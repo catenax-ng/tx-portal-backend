@@ -52,11 +52,11 @@ public interface IDocumentRepository
     /// <summary>
     /// Gets all documents for the given applicationId, documentId and userId
     /// </summary>
+    /// <param name="iamUserId">Id of the user</param>
     /// <param name="applicationId">Id of the application</param>
     /// <param name="documentTypeId">Id of the document type</param>
-    /// <param name="iamUserId">Id of the user</param>
     /// <returns>A collection of documents</returns>
-    IAsyncEnumerable<UploadDocuments> GetUploadedDocumentsAsync(Guid applicationId, DocumentTypeId documentTypeId);
+    IAsyncEnumerable<UploadDocuments> GetUploadedDocumentsAsync(string iamUserId, Guid applicationId, DocumentTypeId documentTypeId);
     
     /// <summary>
     /// Gets the documents userid by the document id

@@ -132,7 +132,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Controllers
         [ProducesResponseType(typeof(IAsyncEnumerable<UploadDocuments> ), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
         public IAsyncEnumerable<UploadDocuments> GetUploadedDocumentsAsync([FromRoute] Guid applicationId,[FromRoute] DocumentTypeId documentTypeId) =>
-            _registrationBusinessLogic.GetUploadedDocumentsAsync(applicationId,documentTypeId);
+            this.WithIamUserId(iamUserId => _registrationBusinessLogic.GetUploadedDocumentsAsync(iamUserId, applicationId,documentTypeId));
 
         /// <summary>
         /// Get all composite client roles

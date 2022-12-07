@@ -836,7 +836,7 @@ public class RegistrationBusinessLogicTest
         // Arrange
         Guid applicationId = new Guid("7eab8e16-8298-4b41-953b-515745423658");
         var uploadDocuments = _fixture.CreateMany<UploadDocuments>(3).ToAsyncEnumerable();
-        A.CallTo(() => _documentRepository.GetUploadedDocumentsAsync(applicationId, DocumentTypeId.APP_CONTRACT))
+        A.CallTo(() => _documentRepository.GetUploadedDocumentsAsync(_iamUserId, applicationId, DocumentTypeId.APP_CONTRACT))
             .Returns(uploadDocuments);
         var sut = new RegistrationBusinessLogic(
             _options,
@@ -847,7 +847,7 @@ public class RegistrationBusinessLogicTest
             null!,
             _portalRepositories);
         // Act
-        var result = await sut.GetUploadedDocumentsAsync(applicationId, DocumentTypeId.APP_CONTRACT).ToListAsync().ConfigureAwait(false);
+        var result = await sut.GetUploadedDocumentsAsync(_iamUserId, applicationId, DocumentTypeId.APP_CONTRACT).ToListAsync().ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();

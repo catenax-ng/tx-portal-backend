@@ -95,7 +95,7 @@ public class RegistrationControllerTest
         //Arrange
         Guid applicationId = new Guid("7eab8e16-8298-4b41-953b-515745423658");
         var uploadDocuments = _fixture.CreateMany<UploadDocuments>(3).ToAsyncEnumerable();
-        A.CallTo(() => _registrationBusinessLogicFake.GetUploadedDocumentsAsync(applicationId, DocumentTypeId.APP_CONTRACT))
+        A.CallTo(() => _registrationBusinessLogicFake.GetUploadedDocumentsAsync(_iamUserId, applicationId, DocumentTypeId.APP_CONTRACT))
             .Returns(uploadDocuments);
 
         //Act
@@ -104,7 +104,7 @@ public class RegistrationControllerTest
         //Assert
         await foreach (var item in result)
         {
-            A.CallTo(() => _registrationBusinessLogicFake.GetUploadedDocumentsAsync(applicationId, DocumentTypeId.APP_CONTRACT)).MustHaveHappenedOnceExactly();
+            A.CallTo(() => _registrationBusinessLogicFake.GetUploadedDocumentsAsync(_iamUserId, applicationId, DocumentTypeId.APP_CONTRACT)).MustHaveHappenedOnceExactly();
             Assert.NotNull(item);
             Assert.IsType<UploadDocuments>(item);
         }

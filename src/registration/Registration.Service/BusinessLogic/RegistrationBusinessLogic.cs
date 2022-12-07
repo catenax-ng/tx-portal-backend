@@ -457,8 +457,8 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
     }
     
     //TODO: Need to implement storage for document upload
-    public IAsyncEnumerable<UploadDocuments> GetUploadedDocumentsAsync(Guid applicationId, DocumentTypeId documentTypeId) =>
-        _portalRepositories.GetInstance<IDocumentRepository>().GetUploadedDocumentsAsync(applicationId,documentTypeId);
+    public IAsyncEnumerable<UploadDocuments> GetUploadedDocumentsAsync(string iamUserId, Guid applicationId, DocumentTypeId documentTypeId) =>
+        _portalRepositories.GetInstance<IDocumentRepository>().GetUploadedDocumentsAsync(iamUserId, applicationId,documentTypeId);
 
     public async Task<int> SetInvitationStatusAsync(string iamUserId)
     {

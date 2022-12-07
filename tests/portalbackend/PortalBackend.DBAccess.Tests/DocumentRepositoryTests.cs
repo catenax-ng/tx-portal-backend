@@ -84,8 +84,21 @@ public class DocumentRepositoryTests : IAssemblyFixture<TestDbFixture>
         var (sut, _) = await CreateSut().ConfigureAwait(false);
     
         // Act
-        var results = await sut.GetUploadedDocumentsAsync(new Guid("4829b64c-de6a-426c-81fc-c0bcf95bcb76"), DocumentTypeId.CX_FRAME_CONTRACT).ToListAsync().ConfigureAwait(false);
+        var results = await sut.GetUploadedDocumentsAsync("3d8142f1-860b-48aa-8c2b-1ccb18699f66", new Guid("4829b64c-de6a-426c-81fc-c0bcf95bcb76"), DocumentTypeId.CX_FRAME_CONTRACT).ToListAsync().ConfigureAwait(false);
     
+        // Assert
+        results.Should().NotBeNull();
+    }
+    
+    [Fact]
+    public async Task GetUploadedDocumentsAsync_ForUserNotUploader_ReturnsExpectedDocument()
+    {
+        // Arrange
+        var (sut, _) = await CreateSut().ConfigureAwait(false);
+        
+        // Act
+        var results = await sut.GetUploadedDocumentsAsync("623770c5-cf38-4b9f-9a35-f8b9ae972e2e", new Guid("4829b64c-de6a-426c-81fc-c0bcf95bcb76"), DocumentTypeId.CX_FRAME_CONTRACT).ToListAsync().ConfigureAwait(false);
+        
         // Assert
         results.Should().NotBeNull();
     }
