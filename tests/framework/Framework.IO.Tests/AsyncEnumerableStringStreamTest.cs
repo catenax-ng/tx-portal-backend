@@ -20,8 +20,8 @@
 
 using AutoFixture;
 using FluentAssertions;
-using Xunit;
 using System.Text;
+using Xunit;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Framework.IO.Tests;
 
@@ -42,7 +42,7 @@ public class AsyncEnumerableStringStreamTest
     [Fact]
     public void TestMetadata()
     {
-        var sut = new AsyncEnumerableStringStream(_data.ToAsyncEnumerable(),_encoding);
+        var sut = new AsyncEnumerableStringStream(_data.ToAsyncEnumerable(), _encoding);
         sut.CanRead.Should().BeTrue();
         sut.CanSeek.Should().BeFalse();
         sut.CanTimeout.Should().BeFalse();
@@ -50,11 +50,11 @@ public class AsyncEnumerableStringStreamTest
         Assert.Throws<NotSupportedException>(() => sut.Length);
         Assert.Throws<NotSupportedException>(() => sut.Position = _fixture.Create<long>());
         Assert.Throws<NotSupportedException>(() => sut.Position);
-        Assert.Throws<NotSupportedException>(() => sut.Seek(_fixture.Create<long>(),_fixture.Create<SeekOrigin>()));
+        Assert.Throws<NotSupportedException>(() => sut.Seek(_fixture.Create<long>(), _fixture.Create<SeekOrigin>()));
         Assert.Throws<NotSupportedException>(() => sut.Flush());
-        Assert.Throws<NotSupportedException>(() => sut.Read(_fixture.Create<byte[]>(),_fixture.Create<int>(),_fixture.Create<int>()));
-        Assert.Throws<NotSupportedException>(() => sut.Write(_fixture.Create<byte[]>(),_fixture.Create<int>(),_fixture.Create<int>())); 
-        Assert.Throws<NotSupportedException>(() => sut.SetLength(_fixture.Create<long>())); 
+        Assert.Throws<NotSupportedException>(() => sut.Read(_fixture.Create<byte[]>(), _fixture.Create<int>(), _fixture.Create<int>()));
+        Assert.Throws<NotSupportedException>(() => sut.Write(_fixture.Create<byte[]>(), _fixture.Create<int>(), _fixture.Create<int>()));
+        Assert.Throws<NotSupportedException>(() => sut.SetLength(_fixture.Create<long>()));
     }
 
     [Fact]
@@ -62,7 +62,7 @@ public class AsyncEnumerableStringStreamTest
     {
         using var expected = GetExpected();
 
-        var sut = new AsyncEnumerableStringStream(_data.ToAsyncEnumerable(),_encoding);
+        var sut = new AsyncEnumerableStringStream(_data.ToAsyncEnumerable(), _encoding);
 
         using var result = new MemoryStream();
         await sut.CopyToAsync(result).ConfigureAwait(false);
@@ -73,10 +73,10 @@ public class AsyncEnumerableStringStreamTest
     private MemoryStream GetExpected()
     {
         var praeamble = _encoding.GetPreamble();
-        var dataBytes = _encoding.GetBytes(string.Join(Environment.NewLine,_data)+Environment.NewLine);
+        var dataBytes = _encoding.GetBytes(string.Join(Environment.NewLine, _data) + Environment.NewLine);
         var ms = new MemoryStream(praeamble.Length + dataBytes.Length);
-        ms.Write(praeamble,0,praeamble.Length);
-        ms.Write(dataBytes,0,dataBytes.Length);
+        ms.Write(praeamble, 0, praeamble.Length);
+        ms.Write(dataBytes, 0, dataBytes.Length);
         return ms;
     }
 }

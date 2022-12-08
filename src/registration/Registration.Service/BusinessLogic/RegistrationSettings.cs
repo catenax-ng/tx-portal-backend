@@ -18,8 +18,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using System.ComponentModel.DataAnnotations;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.BusinessLogic;
 
@@ -33,7 +33,7 @@ public class RegistrationSettings
 
     [Required(AllowEmptyStrings = false)]
     public string KeyCloakClientID { get; set; }
-    
+
     [Required(AllowEmptyStrings = false)]
     public string BasePortalAddress { get; set; }
 

@@ -79,9 +79,9 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     }
 
     #endregion
-    
+
     #region GetOfferProviderDetailsAsync
-    
+
     [Fact]
     public async Task GetOfferProviderDetailsAsync_ReturnsExpectedResult()
     {
@@ -123,9 +123,9 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     }
 
     #endregion
-    
+
     #region GetAllActiveApps
-    
+
     [Fact]
     public async Task GetAllActiveApps_ReturnsExpectedResult()
     {
@@ -142,7 +142,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     #endregion
 
     #region GetAllActiveApps
-    
+
     [Fact]
     public async Task GetOfferDetailsByIdAsync_ReturnsExpectedResult()
     {
@@ -184,9 +184,9 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     }
 
     #endregion
-    
+
     #region AttachAndModifyOffer
-    
+
     [Fact]
     public async Task AttachAndModifyOffer_WithExistingOffer_UpdatesStatus()
     {
@@ -209,11 +209,11 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         changedEntity.State.Should().Be(EntityState.Modified);
         changedEntity.Entity.Should().BeOfType<Offer>().Which.Name.Should().Be("test abc");
     }
-    
+
     #endregion
 
     #region Delete Offer
-    
+
     [Fact]
     public async Task DeleteOffer_WithExistingOffer_RemovesOffer()
     {
@@ -234,7 +234,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     }
 
     #endregion
-    
+
     #region Create Offer
 
     [Fact]
@@ -259,7 +259,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     #endregion
 
     #region AttachAndModifyOfferLicense
-    
+
     [Fact]
     public async Task AttachAndModifyOfferLicense_WithExistingOfferLicense_UpdatesLicenseText()
     {
@@ -279,11 +279,11 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         changedEntity.State.Should().Be(EntityState.Modified);
         changedEntity.Entity.Should().BeOfType<OfferLicense>().Which.Licensetext.Should().Be("666");
     }
-    
+
     #endregion
 
     #region Remove Offer Assigned License
-    
+
     [Fact]
     public async Task RemoveOfferAssignedLicense_WithExisting_RemovesOfferAssignedLicense()
     {
@@ -306,7 +306,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     #endregion
 
     #region RemoveAppLanguages
-    
+
     [Fact]
     public async Task RemoveAppLanguages_WithExisting_RemovesAppLanguages()
     {
@@ -314,7 +314,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         var (sut, dbContext) = await CreateSutWithContext().ConfigureAwait(false);
 
         // Act
-        sut.RemoveAppLanguages(new [] { (new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4"), "de") });
+        sut.RemoveAppLanguages(new[] { (new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4"), "de") });
 
         // Assert
         var changeTracker = dbContext.ChangeTracker;
@@ -327,9 +327,9 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     }
 
     #endregion
-    
+
     #region GetAppUpdateData
-    
+
     [Fact]
     public async Task GetAppUpdateData_ReturnsExpectedResult()
     {
@@ -337,7 +337,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         var sut = await CreateSut().ConfigureAwait(false);
 
         // Act
-        var offerDetail = await sut.GetAppUpdateData(new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4"), "623770c5-cf38-4b9f-9a35-f8b9ae972e2e", new []{"de"}, new []{ new Guid("06b243a4-ba51-4bf3-bc40-5d79a2231b90")}).ConfigureAwait(false);
+        var offerDetail = await sut.GetAppUpdateData(new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4"), "623770c5-cf38-4b9f-9a35-f8b9ae972e2e", new[] { "de" }, new[] { new Guid("06b243a4-ba51-4bf3-bc40-5d79a2231b90") }).ConfigureAwait(false);
 
         // Assert
         offerDetail.Should().NotBeNull();
@@ -345,9 +345,9 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     }
 
     #endregion
-    
+
     #region RemoveServiceAssignedServiceTypes
-    
+
     [Fact]
     public async Task AddServiceAssignedServiceTypes_WithExisting_RemovesServiceAssignedServiceType()
     {
@@ -355,7 +355,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         var (sut, context) = await CreateSutWithContext().ConfigureAwait(false);
 
         // Act
-        sut.AddServiceAssignedServiceTypes(new [] { (new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA5"), ServiceTypeId.DATASPACE_SERVICE) });
+        sut.AddServiceAssignedServiceTypes(new[] { (new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA5"), ServiceTypeId.DATASPACE_SERVICE) });
 
         // Assert
         var changeTracker = context.ChangeTracker;
@@ -369,7 +369,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     #endregion
 
     #region RemoveServiceAssignedServiceTypes
-    
+
     [Fact]
     public async Task RemoveServiceAssignedServiceTypes_WithExisting_RemovesServiceAssignedServiceType()
     {
@@ -377,7 +377,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         var (sut, dbContext) = await CreateSutWithContext().ConfigureAwait(false);
 
         // Act
-        sut.RemoveServiceAssignedServiceTypes(new [] { (new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA5"), ServiceTypeId.CONSULTANCE_SERVICE) });
+        sut.RemoveServiceAssignedServiceTypes(new[] { (new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA5"), ServiceTypeId.CONSULTANCE_SERVICE) });
 
         // Assert
         var changeTracker = dbContext.ChangeTracker;
@@ -390,9 +390,9 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     }
 
     #endregion
-    
+
     #region GetActiveServices
-    
+
     [Theory]
     [InlineData(ServiceOverviewSorting.ProviderAsc)]
     [InlineData(ServiceOverviewSorting.ProviderDesc)]
@@ -441,7 +441,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     #endregion
 
     #region GetServiceDetailById
-    
+
     [Fact]
     public async Task GetServiceDetailByIdUntrackedAsync_ReturnsExpectedResult()
     {
@@ -459,7 +459,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     #endregion
 
     #region GetOfferDeclineDataAsync
-    
+
     [Fact]
     public async Task GetOfferDeclineDataAsync_ReturnsExpectedResult()
     {
@@ -476,11 +476,11 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         offerDetail.Should().NotBeNull();
         offerDetail.OfferStatus.Should().Be(OfferStatusId.ACTIVE);
     }
-    
+
     #endregion
 
     #region Setup
-    
+
     private async Task<OfferRepository> CreateSut()
     {
         var context = await _dbTestDbFixture.GetPortalDbContext().ConfigureAwait(false);

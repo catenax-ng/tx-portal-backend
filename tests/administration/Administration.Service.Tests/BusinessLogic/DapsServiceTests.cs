@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -24,9 +24,9 @@ using FakeItEasy;
 using FluentAssertions;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared;
 using System.Net;
-using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Xunit;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Tests.BusinessLogic;
@@ -34,7 +34,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Tests.Busin
 public class DapsServiceTests
 {
     #region Initialization
-    
+
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IOptions<DapsSettings> _options;
 
@@ -53,9 +53,9 @@ public class DapsServiceTests
     }
 
     #endregion
-    
+
     #region EnableDapsAuth
-    
+
     [Fact]
     public async Task EnableDapsAuthAsync_WithValidCall_ReturnsExpected()
     {
@@ -104,7 +104,7 @@ public class DapsServiceTests
         // Arrange
         var file = FormFileHelper.GetFormFile("Content of the super secure certificate", "test.pem", "application/x-pem-file");
 
-        var httpMessageHandlerMock = new HttpMessageHandlerMock(HttpStatusCode.BadRequest, ex:  new HttpRequestException ("DNS Error"));
+        var httpMessageHandlerMock = new HttpMessageHandlerMock(HttpStatusCode.BadRequest, ex: new HttpRequestException("DNS Error"));
         CreateHttpClient(httpMessageHandlerMock);
         const string clientName = "Connec Tor";
         const string referringConnector = "https://connect-tor.com";

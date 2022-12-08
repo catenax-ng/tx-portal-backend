@@ -18,18 +18,17 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Authentication;
-using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Models;
-using Org.Eclipse.TractusX.Portal.Backend.Registration.Service.BusinessLogic;
-using Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Model;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
-using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
-using System.Net;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
+using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Authentication;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Bpn.Model;
+using Org.Eclipse.TractusX.Portal.Backend.Registration.Service.BusinessLogic;
+using Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Model;
+using System.Net;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Controllers
 {
@@ -39,17 +38,14 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Controllers
     [Consumes("application/json")]
     public class RegistrationController : ControllerBase
     {
-        private readonly ILogger<RegistrationController> _logger;
         private readonly IRegistrationBusinessLogic _registrationBusinessLogic;
 
         /// <summary>
         /// Creates a new instance of <see cref="RegistrationController"/>
         /// </summary>
-        /// <param name="logger">The logger</param>
         /// <param name="registrationBusinessLogic">Access to the business logic</param>
-        public RegistrationController(ILogger<RegistrationController> logger, IRegistrationBusinessLogic registrationBusinessLogic)
+        public RegistrationController(IRegistrationBusinessLogic registrationBusinessLogic)
         {
-            _logger = logger;
             _registrationBusinessLogic = registrationBusinessLogic;
         }
 
@@ -69,7 +65,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Controllers
         [ProducesResponseType(typeof(IAsyncEnumerable<FetchBusinessPartnerDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status503ServiceUnavailable)]
-        public IAsyncEnumerable<FetchBusinessPartnerDto> GetOneObjectAsync([FromRoute] string bpn, [FromHeader] string authorization, CancellationToken cancellationToken) => 
+        public IAsyncEnumerable<FetchBusinessPartnerDto> GetOneObjectAsync([FromRoute] string bpn, [FromHeader] string authorization, CancellationToken cancellationToken) =>
             _registrationBusinessLogic.GetCompanyByIdentifierAsync(bpn, authorization.Split(" ")[1], cancellationToken);
 
         /// <summary>
@@ -116,7 +112,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Controllers
             var (fileName, content) = await this.WithIamUserId(user => _registrationBusinessLogic.GetDocumentContentAsync(documentId, user));
             return File(content, "application/pdf", fileName);
         }
-        
+
         /// <summary>
         /// Gets documents for a specific document type and application
         /// </summary>
@@ -129,9 +125,9 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Controllers
         [HttpGet]
         [Authorize(Roles = "view_registration")]
         [Route("application/{applicationId}/documentType/{documentTypeId}/documents")]
-        [ProducesResponseType(typeof(IAsyncEnumerable<UploadDocuments> ), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<UploadDocuments>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
-        public Task<IEnumerable<UploadDocuments>> GetUploadedDocumentsAsync([FromRoute] Guid applicationId,[FromRoute] DocumentTypeId documentTypeId) =>
+        public Task<IEnumerable<UploadDocuments>> GetUploadedDocumentsAsync([FromRoute] Guid applicationId, [FromRoute] DocumentTypeId documentTypeId) =>
            this.WithIamUserId(user => _registrationBusinessLogic.GetUploadedDocumentsAsync(applicationId, documentTypeId, user));
 
         /// <summary>
@@ -146,7 +142,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Controllers
         [ProducesResponseType(typeof(List<string>), (int)HttpStatusCode.OK)]
         public IAsyncEnumerable<string> GetClientRolesComposite() =>
             _registrationBusinessLogic.GetClientRolesCompositeAsync();
-            
+
         /// <summary>
         /// Gets the applications with each status
         /// </summary>
@@ -245,7 +241,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Controllers
         [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(ErrorResponse),StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
         public Task<int> InviteNewUserAsync([FromRoute] Guid applicationId, [FromBody] UserCreationInfoWithMessage userCreationInfo) =>
             this.WithIamUserId(iamUserId =>
                 _registrationBusinessLogic.InviteNewUserAsync(applicationId, userCreationInfo, iamUserId));
@@ -354,9 +350,9 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Controllers
         [Route("application/{applicationId}/registrationData")]
         [ProducesResponseType(typeof(RegistrationData), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
-         public Task<RegistrationData> GetRegistrationDataAsync([FromRoute] Guid applicationId) =>
-            this.WithIamUserId(iamUserId => 
-                _registrationBusinessLogic.GetRegistrationDataAsync(applicationId,iamUserId));
+        public Task<RegistrationData> GetRegistrationDataAsync([FromRoute] Guid applicationId) =>
+            this.WithIamUserId(iamUserId =>
+                _registrationBusinessLogic.GetRegistrationDataAsync(applicationId, iamUserId));
 
         /// <summary>
         /// Gets the company roles and roles description
@@ -371,7 +367,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Controllers
         [ProducesResponseType(typeof(IAsyncEnumerable<CompanyRolesDetails>), StatusCodes.Status200OK)]
         public IAsyncEnumerable<CompanyRolesDetails> GetCompanyRolesAsync([FromQuery] string? languageShortName = null) =>
             _registrationBusinessLogic.GetCompanyRoles(languageShortName);
-        
+
         /// <summary>
         /// Deletes the document with the given id
         /// </summary>

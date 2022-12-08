@@ -27,10 +27,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
-  <Target Name="DotnetFormat" BeforeTargets="Build">
-    <Exec Command="dotnet format --verify-no-changes --no-restore"/>
-  </Target>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />

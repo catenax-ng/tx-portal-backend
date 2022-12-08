@@ -39,7 +39,7 @@ public interface IAppReleaseBusinessLogic
     /// <param name="userId"></param>
     /// <returns></returns>
     Task UpdateAppAsync(Guid appId, AppEditableDetail updateModel, string userId);
-    
+
     /// <summary>
     /// Upload document for given company user for appId
     /// </summary>
@@ -50,7 +50,7 @@ public interface IAppReleaseBusinessLogic
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     Task<int> CreateAppDocumentAsync(Guid appId, DocumentTypeId documentTypeId, IFormFile document, string iamUserId, CancellationToken cancellationToken);
-    
+
     /// <summary>
     /// Add User Role for App
     /// </summary>
@@ -59,7 +59,7 @@ public interface IAppReleaseBusinessLogic
     /// <param name="iamUserId"></param>
     /// <returns></returns>
     Task<IEnumerable<AppRoleData>> AddAppUserRoleAsync(Guid appId, IEnumerable<AppUserRole> appAssignedDesc, string iamUserId);
-    
+
     /// <summary>
     /// Return Agreements for App_Contract Category
     /// </summary>
@@ -73,7 +73,7 @@ public interface IAppReleaseBusinessLogic
     /// <param name="userId"></param>
     /// <returns></returns>
     Task<OfferAgreementConsent> GetOfferAgreementConsentById(Guid appId, string userId);
-    
+
     /// <summary>
     /// Update Agreement Consent
     /// </summary>
@@ -82,7 +82,7 @@ public interface IAppReleaseBusinessLogic
     /// <param name="userId"></param>
     /// <returns></returns>
     Task<int> SubmitOfferConsentAsync(Guid appId, OfferAgreementConsent offerAgreementConsents, string userId);
-    
+
     /// <summary>
     /// Return Offer with Consent Status
     /// </summary>
@@ -90,7 +90,7 @@ public interface IAppReleaseBusinessLogic
     /// <param name="userId"></param>
     /// <returns></returns>
     Task<OfferProviderResponse> GetAppDetailsForStatusAsync(Guid appId, string userId);
-    
+
     /// <summary>
     /// Delete User Role by appId and roleId
     /// </summary>
@@ -99,7 +99,7 @@ public interface IAppReleaseBusinessLogic
     /// <param name="iamUserId"></param>
     /// <returns></returns>
     Task DeleteAppRoleAsync(Guid appId, Guid roleId, string iamUserId);
-    
+
     /// <summary>
     /// Get Sales Manager Data
     /// </summary>
@@ -136,7 +136,7 @@ public interface IAppReleaseBusinessLogic
     /// <param name="iamUserId"></param>
     /// <returns></returns>
     Task SubmitAppReleaseRequestAsync(Guid appId, string iamUserId);
-    
+
     /// <summary>
     /// Add User ROle for Active App and create notification
     /// </summary>
@@ -144,8 +144,8 @@ public interface IAppReleaseBusinessLogic
     /// <param name="appUserRolesDescription"></param>
     /// <param name="iamUserId"></param>
     /// <returns></returns>
-    Task<IEnumerable<AppRoleData>>  AddActiveAppUserRoleAsync(Guid appId, IEnumerable<AppUserRole> appUserRolesDescription, string iamUserId);
-    
+    Task<IEnumerable<AppRoleData>> AddActiveAppUserRoleAsync(Guid appId, IEnumerable<AppUserRole> appUserRolesDescription, string iamUserId);
+
     /// <summary>
     /// Approve App Status from IN_Review to Active
     /// </summary>

@@ -18,8 +18,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using System;
 
 #nullable disable
 
@@ -32,7 +32,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
             migrationBuilder.Sql("DELETE FROM portal.company_service_account_assigned_roles");
             migrationBuilder.Sql("DELETE FROM portal.company_user_assigned_roles");
             migrationBuilder.Sql("DELETE FROM portal.user_roles");
-            
+
             migrationBuilder.DropForeignKey(
                 name: "fk_user_roles_iam_clients_iam_client_id",
                 schema: "portal",

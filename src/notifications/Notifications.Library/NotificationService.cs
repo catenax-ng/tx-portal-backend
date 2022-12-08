@@ -40,7 +40,7 @@ public class NotificationService : INotificationService
     {
         _portalRepositories = portalRepositories;
     }
-    
+
     /// <inheritdoc />
     public async Task CreateNotifications(
         IDictionary<string, IEnumerable<string>> receiverUserRoles,

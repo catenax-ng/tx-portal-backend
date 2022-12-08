@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -37,10 +37,10 @@ public interface IServiceAccountCreation
     /// <param name="bpns">Optional list of bpns to set for the user</param>
     /// <returns>Returns information about the created technical user</returns>
     Task<(string clientId, ServiceAccountData serviceAccountData, Guid serviceAccountId, List<UserRoleData> userRoleData)> CreateServiceAccountAsync(
-        string name, 
-        string description, 
-        IamClientAuthMethod iamClientAuthMethod, 
-        IEnumerable<Guid> userRoleIds, 
+        string name,
+        string description,
+        IamClientAuthMethod iamClientAuthMethod,
+        IEnumerable<Guid> userRoleIds,
         Guid companyId,
         IEnumerable<string> bpns);
 }

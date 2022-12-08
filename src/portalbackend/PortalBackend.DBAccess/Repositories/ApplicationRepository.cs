@@ -18,11 +18,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Microsoft.EntityFrameworkCore;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
-using Microsoft.EntityFrameworkCore;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 
@@ -89,8 +89,9 @@ public class ApplicationRepository : IApplicationRepository
     public Task<CompanyApplicationUserEmailData?> GetOwnCompanyApplicationUserEmailDataAsync(Guid applicationId, string iamUserId) =>
         _dbContext.CompanyApplications
             .Where(application => application.Id == applicationId)
-            .Select(application => new {
-                Application = application, 
+            .Select(application => new
+            {
+                Application = application,
                 CompanyUser = application.Company!.CompanyUsers.Where(companyUser => companyUser.IamUser!.UserEntityId == iamUserId).SingleOrDefault()
             })
             .Select(data => new CompanyApplicationUserEmailData(
@@ -129,7 +130,7 @@ public class ApplicationRepository : IApplicationRepository
             .SelectMany(company => company.CompanyApplications.Where(companyApplication =>
                 applicationStatusIds != null ? applicationStatusIds.Contains(companyApplication.ApplicationStatusId) : true));
 
-    public Task<CompanyApplicationWithCompanyAddressUserData?> GetCompanyApplicationWithCompanyAdressUserDataAsync (Guid applicationId, Guid companyId, string iamUserId) =>
+    public Task<CompanyApplicationWithCompanyAddressUserData?> GetCompanyApplicationWithCompanyAdressUserDataAsync(Guid applicationId, Guid companyId, string iamUserId) =>
         _dbContext.CompanyApplications
             .Where(application => application.Id == applicationId
                 && application.CompanyId == companyId)
@@ -207,8 +208,8 @@ public class ApplicationRepository : IApplicationRepository
                         companyUser.Company!.Name)))
             .AsAsyncEnumerable();
 
-     public IQueryable<CompanyApplication> GetAllCompanyApplicationsDetailsQuery(string? companyName = null) =>
-         _dbContext.CompanyApplications
-            .AsNoTracking()
-            .Where(application => companyName != null ? EF.Functions.ILike(application.Company!.Name, $"%{companyName}%") : true);
+    public IQueryable<CompanyApplication> GetAllCompanyApplicationsDetailsQuery(string? companyName = null) =>
+        _dbContext.CompanyApplications
+           .AsNoTracking()
+           .Where(application => companyName != null ? EF.Functions.ILike(application.Company!.Name, $"%{companyName}%") : true);
 }

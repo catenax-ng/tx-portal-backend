@@ -32,7 +32,7 @@ public class CompanyServiceAccount
         UserRoles = new HashSet<UserRole>();
         CompanyServiceAccountAssignedRoles = new HashSet<CompanyServiceAccountAssignedRole>();
     }
-    
+
     public CompanyServiceAccount(Guid id, Guid companyId, CompanyServiceAccountStatusId companyServiceAccountStatusId, string name, string description, DateTimeOffset dateCreated) : this()
     {
         Id = id;

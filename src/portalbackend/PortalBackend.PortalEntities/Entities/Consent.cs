@@ -35,8 +35,8 @@ public class Consent
     /// Please only use when attaching the Consent to the database
     /// </summary>
     /// <param name="id"></param>
-    public Consent(Guid id) 
-        :this()
+    public Consent(Guid id)
+        : this()
     {
         Id = id;
     }

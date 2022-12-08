@@ -47,10 +47,17 @@ public interface INotificationBusinessLogic
     /// <param name="isRead">OPTIONAL: filter for read or unread notifications</param>
     /// <param name="typeId">OPTIONAL: The type of the notifications</param>
     /// <param name="topicId">OPTIONAL: The topic of the notifications</param>
+    /// <param name="onlyDueDate">OPTIONAL: If true only notifications with a due date will be returned</param>
     /// <param name="sorting">Kind of sorting for the notifications</param>
     /// <returns>Returns a collection of the users notification</returns>
-    Task<Pagination.Response<NotificationDetailData>> GetNotificationsAsync(int page, int size, string iamUserId,
-        bool? isRead = null, NotificationTypeId? typeId = null, NotificationTopicId? topicId = null,
+    Task<Pagination.Response<NotificationDetailData>> GetNotificationsAsync(
+        int page,
+        int size,
+        string iamUserId,
+        bool? isRead = null,
+        NotificationTypeId? typeId = null,
+        NotificationTopicId? topicId = null,
+        bool onlyDueDate = false,
         NotificationSorting? sorting = null);
 
     /// <summary>
@@ -59,7 +66,7 @@ public interface INotificationBusinessLogic
     /// <param name="iamUserId">The id of the current user</param>
     /// <param name="notificationId">The id of the notification</param>
     /// <returns>Returns a notification</returns>
-    Task<NotificationDetailData> GetNotificationDetailDataAsync(string iamUserId, Guid notificationId);        
+    Task<NotificationDetailData> GetNotificationDetailDataAsync(string iamUserId, Guid notificationId);
 
     /// <summary>
     /// Gets the notification account for the given user

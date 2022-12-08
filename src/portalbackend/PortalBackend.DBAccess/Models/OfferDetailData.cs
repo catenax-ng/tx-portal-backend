@@ -34,13 +34,13 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 /// <param name="Price">Pricing information of the app.</param>
 /// <param name="OfferSubscriptionDetailData">Detail Data of the offer subscription</param>
 public record OfferDetailData(
-   Guid Id, 
-   string? Title, 
-   string Provider, 
-   string? LeadPictureUri, 
+   Guid Id,
+   string? Title,
+   string Provider,
+   string? LeadPictureUri,
    string? ContactEmail,
-   string? Description, 
-   string Price, 
+   string? Description,
+   string Price,
    IEnumerable<OfferSubscriptionStateDetailData> OfferSubscriptionDetailData);
 
 /// <summary>
@@ -56,13 +56,13 @@ public record OfferDetailData(
 /// <param name="OfferSubscriptionDetailData">Detail Data of the offer subscription</param>
 /// <param name="ServiceTypeIds">Collection of the assigned serviceTypeIds.</param>
 public record ServiceDetailData(
-    Guid Id, 
-    string? Title, 
-    string Provider, 
-    string? LeadPictureUri, 
+    Guid Id,
+    string? Title,
+    string Provider,
+    string? LeadPictureUri,
     string? ContactEmail,
-    string? Description, 
-    string Price, 
+    string? Description,
+    string Price,
     IEnumerable<OfferSubscriptionStateDetailData> OfferSubscriptionDetailData,
     IEnumerable<ServiceTypeId> ServiceTypeIds);
 

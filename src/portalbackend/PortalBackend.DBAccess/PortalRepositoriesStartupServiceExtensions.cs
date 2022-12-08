@@ -20,10 +20,10 @@
 
 using Laraue.EfCoreTriggers.Common.Extensions;
 using Laraue.EfCoreTriggers.PostgreSql.Extensions;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 

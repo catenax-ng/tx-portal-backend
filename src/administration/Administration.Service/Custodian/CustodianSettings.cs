@@ -62,4 +62,3 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Custodian
     }
 }
 
-

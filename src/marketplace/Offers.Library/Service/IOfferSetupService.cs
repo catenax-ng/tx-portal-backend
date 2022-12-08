@@ -26,6 +26,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Service;
 /// Business logic for handling offer-related operations. Includes persistence layer access.
 /// </summary>
 public interface IOfferSetupService
-{ 
+{
     Task AutoSetupOffer(OfferThirdPartyAutoSetupData autoSetupData, string iamUserId, string accessToken, string serviceDetailsAutoSetupUrl);
 }

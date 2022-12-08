@@ -81,7 +81,7 @@ public class RegistrationBusinessLogicTest
         _fixture = new Fixture().Customize(new AutoFakeItEasyCustomization { ConfigureMembers = true });
         _fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList()
             .ForEach(b => _fixture.Behaviors.Remove(b));
-        _fixture.Behaviors.Add(new OmitOnRecursionBehavior());  
+        _fixture.Behaviors.Add(new OmitOnRecursionBehavior());
 
         _provisioningManager = A.Fake<IProvisioningManager>();
         _portalRepositories = A.Fake<IPortalRepositories>();
@@ -98,7 +98,7 @@ public class RegistrationBusinessLogicTest
         _mailingService = A.Fake<IMailingService>();
         _notificationService = A.Fake<INotificationService>();
         _sdFactory = A.Fake<ISdFactoryService>();
-        
+
         _settings.WelcomeNotificationTypeIds = new List<NotificationTypeId>
         {
             NotificationTypeId.WELCOME,
@@ -121,7 +121,7 @@ public class RegistrationBusinessLogicTest
 
         _logic = new RegistrationBusinessLogic(_portalRepositories, options, _provisioningManager, _custodianService, _mailingService, _notificationService, _sdFactory, _bpdmService);
     }
-    
+
     #region ApprovePartnerRequest
 
     [Fact]
@@ -169,7 +169,7 @@ public class RegistrationBusinessLogicTest
             { ClientId, roles.AsEnumerable() }
         };
         var userRoleData = new List<UserRoleData> { new(UserRoleId, ClientId, "Company Admin") };
-        
+
         var companyUserAssignedRole = _fixture.Create<CompanyUserAssignedRole>();
         var companyUserAssignedBusinessPartner = _fixture.Create<CompanyUserAssignedBusinessPartner>();
 
@@ -261,7 +261,7 @@ public class RegistrationBusinessLogicTest
             .Returns(companyApplicationData.AsQueryable());
 
         // Act
-        var result = await _logic.GetCompanyApplicationDetailsAsync(0, 5,null).ConfigureAwait(false);
+        var result = await _logic.GetCompanyApplicationDetailsAsync(0, 5, null).ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _applicationRepository.GetCompanyApplicationsFilteredQuery(null, A<IEnumerable<CompanyApplicationStatusId>>.That.Matches(x => x.Count() == 3 && x.All(y => companyAppStatus.Contains(y))))).MustHaveHappenedOnceExactly();
@@ -270,7 +270,7 @@ public class RegistrationBusinessLogicTest
     }
 
     #region Trigger bpn data push
-    
+
     [Fact]
     public async Task TriggerBpnDataPush_WithValidData_CallsService()
     {
@@ -288,7 +288,7 @@ public class RegistrationBusinessLogicTest
         // Assert
         A.CallTo(() => _bpdmService.TriggerBpnDataPush(A<BpdmTransferData>._, CancellationToken.None)).MustHaveHappenedOnceExactly();
     }
-    
+
     [Fact]
     public async Task TriggerBpnDataPush_WithNotExistingApplication_ThrowsNotFoundException()
     {
@@ -360,7 +360,7 @@ public class RegistrationBusinessLogicTest
     }
 
     #endregion
-    
+
     #region Setup
 
     private void SetupFakes(
@@ -388,7 +388,6 @@ public class RegistrationBusinessLogicTest
             { ClientId, new List<string> { "Company Admin" }.AsEnumerable() }
         };
 
-        
         A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsForSubmittedApplicationAsync(A<Guid>.That.Matches(x => x == Id)))
             .ReturnsLazily(() => new ValueTuple<Guid, string, string?, string>(company.Id, company.Name, company.BusinessPartnerNumber!, "de"));
         A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsForSubmittedApplicationAsync(A<Guid>.That.Matches(x => x == IdWithoutBpn)))
@@ -446,12 +445,12 @@ public class RegistrationBusinessLogicTest
 
         A.CallTo(() => _custodianService.CreateWalletAsync(BusinessPartnerNumber, CompanyName, A<CancellationToken>._))
             .Returns(Task.CompletedTask);
-            
+
         A.CallTo(() => _notificationService.CreateNotifications(A<IDictionary<string, IEnumerable<string>>>._, A<Guid>._, A<IEnumerable<(string? content, NotificationTypeId notificationTypeId)>>._, A<Guid>._))
             .Invokes((
-                IDictionary<string,IEnumerable<string>> _, 
-                Guid? creatorId, 
-                IEnumerable<(string? content, NotificationTypeId notificationTypeId)> notifications, 
+                IDictionary<string, IEnumerable<string>> _,
+                Guid? creatorId,
+                IEnumerable<(string? content, NotificationTypeId notificationTypeId)> notifications,
                 Guid _) =>
             {
                 foreach (var notificationData in notifications)

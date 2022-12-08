@@ -112,9 +112,9 @@ public class SdFactoryService : ISdFactoryService
         }
 
         var document = _portalRepositories.GetInstance<IDocumentRepository>().CreateDocument(
-            $"SelfDescription_{docTitle}.json", 
-            documentContent, 
-            hash, 
+            $"SelfDescription_{docTitle}.json",
+            documentContent,
+            hash,
             DocumentTypeId.APP_TECHNICAL_INFORMATION,
             doc =>
             {

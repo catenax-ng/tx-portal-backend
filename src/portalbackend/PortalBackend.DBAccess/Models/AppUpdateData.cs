@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -27,6 +27,6 @@ public record AppUpdateData
     bool IsUserOfProvider,
     IEnumerable<(string, string, string)> OfferDescriptions,
     IEnumerable<(string Shortname, bool IsMatch)> Languages,
-    IEnumerable<Guid> MatchingUseCases, 
+    IEnumerable<Guid> MatchingUseCases,
     ValueTuple<Guid, string, bool> OfferLicense,
     Guid? SalesManagerId);

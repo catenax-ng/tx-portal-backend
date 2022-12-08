@@ -18,9 +18,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Microsoft.EntityFrameworkCore;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
-using Microsoft.EntityFrameworkCore;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Maintenance.App;
 
@@ -58,13 +58,13 @@ public class BatchDeleteService : BackgroundService
     {
         using var scope = _serviceScopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<PortalDbContext>();
-            
+
         if (!stoppingToken.IsCancellationRequested)
         {
             try
             {
                 _logger.LogInformation("Cleaning up documents and consents older {Days} days...", _days);
-                await dbContext.Database.ExecuteSqlInterpolatedAsync($"WITH documentids AS (DELETE FROM portal.documents WHERE date_created < {DateTimeOffset.UtcNow.AddDays(-_days)} AND (document_status_id = {(int)DocumentStatusId.PENDING} OR document_status_id = {(int) DocumentStatusId.INACTIVE}) RETURNING id) DELETE FROM portal.consents WHERE document_id IN (SELECT id FROM documentids);", stoppingToken).ConfigureAwait(false);
+                await dbContext.Database.ExecuteSqlInterpolatedAsync($"WITH documentids AS (DELETE FROM portal.documents WHERE date_created < {DateTimeOffset.UtcNow.AddDays(-_days)} AND (document_status_id = {(int)DocumentStatusId.PENDING} OR document_status_id = {(int)DocumentStatusId.INACTIVE}) RETURNING id) DELETE FROM portal.consents WHERE document_id IN (SELECT id FROM documentids);", stoppingToken).ConfigureAwait(false);
                 _logger.LogInformation("Documents older than {Days} days and depending consents successfully cleaned up.", _days);
             }
             catch (Exception ex)

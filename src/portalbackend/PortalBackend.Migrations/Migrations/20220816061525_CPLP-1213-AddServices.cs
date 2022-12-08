@@ -18,9 +18,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using System;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
+using System;
 
 #nullable disable
 
@@ -298,7 +298,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 schema: "portal",
                 table: "services",
                 column: "service_status_id");
-            
+
             // The audit trigger creation need to be reworked for classes that are not existing anymore
             // needs to be done for migration CPLP-1254-db-audit as well
             // migrationBuilder.AddAuditTrigger<AuditService>("audit_services_cplp_1213_add_services");

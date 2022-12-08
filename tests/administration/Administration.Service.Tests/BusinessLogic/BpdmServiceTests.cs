@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -23,11 +23,11 @@ using AutoFixture.AutoFakeItEasy;
 using FakeItEasy;
 using FluentAssertions;
 using Microsoft.Extensions.Options;
+using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
+using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Token;
 using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared;
-using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
-using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Models;
 using System.Net;
 using Xunit;
 
@@ -45,7 +45,7 @@ public class BpdmServiceTests
 
     public BpdmServiceTests()
     {
-        _fixture = new Fixture().Customize(new AutoFakeItEasyCustomization {ConfigureMembers = true});
+        _fixture = new Fixture().Customize(new AutoFakeItEasyCustomization { ConfigureMembers = true });
         _fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList()
             .ForEach(b => _fixture.Behaviors.Remove(b));
         _fixture.Behaviors.Add(new OmitOnRecursionBehavior());
@@ -85,7 +85,7 @@ public class BpdmServiceTests
         A.CallTo(() => _httpClientFactory.CreateClient(nameof(BpdmService)))
             .Returns(httpClient);
         var sut = new BpdmService(_httpClientFactory, _tokenService, _options);
-        
+
         // Act
         var result = await sut.TriggerBpnDataPush(data, CancellationToken.None).ConfigureAwait(false);
 
@@ -118,7 +118,7 @@ public class BpdmServiceTests
     #endregion
 
     #region Setup
-    
+
     private void SetupTokenService()
     {
         A.CallTo(() => _tokenService.GetTokenAsync(A<GetTokenSettings>._, A<CancellationToken>._)).Returns(_accessToken);

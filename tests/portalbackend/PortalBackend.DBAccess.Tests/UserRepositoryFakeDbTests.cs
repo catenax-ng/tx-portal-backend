@@ -59,7 +59,7 @@ public class UserRepositoryFakeDbTests
         {
             companyUser.Offers.Add(app);
         }
-        var iamUsersFakeDbSet = new IamUser[]{ iamUser }.AsFakeDbSet();
+        var iamUsersFakeDbSet = new IamUser[] { iamUser }.AsFakeDbSet();
 
         A.CallTo(() => _contextFake.IamUsers).Returns(iamUsersFakeDbSet);
         _fixture.Inject(_contextFake);
@@ -75,7 +75,7 @@ public class UserRepositoryFakeDbTests
         var favouriteAppIds = favouriteApps.Select(app => app.Id).ToList();
         results.Should().BeEquivalentTo(favouriteAppIds);
     }
-    
+
     [Fact]
     public async Task GetCompanyUserWithRoleId_ReturnsExpectedCompanyUsers()
     {
@@ -109,17 +109,17 @@ public class UserRepositoryFakeDbTests
             new(companyUser2.Id, userRoles.Last().Id),
             new(companyUser3.Id, userRoles.Last().Id),
         }.AsFakeDbSet();
-        
+
         A.CallTo(() => _contextFake.UserRoles).Returns(userRoles.AsFakeDbSet());
         A.CallTo(() => _contextFake.CompanyUsers).Returns(companyUsersDbSet);
         A.CallTo(() => _contextFake.CompanyUserAssignedRoles).Returns(userRolesDbSet);
-        
+
         _fixture.Inject(_contextFake);
 
         var sut = _fixture.Create<UserRepository>();
 
         // Act
-        var result = await sut.GetCompanyUserWithRoleIdForCompany(new [] { userRoles.First().Id }, companyUser1.CompanyId).ToListAsync();
+        var result = await sut.GetCompanyUserWithRoleIdForCompany(new[] { userRoles.First().Id }, companyUser1.CompanyId).ToListAsync();
 
         // Assert
         result.Should().NotBeNullOrEmpty();

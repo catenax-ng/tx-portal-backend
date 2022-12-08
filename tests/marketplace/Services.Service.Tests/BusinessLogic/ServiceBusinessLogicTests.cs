@@ -92,11 +92,11 @@ public class ServiceBusinessLogicTests
 
         var serviceSettings = new ServiceSettings
         {
-            ApplicationsMaxPageSize = 15, 
+            ApplicationsMaxPageSize = 15,
             ServiceAccountRoles = new Dictionary<string, IEnumerable<string>>
             {
                 {"Test", new[] {"Technical User"}}
-            }, 
+            },
             CompanyAdminRoles = new Dictionary<string, IEnumerable<string>>
             {
                 {"CatenaX", new[] {"Company Admin"}}
@@ -203,7 +203,7 @@ public class ServiceBusinessLogicTests
     #endregion
 
     #region GetCompanyProvidedServiceSubscriptionStatusesForUser
-    
+
     [Fact]
     public async Task GetCompanyProvidedServiceSubscriptionStatusesForUserAsync_ReturnsExpectedCount()
     {
@@ -324,7 +324,7 @@ public class ServiceBusinessLogicTests
         var offerService = A.Fake<IOfferService>();
         A.CallTo(() => offerService.CreateOfferSubscriptionAgreementConsentAsync(A<Guid>._, A<Guid>._, A<ConsentStatusId>._, A<string>._, A<OfferTypeId>._))
             .ReturnsLazily(() => consentId);
-        var sut = new ServiceBusinessLogic(A.Fake<IPortalRepositories>(),offerService, A.Fake<IOfferSubscriptionService>(), Options.Create(new ServiceSettings()));
+        var sut = new ServiceBusinessLogic(A.Fake<IPortalRepositories>(), offerService, A.Fake<IOfferSubscriptionService>(), Options.Create(new ServiceSettings()));
 
         // Act
         var offerAgreementConsentData = new OfferAgreementConsentData(_existingAgreementId, ConsentStatusId.ACTIVE);
@@ -365,7 +365,7 @@ public class ServiceBusinessLogicTests
         var offerService = A.Fake<IOfferService>();
         A.CallTo(() => offerService.GetConsentDetailDataAsync(A<Guid>.That.Matches(x => x == _validConsentId), A<OfferTypeId>._))
             .ReturnsLazily(() => data);
-        var sut = new ServiceBusinessLogic(A.Fake<IPortalRepositories>(),offerService, A.Fake<IOfferSubscriptionService>(), Options.Create(new ServiceSettings()));
+        var sut = new ServiceBusinessLogic(A.Fake<IPortalRepositories>(), offerService, A.Fake<IOfferSubscriptionService>(), Options.Create(new ServiceSettings()));
 
         // Act
         var result = await sut.GetServiceConsentDetailDataAsync(_validConsentId).ConfigureAwait(false);
@@ -416,16 +416,16 @@ public class ServiceBusinessLogicTests
     #endregion
 
     #region UpdateServiceAsync
-    
+
     [Fact]
     public async Task UpdateServiceAsync_WithoutService_ThrowsException()
     {
         // Arrange
         SetupUpdateService();
-        var data = new ServiceUpdateRequestData("test", new List<LocalizedDescription>(), new List<ServiceTypeId>(), "123","test@email.com", Guid.NewGuid());
+        var data = new ServiceUpdateRequestData("test", new List<LocalizedDescription>(), new List<ServiceTypeId>(), "123", "test@email.com", Guid.NewGuid());
         var settings = new ServiceSettings();
         var sut = new ServiceBusinessLogic(_portalRepositories, _offerService, _offerSubscriptionService, Options.Create(settings));
-     
+
         // Act
         async Task Act() => await sut.UpdateServiceAsync(_notExistingServiceId, data, _iamUser.UserEntityId).ConfigureAwait(false);
 
@@ -433,16 +433,16 @@ public class ServiceBusinessLogicTests
         var error = await Assert.ThrowsAsync<NotFoundException>(Act).ConfigureAwait(false);
         error.Message.Should().Be($"Service {_notExistingServiceId} does not exists");
     }
-    
+
     [Fact]
     public async Task UpdateServiceAsync_WithActiveService_ThrowsException()
     {
         // Arrange
         SetupUpdateService();
-        var data = new ServiceUpdateRequestData("test", new List<LocalizedDescription>(), new List<ServiceTypeId>(), "123","test@email.com", Guid.NewGuid());
+        var data = new ServiceUpdateRequestData("test", new List<LocalizedDescription>(), new List<ServiceTypeId>(), "123", "test@email.com", Guid.NewGuid());
         var settings = new ServiceSettings();
         var sut = new ServiceBusinessLogic(_portalRepositories, _offerService, _offerSubscriptionService, Options.Create(settings));
-     
+
         // Act
         async Task Act() => await sut.UpdateServiceAsync(_activeServiceId, data, _iamUser.UserEntityId).ConfigureAwait(false);
 
@@ -456,7 +456,7 @@ public class ServiceBusinessLogicTests
     {
         // Arrange
         SetupUpdateService();
-        var data = new ServiceUpdateRequestData("test", new List<LocalizedDescription>(), new List<ServiceTypeId>(), "123","test@email.com", Guid.NewGuid());
+        var data = new ServiceUpdateRequestData("test", new List<LocalizedDescription>(), new List<ServiceTypeId>(), "123", "test@email.com", Guid.NewGuid());
         var settings = new ServiceSettings();
         var sut = new ServiceBusinessLogic(_portalRepositories, _offerService, _offerSubscriptionService, Options.Create(settings));
 
@@ -474,15 +474,15 @@ public class ServiceBusinessLogicTests
         // Arrange
         SetupUpdateService();
         var data = new ServiceUpdateRequestData(
-            "test", 
+            "test",
             new List<LocalizedDescription>
             {
-                new("de", "Long description", "desc") 
-            }, 
+                new("de", "Long description", "desc")
+            },
             new List<ServiceTypeId>
             {
                 ServiceTypeId.CONSULTANCE_SERVICE
-            }, 
+            },
             "43",
             "test@email.com",
             _companyUser.Id);
@@ -504,7 +504,7 @@ public class ServiceBusinessLogicTests
 
         // Act
         await sut.UpdateServiceAsync(_existingServiceId, data, _iamUser.UserEntityId).ConfigureAwait(false);
-        
+
         // Assert
         A.CallTo(() => _offerRepository.AttachAndModifyOffer(A<Guid>._, A<Action<Offer>>._, A<Action<Offer>>._))
             .MustHaveHappenedOnceExactly();
@@ -520,7 +520,7 @@ public class ServiceBusinessLogicTests
     }
 
     #endregion
-    
+
     #region SubmitServiceAsync
 
     [Fact]
@@ -533,7 +533,7 @@ public class ServiceBusinessLogicTests
         await sut.SubmitServiceAsync(_existingServiceId, _iamUser.UserEntityId).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() => 
+        A.CallTo(() =>
                 _offerService.SubmitOfferAsync(
                     _existingServiceId,
                     _iamUser.UserEntityId,
@@ -544,9 +544,9 @@ public class ServiceBusinessLogicTests
     }
 
     #endregion
-    
+
     #region DeclineServiceRequest
-    
+
     [Fact]
     public async Task DeclineServiceRequestAsync_CallsExpected()
     {
@@ -558,7 +558,7 @@ public class ServiceBusinessLogicTests
             BasePortalAddress = "test"
         };
         var sut = new ServiceBusinessLogic(null!, _offerService, null!, Options.Create(settings));
-     
+
         // Act
         await sut.DeclineServiceRequestAsync(_existingServiceId, _iamUser.UserEntityId, data).ConfigureAwait(false);
 
@@ -567,9 +567,9 @@ public class ServiceBusinessLogicTests
             OfferTypeId.SERVICE, NotificationTypeId.SERVICE_RELEASE_REJECTION,
             A<IDictionary<string, IEnumerable<string>>>._, A<string>._)).MustHaveHappenedOnceExactly();
     }
-    
+
     #endregion
-    
+
     #region Setup
 
     private void SetupUpdateService()
@@ -589,10 +589,10 @@ public class ServiceBusinessLogicTests
     {
         var serviceDetailData = _fixture.CreateMany<ServiceOverviewData>(count);
         var paginationResult = (int skip, int take) => Task.FromResult(new Pagination.Source<ServiceOverviewData>(serviceDetailData.Count(), serviceDetailData.Skip(skip).Take(take)));
-        
+
         A.CallTo(() => _offerRepository.GetActiveServicesPaginationSource(A<ServiceOverviewSorting?>._, A<ServiceTypeId?>._))
             .Returns(paginationResult);
-        
+
         A.CallTo(() => _portalRepositories.GetInstance<IOfferRepository>()).Returns(_offerRepository);
     }
 
@@ -602,11 +602,11 @@ public class ServiceBusinessLogicTests
             .With(x => x.Id, _existingServiceId)
             .Create();
         A.CallTo(() => _userRepository.GetCompanyUserWithIamUserCheckAndCompanyShortName(_iamUser.UserEntityId, _companyUser.Id))
-            .ReturnsLazily(() => new List<(Guid CompanyUserId, bool IsIamUser, string CompanyUserName, Guid CompanyId)>{new (_companyUser.Id, true, "COMPANYBPN", _companyUserCompanyId), new (_companyUser.Id, false, "OTHERCOMPANYBPN", _companyUserCompanyId)}.ToAsyncEnumerable());
+            .ReturnsLazily(() => new List<(Guid CompanyUserId, bool IsIamUser, string CompanyUserName, Guid CompanyId)> { new(_companyUser.Id, true, "COMPANYBPN", _companyUserCompanyId), new(_companyUser.Id, false, "OTHERCOMPANYBPN", _companyUserCompanyId) }.ToAsyncEnumerable());
         A.CallTo(() => _userRepository.GetCompanyUserWithIamUserCheckAndCompanyShortName(_iamUser.UserEntityId, A<Guid>.That.Not.Matches(x => x == _companyUser.Id)))
-            .ReturnsLazily(() => new List<(Guid CompanyUserId, bool IsIamUser, string CompanyUserName, Guid CompanyId)>{new (_companyUser.Id, true, "COMPANYBPN", _companyUserCompanyId)}.ToAsyncEnumerable());
+            .ReturnsLazily(() => new List<(Guid CompanyUserId, bool IsIamUser, string CompanyUserName, Guid CompanyId)> { new(_companyUser.Id, true, "COMPANYBPN", _companyUserCompanyId) }.ToAsyncEnumerable());
         A.CallTo(() => _userRepository.GetCompanyUserWithIamUserCheckAndCompanyShortName(A<string>.That.Not.Matches(x => x == _iamUser.UserEntityId), _companyUser.Id))
-            .ReturnsLazily(() => new List<(Guid CompanyUserId, bool IsIamUser, string CompanyUserName, Guid CompanyId)>{new (_companyUser.Id, false, "OTHERCOMPANYBPN", _companyUserCompanyId)}.ToAsyncEnumerable());
+            .ReturnsLazily(() => new List<(Guid CompanyUserId, bool IsIamUser, string CompanyUserName, Guid CompanyId)> { new(_companyUser.Id, false, "OTHERCOMPANYBPN", _companyUserCompanyId) }.ToAsyncEnumerable());
         A.CallTo(() => _userRepository.GetCompanyUserWithIamUserCheckAndCompanyShortName(A<string>.That.Not.Matches(x => x == _iamUser.UserEntityId), A<Guid>.That.Not.Matches(x => x == _companyUser.Id)))
             .ReturnsLazily(() => new List<(Guid CompanyUserId, bool IsIamUser, string CompanyUserName, Guid CompanyId)>().ToAsyncEnumerable());
 
@@ -623,12 +623,15 @@ public class ServiceBusinessLogicTests
             .ReturnsLazily(() => (new CompanyInformationData(Guid.Empty, "The Company", "DE", "BPN00000001"), _companyUser.Id, "test@mail.de"));
         A.CallTo(() => _userRepository.GetOwnCompanyInformationWithCompanyUserIdAndEmailAsync(A<string>.That.Not.Matches(x => x == _iamUser.UserEntityId || x == _notAssignedCompanyIdUser)))
             .ReturnsLazily(() => (new CompanyInformationData(_companyUser.CompanyId, "The Company", "DE", "BPN00000001"), Guid.Empty, "test@mail.de"));
-        
+
         A.CallTo(() => _offerRepository.GetServiceDetailByIdUntrackedAsync(_existingServiceId, A<string>.That.Matches(x => x == "en"), A<string>._))
-            .ReturnsLazily(() => serviceDetail with {OfferSubscriptionDetailData = new []
+            .ReturnsLazily(() => serviceDetail with
+            {
+                OfferSubscriptionDetailData = new[]
             {
                 new OfferSubscriptionStateDetailData(Guid.NewGuid(), OfferSubscriptionStatusId.ACTIVE)
-            }});
+            }
+            });
         A.CallTo(() => _offerRepository.GetServiceDetailByIdUntrackedAsync(A<Guid>.That.Not.Matches(x => x == _existingServiceId), A<string>._, A<string>._))
             .ReturnsLazily(() => (ServiceDetailData?)null);
 

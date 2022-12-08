@@ -45,7 +45,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Bpn.Model
         [JsonPropertyName("profileClassifications")]
         public object[] ProfileClassifications { get; set; } = null!;
 
-        [JsonPropertyName("types")] 
+        [JsonPropertyName("types")]
         public Type[] Types { get; set; } = null!;
 
         [JsonPropertyName("bankAccounts")]
@@ -83,19 +83,19 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Bpn.Model
     {
         [JsonPropertyName("trustScores")]
         public double[] TrustScores { get; set; } = null!;
-        
+
         [JsonPropertyName("currencyCode")]
         public string CurrencyCode { get; set; } = null!;
-        
+
         [JsonPropertyName("internationalBankAccountIdentifier")]
         public string InternationalBankAccountIdentifier { get; set; } = null!;
-        
+
         [JsonPropertyName("internationalBankIdentifier")]
         public string InternationalBankIdentifier { get; set; } = null!;
-        
+
         [JsonPropertyName("nationalBankAccountIdentifier")]
         public string NationalBankAccountIdentifier { get; set; } = null!;
-        
+
         [JsonPropertyName("nationalBankIdentifier")]
         public string NationalBankIdentifier { get; set; } = null!;
     }
@@ -104,7 +104,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Bpn.Model
     {
         [JsonPropertyName("technicalKey")]
         public string TechnicalKey { get; set; } = null!;
-        
+
         [JsonPropertyName("name")]
         public string Name { get; set; } = null!;
     }
@@ -113,7 +113,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Bpn.Model
     {
         [JsonPropertyName("name")]
         public string Name { get; set; } = null!;
-        
+
         [JsonPropertyName("url")]
         public string Url { get; set; } = null!;
     }
@@ -122,13 +122,13 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Bpn.Model
     {
         [JsonPropertyName("officialDenotation")]
         public object OfficialDenotation { get; set; } = null!;
-        
+
         [JsonPropertyName("validFrom")]
         public DateTime? ValidFrom { get; set; }
-        
+
         [JsonPropertyName("validUntil")]
         public object ValidUntil { get; set; } = null!;
-        
+
         [JsonPropertyName("type")]
         public Type Type { get; set; } = null!;
     }
@@ -137,10 +137,10 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Bpn.Model
     {
         [JsonPropertyName("technicalKey")]
         public string TechnicalKey { get; set; } = null!;
-        
+
         [JsonPropertyName("name")]
         public string Name { get; set; } = null!;
-        
+
         [JsonPropertyName("url")]
         public string Url { get; set; } = null!;
     }
@@ -149,13 +149,13 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Bpn.Model
     {
         [JsonPropertyName("value")]
         public string Value { get; set; } = null!;
-        
+
         [JsonPropertyName("type")]
         public Type Type { get; set; } = null!;
-        
+
         [JsonPropertyName("issuingBody")]
         public Issuingbody IssuingBody { get; set; } = null!;
-        
+
         [JsonPropertyName("status")]
         public Status Status { get; set; } = null!;
     }
@@ -164,10 +164,10 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Bpn.Model
     {
         [JsonPropertyName("technicalKey")]
         public string TechnicalKey { get; set; } = null!;
-        
+
         [JsonPropertyName("name")]
         public string Name { get; set; } = null!;
-        
+
         [JsonPropertyName("url")]
         public string Url { get; set; } = null!;
     }
@@ -176,52 +176,52 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Bpn.Model
     {
         [JsonPropertyName("value")]
         public string Value { get; set; } = null!;
-        
+
         [JsonPropertyName("shortName")]
         public object ShortName { get; set; } = null!;
-        
+
         [JsonPropertyName("type")]
         public Type Type { get; set; } = null!;
-        
+
         [JsonPropertyName("language")]
         public Language Language { get; set; } = null!;
     }
-    
+
     public class Address
     {
         [JsonPropertyName("versions")]
         public Versions Versions { get; set; } = null!;
-        
+
         [JsonPropertyName("careOf")]
         public object CareOf { get; set; } = null!;
-        
+
         [JsonPropertyName("contexts")]
         public object[] Contexts { get; set; } = null!;
-        
+
         [JsonPropertyName("country")]
         public Country Country { get; set; } = null!;
-        
+
         [JsonPropertyName("administrativeAreas")]
         public Administrativearea[] AdministrativeAreas { get; set; } = null!;
-        
+
         [JsonPropertyName("postCodes")]
         public Postcode[] PostCodes { get; set; } = null!;
-        
+
         [JsonPropertyName("localities")]
         public Locality[] Localities { get; set; } = null!;
-        
+
         [JsonPropertyName("thoroughfares")]
         public Thoroughfare[] Thoroughfares { get; set; } = null!;
-        
+
         [JsonPropertyName("premises")]
         public Premis[] Premises { get; set; } = null!;
-        
+
         [JsonPropertyName("postalDeliveryPoints")]
         public Postaldeliverypoint[] PostalDeliveryPoints { get; set; } = null!;
-        
+
         [JsonPropertyName("geographicCoordinates")]
         public object GeographicCoordinates { get; set; } = null!;
-        
+
         [JsonPropertyName("types")]
         public Type[] Types { get; set; } = null!;
     }
@@ -230,13 +230,13 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Bpn.Model
     {
         [JsonPropertyName("type")]
         public string Type { get; set; } = null!;
-        
+
         [JsonPropertyName("value")]
         public string Value { get; set; } = null!;
-        
+
         [JsonPropertyName("shortName")]
         public string ShortName { get; set; } = null!;
-        
+
         [JsonPropertyName("number")]
         public int? Number { get; set; }
     }
@@ -245,13 +245,13 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Bpn.Model
     {
         [JsonPropertyName("type")]
         public string Type { get; set; } = null!;
-        
+
         [JsonPropertyName("value")]
         public string Value { get; set; } = null!;
-        
+
         [JsonPropertyName("shortName")]
         public string ShortName { get; set; } = null!;
-        
+
         [JsonPropertyName("number")]
         public int? Number { get; set; }
     }
@@ -260,7 +260,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Bpn.Model
     {
         [JsonPropertyName("characterSet")]
         public Characterset CharacterSet { get; set; } = null!;
-        
+
         [JsonPropertyName("language")]
         public Language Language { get; set; } = null!;
     }
@@ -269,7 +269,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Bpn.Model
     {
         [JsonPropertyName("technicalKey")]
         public string TechnicalKey { get; set; } = null!;
-        
+
         [JsonPropertyName("name")]
         public string Name { get; set; } = null!;
     }
@@ -278,7 +278,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Bpn.Model
     {
         [JsonPropertyName("technicalKey")]
         public string TechnicalKey { get; set; } = null!;
-        
+
         [JsonPropertyName("name")]
         public string Name { get; set; } = null!;
     }
@@ -287,16 +287,16 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Bpn.Model
     {
         [JsonPropertyName("value")]
         public string Value { get; set; } = null!;
-        
+
         [JsonPropertyName("shortName")]
         public string ShortName { get; set; } = null!;
-        
+
         [JsonPropertyName("fipsCode")]
         public string FipsCode { get; set; } = null!;
-        
+
         [JsonPropertyName("type")]
         public Type Type { get; set; } = null!;
-        
+
         [JsonPropertyName("language")]
         public Language Language { get; set; } = null!;
     }
@@ -305,7 +305,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Bpn.Model
     {
         [JsonPropertyName("value")]
         public string Value { get; set; } = null!;
-        
+
         [JsonPropertyName("type")]
         public Type Type { get; set; } = null!;
     }
@@ -314,31 +314,31 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Bpn.Model
     {
         [JsonPropertyName("value")]
         public string Value { get; set; } = null!;
-        
+
         [JsonPropertyName("shortName")]
         public object ShortName { get; set; } = null!;
-        
+
         [JsonPropertyName("type")]
         public Type Type { get; set; } = null!;
-        
+
         [JsonPropertyName("language")]
         public Language Language { get; set; } = null!;
     }
-    
+
     public class Thoroughfare
     {
         [JsonPropertyName("value")]
         public string Value { get; set; } = null!;
-        
+
         [JsonPropertyName("name")]
         public object Name { get; set; } = null!;
-        
+
         [JsonPropertyName("shortName")]
         public object ShortName { get; set; } = null!;
-        
+
         [JsonPropertyName("number")]
         public string Number { get; set; } = null!;
-        
+
         [JsonPropertyName("direction")]
         public object Direction { get; set; } = null!;
 
@@ -349,11 +349,4 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Bpn.Model
         public Language Language { get; set; } = null!;
     }
 }
-
-
-
-
-
-
-
 

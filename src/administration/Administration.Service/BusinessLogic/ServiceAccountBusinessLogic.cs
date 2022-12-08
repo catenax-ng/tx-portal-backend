@@ -18,6 +18,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
@@ -29,8 +31,6 @@ using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Service;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
 
@@ -40,7 +40,6 @@ public class ServiceAccountBusinessLogic : IServiceAccountBusinessLogic
     private readonly IPortalRepositories _portalRepositories;
     private readonly IServiceAccountCreation _serviceAccountCreation;
     private readonly ServiceAccountSettings _settings;
-    
 
     public ServiceAccountBusinessLogic(
         IProvisioningManager provisioningManager,
@@ -62,7 +61,7 @@ public class ServiceAccountBusinessLogic : IServiceAccountBusinessLogic
         }
         if (string.IsNullOrWhiteSpace(serviceAccountCreationInfos.Name))
         {
-            throw new ControllerArgumentException("name must not be empty","name");
+            throw new ControllerArgumentException("name must not be empty", "name");
         }
 
         var result = await _portalRepositories.GetInstance<IUserRepository>().GetCompanyIdAndBpnForIamUserUntrackedAsync(iamAdminId).ConfigureAwait(false);
@@ -101,7 +100,7 @@ public class ServiceAccountBusinessLogic : IServiceAccountBusinessLogic
             await _provisioningManager.DeleteCentralClientAsync(serviceAccount.IamServiceAccount.ClientId).ConfigureAwait(false);
             serviceAccountRepository.RemoveIamServiceAccount(serviceAccount.IamServiceAccount);
         }
-        foreach(var companyServiceAccountAssignedRole in serviceAccount.CompanyServiceAccountAssignedRoles)
+        foreach (var companyServiceAccountAssignedRole in serviceAccount.CompanyServiceAccountAssignedRoles)
         {
             serviceAccountRepository.RemoveCompanyServiceAccountAssignedRole(companyServiceAccountAssignedRole);
         }
@@ -124,9 +123,9 @@ public class ServiceAccountBusinessLogic : IServiceAccountBusinessLogic
             result.Description,
             authData.IamClientAuthMethod,
             result.UserRoleDatas)
-            {
-                Secret = authData.Secret
-            };
+        {
+            Secret = authData.Secret
+        };
     }
 
     public async Task<ServiceAccountDetails> ResetOwnCompanyServiceAccountSecretAsync(Guid serviceAccountId, string iamAdminId)
@@ -145,9 +144,9 @@ public class ServiceAccountBusinessLogic : IServiceAccountBusinessLogic
             result.Description,
             authData.IamClientAuthMethod,
             result.UserRoleDatas)
-            {
-                Secret = authData.Secret
-            };
+        {
+            Secret = authData.Secret
+        };
     }
 
     public async Task<ServiceAccountDetails> UpdateOwnCompanyServiceAccountDetailsAsync(Guid serviceAccountId, ServiceAccountEditableDetails serviceAccountEditableDetails, string iamAdminId)
@@ -158,7 +157,7 @@ public class ServiceAccountBusinessLogic : IServiceAccountBusinessLogic
         }
         if (serviceAccountId != serviceAccountEditableDetails.ServiceAccountId)
         {
-            throw new ArgumentException($"serviceAccountId {serviceAccountId} from path does not match the one in body {serviceAccountEditableDetails.ServiceAccountId}","serviceAccountId");
+            throw new ArgumentException($"serviceAccountId {serviceAccountId} from path does not match the one in body {serviceAccountEditableDetails.ServiceAccountId}", "serviceAccountId");
         }
         var result = await _portalRepositories.GetInstance<IServiceAccountRepository>().GetOwnCompanyServiceAccountWithIamClientIdAsync(serviceAccountId, iamAdminId).ConfigureAwait(false);
         if (result == null)
@@ -177,7 +176,7 @@ public class ServiceAccountBusinessLogic : IServiceAccountBusinessLogic
                 serviceAccountEditableDetails.Name,
                 serviceAccountEditableDetails.Description,
                 serviceAccountEditableDetails.IamClientAuthMethod)).ConfigureAwait(false);
-        
+
         var authData = await _provisioningManager.GetCentralClientAuthDataAsync(result.ClientId).ConfigureAwait(false);
 
         serviceAccount.Name = serviceAccountEditableDetails.Name;
@@ -218,5 +217,5 @@ public class ServiceAccountBusinessLogic : IServiceAccountBusinessLogic
     }
 
     public IAsyncEnumerable<UserRoleWithDescription> GetServiceAccountRolesAsync(string? languageShortName = null) =>
-        _portalRepositories.GetInstance<IUserRolesRepository>().GetServiceAccountRolesAsync(_settings.ClientId,languageShortName);
+        _portalRepositories.GetInstance<IUserRolesRepository>().GetServiceAccountRolesAsync(_settings.ClientId, languageShortName);
 }

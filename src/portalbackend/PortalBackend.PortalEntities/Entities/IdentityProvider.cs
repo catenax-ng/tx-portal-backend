@@ -24,11 +24,12 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entit
 
 public class IdentityProvider
 {
-    private IdentityProvider() {
+    private IdentityProvider()
+    {
         Companies = new HashSet<Company>();
         CompanyIdentityProviders = new HashSet<CompanyIdentityProvider>();
     }
-    
+
     public IdentityProvider(Guid id, IdentityProviderCategoryId identityProviderCategoryId, DateTimeOffset dateCreated) : this()
     {
         Id = id;

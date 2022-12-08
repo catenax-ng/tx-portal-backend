@@ -41,7 +41,7 @@ public class Country
     }
 
     [Key]
-    [StringLength(2,MinimumLength = 2)]
+    [StringLength(2, MinimumLength = 2)]
     public string Alpha2Code { get; private set; }
 
     [StringLength(3, MinimumLength = 3)]

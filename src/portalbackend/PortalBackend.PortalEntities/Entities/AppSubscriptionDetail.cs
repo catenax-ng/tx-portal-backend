@@ -41,13 +41,13 @@ public class AppSubscriptionDetail : IAuditableV1
     /// </summary>
     /// <param name="id">Id of the entity</param>
     /// <param name="offerSubscriptionId">Id of the offer subscription</param>
-    public AppSubscriptionDetail(Guid id, Guid offerSubscriptionId) 
+    public AppSubscriptionDetail(Guid id, Guid offerSubscriptionId)
         : this()
     {
         this.Id = id;
         this.OfferSubscriptionId = offerSubscriptionId;
     }
-    
+
     /// <summary>
     /// Id of the entity
     /// </summary>
@@ -62,13 +62,13 @@ public class AppSubscriptionDetail : IAuditableV1
     /// ID of the app instance.
     /// </summary>
     public Guid? AppInstanceId { get; set; }
-    
+
     [MaxLength(255)]
     public string? AppSubscriptionUrl { get; set; }
-    
+
     [AuditLastEditorV1]
     public Guid? LastEditorId { get; set; }
-    
+
     /// <summary>
     /// Subscribing app instance.
     /// </summary>

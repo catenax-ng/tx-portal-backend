@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -22,6 +22,7 @@ using AutoFixture;
 using AutoFixture.AutoFakeItEasy;
 using FakeItEasy;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Models;
@@ -31,10 +32,9 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared;
+using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared.Extensions;
 using System.Net;
 using System.Net.Http.Headers;
-using Microsoft.Extensions.Logging;
-using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared.Extensions;
 using Xunit;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Tests.BusinessLogic;
@@ -42,7 +42,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Tests.Busin
 public class SdFactoryServiceTests
 {
     #region Initialization
-    
+
     private readonly Guid _applicationId = new("ac1cf001-7fbc-1f2f-817f-bce058020001");
     private readonly IPortalRepositories _portalRepositories;
     private readonly IDocumentRepository _documentRepository;
@@ -70,9 +70,9 @@ public class SdFactoryServiceTests
     }
 
     #endregion
-    
+
     #region Register Connector
-    
+
     [Fact]
     public async Task RegisterConnectorAsync_WithValidData_CreatesDocumentInDatabase()
     {
@@ -124,7 +124,7 @@ public class SdFactoryServiceTests
     }
 
     [Fact]
-    public async Task  RegisterConnectorAsync_WithInvalidData_ThrowsException()
+    public async Task RegisterConnectorAsync_WithInvalidData_ThrowsException()
     {
         // Arrange
         var httpMessageHandlerMock = new HttpMessageHandlerMock(HttpStatusCode.BadRequest);
@@ -143,9 +143,9 @@ public class SdFactoryServiceTests
     }
 
     #endregion
-    
+
     #region RegisterSelfDescription
-    
+
     [Fact]
     public async Task RegisterSelfDescriptionAsync_WithValidData_CreatesDocumentInDatabase()
     {
@@ -196,7 +196,7 @@ public class SdFactoryServiceTests
     }
 
     [Fact]
-    public async Task  RegisterSelfDescriptionAsync_WithInvalidData_ThrowsException()
+    public async Task RegisterSelfDescriptionAsync_WithInvalidData_ThrowsException()
     {
         // Arrange
         var httpMessageHandlerMock = new HttpMessageHandlerMock(HttpStatusCode.BadRequest);
@@ -214,17 +214,17 @@ public class SdFactoryServiceTests
     }
 
     #endregion
-    
+
     #region Setup
 
     private void CreateHttpClient(HttpMessageHandler httpMessageHandlerMock)
     {
-        var httpClient = new HttpClient(httpMessageHandlerMock) {BaseAddress = new Uri(_options.Value.SdFactoryUrl)};
+        var httpClient = new HttpClient(httpMessageHandlerMock) { BaseAddress = new Uri(_options.Value.SdFactoryUrl) };
         A.CallTo(() => _httpClientFactory.CreateClient(A<string>._)).Returns(httpClient);
     }
 
     private void SetupRepositoryMethods()
-    { 
+    {
         A.CallTo(() => _documentRepository.CreateDocument(A<string>._, A<byte[]>._, A<byte[]>._, A<DocumentTypeId>._, A<Action<Document>?>._))
             .Invokes(x =>
             {
@@ -242,6 +242,6 @@ public class SdFactoryServiceTests
 
         A.CallTo(() => _portalRepositories.GetInstance<IDocumentRepository>()).Returns(_documentRepository);
     }
-    
+
     #endregion
 }

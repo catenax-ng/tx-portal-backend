@@ -38,7 +38,7 @@ public class DocumentsBusinessLogic : IDocumentsBusinessLogic
     /// </summary>
     public DocumentsBusinessLogic(IPortalRepositories portalRepositories)
     {
-    
+
         _portalRepositories = portalRepositories;
     }
 
@@ -53,7 +53,7 @@ public class DocumentsBusinessLogic : IDocumentsBusinessLogic
 
         return (document.DocumentName, document.DocumentContent);
     }
-    
+
     /// <inheritdoc />
     public async Task<bool> DeleteDocumentAsync(Guid documentId, string iamUserId)
     {

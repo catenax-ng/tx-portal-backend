@@ -27,10 +27,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
-  <Target Name="DotnetFormat" BeforeTargets="Build">
-    <Exec Command="dotnet format --verify-no-changes --no-restore"/>
-  </Target>
-
   <ItemGroup>
     <PackageReference Include="MailKit" Version="2.15.0" />
     <PackageReference Include="MimeKit" Version="2.15.1" />

@@ -42,7 +42,7 @@ public class BpdmService : IBpdmService
     /// <inheritdoc />
     public async Task<bool> TriggerBpnDataPush(BpdmTransferData data, CancellationToken cancellationToken)
     {
-        var httpClient = await GetBpdmHttpClient(cancellationToken).ConfigureAwait(false);        
+        var httpClient = await GetBpdmHttpClient(cancellationToken).ConfigureAwait(false);
 
         try
         {
@@ -76,7 +76,7 @@ public class BpdmService : IBpdmService
                         })
                 )
             };
-        
+
             var result = await httpClient.PutAsJsonAsync("api/catena/input/legal-entities", requestData, cancellationToken).ConfigureAwait(false);
             if (result.IsSuccessStatusCode)
                 return true;

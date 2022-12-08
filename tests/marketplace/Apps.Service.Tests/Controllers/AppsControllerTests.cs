@@ -219,7 +219,7 @@ public class AppsControllerTests
         A.CallTo(() => _logic.AddOwnCompanyAppSubscriptionAsync(serviceId, consentData, IamUserId, _accessToken)).MustHaveHappenedOnceExactly();
         Assert.IsType<NoContentResult>(result);
     }
-    
+
     [Fact]
     public async Task ActivateCompanyAppSubscriptionAsync_ReturnsNoContent()
     {
@@ -268,7 +268,7 @@ public class AppsControllerTests
         A.CallTo(() => _logic.GetCompanyProvidedAppsDataForUserAsync(IamUserId)).MustHaveHappenedOnceExactly();
         result.Should().HaveCount(5);
     }
-    
+
     [Fact]
     public async Task GetServiceAgreement_ReturnsExpected()
     {
@@ -296,7 +296,7 @@ public class AppsControllerTests
             new TechnicalUserInfoData(Guid.NewGuid(), "abcPW", "sa1"),
             new ClientInfoData(Guid.NewGuid().ToString())
         );
-        A.CallTo(() => _logic.AutoSetupAppAsync(A<OfferAutoSetupData>._, A<string>.That.Matches(x => x== IamUserId)))
+        A.CallTo(() => _logic.AutoSetupAppAsync(A<OfferAutoSetupData>._, A<string>.That.Matches(x => x == IamUserId)))
             .Returns(responseData);
 
         //Act
@@ -307,7 +307,7 @@ public class AppsControllerTests
         Assert.IsType<OfferAutoSetupResponseData>(result);
         result.Should().Be(responseData);
     }
-        
+
     [Fact]
     public async Task DeclineAppRequest_ReturnsNoContent()
     {

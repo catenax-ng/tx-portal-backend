@@ -18,11 +18,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Microsoft.EntityFrameworkCore;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
-using Microsoft.EntityFrameworkCore;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 
@@ -70,7 +70,7 @@ public class CompanyRepository : ICompanyRepository
             .AsNoTracking()
             .Where(iamUser => iamUser.UserEntityId == iamUserId)
             .Select(iamUser => iamUser!.CompanyUser!.Company)
-            .Select(company => new ValueTuple<string,Guid>(company!.Name, company.Id))
+            .Select(company => new ValueTuple<string, Guid>(company!.Name, company.Id))
             .SingleOrDefaultAsync();
 
     /// <inheritdoc />
@@ -121,11 +121,11 @@ public class CompanyRepository : ICompanyRepository
     public Task<(bool IsValidServicProviderDetailsId, bool IsSameCompany)> CheckProviderCompanyDetailsExistsForUser(string iamUserId, Guid providerCompanyDetailsId) =>
         _context.ProviderCompanyDetails.AsNoTracking()
             .Where(details => details.Id == providerCompanyDetailsId)
-            .Select(details => new ValueTuple<bool,bool>(
+            .Select(details => new ValueTuple<bool, bool>(
                 true,
                 details.Company!.CompanyUsers.Any(user => user.IamUser!.UserEntityId == iamUserId)))
             .SingleOrDefaultAsync();
-    
+
     /// <inheritdoc />
     public ProviderCompanyDetail CreateProviderCompanyDetail(Guid companyId, string dataUrl) =>
         _context.ProviderCompanyDetails.Add(new ProviderCompanyDetail(Guid.NewGuid(), companyId, dataUrl, DateTimeOffset.UtcNow)).Entity;
@@ -133,9 +133,9 @@ public class CompanyRepository : ICompanyRepository
     /// <inheritdoc />
     public Task<(ProviderDetailReturnData ProviderDetailReturnData, bool IsProviderCompany, bool IsCompanyUser)> GetProviderCompanyDetailAsync(Guid providerDetailDataId, CompanyRoleId companyRoleId, string iamUserId) =>
         _context.ProviderCompanyDetails
-            .Where(x => 
+            .Where(x =>
                 x.Id == providerDetailDataId)
-            .Select(x => new ValueTuple<ProviderDetailReturnData,bool,bool>(
+            .Select(x => new ValueTuple<ProviderDetailReturnData, bool, bool>(
                 new ProviderDetailReturnData(x.Id, x.CompanyId, x.AutoSetupUrl),
                 x.Company!.CompanyRoles.Any(companyRole => companyRole.Id == companyRoleId),
                 x.Company.CompanyUsers.Any(user => user.IamUser!.UserEntityId == iamUserId)))
@@ -147,7 +147,7 @@ public class CompanyRepository : ICompanyRepository
         var providerCompanyDetail = _context.Attach(new ProviderCompanyDetail(providerCompanyDetailId, Guid.Empty, null!, default)).Entity;
         setOptionalParameters.Invoke(providerCompanyDetail);
     }
-    
+
     /// <inheritdoc />
     public Task<string?> GetCompanyBpnByIdAsync(Guid companyId) =>
         _context.Companies.AsNoTracking()

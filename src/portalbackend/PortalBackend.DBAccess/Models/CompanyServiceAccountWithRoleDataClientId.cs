@@ -31,7 +31,7 @@ public class CompanyServiceAccountWithRoleDataClientId
         ClientClientId = clientClientId;
         UserRoleDatas = userRoleDatas;
     }
-    
+
     public CompanyServiceAccount CompanyServiceAccount { get; set; }
     public string ClientId;
     public string ClientClientId { get; set; }

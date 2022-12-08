@@ -91,13 +91,13 @@ public class NotificationController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public Task<Pagination.Response<NotificationDetailData>> GetNotifications(
         [FromQuery] int page = 0,
-        [FromQuery] int size = 15, 
+        [FromQuery] int size = 15,
         [FromQuery] bool? isRead = null,
         [FromQuery] NotificationTypeId? notificationTypeId = null,
         [FromQuery] NotificationTopicId? notificationTopicId = null,
         [FromQuery] bool onlyDueDate = false,
         [FromQuery] NotificationSorting? sorting = null) =>
-        this.WithIamUserId(userId => _logic.GetNotificationsAsync(page, size, userId, isRead, notificationTypeId, notificationTopicId, sorting));
+        this.WithIamUserId(userId => _logic.GetNotificationsAsync(page, size, userId, isRead, notificationTypeId, notificationTopicId, onlyDueDate, sorting));
 
     /// <summary>
     ///     Gets a notification for the logged in user
@@ -116,7 +116,7 @@ public class NotificationController : ControllerBase
     public Task<NotificationDetailData> GetNotification(
         [FromRoute] Guid notificationId) =>
         this.WithIamUserId(userId => _logic.GetNotificationDetailDataAsync(userId, notificationId));
-    
+
     /// <summary>
     /// Gets the notification count for the current logged in user
     /// </summary>
@@ -163,7 +163,8 @@ public class NotificationController : ControllerBase
     [HttpPut]
     [Route("{notificationId:guid}/read")]
     [Authorize(Roles = "view_notifications")]
-    [ProducesResponseType(typeof(int), StatusCodes.Status204NoContent)]   [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(int), StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
     public async Task<ActionResult> SetNotificationToRead([FromRoute] Guid notificationId, [FromQuery] bool isRead = true)
     {

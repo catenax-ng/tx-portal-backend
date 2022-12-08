@@ -46,7 +46,7 @@ public interface IDocumentRepository
     /// <param name="documentId">Id of the document</param>
     /// <returns>Returns the document</returns>
     Task<Document?> GetDocumentByIdAsync(Guid documentId);
-    
+
     Task<(Guid DocumentId, DocumentStatusId DocumentStatusId, IEnumerable<Guid> ConsentIds, bool IsSameUser)> GetDocumentDetailsForIdUntrackedAsync(Guid documentId, string iamUserId);
 
     /// <summary>
@@ -57,7 +57,7 @@ public interface IDocumentRepository
     /// <param name="iamUserId">Id of the user</param>
     /// <returns>A collection of documents</returns>
     Task<(bool IsApplicationAssignedUser, IEnumerable<UploadDocuments> Documents)> GetUploadedDocumentsAsync(Guid applicationId, DocumentTypeId documentTypeId, string iamUserId);
-    
+
     /// <summary>
     /// Gets the documents userid by the document id
     /// </summary>
@@ -70,7 +70,7 @@ public interface IDocumentRepository
     /// </summary>
     /// <param name="documentId">The documentId that should be removed</param>
     void RemoveDocument(Guid documentId);
-    
+
     /// <summary>
     /// Gets the documents and User by the document id
     /// </summary>

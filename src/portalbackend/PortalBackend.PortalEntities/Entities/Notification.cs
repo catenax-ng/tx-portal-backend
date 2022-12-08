@@ -47,7 +47,7 @@ public class Notification
     public Guid Id { get; private set; }
 
     public Guid ReceiverUserId { get; private set; }
-    
+
     public DateTimeOffset DateCreated { get; private set; }
 
     public string? Content { get; set; }

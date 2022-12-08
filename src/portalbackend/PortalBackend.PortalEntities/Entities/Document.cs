@@ -35,7 +35,7 @@ public class Document
         Offers = new HashSet<Offer>();
         Companies = new HashSet<Company>();
     }
-    
+
     public Document(Guid id, byte[] documentContent, byte[] documentHash, string documentName, DateTimeOffset dateCreated, DocumentStatusId documentStatusId, DocumentTypeId documentTypeId) : this()
     {
         Id = id;

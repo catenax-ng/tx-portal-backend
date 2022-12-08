@@ -40,7 +40,7 @@ builder.Services.AddDefaultServices<Program>(builder.Configuration, VERSION)
                 .AddPortalRepositories(builder.Configuration)
                 .AddProvisioningManager(builder.Configuration);
 
-builder.Services.AddTransient<IClientBusinessLogic,ClientBusinessLogic>();
+builder.Services.AddTransient<IClientBusinessLogic, ClientBusinessLogic>();
 
 builder.Build()
     .CreateApp<Program>("provisioning", VERSION)

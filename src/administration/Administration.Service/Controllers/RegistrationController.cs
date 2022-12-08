@@ -18,13 +18,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Authentication;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Controllers;
 
@@ -35,7 +35,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Controllers
 public class RegistrationController : ControllerBase
 {
     private readonly IRegistrationBusinessLogic _logic;
-    
+
     /// <summary>
     /// Creates a new instance of <see cref="RegistrationController"/>
     /// </summary>
@@ -62,7 +62,7 @@ public class RegistrationController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public Task<CompanyWithAddress> GetCompanyWithAddressAsync([FromRoute] Guid applicationId) =>
         _logic.GetCompanyWithAddressAsync(applicationId);
-    
+
     /// <summary>
     /// Get Application Detail by Company Name or Status
     /// </summary>
@@ -79,7 +79,7 @@ public class RegistrationController : ControllerBase
     [Authorize(Roles = "view_submitted_applications")]
     [Route("applications")]
     [ProducesResponseType(typeof(Pagination.Response<CompanyApplicationDetails>), StatusCodes.Status200OK)]
-    public Task<Pagination.Response<CompanyApplicationDetails>> GetApplicationDetailsAsync([FromQuery]int page, [FromQuery]int size, [FromQuery]string? companyName = null) =>
+    public Task<Pagination.Response<CompanyApplicationDetails>> GetApplicationDetailsAsync([FromQuery] int page, [FromQuery] int size, [FromQuery] string? companyName = null) =>
         _logic.GetCompanyApplicationDetailsAsync(page, size, companyName);
 
     /// <summary>
@@ -158,7 +158,6 @@ public class RegistrationController : ControllerBase
     public Task UpdateCompanyBpn([FromRoute] Guid applicationId, [FromRoute] string bpn) =>
         _logic.UpdateCompanyBpn(applicationId, bpn);
 
-    
     /// <summary>
     /// Approves the partner request
     /// </summary>

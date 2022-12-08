@@ -40,7 +40,7 @@ public class UserRepositoryTests : IAssemblyFixture<TestDbFixture>
 {
     private readonly TestDbFixture _dbTestDbFixture;
     private const string ValidIamUserId = "623770c5-cf38-4b9f-9a35-f8b9ae972e2d";
-    private readonly Guid ValidCompanyUser = new ("ac1cf001-7fbc-1f2f-817f-bce058020001");
+    private readonly Guid ValidCompanyUser = new("ac1cf001-7fbc-1f2f-817f-bce058020001");
     private readonly Guid _validOfferId = new("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4");
 
     public UserRepositoryTests(TestDbFixture testDbFixture)
@@ -128,9 +128,9 @@ public class UserRepositoryTests : IAssemblyFixture<TestDbFixture>
         var result = await sut.GetOwnCompanyAppUsersPaginationSourceAsync(
             _validOfferId,
             ValidIamUserId,
-            new [] { OfferSubscriptionStatusId.ACTIVE },
-            new [] { CompanyUserStatusId.ACTIVE, CompanyUserStatusId.INACTIVE },
-            new CompanyUserFilter(null, null, null, null, null))(0,15).ConfigureAwait(false);
+            new[] { OfferSubscriptionStatusId.ACTIVE },
+            new[] { CompanyUserStatusId.ACTIVE, CompanyUserStatusId.INACTIVE },
+            new CompanyUserFilter(null, null, null, null, null))(0, 15).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
@@ -148,9 +148,9 @@ public class UserRepositoryTests : IAssemblyFixture<TestDbFixture>
         var result = await sut.GetOwnCompanyAppUsersPaginationSourceAsync(
             _validOfferId,
             ValidIamUserId,
-            new [] { OfferSubscriptionStatusId.ACTIVE },
-            new [] { CompanyUserStatusId.INACTIVE },
-            new CompanyUserFilter(null, null, null, null, null))(0,15).ConfigureAwait(false);
+            new[] { OfferSubscriptionStatusId.ACTIVE },
+            new[] { CompanyUserStatusId.INACTIVE },
+            new CompanyUserFilter(null, null, null, null, null))(0, 15).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
@@ -168,9 +168,9 @@ public class UserRepositoryTests : IAssemblyFixture<TestDbFixture>
         var result = await sut.GetOwnCompanyAppUsersPaginationSourceAsync(
             _validOfferId,
             ValidIamUserId,
-            new [] { OfferSubscriptionStatusId.ACTIVE },
-            new [] { CompanyUserStatusId.ACTIVE, CompanyUserStatusId.INACTIVE, CompanyUserStatusId.DELETED },
-            new CompanyUserFilter(null, null, null, null, null))(0,15).ConfigureAwait(false);
+            new[] { OfferSubscriptionStatusId.ACTIVE },
+            new[] { CompanyUserStatusId.ACTIVE, CompanyUserStatusId.INACTIVE, CompanyUserStatusId.DELETED },
+            new CompanyUserFilter(null, null, null, null, null))(0, 15).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
@@ -188,9 +188,9 @@ public class UserRepositoryTests : IAssemblyFixture<TestDbFixture>
         var result = await sut.GetOwnCompanyAppUsersPaginationSourceAsync(
             _validOfferId,
             Guid.NewGuid().ToString(),
-            new [] { OfferSubscriptionStatusId.ACTIVE },
-            new [] { CompanyUserStatusId.ACTIVE, CompanyUserStatusId.INACTIVE },
-            new CompanyUserFilter(null, null, null, null, null))(0,15).ConfigureAwait(false);
+            new[] { OfferSubscriptionStatusId.ACTIVE },
+            new[] { CompanyUserStatusId.ACTIVE, CompanyUserStatusId.INACTIVE },
+            new CompanyUserFilter(null, null, null, null, null))(0, 15).ConfigureAwait(false);
 
         // Assert
         result.Should().BeNull();
@@ -256,11 +256,11 @@ public class UserRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var (sut, _) = await CreateSut().ConfigureAwait(false);
-        Guid applicatiodId = new Guid("4829b64c-de6a-426c-81fc-c0bcf95bcb76");
+        var applicatiodId = new Guid("4829b64c-de6a-426c-81fc-c0bcf95bcb76");
         // Act
-        var result = await sut.GetRegistrationDataUntrackedAsync(applicatiodId, ValidIamUserId, new [] { DocumentTypeId.CX_FRAME_CONTRACT, DocumentTypeId.COMMERCIAL_REGISTER_EXTRACT }).ConfigureAwait(false);
+        var result = await sut.GetRegistrationDataUntrackedAsync(applicatiodId, ValidIamUserId, new[] { DocumentTypeId.CX_FRAME_CONTRACT, DocumentTypeId.COMMERCIAL_REGISTER_EXTRACT }).ConfigureAwait(false);
         // Assert
-        
+
         result.Should().NotBeNull();
         result!.Documents.Should().NotBeNull();
     }
@@ -274,10 +274,10 @@ public class UserRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var (sut, _) = await CreateSut().ConfigureAwait(false);
-        
+
         // Act        
         var result = await sut.GetCompanyUserWithIamUserCheckAndCompanyShortName(ValidIamUserId, null).ToListAsync().ConfigureAwait(false);
-        
+
         // Assert
         result.Should().HaveCount(1);
     }
@@ -287,10 +287,10 @@ public class UserRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var (sut, _) = await CreateSut().ConfigureAwait(false);
-        
+
         // Act        
         var result = await sut.GetCompanyUserWithIamUserCheckAndCompanyShortName(string.Empty, null).ToListAsync().ConfigureAwait(false);
-        
+
         // Assert
         result.Should().BeEmpty();
     }
@@ -300,10 +300,10 @@ public class UserRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var (sut, _) = await CreateSut().ConfigureAwait(false);
-        
+
         // Act        
         var result = await sut.GetCompanyUserWithIamUserCheckAndCompanyShortName(string.Empty, ValidCompanyUser).ToListAsync().ConfigureAwait(false);
-        
+
         // Assert
         result.Should().HaveCount(1);
     }
@@ -313,10 +313,10 @@ public class UserRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var (sut, _) = await CreateSut().ConfigureAwait(false);
-        
+
         // Act        
         var result = await sut.GetCompanyUserWithIamUserCheckAndCompanyShortName(ValidIamUserId, ValidCompanyUser).ToListAsync().ConfigureAwait(false);
-        
+
         // Assert
         result.Should().HaveCount(2);
     }

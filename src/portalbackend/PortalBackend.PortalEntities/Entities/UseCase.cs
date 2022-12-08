@@ -32,7 +32,7 @@ public class UseCase
         Companies = new HashSet<Company>();
         Apps = new HashSet<Offer>();
     }
-    
+
     public UseCase(Guid id, string name, string shortname) : this()
     {
         Id = id;

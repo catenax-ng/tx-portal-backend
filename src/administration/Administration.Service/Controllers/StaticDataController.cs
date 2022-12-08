@@ -18,11 +18,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
-using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
+using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Authentication;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Controllers;
 
@@ -45,7 +45,7 @@ public class StaticDataController : ControllerBase
     {
         _logic = logic;
     }
-    
+
     /// <summary>
     /// Retrieves all Use Case Data
     /// </summary>
@@ -60,7 +60,7 @@ public class StaticDataController : ControllerBase
     [ProducesResponseType(typeof(IAsyncEnumerable<UseCaseData>), StatusCodes.Status200OK)]
     public IAsyncEnumerable<UseCaseData> GetUseCases() =>
         _logic.GetAllUseCase();
-    
+
     /// <summary>
     /// Retrieve all app language tags - short name (2digit) and long name
     /// </summary>

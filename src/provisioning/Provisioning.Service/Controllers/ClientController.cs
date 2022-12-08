@@ -18,11 +18,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using System.Net;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Service.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Service.Models;
+using System.Net;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Provisioning.Service.Controllers
 {
@@ -58,7 +58,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Provisioning.Service.Controllers
         /// <remarks>Example: Get: /api/provisioning/client/setup</remarks>
         /// <response code="200">Successfully created the client.</response>
         [HttpPost]
-        [Authorize(Roles="setup_client")]
+        [Authorize(Roles = "setup_client")]
         [Route("client/setup")]
         [ProducesResponseType(typeof(IAsyncEnumerable<string>), StatusCodes.Status200OK)]
         public async Task<IActionResult> CreateClient([FromBody] ClientSetupData clientSetupData)

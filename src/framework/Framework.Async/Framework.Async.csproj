@@ -25,9 +25,4 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
-
-  <Target Name="DotnetFormat" BeforeTargets="Build">
-    <Exec Command="dotnet format --verify-no-changes --no-restore"/>
-  </Target>
-
 </Project>

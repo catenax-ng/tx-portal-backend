@@ -18,15 +18,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Org.Eclipse.TractusX.Portal.Backend.Framework.Cors;
-using Org.Eclipse.TractusX.Portal.Backend.Framework.Swagger;
-using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Authentication;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Cors;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Swagger;
+using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Authentication;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text.Json.Serialization;
 
@@ -39,7 +39,8 @@ public static class StartupServiceExtensions
         services.AddCors(options => options.SetupCors(configuration));
 
         services.AddControllers()
-            .AddJsonOptions(options => {
+            .AddJsonOptions(options =>
+            {
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false));
             });
 
@@ -49,13 +50,14 @@ public static class StartupServiceExtensions
         {
             x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
             x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        }).AddJwtBearer(options => {
+        }).AddJwtBearer(options =>
+        {
             configuration.Bind("JwtBearerOptions", options);
             if (!options.RequireHttpsMetadata)
             {
                 options.BackchannelHttpHandler = new HttpClientHandler
                 {
-                    ServerCertificateCustomValidationCallback = (_,_,_,_) => true
+                    ServerCertificateCustomValidationCallback = (_, _, _, _) => true
                 };
             }
         });
@@ -70,7 +72,7 @@ public static class StartupServiceExtensions
         return services;
     }
 
-    public static IServiceCollection AddCustomAuthorization(this IServiceCollection services, IConfiguration configuration) =>
+    public static IServiceCollection AddCustomAuthorization(this IServiceCollection services) =>
         services.AddTransient<IAuthorizationHandler, ClaimRequestPathHandler>()
             .AddAuthorization(option =>
             {

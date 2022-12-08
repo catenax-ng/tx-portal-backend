@@ -26,7 +26,7 @@ public record UserCreationInfoIdp(
 
     [property: JsonPropertyName("firstName")]
     string FirstName,
-    
+
     [property: JsonPropertyName("lastName")]
     string LastName,
 

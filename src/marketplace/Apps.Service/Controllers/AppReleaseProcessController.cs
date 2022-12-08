@@ -41,7 +41,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.Controllers;
 public class AppReleaseProcessController : ControllerBase
 {
     private readonly IAppReleaseBusinessLogic _appReleaseBusinessLogic;
-    
+
     /// <summary>
     /// Constructor
     /// </summary>
@@ -50,7 +50,7 @@ public class AppReleaseProcessController : ControllerBase
     {
         _appReleaseBusinessLogic = appReleaseBusinessLogic;
     }
-    
+
     /// <summary>
     /// Add app details to a newly created owned app under the app release/publishing process.
     /// </summary>
@@ -66,7 +66,7 @@ public class AppReleaseProcessController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    public async Task<NoContentResult> UpdateApp([FromRoute] Guid appId, [FromBody] AppEditableDetail updateModel) 
+    public async Task<NoContentResult> UpdateApp([FromRoute] Guid appId, [FromBody] AppEditableDetail updateModel)
     {
         await this.WithIamUserId(userId => _appReleaseBusinessLogic.UpdateAppAsync(appId, updateModel, userId)).ConfigureAwait(false);
         return NoContent();
@@ -97,7 +97,7 @@ public class AppReleaseProcessController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status415UnsupportedMediaType)]
     public Task<int> UpdateAppDocumentAsync([FromRoute] Guid appId, [FromRoute] DocumentTypeId documentTypeId, [FromForm(Name = "document")] IFormFile document, CancellationToken cancellationToken) =>
          this.WithIamUserId(iamUserId => _appReleaseBusinessLogic.CreateAppDocumentAsync(appId, documentTypeId, document, iamUserId, cancellationToken));
-    
+
     /// <summary>
     /// Add role and role description for App 
     /// </summary>
@@ -113,7 +113,7 @@ public class AppReleaseProcessController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<AppRoleData>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    public async Task<IEnumerable<AppRoleData>> AddAppUserRole([FromRoute] Guid appId, [FromBody] IEnumerable<AppUserRole> appAssignedDesc)=>
+    public async Task<IEnumerable<AppRoleData>> AddAppUserRole([FromRoute] Guid appId, [FromBody] IEnumerable<AppUserRole> appAssignedDesc) =>
          await this.WithIamUserId(iamUserId => _appReleaseBusinessLogic.AddAppUserRoleAsync(appId, appAssignedDesc, iamUserId)).ConfigureAwait(false);
 
     /// <summary>
@@ -127,7 +127,7 @@ public class AppReleaseProcessController : ControllerBase
     [ProducesResponseType(typeof(IAsyncEnumerable<AgreementData>), StatusCodes.Status200OK)]
     public IAsyncEnumerable<AgreementData> GetOfferAgreementDataAsync() =>
         _appReleaseBusinessLogic.GetOfferAgreementDataAsync();
-    
+
     /// <summary>
     /// Gets the agreement consent status for the given app id
     /// </summary>
@@ -161,7 +161,7 @@ public class AppReleaseProcessController : ControllerBase
     public Task<int> SubmitOfferConsentToAgreementsAsync([FromRoute] Guid appId, [FromBody] OfferAgreementConsent offerAgreementConsents) =>
         this.WithIamUserId(iamUserId =>
             _appReleaseBusinessLogic.SubmitOfferConsentAsync(appId, offerAgreementConsents, iamUserId));
-    
+
     /// <summary>
     /// Return app detail with status
     /// </summary>
@@ -176,7 +176,7 @@ public class AppReleaseProcessController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public Task<OfferProviderResponse> GetAppDetailsForStatusAsync([FromRoute] Guid appId) =>
         this.WithIamUserId(iamUserId => _appReleaseBusinessLogic.GetAppDetailsForStatusAsync(appId, iamUserId));
-    
+
     /// <summary>
     /// Removes a role from persistence layer by appId and roleId.
     /// </summary>
@@ -195,7 +195,7 @@ public class AppReleaseProcessController : ControllerBase
         await this.WithIamUserId(iamUserId => _appReleaseBusinessLogic.DeleteAppRoleAsync(appId, roleId, iamUserId));
         return NoContent();
     }
-    
+
     /// <summary>
     /// Get All Users with Role of Sales Manager
     /// </summary>
@@ -221,11 +221,11 @@ public class AppReleaseProcessController : ControllerBase
     [Authorize(Roles = "add_apps")]
     [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ErrorResponse),StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<CreatedAtRouteResult> ExecuteAppCreation([FromBody] AppRequestModel appRequestModel)
     {
         var appId = await this.WithIamUserId(iamUserId => _appReleaseBusinessLogic.AddAppAsync(appRequestModel, iamUserId).ConfigureAwait(false));
-        return CreatedAtRoute(nameof(AppsController.GetAppDetailsByIdAsync), new {controller = "Apps", appId = appId}, appId);
+        return CreatedAtRoute(nameof(AppsController.GetAppDetailsByIdAsync), new { controller = "Apps", appId = appId }, appId);
     }
 
     /// <summary>
@@ -284,7 +284,7 @@ public class AppReleaseProcessController : ControllerBase
         await this.WithIamUserId(userId => _appReleaseBusinessLogic.SubmitAppReleaseRequestAsync(appId, userId)).ConfigureAwait(false);
         return NoContent();
     }
-    
+
     /// <summary>
     /// dd role and role description for Active App 
     /// </summary>
@@ -300,9 +300,9 @@ public class AppReleaseProcessController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<AppRoleData>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    public async Task<IEnumerable<AppRoleData>> AddActiveAppUserRole([FromRoute] Guid appId, [FromBody] IEnumerable<AppUserRole> appAssignedDesc)=>
+    public async Task<IEnumerable<AppRoleData>> AddActiveAppUserRole([FromRoute] Guid appId, [FromBody] IEnumerable<AppUserRole> appAssignedDesc) =>
          await this.WithIamUserId(iamUserId => _appReleaseBusinessLogic.AddActiveAppUserRoleAsync(appId, appAssignedDesc, iamUserId)).ConfigureAwait(false);
-    
+
     /// <summary>
     /// Approve App to change status from IN_REVIEW to Active and create notification
     /// </summary>

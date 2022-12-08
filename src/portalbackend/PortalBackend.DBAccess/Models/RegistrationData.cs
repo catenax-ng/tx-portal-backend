@@ -18,8 +18,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using System.Text.Json.Serialization;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using System.Text.Json.Serialization;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models
 {
@@ -79,7 +79,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models
         [JsonPropertyName("agreements")]
         public IEnumerable<AgreementConsentStatusForRegistrationData> AgreementConsentStatuses { get; set; }
         public IEnumerable<RegistrationDocumentNames> Documents { get; set; }
-
     }
 
     public class AgreementConsentStatusForRegistrationData
@@ -90,7 +89,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models
             ConsentStatusId = consentStatusId;
         }
 
-        private AgreementConsentStatusForRegistrationData() {}
+        private AgreementConsentStatusForRegistrationData() { }
 
         [JsonPropertyName("agreementId")]
         public Guid AgreementId { get; set; }
@@ -98,5 +97,4 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models
         [JsonPropertyName("consentStatus")]
         public ConsentStatusId ConsentStatusId { get; set; }
     }
-
 }

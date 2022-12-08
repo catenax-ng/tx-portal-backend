@@ -18,9 +18,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Keycloak.Factory;
 
@@ -46,7 +46,10 @@ public class KeycloakSettings
         }
 
         if ((User != null && Password != null) ||
-            (ClientId != null && ClientSecret != null)) return;
+            (ClientId != null && ClientSecret != null))
+        {
+            return;
+        }
 
         new ConfigurationValidation<KeycloakSettings>()
             .NotNullOrWhiteSpace(User, () => nameof(User))

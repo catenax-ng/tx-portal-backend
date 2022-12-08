@@ -18,16 +18,16 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using System;
-using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
 using AutoFixture;
 using AutoFixture.AutoFakeItEasy;
 using FakeItEasy;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling.Tests;
@@ -54,10 +54,10 @@ public class GeneralHttpErrorHandlerTests
         var logger = A.Fake<ILogger<GeneralHttpErrorHandler>>();
 
         var generalHttpErrorHandler = new GeneralHttpErrorHandler(MockNextMiddleware, logger);
-        
+
         // Act
         await generalHttpErrorHandler.Invoke(httpContext);
-        
+
         // Assert
         ((HttpStatusCode)httpContext.Response.StatusCode).Should().Be(HttpStatusCode.BadRequest);
     }
@@ -72,10 +72,10 @@ public class GeneralHttpErrorHandlerTests
         var logger = A.Fake<ILogger<GeneralHttpErrorHandler>>();
 
         var generalHttpErrorHandler = new GeneralHttpErrorHandler(MockNextMiddleware, logger);
-        
+
         // Act
         await generalHttpErrorHandler.Invoke(httpContext);
-        
+
         // Assert
         ((HttpStatusCode)httpContext.Response.StatusCode).Should().Be(HttpStatusCode.Forbidden);
     }
@@ -90,10 +90,10 @@ public class GeneralHttpErrorHandlerTests
         var logger = A.Fake<ILogger<GeneralHttpErrorHandler>>();
 
         var generalHttpErrorHandler = new GeneralHttpErrorHandler(MockNextMiddleware, logger);
-        
+
         // Act
         await generalHttpErrorHandler.Invoke(httpContext);
-        
+
         // Assert
         ((HttpStatusCode)httpContext.Response.StatusCode).Should().Be(HttpStatusCode.NotFound);
     }
@@ -108,10 +108,10 @@ public class GeneralHttpErrorHandlerTests
         var logger = A.Fake<ILogger<GeneralHttpErrorHandler>>();
 
         var generalHttpErrorHandler = new GeneralHttpErrorHandler(MockNextMiddleware, logger);
-        
+
         // Act
         await generalHttpErrorHandler.Invoke(httpContext);
-        
+
         // Assert
         ((HttpStatusCode)httpContext.Response.StatusCode).Should().Be(HttpStatusCode.UnsupportedMediaType);
     }
@@ -126,10 +126,10 @@ public class GeneralHttpErrorHandlerTests
         var logger = A.Fake<ILogger<GeneralHttpErrorHandler>>();
 
         var generalHttpErrorHandler = new GeneralHttpErrorHandler(MockNextMiddleware, logger);
-        
+
         // Act
         await generalHttpErrorHandler.Invoke(httpContext);
-        
+
         // Assert
         ((HttpStatusCode)httpContext.Response.StatusCode).Should().Be(HttpStatusCode.BadGateway);
     }

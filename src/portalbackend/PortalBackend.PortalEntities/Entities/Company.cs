@@ -43,7 +43,7 @@ public class Company
         ProvidedConnectors = new HashSet<Connector>();
         HostedConnectors = new HashSet<Connector>();
     }
-    
+
     public Company(Guid id, string name, CompanyStatusId companyStatusId, DateTimeOffset dateCreated) : this()
     {
         Id = id;
@@ -76,7 +76,7 @@ public class Company
 
     // Navigation properties
     public virtual Address? Address { get; set; }
-    
+
     public virtual ProviderCompanyDetail? ProviderCompanyDetail { get; private set; }
     public virtual ICollection<Agreement> Agreements { get; private set; }
     public virtual ICollection<Offer> BoughtOffers { get; private set; }

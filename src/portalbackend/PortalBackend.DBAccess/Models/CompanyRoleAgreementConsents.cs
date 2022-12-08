@@ -52,7 +52,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models
             ConsentStatusId = consentStatusId;
         }
 
-        private AgreementConsentStatus() {}
+        private AgreementConsentStatus() { }
 
         [JsonPropertyName("agreementId")]
         public Guid AgreementId { get; set; }

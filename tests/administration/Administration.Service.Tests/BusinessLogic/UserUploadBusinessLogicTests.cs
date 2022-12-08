@@ -45,7 +45,7 @@ public class UserUploadBusinessLogicTests
     private readonly string _clientId;
     private readonly UserSettings _settings;
     private readonly Encoding _encoding;
-    private readonly Func<UserCreationRoleDataIdpInfo,(Guid CompanyUserId, string UserName, string? Password, Exception? Error)> _processLine;
+    private readonly Func<UserCreationRoleDataIdpInfo, (Guid CompanyUserId, string UserName, string? Password, Exception? Error)> _processLine;
     private readonly Exception _error;
     private readonly Random _random;
 
@@ -68,7 +68,7 @@ public class UserUploadBusinessLogicTests
         _settings = _fixture.Build<UserSettings>().With(x => x.Portal, _fixture.Build<UserSetting>().With(x => x.KeyCloakClientID, _clientId).Create()).Create();
         _encoding = _fixture.Create<Encoding>();
 
-        _processLine = A.Fake<Func<UserCreationRoleDataIdpInfo,(Guid CompanyUserId, string UserName, string? Password, Exception? Error)>>();
+        _processLine = A.Fake<Func<UserCreationRoleDataIdpInfo, (Guid CompanyUserId, string UserName, string? Password, Exception? Error)>>();
 
         _error = _fixture.Create<TestException>();
     }
@@ -77,9 +77,9 @@ public class UserUploadBusinessLogicTests
     [Fact]
     public async Task TestSetup()
     {
-        SetupFakes(new [] { HeaderLine() });
+        SetupFakes(new[] { HeaderLine() });
 
-        var sut = new UserUploadBusinessLogic(_userProvisioningService,_options);
+        var sut = new UserUploadBusinessLogic(_userProvisioningService, _options);
 
         var result = await sut.UploadOwnCompanyIdpUsersAsync(_identityProviderId, _document, _iamUserId, CancellationToken.None).ConfigureAwait(false);
 
@@ -94,7 +94,7 @@ public class UserUploadBusinessLogicTests
     [Fact]
     public async Task TestUserCreationAllSuccess()
     {
-        SetupFakes(new [] {
+        SetupFakes(new[] {
             HeaderLine(),
             NextLine(),
             NextLine(),
@@ -103,7 +103,7 @@ public class UserUploadBusinessLogicTests
             NextLine()
         });
 
-        var sut = new UserUploadBusinessLogic(_userProvisioningService,_options);
+        var sut = new UserUploadBusinessLogic(_userProvisioningService, _options);
 
         var result = await sut.UploadOwnCompanyIdpUsersAsync(_identityProviderId, _document, _iamUserId, CancellationToken.None).ConfigureAwait(false);
 
@@ -119,7 +119,7 @@ public class UserUploadBusinessLogicTests
     {
         var invalidHeader = _fixture.Create<string>();
 
-        SetupFakes(new [] {
+        SetupFakes(new[] {
             invalidHeader,
             NextLine(),
             NextLine(),
@@ -128,7 +128,7 @@ public class UserUploadBusinessLogicTests
             NextLine()
         });
 
-        var sut = new UserUploadBusinessLogic(_userProvisioningService,_options);
+        var sut = new UserUploadBusinessLogic(_userProvisioningService, _options);
 
         async Task Act() => await sut.UploadOwnCompanyIdpUsersAsync(_identityProviderId, _document, _iamUserId, CancellationToken.None).ConfigureAwait(false);
 
@@ -141,7 +141,7 @@ public class UserUploadBusinessLogicTests
     {
         var creationInfo = _fixture.Create<UserCreationRoleDataIdpInfo>();
 
-        SetupFakes(new [] {
+        SetupFakes(new[] {
             HeaderLine(),
             NextLine(),
             NextLine(),
@@ -158,7 +158,7 @@ public class UserUploadBusinessLogicTests
                     .With(x => x.Error, _error)
                     .Create());
 
-        var sut = new UserUploadBusinessLogic(_userProvisioningService,_options);
+        var sut = new UserUploadBusinessLogic(_userProvisioningService, _options);
 
         var result = await sut.UploadOwnCompanyIdpUsersAsync(_identityProviderId, _document, _iamUserId, CancellationToken.None).ConfigureAwait(false);
 
@@ -175,7 +175,7 @@ public class UserUploadBusinessLogicTests
     [Fact]
     public async Task TestUserCreationParsingError()
     {
-        SetupFakes(new [] {
+        SetupFakes(new[] {
             HeaderLine(),
             NextLine(),
             NextLine(),
@@ -184,7 +184,7 @@ public class UserUploadBusinessLogicTests
             NextLine()
         });
 
-        var sut = new UserUploadBusinessLogic(_userProvisioningService,_options);
+        var sut = new UserUploadBusinessLogic(_userProvisioningService, _options);
 
         var result = await sut.UploadOwnCompanyIdpUsersAsync(_identityProviderId, _document, _iamUserId, CancellationToken.None).ConfigureAwait(false);
 
@@ -201,7 +201,7 @@ public class UserUploadBusinessLogicTests
     {
         var creationInfo = _fixture.Create<UserCreationRoleDataIdpInfo>();
 
-        SetupFakes(new [] {
+        SetupFakes(new[] {
             HeaderLine(),
             NextLine(),
             NextLine(),
@@ -213,7 +213,7 @@ public class UserUploadBusinessLogicTests
         A.CallTo(() => _processLine(A<UserCreationRoleDataIdpInfo>.That.Matches(info => CreationInfoMatches(info, creationInfo))))
             .Throws(_error);
 
-        var sut = new UserUploadBusinessLogic(_userProvisioningService,_options);
+        var sut = new UserUploadBusinessLogic(_userProvisioningService, _options);
 
         var result = await sut.UploadOwnCompanyIdpUsersAsync(_identityProviderId, _document, _iamUserId, CancellationToken.None).ConfigureAwait(false);
 
@@ -234,13 +234,13 @@ public class UserUploadBusinessLogicTests
     [Fact]
     public async Task TestSetupSharedIdp()
     {
-        SetupFakes(new [] { HeaderLineSharedIdp() });
+        SetupFakes(new[] { HeaderLineSharedIdp() });
 
-        var sut = new UserUploadBusinessLogic(_userProvisioningService,_options);
+        var sut = new UserUploadBusinessLogic(_userProvisioningService, _options);
 
         var result = await sut.UploadOwnCompanySharedIdpUsersAsync(_document, _iamUserId, CancellationToken.None).ConfigureAwait(false);
 
-        A.CallTo(() => _userProvisioningService.GetCompanyNameSharedIdpAliasData(A<string>.That.IsEqualTo(_iamUserId),A<Guid?>._)).MustHaveHappened();
+        A.CallTo(() => _userProvisioningService.GetCompanyNameSharedIdpAliasData(A<string>.That.IsEqualTo(_iamUserId), A<Guid?>._)).MustHaveHappened();
         result.Should().NotBeNull();
         result.Created.Should().Be(0);
         result.Error.Should().Be(0);
@@ -251,7 +251,7 @@ public class UserUploadBusinessLogicTests
     [Fact]
     public async Task TestUserCreationSharedIdpAllSuccess()
     {
-        SetupFakes(new [] {
+        SetupFakes(new[] {
             HeaderLineSharedIdp(),
             NextLineSharedIdp(),
             NextLineSharedIdp(),
@@ -260,7 +260,7 @@ public class UserUploadBusinessLogicTests
             NextLineSharedIdp()
         });
 
-        var sut = new UserUploadBusinessLogic(_userProvisioningService,_options);
+        var sut = new UserUploadBusinessLogic(_userProvisioningService, _options);
 
         var result = await sut.UploadOwnCompanySharedIdpUsersAsync(_document, _iamUserId, CancellationToken.None).ConfigureAwait(false);
 
@@ -276,7 +276,7 @@ public class UserUploadBusinessLogicTests
     {
         var invalidHeader = _fixture.Create<string>();
 
-        SetupFakes(new [] {
+        SetupFakes(new[] {
             invalidHeader,
             NextLineSharedIdp(),
             NextLineSharedIdp(),
@@ -285,7 +285,7 @@ public class UserUploadBusinessLogicTests
             NextLineSharedIdp()
         });
 
-        var sut = new UserUploadBusinessLogic(_userProvisioningService,_options);
+        var sut = new UserUploadBusinessLogic(_userProvisioningService, _options);
 
         async Task Act() => await sut.UploadOwnCompanySharedIdpUsersAsync(_document, _iamUserId, CancellationToken.None).ConfigureAwait(false);
 
@@ -298,7 +298,7 @@ public class UserUploadBusinessLogicTests
     {
         var creationInfo = _fixture.Create<UserCreationRoleDataIdpInfo>();
 
-        SetupFakes(new [] {
+        SetupFakes(new[] {
             HeaderLineSharedIdp(),
             NextLineSharedIdp(),
             NextLineSharedIdp(),
@@ -315,7 +315,7 @@ public class UserUploadBusinessLogicTests
                     .With(x => x.Error, _error)
                     .Create());
 
-        var sut = new UserUploadBusinessLogic(_userProvisioningService,_options);
+        var sut = new UserUploadBusinessLogic(_userProvisioningService, _options);
 
         var result = await sut.UploadOwnCompanySharedIdpUsersAsync(_document, _iamUserId, CancellationToken.None).ConfigureAwait(false);
 
@@ -332,7 +332,7 @@ public class UserUploadBusinessLogicTests
     [Fact]
     public async Task TestUserCreationSharedIdpParsingError()
     {
-        SetupFakes(new [] {
+        SetupFakes(new[] {
             HeaderLineSharedIdp(),
             NextLineSharedIdp(),
             NextLineSharedIdp(),
@@ -341,7 +341,7 @@ public class UserUploadBusinessLogicTests
             NextLineSharedIdp()
         });
 
-        var sut = new UserUploadBusinessLogic(_userProvisioningService,_options);
+        var sut = new UserUploadBusinessLogic(_userProvisioningService, _options);
 
         var result = await sut.UploadOwnCompanySharedIdpUsersAsync(_document, _iamUserId, CancellationToken.None).ConfigureAwait(false);
 
@@ -358,7 +358,7 @@ public class UserUploadBusinessLogicTests
     {
         var creationInfo = _fixture.Create<UserCreationRoleDataIdpInfo>();
 
-        SetupFakes(new [] {
+        SetupFakes(new[] {
             HeaderLineSharedIdp(),
             NextLineSharedIdp(),
             NextLineSharedIdp(),
@@ -370,7 +370,7 @@ public class UserUploadBusinessLogicTests
         A.CallTo(() => _processLine(A<UserCreationRoleDataIdpInfo>.That.Matches(info => CreationInfoMatchesSharedIdp(info, creationInfo))))
             .Throws(_error);
 
-        var sut = new UserUploadBusinessLogic(_userProvisioningService,_options);
+        var sut = new UserUploadBusinessLogic(_userProvisioningService, _options);
 
         var result = await sut.UploadOwnCompanySharedIdpUsersAsync(_document, _iamUserId, CancellationToken.None).ConfigureAwait(false);
 
@@ -393,19 +393,19 @@ public class UserUploadBusinessLogicTests
         A.CallTo(() => _document.ContentType).Returns("text/csv");
         A.CallTo(() => _document.OpenReadStream()).ReturnsLazily(() => new AsyncEnumerableStringStream(lines.ToAsyncEnumerable(), _encoding));
 
-        A.CallTo(() =>_options.Value).Returns(_settings);
+        A.CallTo(() => _options.Value).Returns(_settings);
 
         A.CallTo(() => _userProvisioningService.GetCompanyNameIdpAliasData(A<Guid>.That.IsEqualTo(_identityProviderId), A<string>.That.IsEqualTo(_iamUserId)))
-            .Returns((_fixture.Build<CompanyNameIdpAliasData>().With(x => x.IsSharedIdp, false).Create(),_fixture.Create<string>()));
+            .Returns((_fixture.Build<CompanyNameIdpAliasData>().With(x => x.IsSharedIdp, false).Create(), _fixture.Create<string>()));
 
-        A.CallTo(() => _userProvisioningService.GetCompanyNameSharedIdpAliasData(A<string>.That.IsEqualTo(_iamUserId),A<Guid?>._))
-            .Returns((_fixture.Build<CompanyNameIdpAliasData>().With(x => x.IsSharedIdp, true).Create(),_fixture.Create<string>()));
+        A.CallTo(() => _userProvisioningService.GetCompanyNameSharedIdpAliasData(A<string>.That.IsEqualTo(_iamUserId), A<Guid?>._))
+            .Returns((_fixture.Build<CompanyNameIdpAliasData>().With(x => x.IsSharedIdp, true).Create(), _fixture.Create<string>()));
 
-        A.CallTo(() => _userProvisioningService.GetOwnCompanyPortalRoleDatas(A<string>._,A<IEnumerable<string>>._, A<string>._))
+        A.CallTo(() => _userProvisioningService.GetOwnCompanyPortalRoleDatas(A<string>._, A<IEnumerable<string>>._, A<string>._))
             .ReturnsLazily((string clientId, IEnumerable<string> roles, string _) =>
                 roles.Select(role => _fixture.Build<UserRoleData>().With(x => x.ClientClientId, clientId).With(x => x.UserRoleText, role).Create()));
 
-        A.CallTo(() => _userProvisioningService.CreateOwnCompanyIdpUsersAsync(A<CompanyNameIdpAliasData>._,A<IAsyncEnumerable<UserCreationRoleDataIdpInfo>>._,A<CancellationToken>._))
+        A.CallTo(() => _userProvisioningService.CreateOwnCompanyIdpUsersAsync(A<CompanyNameIdpAliasData>._, A<IAsyncEnumerable<UserCreationRoleDataIdpInfo>>._, A<CancellationToken>._))
             .ReturnsLazily((CompanyNameIdpAliasData companyNameIdpAliasData, IAsyncEnumerable<UserCreationRoleDataIdpInfo> userCreationInfos, CancellationToken cancellationToken) =>
                 userCreationInfos.Select(userCreationInfo => _processLine(userCreationInfo)));
 
@@ -417,29 +417,29 @@ public class UserUploadBusinessLogicTests
     }
 
     private static string HeaderLine() =>
-        string.Join(",",new [] {
+        string.Join(",", new[] {
             UserUploadBusinessLogic.CsvHeaders.FirstName,
             UserUploadBusinessLogic.CsvHeaders.LastName,
             UserUploadBusinessLogic.CsvHeaders.Email,
             UserUploadBusinessLogic.CsvHeaders.ProviderUserName,
             UserUploadBusinessLogic.CsvHeaders.ProviderUserId,
-            UserUploadBusinessLogic.CsvHeaders.Roles });        
+            UserUploadBusinessLogic.CsvHeaders.Roles });
 
     private string NextLine() =>
-        string.Join(",",_fixture.CreateMany<string>(_random.Next(5,10)));        
+        string.Join(",", _fixture.CreateMany<string>(_random.Next(5, 10)));
 
     private static string HeaderLineSharedIdp() =>
-        string.Join(",",new [] {
+        string.Join(",", new[] {
             UserUploadBusinessLogic.CsvHeaders.FirstName,
             UserUploadBusinessLogic.CsvHeaders.LastName,
             UserUploadBusinessLogic.CsvHeaders.Email,
-            UserUploadBusinessLogic.CsvHeaders.Roles });        
+            UserUploadBusinessLogic.CsvHeaders.Roles });
 
     private string NextLineSharedIdp() =>
-        string.Join(",",_fixture.CreateMany<string>(_random.Next(3,7)));        
+        string.Join(",", _fixture.CreateMany<string>(_random.Next(3, 7)));
 
     private static string NextLine(UserCreationRoleDataIdpInfo userCreationInfoIdp) =>
-        string.Join(",", new [] {
+        string.Join(",", new[] {
             userCreationInfoIdp.FirstName,
             userCreationInfoIdp.LastName,
             userCreationInfoIdp.Email,
@@ -448,7 +448,7 @@ public class UserUploadBusinessLogicTests
         }.Concat(userCreationInfoIdp.RoleDatas.Select(d => d.UserRoleText)));
 
     private static string NextLineSharedIdp(UserCreationRoleDataIdpInfo userCreationInfoIdp) =>
-        string.Join(",", new [] {
+        string.Join(",", new[] {
             userCreationInfoIdp.FirstName,
             userCreationInfoIdp.LastName,
             userCreationInfoIdp.Email,
@@ -467,7 +467,7 @@ public class UserUploadBusinessLogicTests
             creationInfo.LastName == other.LastName &&
             creationInfo.Email == other.Email &&
             creationInfo.RoleDatas.Select(d => d.UserRoleText).SequenceEqual(other.RoleDatas.Select(d => d.UserRoleText));
-    
+
     #endregion
 
     [Serializable]

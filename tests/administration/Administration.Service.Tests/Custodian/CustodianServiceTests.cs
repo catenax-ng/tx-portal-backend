@@ -47,7 +47,7 @@ public class CustodianServiceTests
 
     public CustodianServiceTests()
     {
-        _fixture = new Fixture().Customize(new AutoFakeItEasyCustomization {ConfigureMembers = true});
+        _fixture = new Fixture().Customize(new AutoFakeItEasyCustomization { ConfigureMembers = true });
         _fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList()
             .ForEach(b => _fixture.Behaviors.Remove(b));
         _fixture.Behaviors.Add(new OmitOnRecursionBehavior());
@@ -88,7 +88,7 @@ public class CustodianServiceTests
         A.CallTo(() => _httpClientFactory.CreateClient(A<string>.That.Matches(x => x == "custodian")))
             .Returns(httpClient);
         var sut = new CustodianService(_httpClientFactory, _tokenService, _options);
-        
+
         // Act
         await sut.CreateWalletAsync(bpn, name, CancellationToken.None).ConfigureAwait(false);
 
@@ -150,7 +150,7 @@ public class CustodianServiceTests
         A.CallTo(() => _httpClientFactory.CreateClient(A<string>.That.Matches(x => x == "custodian")))
             .Returns(httpClient);
         var sut = new CustodianService(_httpClientFactory, _tokenService, _options);
-        
+
         // Act
         var result = await sut.GetWalletsAsync(CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
@@ -182,7 +182,7 @@ public class CustodianServiceTests
     #endregion
 
     #region Setup
-    
+
     private void SetupTokenService()
     {
         A.CallTo(() => _tokenService.GetTokenAsync(A<GetTokenSettings>._, A<CancellationToken>._)).Returns(_accessToken);

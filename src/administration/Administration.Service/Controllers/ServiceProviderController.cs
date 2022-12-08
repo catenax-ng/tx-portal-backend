@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
@@ -14,7 +14,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Controllers
 public class ServiceProviderController : ControllerBase
 {
     private readonly IServiceProviderBusinessLogic _logic;
-    
+
     /// <summary>
     /// Creates a new instance of <see cref="ServiceProviderController"/> 
     /// </summary>
@@ -66,7 +66,7 @@ public class ServiceProviderController : ControllerBase
         var id = await this.WithIamUserId(iamUserId => _logic.CreateServiceProviderCompanyDetailsAsync(data, iamUserId)).ConfigureAwait(false);
         return CreatedAtRoute(nameof(GetServiceProviderCompanyDetail), new { serviceProviderDetailDataId = id }, id);
     }
-    
+
     /// <summary>
     /// Updates detail data to the calling users service provider
     /// </summary>

@@ -18,8 +18,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using System.ComponentModel.DataAnnotations;
 using Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
 
@@ -27,8 +27,8 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
 /// Model for requesting creation of an application.
 /// </summary>
 public class AppInputModel
-{   
-     /// <summary>
+{
+    /// <summary>
     /// Private constructor.
     /// </summary>
     private AppInputModel()
@@ -39,13 +39,13 @@ public class AppInputModel
         Descriptions = new HashSet<LocalizedDescription>();
         SupportedLanguageCodes = new HashSet<string>();
     }
-    
+
     /// <summary>
     /// Constructor.
     /// </summary>
     /// <param name="provider">Provider of the app.</param>
     /// <param name="price">Price of the app.</param>
-    public AppInputModel(string provider, string price): this()
+    public AppInputModel(string provider, string price) : this()
     {
         Provider = provider;
         Price = price;

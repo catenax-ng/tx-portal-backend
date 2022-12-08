@@ -27,10 +27,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
-  <Target Name="DotnetFormat" BeforeTargets="Build">
-    <Exec Command="dotnet format --verify-no-changes --no-restore"/>
-  </Target>
-
   <ItemGroup>
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
   </ItemGroup>

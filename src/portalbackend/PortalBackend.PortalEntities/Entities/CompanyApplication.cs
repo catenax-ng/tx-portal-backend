@@ -53,6 +53,6 @@ public class CompanyApplication : IAuditableV1
     public Guid? LastEditorId { get; set; }
     // Navigation properties
     public virtual CompanyApplicationStatus? ApplicationStatus { get; set; }
-    public virtual Company? Company { get;  set; }
+    public virtual Company? Company { get; set; }
     public virtual ICollection<Invitation> Invitations { get; private set; }
 }

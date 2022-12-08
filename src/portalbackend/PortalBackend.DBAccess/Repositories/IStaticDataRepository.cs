@@ -32,7 +32,7 @@ public interface IStaticDataRepository
     /// </summary>
     /// <returns>Returns a async enumerable of <see cref="UseCaseData"/></returns>
     IAsyncEnumerable<UseCaseData> GetAllUseCase();
-    
+
     /// <summary>
     /// Retrieves all Language.
     /// </summary>

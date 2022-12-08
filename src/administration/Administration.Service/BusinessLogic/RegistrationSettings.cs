@@ -35,15 +35,15 @@ public class RegistrationSettings
     }
 
     public int ApplicationsMaxPageSize { get; set; }
-    
+
     [Required]
-    public IDictionary<string,IEnumerable<string>> ApplicationApprovalInitialRoles { get; set; }
-    
+    public IDictionary<string, IEnumerable<string>> ApplicationApprovalInitialRoles { get; set; }
+
     [Required]
-    public IDictionary<string,IEnumerable<string>> PartnerUserInitialRoles { get; set; }
-    
+    public IDictionary<string, IEnumerable<string>> PartnerUserInitialRoles { get; set; }
+
     [Required]
-    public IDictionary<string,IEnumerable<string>> CompanyAdminRoles { get; set; }
+    public IDictionary<string, IEnumerable<string>> CompanyAdminRoles { get; set; }
 
     /// <summary>
     /// IDs of the notification types that should be created as welcome notifications

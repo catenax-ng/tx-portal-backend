@@ -25,7 +25,7 @@ using System.Web;
 
 public static class UrlHelper
 {
-    private static readonly string[] ValidUriSchemes = new [] { "http", "https" };
+    private static readonly string[] ValidUriSchemes = new[] { "http", "https" };
 
     public static void ValidateHttpUrl(string url, Func<string> getUrlParameterName)
     {

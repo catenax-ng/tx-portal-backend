@@ -52,7 +52,7 @@ public class ServiceAccountBusinessLogicTests
         _fixture = new Fixture().Customize(new AutoFakeItEasyCustomization { ConfigureMembers = true });
         _fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList()
             .ForEach(b => _fixture.Behaviors.Remove(b));
-        _fixture.Behaviors.Add(new OmitOnRecursionBehavior());  
+        _fixture.Behaviors.Add(new OmitOnRecursionBehavior());
 
         _userRepository = A.Fake<IUserRepository>();
         _portalRepositories = A.Fake<IPortalRepositories>();
@@ -62,7 +62,7 @@ public class ServiceAccountBusinessLogicTests
         {
             ClientId = ClientId
         }));
-        
+
         SetupRepositories();
         SetupServices();
     }
@@ -71,7 +71,7 @@ public class ServiceAccountBusinessLogicTests
     public async Task CreateOwnCompanyServiceAccountAsync_WithValidInput_ReturnsCreatedConnectorData()
     {
         // Arrange
-        var serviceAccountCreationInfos = new ServiceAccountCreationInfo("TheName", "Just a short description", IamClientAuthMethod.SECRET, new []
+        var serviceAccountCreationInfos = new ServiceAccountCreationInfo("TheName", "Just a short description", IamClientAuthMethod.SECRET, new[]
         {
             Guid.NewGuid()
         });
@@ -84,12 +84,12 @@ public class ServiceAccountBusinessLogicTests
         result.Should().NotBeNull();
         result.IamClientAuthMethod.Should().Be(IamClientAuthMethod.SECRET);
     }
-    
+
     [Fact]
     public async Task CreateOwnCompanyServiceAccountAsync_WithInvalidUser_NotFoundException()
     {
         // Arrange
-        var serviceAccountCreationInfos = new ServiceAccountCreationInfo("TheName", "Just a short description", IamClientAuthMethod.SECRET, new []
+        var serviceAccountCreationInfos = new ServiceAccountCreationInfo("TheName", "Just a short description", IamClientAuthMethod.SECRET, new[]
         {
             Guid.NewGuid()
         });
@@ -103,12 +103,12 @@ public class ServiceAccountBusinessLogicTests
         var exception = await Assert.ThrowsAsync<NotFoundException>(Act);
         exception.Message.Should().Be($"user {invalidUserId} is not associated with any company");
     }
-    
+
     [Fact]
     public async Task CreateOwnCompanyServiceAccountAsync_WithEmptyName_ThrowsControllerArgumentException()
     {
         // Arrange
-        var serviceAccountCreationInfos = new ServiceAccountCreationInfo(string.Empty, "Just a short description", IamClientAuthMethod.SECRET, new []
+        var serviceAccountCreationInfos = new ServiceAccountCreationInfo(string.Empty, "Just a short description", IamClientAuthMethod.SECRET, new[]
         {
             Guid.NewGuid()
         });
@@ -122,12 +122,12 @@ public class ServiceAccountBusinessLogicTests
         exception.Message.Should().Be("name must not be empty (Parameter 'name')");
         exception.ParamName.Should().Be("name");
     }
-    
+
     [Fact]
     public async Task CreateConnectorAsync_WithInvalidIamClientAuthMethod_ThrowsControllerArgumentException()
     {
         // Arrange
-        var serviceAccountCreationInfos = new ServiceAccountCreationInfo("TheName", "Just a short description", IamClientAuthMethod.JWT, new []
+        var serviceAccountCreationInfos = new ServiceAccountCreationInfo("TheName", "Just a short description", IamClientAuthMethod.JWT, new[]
         {
             Guid.NewGuid()
         });
@@ -141,7 +141,7 @@ public class ServiceAccountBusinessLogicTests
         exception.Message.Should().Be("other authenticationType values than SECRET are not supported yet (Parameter 'authenticationType')");
         exception.ParamName.Should().Be("authenticationType");
     }
-    
+
     #region Setup
 
     private void SetupRepositories()

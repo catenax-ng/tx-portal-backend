@@ -18,12 +18,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Custodian.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Token;
-
-using Microsoft.Extensions.Options;
-
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -67,7 +65,7 @@ public class CustodianService : ICustodianService
 
         const string url = "/api/wallets";
         var result = await httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
-        
+
         if (result.IsSuccessStatusCode)
         {
             using var responseStream = await result.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);

@@ -47,10 +47,10 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
     private readonly IBpdmService _bpdmService;
 
     public RegistrationBusinessLogic(
-        IPortalRepositories portalRepositories, 
-        IOptions<RegistrationSettings> configuration, 
-        IProvisioningManager provisioningManager, 
-        ICustodianService custodianService, 
+        IPortalRepositories portalRepositories,
+        IOptions<RegistrationSettings> configuration,
+        IProvisioningManager provisioningManager,
+        ICustodianService custodianService,
         IMailingService mailingService,
         INotificationService notificationService,
         ISdFactoryService sdFactoryService,
@@ -169,7 +169,7 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
         applicationRepository.AttachAndModifyCompanyApplication(applicationId, ca =>
         {
             ca.ApplicationStatusId = CompanyApplicationStatusId.CONFIRMED;
-            ca.DateLastChanged = DateTimeOffset.UtcNow;    
+            ca.DateLastChanged = DateTimeOffset.UtcNow;
         });
 
         _portalRepositories.GetInstance<ICompanyRepository>().AttachAndModifyCompany(companyId, c =>
@@ -184,8 +184,9 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
 
         await PostRegistrationWelcomeEmailAsync(userRolesRepository, applicationRepository, applicationId).ConfigureAwait(false);
 
-        if (assignedRoles == null) return true;
-        
+        if (assignedRoles == null)
+            return true;
+
         var unassignedClientRoles = _settings.ApplicationApprovalInitialRoles
             .Select(initialClientRoles => (
                 client: initialClientRoles.Key,
@@ -227,7 +228,8 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
                 }
             }
 
-            if (userData.BusinessPartnerNumbers.Contains(businessPartnerNumber)) continue;
+            if (userData.BusinessPartnerNumbers.Contains(businessPartnerNumber))
+                continue;
 
             userBusinessPartnersRepository.CreateCompanyUserAssignedBusinessPartner(userData.CompanyUserId, businessPartnerNumber);
             await _provisioningManager

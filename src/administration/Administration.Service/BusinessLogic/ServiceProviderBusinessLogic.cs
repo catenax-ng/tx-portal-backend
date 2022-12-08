@@ -103,7 +103,7 @@ public class ServiceProviderBusinessLogic : IServiceProviderBusinessLogic
             throw new ControllerArgumentException("Url must start with https and the maximum allowed length is 100 characters", nameof(data.Url));
         }
     }
-    
+
     private async Task UpdateServiceProviderCompanyDetailsInternalAsync(Guid serviceProviderDetailDataId,
         ServiceProviderDetailData data, string iamUserId)
     {

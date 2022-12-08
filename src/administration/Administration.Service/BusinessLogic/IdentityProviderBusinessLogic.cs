@@ -53,7 +53,7 @@ public class IdentityProviderBusinessLogic : IIdentityProviderBusinessLogic
     {
         await foreach (var identityProviderData in _portalRepositories.GetInstance<IIdentityProviderRepository>().GetOwnCompanyIdentityProviderCategoryDataUntracked(iamUserId).ConfigureAwait(false))
         {
-            switch(identityProviderData.CategoryId)
+            switch (identityProviderData.CategoryId)
             {
                 case IdentityProviderCategoryId.KEYCLOAK_SHARED:
                 case IdentityProviderCategoryId.KEYCLOAK_OIDC:
@@ -69,11 +69,11 @@ public class IdentityProviderBusinessLogic : IIdentityProviderBusinessLogic
                         identityProviderDataSAML.RedirectUrl,
                         identityProviderDataSAML.Enabled,
                         await _provisioningManager.GetIdentityProviderMappers(identityProviderData.Alias).ToListAsync().ConfigureAwait(false))
-                        {
-                            saml = new IdentityProviderDetailsSaml(
+                    {
+                        saml = new IdentityProviderDetailsSaml(
                                 identityProviderDataSAML.EntityId,
                                 identityProviderDataSAML.SingleSignOnServiceUrl)
-                        };
+                    };
                     break;
             }
         }
@@ -143,7 +143,7 @@ public class IdentityProviderBusinessLogic : IIdentityProviderBusinessLogic
     {
         var (alias, category) = await ValidateGetOwnCompanyIdentityProviderArguments(identityProviderId, iamUserId).ConfigureAwait(false);
 
-        switch(category)
+        switch (category)
         {
             case IdentityProviderCategoryId.KEYCLOAK_SHARED:
             case IdentityProviderCategoryId.KEYCLOAK_OIDC:
@@ -166,14 +166,14 @@ public class IdentityProviderBusinessLogic : IIdentityProviderBusinessLogic
         {
             throw new NotFoundException($"identityProvider {identityProviderId} does not exist");
         }
-        return new ValueTuple<string,IdentityProviderCategoryId>(alias, category);
+        return new ValueTuple<string, IdentityProviderCategoryId>(alias, category);
     }
 
     public async ValueTask<IdentityProviderDetails> SetOwnCompanyIdentityProviderStatusAsync(Guid identityProviderId, bool enabled, string iamUserId)
     {
         var (category, alias) = await ValidateSetOwnCompanyIdentityProviderStatusArguments(identityProviderId, enabled, iamUserId).ConfigureAwait(false);
 
-        switch(category)
+        switch (category)
         {
             case IdentityProviderCategoryId.KEYCLOAK_OIDC:
                 await _provisioningManager.SetCentralIdentityProviderStatusAsync(alias, enabled).ConfigureAwait(false);
@@ -215,7 +215,7 @@ public class IdentityProviderBusinessLogic : IIdentityProviderBusinessLogic
     {
         var (category, alias) = await ValidateUpdateOwnCompanyIdentityProviderArguments(identityProviderId, details, iamUserId).ConfigureAwait(false);
 
-        switch(category)
+        switch (category)
         {
             case IdentityProviderCategoryId.KEYCLOAK_OIDC:
                 await UpdateIdentityProviderOidc(alias, details).ConfigureAwait(false);
@@ -249,11 +249,11 @@ public class IdentityProviderBusinessLogic : IIdentityProviderBusinessLogic
 
     private async ValueTask UpdateIdentityProviderOidc(string alias, IdentityProviderEditableDetails details)
     {
-        if(details.oidc == null)
+        if (details.oidc == null)
         {
             throw new ControllerArgumentException("property 'oidc' must not be null", nameof(details.oidc));
         }
-        if(details.saml != null)
+        if (details.saml != null)
         {
             throw new ControllerArgumentException("property 'saml' must be null", nameof(details.saml));
         }
@@ -271,11 +271,11 @@ public class IdentityProviderBusinessLogic : IIdentityProviderBusinessLogic
 
     private async ValueTask UpdateIdentityProviderSaml(string alias, IdentityProviderEditableDetails details)
     {
-        if(details.saml == null)
+        if (details.saml == null)
         {
             throw new ControllerArgumentException("property 'saml' must not be null", nameof(details.saml));
         }
-        if(details.oidc != null)
+        if (details.oidc != null)
         {
             throw new ControllerArgumentException("property 'oidc' must be null", nameof(details.oidc));
         }
@@ -290,11 +290,11 @@ public class IdentityProviderBusinessLogic : IIdentityProviderBusinessLogic
 
     private async ValueTask UpdateIdentityProviderShared(string alias, IdentityProviderEditableDetails details)
     {
-        if(details.oidc != null)
+        if (details.oidc != null)
         {
             throw new ControllerArgumentException("property 'oidc' must be null", nameof(details.oidc));
         }
-        if(details.saml != null)
+        if (details.saml != null)
         {
             throw new ControllerArgumentException("property 'saml' must be null", nameof(details.saml));
         }
@@ -371,15 +371,15 @@ public class IdentityProviderBusinessLogic : IIdentityProviderBusinessLogic
             identityProviderDataOIDC.RedirectUrl,
             identityProviderDataOIDC.Enabled,
             await _provisioningManager.GetIdentityProviderMappers(alias).ToListAsync().ConfigureAwait(false))
-            {
-                oidc = new IdentityProviderDetailsOidc(
+        {
+            oidc = new IdentityProviderDetailsOidc(
                     identityProviderDataOIDC.AuthorizationUrl,
                     identityProviderDataOIDC.ClientId,
                     identityProviderDataOIDC.ClientAuthMethod)
-                    {
-                        signatureAlgorithm = identityProviderDataOIDC.SignatureAlgorithm
-                    }
-            };
+            {
+                signatureAlgorithm = identityProviderDataOIDC.SignatureAlgorithm
+            }
+        };
     }
 
     private async ValueTask<IdentityProviderDetails> GetIdentityProviderDetailsSaml(Guid identityProviderId, string alias)
@@ -393,11 +393,11 @@ public class IdentityProviderBusinessLogic : IIdentityProviderBusinessLogic
             identityProviderDataSAML.RedirectUrl,
             identityProviderDataSAML.Enabled,
             await _provisioningManager.GetIdentityProviderMappers(alias).ToListAsync().ConfigureAwait(false))
-            {
-                saml = new IdentityProviderDetailsSaml(
+        {
+            saml = new IdentityProviderDetailsSaml(
                     identityProviderDataSAML.EntityId,
                     identityProviderDataSAML.SingleSignOnServiceUrl)
-            };
+        };
     }
 
     public async ValueTask<UserIdentityProviderLinkData> CreateOwnCompanyUserIdentityProviderLinkDataAsync(Guid companyUserId, UserIdentityProviderLinkData identityProviderLinkData, string iamUserId)
@@ -414,11 +414,11 @@ public class IdentityProviderBusinessLogic : IIdentityProviderBusinessLogic
                     identityProviderLinkData.userName))
                 .ConfigureAwait(false);
         }
-        catch(KeycloakEntityConflictException ce)
+        catch (KeycloakEntityConflictException ce)
         {
             throw new ConflictException($"identityProviderLink for identityProvider {identityProviderLinkData.identityProviderId} already exists for user {companyUserId}", ce);
         }
-        
+
         return new UserIdentityProviderLinkData(
             identityProviderLinkData.identityProviderId,
             identityProviderLinkData.userId,
@@ -433,7 +433,7 @@ public class IdentityProviderBusinessLogic : IIdentityProviderBusinessLogic
         {
             await _provisioningManager.DeleteProviderUserLinkToCentralUserAsync(userEntityId, alias);
         }
-        catch(KeycloakEntityNotFoundException)
+        catch (KeycloakEntityNotFoundException)
         {
             // for create-and-update semantics this is expected and not an error
         }
@@ -444,7 +444,7 @@ public class IdentityProviderBusinessLogic : IIdentityProviderBusinessLogic
                 userLinkData.userId,
                 userLinkData.userName))
             .ConfigureAwait(false);
-        
+
         return new UserIdentityProviderLinkData(
             identityProviderId,
             userLinkData.userId,
@@ -474,7 +474,7 @@ public class IdentityProviderBusinessLogic : IIdentityProviderBusinessLogic
         {
             await _provisioningManager.DeleteProviderUserLinkToCentralUserAsync(userEntityId, alias).ConfigureAwait(false);
         }
-        catch(KeycloakEntityNotFoundException e)
+        catch (KeycloakEntityNotFoundException e)
         {
             throw new NotFoundException($"identityProviderLink for identityProvider {identityProviderId} not found in keycloak for user {companyUserId}", e);
         }
@@ -539,7 +539,8 @@ public class IdentityProviderBusinessLogic : IIdentityProviderBusinessLogic
 
         var (numProcessed, numLines, errors) = await CsvParser.ProcessCsvAsync(
             stream,
-            line => {
+            line =>
+            {
                 numIdps = ParseCSVFirstLineReturningNumIdps(line);
             },
             line => ParseCSVLine(line, numIdps, existingAliase),
@@ -548,12 +549,12 @@ public class IdentityProviderBusinessLogic : IIdentityProviderBusinessLogic
         ).ConfigureAwait(false);
 
         var numErrors = errors.Count();
-        var numUnchanged = numLines-numProcessed-numErrors;
+        var numUnchanged = numLines - numProcessed - numErrors;
 
         return new IdentityProviderUpdateStats(numProcessed, numUnchanged, numErrors, numLines, errors.Select(x => $"line: {x.Line}, message: {x.Error.Message}"));
     }
 
-    private async IAsyncEnumerable<(bool,Exception?)> ProcessOwnCompanyUsersIdentityProviderLinkDataInternalAsync(
+    private async IAsyncEnumerable<(bool, Exception?)> ProcessOwnCompanyUsersIdentityProviderLinkDataInternalAsync(
         IAsyncEnumerable<(Guid CompanyUserId, UserProfile UserProfile, IEnumerable<IdentityProviderLink> IdentityProviderLinks)> userProfileLinkDatas,
         IUserRepository userRepository,
         Guid companyId,
@@ -561,7 +562,7 @@ public class IdentityProviderBusinessLogic : IIdentityProviderBusinessLogic
         Guid creatorId,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        await foreach(var (companyUserId, profile, identityProviderLinks) in userProfileLinkDatas)
+        await foreach (var (companyUserId, profile, identityProviderLinks) in userProfileLinkDatas)
         {
             Exception? error = null;
             var success = false;
@@ -585,7 +586,7 @@ public class IdentityProviderBusinessLogic : IIdentityProviderBusinessLogic
                 }
                 success = updated;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 if (e is OperationCanceledException)
                 {
@@ -668,7 +669,7 @@ public class IdentityProviderBusinessLogic : IIdentityProviderBusinessLogic
                 companyUser.LastEditorId = creatorId;
             });
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
-   }
+    }
 
     private int ParseCSVFirstLineReturningNumIdps(string firstLine)
     {
@@ -708,7 +709,7 @@ public class IdentityProviderBusinessLogic : IIdentityProviderBusinessLogic
     private ValueTask<(Guid CompanyUserId, UserProfile UserProfile, IEnumerable<IdentityProviderLink> IdentityProviderLinks)> ParseCSVLine(string line, int numIdps, IEnumerable<string> existingAliase)
     {
         var items = line.Split(_settings.CsvSettings.Separator).AsEnumerable().GetEnumerator();
-        if(!items.MoveNext())
+        if (!items.MoveNext())
         {
             throw new ControllerArgumentException($"value for {_settings.CsvSettings.HeaderUserId} type Guid expected");
         }
@@ -716,17 +717,17 @@ public class IdentityProviderBusinessLogic : IIdentityProviderBusinessLogic
         {
             throw new ControllerArgumentException($"invalid format for {_settings.CsvSettings.HeaderUserId} type Guid: '{items.Current}'");
         }
-        if(!items.MoveNext())
+        if (!items.MoveNext())
         {
             throw new ControllerArgumentException($"value for {_settings.CsvSettings.HeaderFirstName} expected");
         }
         var firstName = items.Current;
-        if(!items.MoveNext())
+        if (!items.MoveNext())
         {
             throw new ControllerArgumentException($"value for {_settings.CsvSettings.HeaderLastName} expected");
         }
         var lastName = items.Current;
-        if(!items.MoveNext())
+        if (!items.MoveNext())
         {
             throw new ControllerArgumentException($"value for {_settings.CsvSettings.HeaderEmail} expected");
         }
@@ -740,7 +741,7 @@ public class IdentityProviderBusinessLogic : IIdentityProviderBusinessLogic
         var remaining = numIdps;
         while (remaining > 0)
         {
-            if(!items.MoveNext())
+            if (!items.MoveNext())
             {
                 throw new ControllerArgumentException($"value for {_settings.CsvSettings.HeaderProviderAlias} expected");
             }
@@ -749,12 +750,12 @@ public class IdentityProviderBusinessLogic : IIdentityProviderBusinessLogic
             {
                 throw new ControllerArgumentException($"unexpected value for {_settings.CsvSettings.HeaderProviderAlias}: {identityProviderAlias}]");
             }
-            if(!items.MoveNext())
+            if (!items.MoveNext())
             {
                 throw new ControllerArgumentException($"value for {_settings.CsvSettings.HeaderProviderUserId} expected");
             }
             var identityProviderUserId = items.Current;
-            if(!items.MoveNext())
+            if (!items.MoveNext())
             {
                 throw new ControllerArgumentException($"value for {_settings.CsvSettings.HeaderProviderUserName} expected");
             }
@@ -764,15 +765,17 @@ public class IdentityProviderBusinessLogic : IIdentityProviderBusinessLogic
         }
     }
 
-    private IEnumerable<string> CSVHeaders() {
+    private IEnumerable<string> CSVHeaders()
+    {
         var csvSettings = _settings.CsvSettings;
-        yield return csvSettings.HeaderUserId; 
+        yield return csvSettings.HeaderUserId;
         yield return csvSettings.HeaderFirstName;
         yield return csvSettings.HeaderLastName;
         yield return csvSettings.HeaderEmail;
     }
 
-    private IEnumerable<string> CSVIdpHeaders() {
+    private IEnumerable<string> CSVIdpHeaders()
+    {
         var csvSettings = _settings.CsvSettings;
         yield return csvSettings.HeaderProviderAlias;
         yield return csvSettings.HeaderProviderUserId;
@@ -785,7 +788,7 @@ public class IdentityProviderBusinessLogic : IIdentityProviderBusinessLogic
         var aliase = idpAliasDatas.Select(data => data.Alias).ToList();
         var csvSettings = _settings.CsvSettings;
 
-        bool firstLine = true;
+        var firstLine = true;
 
         await foreach (var (companyUserId, userProfile, identityProviderLinksAsync) in GetOwnCompanyIdentityProviderLinkDataInternalAsync(iamUserId).ConfigureAwait(false))
         {
@@ -807,7 +810,7 @@ public class IdentityProviderBusinessLogic : IIdentityProviderBusinessLogic
                     string.Join(csvSettings.Separator, aliase.SelectMany(alias =>
                         {
                             var identityProviderLink = identityProviderLinks.FirstOrDefault(linkData => linkData.Alias == alias);
-                            return new [] { alias, identityProviderLink?.UserId, identityProviderLink?.UserName };
+                            return new[] { alias, identityProviderLink?.UserId, identityProviderLink?.UserName };
                         })));
             }
         }
@@ -832,7 +835,7 @@ public class IdentityProviderBusinessLogic : IIdentityProviderBusinessLogic
 
     private async IAsyncEnumerable<(Guid CompanyUserId, UserProfile UserProfile, IAsyncEnumerable<IdentityProviderLink> LinkDatas)> GetOwnCompanyIdentityProviderLinkDataInternalAsync(string iamUserId)
     {
-        await foreach(var (companyUserId, firstName, lastName, email, userEntityId) in _portalRepositories.GetInstance<IUserRepository>()
+        await foreach (var (companyUserId, firstName, lastName, email, userEntityId) in _portalRepositories.GetInstance<IUserRepository>()
             .GetOwnCompanyUserQuery(iamUserId)
             .Select(companyUser =>
                 new ValueTuple<Guid, string?, string?, string?, string?>(
@@ -867,7 +870,7 @@ public class IdentityProviderBusinessLogic : IIdentityProviderBusinessLogic
         }
         if (userAliasData.Alias == null)
         {
-            throw new NotFoundException($"identityProvider {identityProviderId} not found in company of user {companyUserId}" );
+            throw new NotFoundException($"identityProvider {identityProviderId} not found in company of user {companyUserId}");
         }
         if (!userAliasData.IsSameCompany)
         {

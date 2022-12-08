@@ -85,7 +85,7 @@ public class ServiceControllerTest
         Assert.IsType<Pagination.Response<ServiceOverviewData>>(result);
         result.Content.Should().HaveCount(5);
     }
-        
+
     [Fact]
     public async Task AddServiceSubscriptionWithConsent_ReturnsExpectedId()
     {
@@ -122,7 +122,7 @@ public class ServiceControllerTest
         Assert.IsType<ServiceDetailData>(result);
         result.Should().Be(serviceDetailData);
     }
-        
+
     [Fact]
     public async Task GetSubscriptionDetail_ReturnsExpectedId()
     {
@@ -193,7 +193,7 @@ public class ServiceControllerTest
         A.CallTo(() => _logic.GetServiceAgreement(ServiceId)).MustHaveHappenedOnceExactly();
         result.Should().HaveCount(5);
     }
-        
+
     [Fact]
     public async Task GetServiceAgreementConsentDetail_ReturnsExpected()
     {
@@ -210,7 +210,7 @@ public class ServiceControllerTest
         A.CallTo(() => _logic.GetServiceConsentDetailDataAsync(consentId)).MustHaveHappenedOnceExactly();
         result.CompanyName.Should().Be("Test Company");
     }
-        
+
     [Fact]
     public async Task AutoSetupService_ReturnsExpected()
     {
@@ -221,7 +221,7 @@ public class ServiceControllerTest
             new TechnicalUserInfoData(Guid.NewGuid(), "abcPW", "sa1"),
             new ClientInfoData(Guid.NewGuid().ToString())
         );
-        A.CallTo(() => _logic.AutoSetupServiceAsync(A<OfferAutoSetupData>._, A<string>.That.Matches(x => x== IamUserId)))
+        A.CallTo(() => _logic.AutoSetupServiceAsync(A<OfferAutoSetupData>._, A<string>.That.Matches(x => x == IamUserId)))
             .Returns(responseData);
 
         //Act
@@ -232,14 +232,14 @@ public class ServiceControllerTest
         Assert.IsType<OfferAutoSetupResponseData>(result);
         result.Should().Be(responseData);
     }
-        
+
     [Fact]
     public async Task UpdateService_ReturnsExpected()
     {
         //Arrange
         var serviceId = _fixture.Create<Guid>();
         var data = _fixture.Create<ServiceUpdateRequestData>();
-        A.CallTo(() => _logic.UpdateServiceAsync(A<Guid>._, A<ServiceUpdateRequestData>._, A<string>.That.Matches(x => x== IamUserId)))
+        A.CallTo(() => _logic.UpdateServiceAsync(A<Guid>._, A<ServiceUpdateRequestData>._, A<string>.That.Matches(x => x == IamUserId)))
             .Returns(Task.CompletedTask);
 
         //Act
@@ -249,7 +249,7 @@ public class ServiceControllerTest
         A.CallTo(() => _logic.UpdateServiceAsync(serviceId, data, IamUserId)).MustHaveHappenedOnceExactly();
         Assert.IsType<NoContentResult>(result);
     }
-    
+
     [Fact]
     public async Task GetCompanyProvidedServiceSubscriptionStatusesForCurrentUserAsync_ReturnsExpectedCount()
     {
@@ -266,7 +266,7 @@ public class ServiceControllerTest
         A.CallTo(() => _logic.GetCompanyProvidedServiceSubscriptionStatusesForUserAsync(0, 15, IamUserId, null, null)).MustHaveHappenedOnceExactly();
         result.Content.Should().HaveCount(5);
     }
-    
+
     [Fact]
     public async Task SubmitService_ReturnsExpectedCount()
     {
@@ -274,14 +274,13 @@ public class ServiceControllerTest
         A.CallTo(() => _logic.SubmitServiceAsync(A<Guid>._, A<string>._))
             .ReturnsLazily(() => Task.CompletedTask);
 
-
         //Act
         var result = await this._controller.SubmitService(ServiceId).ConfigureAwait(false);
 
         //Assert
         A.CallTo(() => _logic.SubmitServiceAsync(ServiceId, IamUserId)).MustHaveHappenedOnceExactly();
     }
-        
+
     [Fact]
     public async Task DeclineServiceRequest_ReturnsNoContent()
     {

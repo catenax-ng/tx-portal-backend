@@ -19,17 +19,16 @@
  ********************************************************************************/
 
 using AutoFixture;
-using Org.Eclipse.TractusX.Portal.Backend.Registration.Service.BusinessLogic;
-using Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Controllers;
-using Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Model;
 using FakeItEasy;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using Org.Eclipse.TractusX.Portal.Backend.Registration.Service.BusinessLogic;
+using Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Controllers;
+using Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Model;
 using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared.Extensions;
 using Xunit;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
-
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Tests;
 
@@ -45,8 +44,7 @@ public class RegistrationControllerTest
     {
         _fixture = new Fixture();
         _registrationBusinessLogicFake = A.Fake<IRegistrationBusinessLogic>();
-        ILogger<RegistrationController> registrationLoggerFake = A.Fake<ILogger<RegistrationController>>();
-        _controller = new RegistrationController(registrationLoggerFake, _registrationBusinessLogicFake);
+        _controller = new RegistrationController(_registrationBusinessLogicFake);
         _controller.AddControllerContextWithClaimAndBearer(_iamUserId, _accessToken);
     }
 
@@ -54,7 +52,7 @@ public class RegistrationControllerTest
     public async Task Get_WhenThereAreInvitedUsers_ShouldReturnActionResultOfInvitedUsersWith200StatusCode()
     {
         //Arrange
-        Guid id = new Guid("7eab8e16-8298-4b41-953b-515745423658");
+        var id = new Guid("7eab8e16-8298-4b41-953b-515745423658");
         var invitedUserMapper = _fixture.CreateMany<InvitedUser>(3).ToAsyncEnumerable();
         A.CallTo(() => _registrationBusinessLogicFake.GetInvitedUsersAsync(id))
             .Returns(invitedUserMapper);
@@ -74,7 +72,7 @@ public class RegistrationControllerTest
     public async Task GetInvitedUsersDetail_WhenIdisNull_ShouldThrowException()
     {
         //Arrange
-        Guid id = new Guid("7eab8e16-8298-4b41-953b-515745423658");
+        var id = new Guid("7eab8e16-8298-4b41-953b-515745423658");
         var invitedUserMapper = _fixture.CreateMany<InvitedUser>(3).ToAsyncEnumerable();
         A.CallTo(() => _registrationBusinessLogicFake.GetInvitedUsersAsync(id))
             .Returns(invitedUserMapper);
@@ -108,7 +106,7 @@ public class RegistrationControllerTest
         result.Should().HaveSameCount(uploadDocuments);
         result.Should().ContainInOrder(uploadDocuments);
     }
-    
+
     [Fact]
     public async Task SubmitCompanyRoleConsentToAgreementsAsync_WithValidData_ReturnsExpected()
     {
@@ -120,7 +118,7 @@ public class RegistrationControllerTest
 
         //Act
         var result = await this._controller.SubmitCompanyRoleConsentToAgreementsAsync(applicationId, data).ConfigureAwait(false);
-        
+
         // Assert
         A.CallTo(() => _registrationBusinessLogicFake.SubmitRoleConsentAsync(applicationId, data, _iamUserId)).MustHaveHappenedOnceExactly();
         result.Should().Be(1);

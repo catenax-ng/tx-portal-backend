@@ -48,7 +48,7 @@ public class ServiceProviderControllerTest
     {
         //Arrange
         var id = Guid.NewGuid();
-        var data = new ServiceProviderDetailData("https://this-is-a-test.de");  
+        var data = new ServiceProviderDetailData("https://this-is-a-test.de");
         A.CallTo(() => _logic.CreateServiceProviderCompanyDetailsAsync(data, IamUserId))
             .ReturnsLazily(() => id);
 
@@ -60,13 +60,13 @@ public class ServiceProviderControllerTest
         Assert.IsType<CreatedAtRouteResult>(result);
         result.Value.Should().Be(id);
     }
-    
+
     [Fact]
     public async Task GetServiceProviderCompanyDetail_WithValidData_ReturnsOk()
     {
         //Arrange
         var id = Guid.NewGuid();
-        var data = new ProviderDetailReturnData(id, CompanyId, "https://this-is-a-test.de");  
+        var data = new ProviderDetailReturnData(id, CompanyId, "https://this-is-a-test.de");
         A.CallTo(() => _logic.GetServiceProviderCompanyDetailsAsync(id, IamUserId))
             .ReturnsLazily(() => data);
 
@@ -79,14 +79,13 @@ public class ServiceProviderControllerTest
         result.Id.Should().Be(id);
         result.CompanyId.Should().Be(CompanyId);
     }
-    
-    
+
     [Fact]
     public async Task UpdateServiceProviderCompanyDetail_WithValidData_ReturnsOk()
     {
         //Arrange
         var id = Guid.NewGuid();
-        var data = new ServiceProviderDetailData("https://this-is-a-test.de");  
+        var data = new ServiceProviderDetailData("https://this-is-a-test.de");
         A.CallTo(() => _logic.UpdateServiceProviderCompanyDetailsAsync(id, data, IamUserId))
             .ReturnsLazily(() => Task.CompletedTask);
 

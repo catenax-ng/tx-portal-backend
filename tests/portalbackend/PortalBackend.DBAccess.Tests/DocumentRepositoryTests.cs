@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -77,7 +77,7 @@ public class DocumentRepositoryTests : IAssemblyFixture<TestDbFixture>
         var changedEntity = changedEntries.Single();
         changedEntity.State.Should().Be(EntityState.Added);
     }
-    
+
     #endregion
 
     #region GetUploadedDocuments
@@ -90,10 +90,10 @@ public class DocumentRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var (sut, _) = await CreateSut().ConfigureAwait(false);
-    
+
         // Act
         var results = await sut.GetUploadedDocumentsAsync(applicationId, documentTypeId, iamUserId).ConfigureAwait(false);
-    
+
         // Assert
         results.Should().NotBe(default);
         results.IsApplicationAssignedUser.Should().BeTrue();
@@ -105,7 +105,7 @@ public class DocumentRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var (sut, _) = await CreateSut().ConfigureAwait(false);
-    
+
         // Act
         var result = await sut.GetUploadedDocumentsAsync(Guid.NewGuid(), DocumentTypeId.CX_FRAME_CONTRACT, "623770c5-cf38-4b9f-9a35-f8b9ae972e2e").ConfigureAwait(false);
 
@@ -118,7 +118,7 @@ public class DocumentRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var (sut, _) = await CreateSut().ConfigureAwait(false);
-    
+
         // Act
         var result = await sut.GetUploadedDocumentsAsync(new Guid("4829b64c-de6a-426c-81fc-c0bcf95bcb76"), DocumentTypeId.CX_FRAME_CONTRACT, Guid.NewGuid().ToString()).ConfigureAwait(false);
 

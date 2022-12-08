@@ -21,8 +21,8 @@
 using FakeItEasy;
 using FluentAssertions;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
-using Xunit;
 using System.Text;
+using Xunit;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Framework.IO.Tests;
 
@@ -30,19 +30,19 @@ public class CsvParserTest
 {
     private readonly Stream _stream;
     private readonly Action<string> _validateHeaderLine;
-    private readonly Func<string,ValueTask<FakeLineType>> _parseLine;
+    private readonly Func<string, ValueTask<FakeLineType>> _parseLine;
     private readonly FakeLineType _parseLineResult;
-    private readonly Func<IAsyncEnumerable<FakeLineType>,IAsyncEnumerable<(bool Processed, Exception? Error)>> _processLines;
+    private readonly Func<IAsyncEnumerable<FakeLineType>, IAsyncEnumerable<(bool Processed, Exception? Error)>> _processLines;
     private readonly CancellationToken _cancellationToken;
-    public class FakeLineType {};
+    public class FakeLineType { };
 
     public CsvParserTest()
     {
         _stream = A.Fake<Stream>();
         _validateHeaderLine = A.Fake<Action<string>>();
-        _parseLine = A.Fake<Func<string,ValueTask<FakeLineType>>>();
+        _parseLine = A.Fake<Func<string, ValueTask<FakeLineType>>>();
         _parseLineResult = A.Fake<FakeLineType>();
-        _processLines = A.Fake<Func<IAsyncEnumerable<FakeLineType>,IAsyncEnumerable<(bool Processed, Exception? Error)>>>();
+        _processLines = A.Fake<Func<IAsyncEnumerable<FakeLineType>, IAsyncEnumerable<(bool Processed, Exception? Error)>>>();
         _cancellationToken = new CancellationToken();
 
         SetupFakes();
@@ -66,27 +66,27 @@ public class CsvParserTest
     [Fact]
     public void ValidateCsvHeadersSuccess()
     {
-        CsvParser.ValidateCsvHeaders("first,second,third", new [] { "first", "second", "third"});
+        CsvParser.ValidateCsvHeaders("first,second,third", new[] { "first", "second", "third" });
     }
 
     [Fact]
     public void ValidateCsvHeadersInvalidHeaderThrows()
     {
-        var exception = Assert.Throws<ControllerArgumentException>(() => CsvParser.ValidateCsvHeaders("first,other,third", new [] { "first", "second", "third"}));
+        var exception = Assert.Throws<ControllerArgumentException>(() => CsvParser.ValidateCsvHeaders("first,other,third", new[] { "first", "second", "third" }));
         exception.Message.Should().Be($"invalid format: expected 'second', got 'other' (Parameter 'document')");
     }
 
     [Fact]
     public void ValidateCsvHeadersLessHeadersThrows()
     {
-        var exception = Assert.Throws<ControllerArgumentException>(() => CsvParser.ValidateCsvHeaders("first,second", new [] { "first", "second", "third"}));
+        var exception = Assert.Throws<ControllerArgumentException>(() => CsvParser.ValidateCsvHeaders("first,second", new[] { "first", "second", "third" }));
         exception.Message.Should().Be($"invalid format: expected 'third', got '' (Parameter 'document')");
     }
 
     [Fact]
     public void ValidateCsvHeadersMoreHeadersThrows()
     {
-        var exception = Assert.Throws<ControllerArgumentException>(() => CsvParser.ValidateCsvHeaders("first,second,third,forth", new [] { "first", "second", "third"}));
+        var exception = Assert.Throws<ControllerArgumentException>(() => CsvParser.ValidateCsvHeaders("first,second,third,forth", new[] { "first", "second", "third" }));
         exception.Message.Should().Be($"unexpected header 'forth' (Parameter 'document')");
     }
 
@@ -153,7 +153,7 @@ public class CsvParserTest
     {
         var items = new List<string> { "item1", "item2", "item3" }.GetEnumerator() as IEnumerator<string>;
         var result = CsvParser.TrailingStringItemsNotNullOrWhiteSpace(items, "itemName").ToList();
-        result.Should().BeEquivalentTo(new [] {"item1", "item2", "item3"});
+        result.Should().BeEquivalentTo(new[] { "item1", "item2", "item3" });
     }
 
     [Fact]
@@ -180,8 +180,8 @@ public class CsvParserTest
     public async Task TestProcessCsvAsyncEmptyFileThrows()
     {
         A.CallTo(() => _stream.ReadAsync(A<Memory<byte>>.Ignored, A<CancellationToken>.Ignored)).Returns(0);
-        
-        async Task Act () => await CsvParser.ProcessCsvAsync(
+
+        async Task Act() => await CsvParser.ProcessCsvAsync(
             _stream,
             _validateHeaderLine,
             _parseLine,
@@ -197,7 +197,7 @@ public class CsvParserTest
     public async Task TestProcessCsvAsyncNoValidateHaderLineEmptyFile()
     {
         A.CallTo(() => _stream.ReadAsync(A<Memory<byte>>.Ignored, A<CancellationToken>.Ignored)).Returns(0);
-        
+
         await CsvParser.ProcessCsvAsync(
             _stream,
             null,
@@ -249,7 +249,7 @@ public class CsvParserTest
         A.CallTo(() => _validateHeaderLine(A<string>.Ignored)).Throws(new ArgumentException("invalid header"));
         using var data = SetupStream("header line\nfirst line\nsecond line\nthird line\nforth line\n");
 
-        async Task Act () => await CsvParser.ProcessCsvAsync(
+        async Task Act() => await CsvParser.ProcessCsvAsync(
             _stream,
             _validateHeaderLine,
             _parseLine,
@@ -293,7 +293,7 @@ public class CsvParserTest
     {
         using var data = SetupStream("header line\nfirst line\nsecond line\nthird line\nforth line\n");
 
-        A.CallTo(() => _processLines(A<IAsyncEnumerable<FakeLineType>>.Ignored)).ReturnsLazily<IAsyncEnumerable<(bool Processed, Exception? Error)>,IAsyncEnumerable<FakeLineType>>(lines => ProcessLinesError(lines));
+        A.CallTo(() => _processLines(A<IAsyncEnumerable<FakeLineType>>.Ignored)).ReturnsLazily<IAsyncEnumerable<(bool Processed, Exception? Error)>, IAsyncEnumerable<FakeLineType>>(lines => ProcessLinesError(lines));
 
         var result = await CsvParser.ProcessCsvAsync(
             _stream,
@@ -317,7 +317,7 @@ public class CsvParserTest
     {
         using var data = SetupStream("header line\nfirst line\nsecond line\nthird line\nforth line\n");
 
-        A.CallTo(() => _processLines(A<IAsyncEnumerable<FakeLineType>>.Ignored)).ReturnsLazily<IAsyncEnumerable<(bool Processed, Exception? Error)>,IAsyncEnumerable<FakeLineType>>(lines => ProcessLinesThrows(lines));
+        A.CallTo(() => _processLines(A<IAsyncEnumerable<FakeLineType>>.Ignored)).ReturnsLazily<IAsyncEnumerable<(bool Processed, Exception? Error)>, IAsyncEnumerable<FakeLineType>>(lines => ProcessLinesThrows(lines));
 
         var result = await CsvParser.ProcessCsvAsync(
             _stream,
@@ -344,47 +344,47 @@ public class CsvParserTest
     {
         A.CallTo(() => _stream.CanRead).Returns(true);
         A.CallTo(() => _parseLine(A<string>.Ignored)).ReturnsLazily(_ => ValueTask.FromResult(_parseLineResult));
-        A.CallTo(() => _processLines(A<IAsyncEnumerable<FakeLineType>>.Ignored)).ReturnsLazily<IAsyncEnumerable<(bool Processed, Exception? Error)>,IAsyncEnumerable<FakeLineType>>(lines => ProcessLinesSuccess(lines));
+        A.CallTo(() => _processLines(A<IAsyncEnumerable<FakeLineType>>.Ignored)).ReturnsLazily<IAsyncEnumerable<(bool Processed, Exception? Error)>, IAsyncEnumerable<FakeLineType>>(lines => ProcessLinesSuccess(lines));
     }
 
     private MemoryStream SetupStream(string stringdata)
     {
         var data = new MemoryStream(Encoding.UTF8.GetBytes(stringdata));
-        A.CallTo(() => _stream.ReadAsync(A<Memory<byte>>.Ignored, A<CancellationToken>.Ignored)).ReturnsLazily<ValueTask<int>,Memory<byte>,CancellationToken>((Memory<byte> memory, CancellationToken cancellationToken) => data.ReadAsync(memory, cancellationToken));
+        A.CallTo(() => _stream.ReadAsync(A<Memory<byte>>.Ignored, A<CancellationToken>.Ignored)).ReturnsLazily<ValueTask<int>, Memory<byte>, CancellationToken>((Memory<byte> memory, CancellationToken cancellationToken) => data.ReadAsync(memory, cancellationToken));
         return data;
     }
 
     private static async IAsyncEnumerable<(bool Processed, Exception? Error)> ProcessLinesSuccess(IAsyncEnumerable<FakeLineType> lines)
     {
-        await foreach(var line in lines)
+        await foreach (var _ in lines)
         {
-            yield return (true,null);
+            yield return (true, null);
         }
     }
 
-    private async static IAsyncEnumerable<(bool Processed, Exception? Error)> ProcessLinesError(IAsyncEnumerable<FakeLineType> lines)
+    private static async IAsyncEnumerable<(bool Processed, Exception? Error)> ProcessLinesError(IAsyncEnumerable<FakeLineType> lines)
     {
-        int numLine = 0;
-        await foreach(var line in lines)
+        var numLine = 0;
+        await foreach (var _ in lines)
         {
             numLine++;
             yield return numLine == 3
                 ? (false, new ControllerArgumentException("error processing"))
-                : (true,null);
+                : (true, null);
         }
     }
 
-    private async static IAsyncEnumerable<(bool Processed, Exception? Error)> ProcessLinesThrows(IAsyncEnumerable<FakeLineType> lines)
+    private static async IAsyncEnumerable<(bool Processed, Exception? Error)> ProcessLinesThrows(IAsyncEnumerable<FakeLineType> lines)
     {
-        int numLine = 0;
-        await foreach(var line in lines)
+        var numLine = 0;
+        await foreach (var _ in lines)
         {
             numLine++;
             if (numLine == 3)
             {
                 throw new UnexpectedConditionException("unexpected error");
             }
-            yield return (true,null);
+            yield return (true, null);
         }
     }
 

@@ -18,10 +18,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using System;
-using System.Data.Common;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.Replication.PgOutput.Messages;
+using System;
+using System.Data.Common;
 
 #nullable disable
 
@@ -111,13 +111,13 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 name: "app_assigned_documents",
                 newName: "offer_assigned_documents",
                 schema: "portal");
-            
+
             migrationBuilder.RenameColumn(
                 name: "app_id",
                 schema: "portal",
                 table: "offer_assigned_documents",
                 newName: "offer_id");
-            
+
             migrationBuilder.RenameTable(
                 name: "app_assigned_licenses",
                 newName: "offer_assigned_licenses",
@@ -189,18 +189,18 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 schema: "portal",
                 table: "offer_subscriptions",
                 newName: "offer_subscription_status_id");
-            
+
             migrationBuilder.AddPrimaryKey(
                 name: "pk_offer_subscriptions",
                 table: "offer_subscriptions",
                 column: "id",
-                schema: "portal"); 
+                schema: "portal");
             migrationBuilder.AlterColumn<Guid>(
                 name: "id",
                 table: "offer_subscriptions",
                 schema: "portal",
                 defaultValueSql: null,
-                oldDefaultValue: "gen_random_uuid()"); 
+                oldDefaultValue: "gen_random_uuid()");
 
             migrationBuilder.RenameTable(
                 name: "app_licenses",
@@ -227,7 +227,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 schema: "portal",
                 table: "user_roles",
                 newName: "offer_id");
-            
+
             migrationBuilder.RenameIndex(
                 name: "ix_user_roles_app_id",
                 schema: "portal",
@@ -304,7 +304,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 table: "offers",
                 newName: "offer_status_id",
                 schema: "portal");
-            
+
             migrationBuilder.CreateTable(
                 name: "app_subscription_details",
                 schema: "portal",
@@ -339,12 +339,12 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 name: "app_instance_id",
                 table: "offer_subscriptions",
                 schema: "portal");
-            
+
             migrationBuilder.DropColumn(
                 name: "app_url",
                 table: "offer_subscriptions",
                 schema: "portal");
-                
+
             migrationBuilder.InsertData(
                 schema: "portal",
                 table: "company_roles",
@@ -376,31 +376,31 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 table: "app_subscription_details",
                 column: "offer_subscription_id",
                 unique: true);
-            
+
             migrationBuilder.CreateIndex(
                 name: "ix_offer_detail_images_offer_id",
                 schema: "portal",
                 table: "offer_detail_images",
                 column: "offer_id");
-            
+
             migrationBuilder.CreateIndex(
                 name: "ix_offer_subscriptions_company_id",
                 schema: "portal",
                 table: "offer_subscriptions",
                 column: "company_id");
-            
+
             migrationBuilder.CreateIndex(
                 name: "ix_offer_subscriptions_offer_id",
                 schema: "portal",
                 table: "offer_subscriptions",
                 column: "offer_id");
-            
+
             migrationBuilder.CreateIndex(
                 name: "ix_offer_subscriptions_offer_subscription_status_id",
                 schema: "portal",
                 table: "offer_subscriptions",
                 column: "offer_subscription_status_id");
-            
+
             migrationBuilder.CreateIndex(
                 name: "ix_offers_offer_status_id",
                 schema: "portal",
@@ -412,13 +412,13 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 schema: "portal",
                 table: "offers",
                 column: "offer_type_id");
-            
+
             migrationBuilder.CreateIndex(
                 name: "ix_offers_provider_company_id",
                 schema: "portal",
                 table: "offers",
                 column: "provider_company_id");
-            
+
             migrationBuilder.CreateIndex(
                 name: "ix_offers_sales_manager_id",
                 schema: "portal",
@@ -869,13 +869,13 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 name: "offer_assigned_documents",
                 newName: "app_assigned_documents",
                 schema: "portal");
-            
+
             migrationBuilder.RenameColumn(
                 name: "offer_id",
                 schema: "portal",
                 table: "app_assigned_documents",
                 newName: "app_id");
-            
+
             migrationBuilder.RenameTable(
                 name: "offer_assigned_licenses",
                 newName: "app_assigned_licenses",
@@ -968,7 +968,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 table: "apps",
                 schema: "portal"
             );
-                
+
             migrationBuilder.AddColumn<bool>(
                 name: "is_core_component",
                 table: "apps",
@@ -987,20 +987,20 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 table: "apps",
                 newName: "app_status_id",
                 schema: "portal");
-                
+
             migrationBuilder.AddColumn<Guid>(
                 name: "app_instance_id",
                 table: "company_assigned_apps",
                 schema: "portal",
-                type: "uuid", 
+                type: "uuid",
                 nullable: true
             );
-            
+
             migrationBuilder.AddColumn<string>(
                 name: "app_url",
                 table: "company_assigned_apps",
                 schema: "portal",
-                type: "character varying(255)", 
+                type: "character varying(255)",
                 maxLength: 255,
                 nullable: true);
 
@@ -1138,17 +1138,17 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 principalTable: "apps",
                 principalColumn: "id",
                 onDelete: ReferentialAction.Cascade);
-            
+
             migrationBuilder.DropPrimaryKey(
                 name: "pk_offer_subscriptions",
                 table: "company_assigned_apps",
-                schema: "portal"); 
+                schema: "portal");
 
             migrationBuilder.AddPrimaryKey(
                 name: "pk_company_assigned_apps",
                 table: "company_assigned_apps",
-                columns: new [] { "company_id", "app_id" },
-                schema: "portal"); 
+                columns: new[] { "company_id", "app_id" },
+                schema: "portal");
         }
     }
 }

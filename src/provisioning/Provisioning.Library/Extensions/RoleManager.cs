@@ -19,8 +19,8 @@
  ********************************************************************************/
 
 using Org.Eclipse.TractusX.Portal.Backend.Keycloak.ErrorHandling;
-using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Library.Models.Roles;
 using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Library.Models.Clients;
+using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Library.Models.Roles;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
 
@@ -47,7 +47,7 @@ public partial class ProvisioningManager
                     return (client.Id, (await _CentralIdp.GetRolesAsync(_Settings.CentralRealm, client.Id).ConfigureAwait(false)).Where(x => roleNames.Contains(x.Name)));
             }
         }
-        catch(KeycloakEntityNotFoundException)
+        catch (KeycloakEntityNotFoundException)
         {
             return (client?.Id, Enumerable.Empty<Role>());
         }
@@ -58,8 +58,9 @@ public partial class ProvisioningManager
             {
                 var (client, roleNames) = x;
                 var (clientId, roles) = await GetCentralClientIdRolesAsync(client, roleNames).ConfigureAwait(false);
-                if (clientId == null || !roles.Any()) return;
-                
+                if (clientId == null || !roles.Any())
+                    return;
+
                 await _CentralIdp.DeleteClientRoleMappingsFromUserAsync(_Settings.CentralRealm, centralUserId, clientId, roles).ConfigureAwait(false);
             }
         )).ConfigureAwait(false);
@@ -73,7 +74,7 @@ public partial class ProvisioningManager
             {
                 yield return (Client: client, Roles: Enumerable.Empty<string>());
             }
-            
+
             IEnumerable<string> assigned;
             try
             {

@@ -18,10 +18,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
- 
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
 
@@ -47,5 +46,5 @@ public class StaticDataBusinessLogic : IStaticDataBusinessLogic
 
     /// <inheritdoc/>
     public IAsyncEnumerable<LanguageData> GetAllLanguage() =>
-        _portalRepositories.GetInstance<IStaticDataRepository>().GetAllLanguage();  
+        _portalRepositories.GetInstance<IStaticDataRepository>().GetAllLanguage();
 }

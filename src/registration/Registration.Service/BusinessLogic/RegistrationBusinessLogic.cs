@@ -29,9 +29,9 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Service;
-using Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Model;
 using Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Bpn;
 using Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Bpn.Model;
+using Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Model;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
@@ -101,7 +101,7 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
         var documentName = document.FileName;
         using var sha256 = SHA256.Create();
         using var ms = new MemoryStream((int)document.Length);
-        
+
         await document.CopyToAsync(ms, cancellationToken).ConfigureAwait(false);
         var hash = sha256.ComputeHash(ms);
         var documentContent = ms.GetBuffer();
@@ -109,7 +109,7 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
         {
             throw new ArgumentException($"document {document.FileName} transmitted length {document.Length} doesn't match actual length {ms.Length}.");
         }
-        
+
         _portalRepositories.GetInstance<IDocumentRepository>().CreateDocument(documentName, documentContent, hash, documentTypeId, doc =>
         {
             doc.CompanyUserId = companyUserId;
@@ -255,13 +255,13 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
 
         if (userCreationInfo.Roles.Any())
         {
-            var clientRoles = new Dictionary<string,IEnumerable<string>> {
+            var clientRoles = new Dictionary<string, IEnumerable<string>> {
                 { _settings.KeyCloakClientID, userCreationInfo.Roles }
             };
             userRoleDatas = await _userProvisioningService.GetRoleDatas(clientRoles).ToListAsync().ConfigureAwait(false);
         }
 
-        var userCreationInfoIdps = new [] { new UserCreationRoleDataIdpInfo(
+        var userCreationInfoIdps = new[] { new UserCreationRoleDataIdpInfo(
             userCreationInfo.firstName ?? "",
             userCreationInfo.lastName ?? "",
             userCreationInfo.eMail,
@@ -288,7 +288,7 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
         }
 
         var companyDisplayName = await _userProvisioningService.GetIdentityProviderDisplayName(companyNameIdpAliasData.IdpAlias).ConfigureAwait(false);
-        
+
         var mailParameters = new Dictionary<string, string>
         {
             { "password", password },
@@ -455,7 +455,7 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
             );
         }
     }
-    
+
     public async Task<IEnumerable<UploadDocuments>> GetUploadedDocumentsAsync(Guid applicationId, DocumentTypeId documentTypeId, string iamUserId)
     {
         var result = await _portalRepositories.GetInstance<IDocumentRepository>().GetUploadedDocumentsAsync(applicationId, documentTypeId, iamUserId).ConfigureAwait(false);
@@ -513,7 +513,7 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
         {
             consent.ConsentStatusId = ConsentStatusId.INACTIVE;
         });
-       
+
         var consentsToActivate = consents
             .Where(consent =>
                 agreementConsentsToSet.Any(agreementConsent =>
@@ -570,52 +570,52 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
             throw new ForbiddenException($"Application is already closed");
         }
 
-        switch(type)
+        switch (type)
         {
             case UpdateApplicationSteps.CompanyWithAddress:
-            {
-                if (applicationStatusId == CompanyApplicationStatusId.CREATED
-                    || applicationStatusId == CompanyApplicationStatusId.ADD_COMPANY_DATA)
                 {
-                    applicationRepository.AttachAndModifyCompanyApplication(applicationId, ca =>
+                    if (applicationStatusId == CompanyApplicationStatusId.CREATED
+                        || applicationStatusId == CompanyApplicationStatusId.ADD_COMPANY_DATA)
                     {
-                        ca.ApplicationStatusId = CompanyApplicationStatusId.INVITE_USER;
-                    });
+                        applicationRepository.AttachAndModifyCompanyApplication(applicationId, ca =>
+                        {
+                            ca.ApplicationStatusId = CompanyApplicationStatusId.INVITE_USER;
+                        });
+                    }
+                    break;
                 }
-                break;
-            }
             case UpdateApplicationSteps.CompanyRoleAgreementConsents:
-            {
-                if (applicationStatusId == CompanyApplicationStatusId.CREATED
-                    || applicationStatusId == CompanyApplicationStatusId.ADD_COMPANY_DATA
-                    || applicationStatusId == CompanyApplicationStatusId.INVITE_USER
-                    || applicationStatusId == CompanyApplicationStatusId.SELECT_COMPANY_ROLE)
                 {
-                    
+                    if (applicationStatusId == CompanyApplicationStatusId.CREATED
+                        || applicationStatusId == CompanyApplicationStatusId.ADD_COMPANY_DATA
+                        || applicationStatusId == CompanyApplicationStatusId.INVITE_USER
+                        || applicationStatusId == CompanyApplicationStatusId.SELECT_COMPANY_ROLE)
+                    {
+
+                        applicationRepository.AttachAndModifyCompanyApplication(applicationId, ca =>
+                        {
+                            ca.ApplicationStatusId = CompanyApplicationStatusId.UPLOAD_DOCUMENTS;
+                        });
+                    }
+                    break;
+                }
+            case UpdateApplicationSteps.SubmitRegistration:
+                {
+                    if (applicationStatusId == CompanyApplicationStatusId.CREATED
+                        || applicationStatusId == CompanyApplicationStatusId.ADD_COMPANY_DATA
+                        || applicationStatusId == CompanyApplicationStatusId.INVITE_USER
+                        || applicationStatusId == CompanyApplicationStatusId.SELECT_COMPANY_ROLE
+                        || applicationStatusId == CompanyApplicationStatusId.UPLOAD_DOCUMENTS)
+                    {
+                        throw new ForbiddenException($"Application status is not fitting to the pre-requisite");
+                    }
+
                     applicationRepository.AttachAndModifyCompanyApplication(applicationId, ca =>
                     {
-                        ca.ApplicationStatusId = CompanyApplicationStatusId.UPLOAD_DOCUMENTS;
+                        ca.ApplicationStatusId = CompanyApplicationStatusId.SUBMITTED;
                     });
+                    break;
                 }
-                break;
-            }
-            case UpdateApplicationSteps.SubmitRegistration:
-            {
-                if (applicationStatusId == CompanyApplicationStatusId.CREATED
-                    || applicationStatusId == CompanyApplicationStatusId.ADD_COMPANY_DATA
-                    || applicationStatusId == CompanyApplicationStatusId.INVITE_USER
-                    || applicationStatusId == CompanyApplicationStatusId.SELECT_COMPANY_ROLE
-                    || applicationStatusId == CompanyApplicationStatusId.UPLOAD_DOCUMENTS)
-                {
-                    throw new ForbiddenException($"Application status is not fitting to the pre-requisite");
-                }
-
-                applicationRepository.AttachAndModifyCompanyApplication(applicationId, ca =>
-                {
-                    ca.ApplicationStatusId = CompanyApplicationStatusId.SUBMITTED;
-                });
-                break;
-            }
         }
     }
 

@@ -22,10 +22,10 @@ using AutoFixture;
 using AutoFixture.AutoFakeItEasy;
 using FakeItEasy;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
-using System.Net;
-using System.Text.Json;
 using Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Bpn;
 using Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Bpn.Model;
+using System.Net;
+using System.Text.Json;
 using Xunit;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Tests

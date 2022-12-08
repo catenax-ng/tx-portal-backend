@@ -35,7 +35,7 @@ public class AuditOffer20221013 : IAuditEntityV1
     public Guid AuditV1Id { get; set; }
 
     public Guid Id { get; set; }
-    
+
     public string? Name { get; set; }
 
     public DateTimeOffset DateCreated { get; private set; }
@@ -45,11 +45,11 @@ public class AuditOffer20221013 : IAuditEntityV1
     public string? ThumbnailUrl { get; set; }
 
     public string? MarketingUrl { get; set; }
-    
+
     public string? ContactEmail { get; set; }
-    
+
     public string? ContactNumber { get; set; }
-    
+
     public string Provider { get; set; }
 
     public OfferTypeId OfferTypeId { get; set; }
