@@ -27,8 +27,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
-  <ItemGroup>
-  </ItemGroup>
+  <Target Name="DotnetFormat" BeforeTargets="Build">
+    <Exec Command="dotnet format --verify-no-changes --no-restore"/>
+  </Target>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.9" />

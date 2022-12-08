@@ -33,6 +33,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <Target Name="DotnetFormat" BeforeTargets="Build">
+    <Exec Command="dotnet format --verify-no-changes --no-restore"/>
+  </Target>
+
   <ItemGroup>
     <PackageReference Include="Flurl.Http.Signed" Version="3.2.4" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />

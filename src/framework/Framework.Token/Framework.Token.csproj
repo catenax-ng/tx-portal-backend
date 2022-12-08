@@ -24,6 +24,11 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
   </ItemGroup>
+  
+  <Target Name="DotnetFormat" BeforeTargets="Build">
+    <Exec Command="dotnet format --verify-no-changes --no-restore"/>
+  </Target>
+
   <PropertyGroup>
     <AssemblyName>Org.Eclipse.TractusX.Portal.Backend.Framework.Token</AssemblyName>
     <TargetFramework>net6.0</TargetFramework>

@@ -19,19 +19,26 @@
 -->
 
 <Project Sdk="Microsoft.NET.Sdk">
-  <ItemGroup>
-    <ProjectReference Include="..\..\framework\Framework.ErrorHandling\Framework.ErrorHandling.csproj" />
-    <ProjectReference Include="..\PortalBackend.PortalEntities\PortalBackend.PortalEntities.csproj" />
-    <ProjectReference Include="..\..\framework\Framework.Models\Framework.Models.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.4" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.3.1" />
-  </ItemGroup>
   <PropertyGroup>
     <AssemblyName>Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess</AssemblyName>
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+  
+  <Target Name="DotnetFormat" BeforeTargets="Build">
+    <Exec Command="dotnet format --verify-no-changes --no-restore"/>
+  </Target>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.4" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.3.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\framework\Framework.ErrorHandling\Framework.ErrorHandling.csproj" />
+    <ProjectReference Include="..\PortalBackend.PortalEntities\PortalBackend.PortalEntities.csproj" />
+    <ProjectReference Include="..\..\framework\Framework.Models\Framework.Models.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -26,6 +26,10 @@
       <ImplicitUsings>enable</ImplicitUsings>
       <Nullable>enable</Nullable>
     </PropertyGroup>
+  
+    <Target Name="DotnetFormat" BeforeTargets="Build">
+      <Exec Command="dotnet format --verify-no-changes --no-restore"/>
+    </Target>
 
     <ItemGroup>
       <ProjectReference Include="..\..\portalbackend\PortalBackend.DBAccess\PortalBackend.DBAccess.csproj" />

@@ -28,6 +28,10 @@
         <IsPackable>false</IsPackable>
         <UserSecretsId>f9f08b6e-5ab3-4bda-8967-69a0b6212e4b</UserSecretsId>
     </PropertyGroup>
+  
+    <Target Name="DotnetFormat" BeforeTargets="Build">
+      <Exec Command="dotnet format --verify-no-changes --no-restore"/>
+    </Target>
 
     <ItemGroup>
         <PackageReference Include="AutoFixture" Version="4.17.0" />

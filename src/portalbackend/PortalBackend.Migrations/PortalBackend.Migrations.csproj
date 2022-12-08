@@ -30,6 +30,10 @@
     <SonarQubeExclude>true</SonarQubeExclude>
   </PropertyGroup>
 
+  <Target Name="DotnetFormat" BeforeTargets="Build">
+    <Exec Command="dotnet format --verify-no-changes --no-restore"/>
+  </Target>
+
   <ItemGroup>
     <PackageReference Include="Laraue.EfCoreTriggers.PostgreSql" Version="6.3.6" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.4">

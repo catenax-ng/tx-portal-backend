@@ -27,7 +27,11 @@
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
     </PropertyGroup>
-
+  
+    <Target Name="DotnetFormat" BeforeTargets="Build">
+      <Exec Command="dotnet format --verify-no-changes --no-restore"/>
+    </Target>
+  
     <ItemGroup>
         <PackageReference Include="AutoFixture" Version="4.17.0" />
         <PackageReference Include="AutoFixture.AutoFakeItEasy" Version="4.17.0" />
