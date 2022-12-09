@@ -58,7 +58,7 @@ public class TokenServiceTests
     #region GetTokenAsync
 
     [Fact]
-    public async void GetTokenAsyncSuccess()
+    public async Task GetTokenAsyncSuccess()
     {
         var authResponse = JsonSerializer.Serialize(_fixture.Build<AuthResponse>().With(x => x.AccessToken, _accessToken).Create());
         SetupHttpClient(new HttpMessageHandlerMock(HttpStatusCode.OK, authResponse.ToFormContent("application/json")));
@@ -74,7 +74,7 @@ public class TokenServiceTests
     }
 
     [Fact]
-    public async void GetTokenAsyncHttpClientError500_Throws()
+    public async Task GetTokenAsyncHttpClientError500_Throws()
     {
         var errorResponse = JsonSerializer.Serialize(_fixture.Create<ErrorResponse>());
         SetupHttpClient(new HttpMessageHandlerMock(HttpStatusCode.InternalServerError, errorResponse.ToFormContent("application/json")));
@@ -93,7 +93,7 @@ public class TokenServiceTests
     }
 
     [Fact]
-    public async void GetTokenAsyncHttpClientThrows_Throws()
+    public async Task GetTokenAsyncHttpClientThrows_Throws()
     {
         SetupHttpClient(new HttpMessageHandlerMock(HttpStatusCode.InternalServerError, ex: _testException));
 

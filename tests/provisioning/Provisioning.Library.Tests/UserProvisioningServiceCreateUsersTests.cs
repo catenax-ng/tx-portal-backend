@@ -82,7 +82,7 @@ public class UserProvisioningServiceCreateUsersTests
     #region CreateOwnCompanyIdpUsersAsync
 
     [Fact]
-    public async void TestFixtureSetup()
+    public async Task TestFixtureSetup()
     {
         var sut = new UserProvisioningService(_provisioningManager, _portalRepositories);
 
@@ -103,7 +103,7 @@ public class UserProvisioningServiceCreateUsersTests
     }
 
     [Fact]
-    public async void TestSharedIdpFixtureSetup()
+    public async Task TestSharedIdpFixtureSetup()
     {
         var sut = new UserProvisioningService(_provisioningManager, _portalRepositories);
 
@@ -124,7 +124,7 @@ public class UserProvisioningServiceCreateUsersTests
     }
 
     [Fact]
-    public async void TestCreateUsersAllSuccess()
+    public async Task TestCreateUsersAllSuccess()
     {
         var sut = new UserProvisioningService(_provisioningManager, _portalRepositories);
 
@@ -142,7 +142,7 @@ public class UserProvisioningServiceCreateUsersTests
     }
 
     [Fact]
-    public async void TestCreateUsersRolesAssignmentError()
+    public async Task TestCreateUsersRolesAssignmentError()
     {
         var sut = new UserProvisioningService(_provisioningManager, _portalRepositories);
 
@@ -175,7 +175,7 @@ public class UserProvisioningServiceCreateUsersTests
     }
 
     [Fact]
-    public async void TestCreateUsersRolesAssignmentNoRolesAssignedSuccess()
+    public async Task TestCreateUsersRolesAssignmentNoRolesAssignedSuccess()
     {
         var sut = new UserProvisioningService(_provisioningManager, _portalRepositories);
 
@@ -203,7 +203,7 @@ public class UserProvisioningServiceCreateUsersTests
     }
 
     [Fact]
-    public async void TestCreateUsersDuplicateKeycloakUserError()
+    public async Task TestCreateUsersDuplicateKeycloakUserError()
     {
         var sut = new UserProvisioningService(_provisioningManager, _portalRepositories);
 
@@ -236,7 +236,7 @@ public class UserProvisioningServiceCreateUsersTests
     }
 
     [Fact]
-    public async void TestCreateUsersExistingCompanyUserWithoutKeycloakUserSuccess()
+    public async Task TestCreateUsersExistingCompanyUserWithoutKeycloakUserSuccess()
     {
         var sut = new UserProvisioningService(_provisioningManager, _portalRepositories);
 
@@ -267,7 +267,7 @@ public class UserProvisioningServiceCreateUsersTests
     #region GetRoleDatas
 
     [Fact]
-    public async void TestGetRoleDatasSuccess()
+    public async Task TestGetRoleDatasSuccess()
     {
         var clientRoles = _fixture.Create<IDictionary<string, IEnumerable<string>>>();
 
@@ -279,7 +279,7 @@ public class UserProvisioningServiceCreateUsersTests
     }
 
     [Fact]
-    public async void TestGetRoleDatasThrows()
+    public async Task TestGetRoleDatasThrows()
     {
         var clientRoles = _fixture.Create<IDictionary<string, IEnumerable<string>>>();
 
@@ -302,7 +302,7 @@ public class UserProvisioningServiceCreateUsersTests
     #region GetOwnCompanyPortalRoleDatas
 
     [Fact]
-    public async void TestGetOwnCompanyPortalRoleDatasSuccess()
+    public async Task TestGetOwnCompanyPortalRoleDatasSuccess()
     {
         var client = _fixture.Create<string>();
         var roles = _fixture.CreateMany<string>();
@@ -316,7 +316,7 @@ public class UserProvisioningServiceCreateUsersTests
     }
 
     [Fact]
-    public async void TestGetOwnCompanyPortalRoleDatasThrows()
+    public async Task TestGetOwnCompanyPortalRoleDatasThrows()
     {
         var client = _fixture.Create<string>();
         var roles = _fixture.CreateMany<string>();
