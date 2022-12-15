@@ -647,13 +647,6 @@ public class OfferService : IOfferService
 
     private async Task SendMail(IDictionary<string,IEnumerable<string>> receiverUserRoles, string offerName, string basePortalAddress, string message, Guid companyId)
     {
-        var mailParams = new Dictionary<string, string>
-        {
-            { "offerName", offerName },
-            { "url", basePortalAddress },
-            { "declineMessage", message }
-        };
-
         var userRolesRepository = _portalRepositories.GetInstance<IUserRolesRepository>();
         var roleData = await userRolesRepository
             .GetUserRoleIdsUntrackedAsync(receiverUserRoles)
@@ -666,10 +659,18 @@ public class OfferService : IOfferService
         }
 
         var companyUserWithRoleIdForCompany = _portalRepositories.GetInstance<IUserRepository>()
-            .GetCompanyUserEmailForCompanyAndRoleId(roleData, companyId);
-        await foreach (var receiver in companyUserWithRoleIdForCompany)
+            .GetCompanyUserInformationForCompanyAndRoleId(roleData, companyId);
+        await foreach (var receiver in companyUserWithRoleIdForCompany.Where(x => !string.IsNullOrWhiteSpace(x.Email)))
         {
-            await _mailingService.SendMails(receiver, mailParams, new List<string> { "offer-request-decline" }).ConfigureAwait(false);
+            var userName = string.Join(" ", new[] { receiver.Name, receiver.LastName }.Where(item => !string.IsNullOrWhiteSpace(item)));
+            var mailParams = new Dictionary<string, string>
+            {
+                { "name", !string.IsNullOrWhiteSpace(userName) ? userName : receiver.Email! },
+                { "offerName", offerName },
+                { "url", basePortalAddress },
+                { "declineMessage", message }
+            };
+            await _mailingService.SendMails(receiver.Email!, mailParams, new List<string> { "offer-request-decline" }).ConfigureAwait(false);
         }
     }
 

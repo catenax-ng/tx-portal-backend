@@ -353,12 +353,14 @@ public class UserRepositoryTests : IAssemblyFixture<TestDbFixture>
         
         // Act
         var result = await sut
-            .GetCompanyUserEmailForCompanyAndRoleId(new[] {new Guid("607818be-4978-41f4-bf63-fa8d2de51154")}, new Guid("2dc4249f-b5ca-4d42-bef1-7a7a950a4f87"))
+            .GetCompanyUserInformationForCompanyAndRoleId(new[] {new Guid("607818be-4978-41f4-bf63-fa8d2de51154")}, new Guid("2dc4249f-b5ca-4d42-bef1-7a7a950a4f87"))
             .ToListAsync().ConfigureAwait(false);
         
         // Assert
         result.Should().HaveCount(1);
-        result.First().Should().Be("tester.user4@test.de");
+        result.First().Email.Should().Be("tester.user4@test.de");
+        result.First().Name.Should().Be("Test User 4");
+        result.First().LastName.Should().Be("it-admin-2");
     }
 
     #endregion

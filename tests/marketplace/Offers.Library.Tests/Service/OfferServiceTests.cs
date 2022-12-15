@@ -1122,8 +1122,8 @@ public class OfferServiceTests
             });
         A.CallTo(() => _userRolesRepository.GetUserRoleIdsUntrackedAsync(A<IDictionary<string, IEnumerable<string>>>._))
             .Returns(roleIds.ToAsyncEnumerable());
-        A.CallTo(() => _userRepository.GetCompanyUserEmailForCompanyAndRoleId(A<IEnumerable<Guid>>._, A<Guid>._))
-            .Returns(new[] {"test@email.com"}.ToAsyncEnumerable());
+        A.CallTo(() => _userRepository.GetCompanyUserInformationForCompanyAndRoleId(A<IEnumerable<Guid>>._, A<Guid>._))
+            .Returns(new[] { new ValueTuple<string?, string?, string?>("test@email.com", "Tony", "Stark") }.ToAsyncEnumerable());
         var sut = new OfferService(_portalRepositories, null!, null!, _notificationService, _mailingService);
 
         // Act
