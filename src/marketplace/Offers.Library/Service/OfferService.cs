@@ -665,7 +665,7 @@ public class OfferService : IOfferService
             var userName = string.Join(" ", new[] { receiver.Name, receiver.LastName }.Where(item => !string.IsNullOrWhiteSpace(item)));
             var mailParams = new Dictionary<string, string>
             {
-                { "name", !string.IsNullOrWhiteSpace(userName) ? userName : receiver.Email! },
+                { "name", !string.IsNullOrWhiteSpace(userName) ? userName : "Service Manager" },
                 { "offerName", offerName },
                 { "url", basePortalAddress },
                 { "declineMessage", message }
