@@ -85,11 +85,10 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
         return companyWithAddress;
     }
 
-    public Task<Pagination.Response<CompanyApplicationDetails>> GetCompanyApplicationDetailsAsync(int page, int size, string? companyName = null)
+    public Task<Pagination.Response<CompanyApplicationDetails>> GetCompanyApplicationDetailsAsync(int page, int size,CompanyApplicationStatusFilter? companyApplicationStatusFilter = null, string? companyName = null)
     {
         var applications = _portalRepositories.GetInstance<IApplicationRepository>().GetCompanyApplicationsFilteredQuery(
-            companyName?.Length >= 3 ? companyName : null,
-            new[] { CompanyApplicationStatusId.SUBMITTED, CompanyApplicationStatusId.CONFIRMED, CompanyApplicationStatusId.DECLINED });
+            companyName?.Length >= 3 ? companyName : null,UpdateCompanyApplicationStatusId(companyApplicationStatusFilter));
 
         return Pagination.CreateResponseAsync(
             page,
@@ -118,7 +117,9 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
                                 && companyUser.Email != null)
                             .Select(companyUser => companyUser!.Email)
                             .FirstOrDefault(),
-                        BusinessPartnerNumber = application.Company.BusinessPartnerNumber
+                        BusinessPartnerNumber = application.Company.BusinessPartnerNumber,
+                        CompanyRoles = application.Company!.CompanyAssignedRoles
+                            .Select(companyAssignedRoles => companyAssignedRoles.CompanyRole!.Label)
                     })
                     .AsAsyncEnumerable()));
     }
@@ -431,5 +432,19 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
         }
 
         return roleData;
+    }
+
+    private static IEnumerable<CompanyApplicationStatusId> UpdateCompanyApplicationStatusId(CompanyApplicationStatusFilter? companyApplicationStatusFilter = null)
+    {
+        IEnumerable<CompanyApplicationStatusId>? companyApplicationStatusId =new[] { CompanyApplicationStatusId.SUBMITTED, CompanyApplicationStatusId.CONFIRMED, CompanyApplicationStatusId.DECLINED };
+        if (companyApplicationStatusFilter!.Equals(CompanyApplicationStatusFilter.Closed))
+        {
+            companyApplicationStatusId = new []{ CompanyApplicationStatusId.SUBMITTED };
+        }
+        else if (companyApplicationStatusFilter!.Equals(CompanyApplicationStatusFilter.InReview))
+        {
+            companyApplicationStatusId = new []{ CompanyApplicationStatusId.CONFIRMED, CompanyApplicationStatusId.DECLINED };
+        }
+        return companyApplicationStatusId;        
     }
 }
