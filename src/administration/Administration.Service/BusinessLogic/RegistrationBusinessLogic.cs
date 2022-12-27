@@ -85,10 +85,10 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
         return companyWithAddress;
     }
 
-    public Task<Pagination.Response<CompanyApplicationDetails>> GetCompanyApplicationDetailsAsync(int page, int size,CompanyApplicationStatusFilter? companyApplicationStatusFilter = null, string? companyName = null)
+    public Task<Pagination.Response<CompanyApplicationDetails>> GetCompanyApplicationDetailsAsync(int page, int size,CompanyApplicationStatusFilter? companyApplicationStatus = null, string? companyName = null)
     {
         var applications = _portalRepositories.GetInstance<IApplicationRepository>().GetCompanyApplicationsFilteredQuery(
-            companyName?.Length >= 3 ? companyName : null,UpdateCompanyApplicationStatusId(companyApplicationStatusFilter));
+            companyName?.Length >= 3 ? companyName : null,UpdateCompanyApplicationStatusId(companyApplicationStatus));
 
         return Pagination.CreateResponseAsync(
             page,
