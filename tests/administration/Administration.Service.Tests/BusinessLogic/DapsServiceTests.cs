@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -24,10 +24,10 @@ using FakeItEasy;
 using FluentAssertions;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
-using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared;
-using System.Net;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Token;
+using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared;
+using System.Net;
 using Xunit;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Tests.BusinessLogic;
@@ -35,7 +35,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Tests.Busin
 public class DapsServiceTests
 {
     #region Initialization
-    
+
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ITokenService _tokenService;
     private readonly string _accessToken;
@@ -65,9 +65,9 @@ public class DapsServiceTests
     }
 
     #endregion
-    
+
     #region EnableDapsAuth
-    
+
     [Fact]
     public async Task EnableDapsAuthAsync_WithValidCall_ReturnsExpected()
     {
@@ -130,7 +130,7 @@ public class DapsServiceTests
 
         SetupTokenService();
         var httpMessageHandlerMock =
-            new HttpMessageHandlerMock(HttpStatusCode.BadRequest, ex:  new HttpRequestException ("DNS Error"));
+            new HttpMessageHandlerMock(HttpStatusCode.BadRequest, ex: new HttpRequestException("DNS Error"));
         var httpClient = new HttpClient(httpMessageHandlerMock)
         {
             BaseAddress = new Uri("https://base.address.com")

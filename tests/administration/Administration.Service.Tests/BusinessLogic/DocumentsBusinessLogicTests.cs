@@ -43,7 +43,7 @@ public class DocumentsBusinessLogicTests
     private static readonly Guid ValidDocumentId = Guid.NewGuid();
     private readonly IFixture _fixture;
     private readonly IDocumentRepository _documentRepository;
-    private IPortalRepositories _portalRepositories;
+    private readonly IPortalRepositories _portalRepositories;
     private readonly IOptions<DocumentSettings> _options;
 
     public DocumentsBusinessLogicTests()
@@ -51,7 +51,7 @@ public class DocumentsBusinessLogicTests
         _fixture = new Fixture().Customize(new AutoFakeItEasyCustomization { ConfigureMembers = true });
         _fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList()
             .ForEach(b => _fixture.Behaviors.Remove(b));
-        _fixture.Behaviors.Add(new OmitOnRecursionBehavior());  
+        _fixture.Behaviors.Add(new OmitOnRecursionBehavior());
 
         _documentRepository = A.Fake<IDocumentRepository>();
         _portalRepositories = A.Fake<IPortalRepositories>();
@@ -62,17 +62,17 @@ public class DocumentsBusinessLogicTests
     }
 
     #region GetSeedData
-    
+
     [Fact]
     public async Task GetSeedData_WithValidId_ReturnsValidData()
     {
         // Arrange
         SetupFakesForGetSeedData();
         var sut = new DocumentsBusinessLogic(_portalRepositories, _options);
-        
+
         // Act
         var result = await sut.GetSeedData(ValidDocumentId).ConfigureAwait(false);
-        
+
         // Assert
         result.Should().NotBeNull();
     }
@@ -84,15 +84,15 @@ public class DocumentsBusinessLogicTests
         var invalidId = Guid.NewGuid();
         SetupFakesForGetSeedData();
         var sut = new DocumentsBusinessLogic(_portalRepositories, _options);
-        
+
         // Act
         async Task Act() => await sut.GetSeedData(invalidId).ConfigureAwait(false);
-        
+
         // Assert
         var exception = await Assert.ThrowsAsync<NotFoundException>(Act);
         exception.Message.Should().Be($"Document {invalidId} does not exists.");
     }
-    
+
     [Fact]
     public async Task CreateConnectorAsync_WithCallFromTest_ThrowsForbiddenException()
     {
@@ -100,17 +100,17 @@ public class DocumentsBusinessLogicTests
         SetupFakesForGetSeedData();
         _options.Value.EnableSeedEndpoint = false;
         var sut = new DocumentsBusinessLogic(_portalRepositories, _options);
-        
+
         // Act
         async Task Act() => await sut.GetSeedData(ValidDocumentId).ConfigureAwait(false);
-        
+
         // Assert
         var exception = await Assert.ThrowsAsync<ForbiddenException>(Act);
         exception.Message.Should().Be("Endpoint can only be used on dev environment");
     }
 
     #endregion
-    
+
     #region Setup
 
     private void SetupFakesForGetSeedData()

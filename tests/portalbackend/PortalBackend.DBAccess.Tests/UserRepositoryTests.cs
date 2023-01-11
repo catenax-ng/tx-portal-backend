@@ -329,10 +329,10 @@ public class UserRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var (sut, _) = await CreateSut().ConfigureAwait(false);
-        
+
         // Act
         var result = await sut
-            .GetCompanyUserWithRoleIdForCompany(new[] {new Guid("607818be-4978-41f4-bf63-fa8d2de51154")}, new Guid("2dc4249f-b5ca-4d42-bef1-7a7a950a4f87"))
+            .GetCompanyUserWithRoleIdForCompany(new[] { new Guid("607818be-4978-41f4-bf63-fa8d2de51154") }, new Guid("2dc4249f-b5ca-4d42-bef1-7a7a950a4f87"))
             .ToListAsync().ConfigureAwait(false);
 
         // Assert
@@ -341,7 +341,7 @@ public class UserRepositoryTests : IAssemblyFixture<TestDbFixture>
     }
 
     #endregion
-    
+
     #region GetCompanyUserWithRoleIdForCompany
 
     [Fact]
@@ -349,12 +349,12 @@ public class UserRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var (sut, _) = await CreateSut().ConfigureAwait(false);
-        
+
         // Act
         var result = await sut
-            .GetCompanyUserEmailForCompanyAndRoleId(new[] {new Guid("607818be-4978-41f4-bf63-fa8d2de51154")}, new Guid("2dc4249f-b5ca-4d42-bef1-7a7a950a4f87"))
+            .GetCompanyUserEmailForCompanyAndRoleId(new[] { new Guid("607818be-4978-41f4-bf63-fa8d2de51154") }, new Guid("2dc4249f-b5ca-4d42-bef1-7a7a950a4f87"))
             .ToListAsync().ConfigureAwait(false);
-        
+
         // Assert
         result.Should().HaveCount(1);
         result.First().Email.Should().Be("tester.user4@test.de");

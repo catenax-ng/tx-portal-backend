@@ -58,30 +58,30 @@ public record CompanyWithAddressData(
     [property: JsonPropertyName("companyRoles")] IEnumerable<AgreementsRoleData> AgreementsRoleData,
     [property: JsonPropertyName("companyUser")] IEnumerable<InvitedUserData> InvitedUserData
     );
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="CompanyRole"></param>
-    /// <param name="Agreements"></param>
-    /// <returns></returns>
-    public record AgreementsRoleData(CompanyRoleId CompanyRole, IEnumerable<AgreementConsentData> Agreements);
+/// <summary>
+/// 
+/// </summary>
+/// <param name="CompanyRole"></param>
+/// <param name="Agreements"></param>
+/// <returns></returns>
+public record AgreementsRoleData(CompanyRoleId CompanyRole, IEnumerable<AgreementConsentData> Agreements);
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="AgreementId"></param>
-    /// <param name="ConsentStatusId"></param>
-    /// <returns></returns>
-    public record AgreementConsentData(
-        Guid AgreementId,
-        [property: JsonPropertyName("consentStatus")] ConsentStatusId ConsentStatusId);
-    
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="UserId"></param>
-    /// <param name="FirstName"></param>
-    /// <param name="LastName"></param>
-    /// <param name="Email"></param>
-    /// <returns></returns>
-    public record InvitedUserData(Guid UserId, string FirstName, string LastName, string Email);
+/// <summary>
+/// 
+/// </summary>
+/// <param name="AgreementId"></param>
+/// <param name="ConsentStatusId"></param>
+/// <returns></returns>
+public record AgreementConsentData(
+    Guid AgreementId,
+    [property: JsonPropertyName("consentStatus")] ConsentStatusId ConsentStatusId);
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="UserId"></param>
+/// <param name="FirstName"></param>
+/// <param name="LastName"></param>
+/// <param name="Email"></param>
+/// <returns></returns>
+public record InvitedUserData(Guid UserId, string FirstName, string LastName, string Email);

@@ -17,25 +17,25 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Models;
 
 public record OfferProviderResponse(
-    string? Title, 
-    string Provider, 
-    Guid LeadPictureId, 
-    string? ProviderName, 
-    IEnumerable<string> UseCase, 
-    IEnumerable<OfferDescriptionData> Descriptions, 
-    IEnumerable<OfferAgreement> Agreements, 
-    IEnumerable<string> SupportedLanguageCodes, 
-    string? Price, 
-    IEnumerable<string> Images, 
-    string? ProviderUri, 
-    string? ContactEmail, 
-    string? ContactNumber, 
+    string? Title,
+    string Provider,
+    Guid LeadPictureId,
+    string? ProviderName,
+    IEnumerable<string> UseCase,
+    IEnumerable<OfferDescriptionData> Descriptions,
+    IEnumerable<OfferAgreement> Agreements,
+    IEnumerable<string> SupportedLanguageCodes,
+    string? Price,
+    IEnumerable<string> Images,
+    string? ProviderUri,
+    string? ContactEmail,
+    string? ContactNumber,
     IDictionary<DocumentTypeId, IEnumerable<DocumentData>> Documents,
     Guid? SalesManagerId
 );

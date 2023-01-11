@@ -18,11 +18,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.IO;
-using System.Net.Http.Headers;
-using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Token;
+using System.Net.Http.Headers;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
 
@@ -82,7 +82,7 @@ public class DapsService : IDapsService
             throw new ServiceException("Daps Service Call failed", ex);
         }
     }
-    
+
     private async Task<HttpClient> GetDapsHttpClient(CancellationToken cancellationToken)
     {
         var tokenParameters = new GetTokenSettings(

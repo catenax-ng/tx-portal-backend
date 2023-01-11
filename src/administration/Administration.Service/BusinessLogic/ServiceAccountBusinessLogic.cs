@@ -39,7 +39,6 @@ public class ServiceAccountBusinessLogic : IServiceAccountBusinessLogic
     private readonly IPortalRepositories _portalRepositories;
     private readonly IServiceAccountCreation _serviceAccountCreation;
     private readonly ServiceAccountSettings _settings;
-    
 
     public ServiceAccountBusinessLogic(
         IProvisioningManager provisioningManager,
@@ -61,7 +60,7 @@ public class ServiceAccountBusinessLogic : IServiceAccountBusinessLogic
         }
         if (string.IsNullOrWhiteSpace(serviceAccountCreationInfos.Name))
         {
-            throw new ControllerArgumentException("name must not be empty","name");
+            throw new ControllerArgumentException("name must not be empty", "name");
         }
 
         var result = await _portalRepositories.GetInstance<IUserRepository>().GetCompanyIdAndBpnForIamUserUntrackedAsync(iamAdminId).ConfigureAwait(false);
@@ -99,7 +98,7 @@ public class ServiceAccountBusinessLogic : IServiceAccountBusinessLogic
             await _provisioningManager.DeleteCentralClientAsync(serviceAccount.IamServiceAccount.ClientId).ConfigureAwait(false);
             serviceAccountRepository.RemoveIamServiceAccount(serviceAccount.IamServiceAccount);
         }
-        foreach(var companyServiceAccountAssignedRole in serviceAccount.CompanyServiceAccountAssignedRoles)
+        foreach (var companyServiceAccountAssignedRole in serviceAccount.CompanyServiceAccountAssignedRoles)
         {
             serviceAccountRepository.RemoveCompanyServiceAccountAssignedRole(companyServiceAccountAssignedRole);
         }
@@ -164,7 +163,7 @@ public class ServiceAccountBusinessLogic : IServiceAccountBusinessLogic
         }
         if (serviceAccountId != serviceAccountEditableDetails.ServiceAccountId)
         {
-            throw new ArgumentException($"serviceAccountId {serviceAccountId} from path does not match the one in body {serviceAccountEditableDetails.ServiceAccountId}","serviceAccountId");
+            throw new ArgumentException($"serviceAccountId {serviceAccountId} from path does not match the one in body {serviceAccountEditableDetails.ServiceAccountId}", "serviceAccountId");
         }
         var serviceAccountRepository = _portalRepositories.GetInstance<IServiceAccountRepository>();
         var result = await serviceAccountRepository.GetOwnCompanyServiceAccountWithIamClientIdAsync(serviceAccountId, iamAdminId).ConfigureAwait(false);
@@ -191,16 +190,18 @@ public class ServiceAccountBusinessLogic : IServiceAccountBusinessLogic
                 serviceAccountEditableDetails.Name,
                 serviceAccountEditableDetails.Description,
                 serviceAccountEditableDetails.IamClientAuthMethod)).ConfigureAwait(false);
-        
+
         var authData = await _provisioningManager.GetCentralClientAuthDataAsync(result.ClientId).ConfigureAwait(false);
 
         serviceAccountRepository.AttachAndModifyCompanyServiceAccount(
             serviceAccountId,
-            sa => {
+            sa =>
+            {
                 sa.Name = result.Name;
                 sa.Description = result.Description;
             },
-            sa => {
+            sa =>
+            {
                 sa.Name = serviceAccountEditableDetails.Name;
                 sa.Description = serviceAccountEditableDetails.Description;
             });
@@ -227,5 +228,5 @@ public class ServiceAccountBusinessLogic : IServiceAccountBusinessLogic
             _portalRepositories.GetInstance<IServiceAccountRepository>().GetOwnCompanyServiceAccountsUntracked(iamAdminId));
 
     public IAsyncEnumerable<UserRoleWithDescription> GetServiceAccountRolesAsync(string? languageShortName = null) =>
-        _portalRepositories.GetInstance<IUserRolesRepository>().GetServiceAccountRolesAsync(_settings.ClientId,languageShortName);
+        _portalRepositories.GetInstance<IUserRolesRepository>().GetServiceAccountRolesAsync(_settings.ClientId, languageShortName);
 }

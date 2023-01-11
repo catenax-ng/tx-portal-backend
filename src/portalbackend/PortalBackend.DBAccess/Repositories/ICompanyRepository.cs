@@ -41,7 +41,7 @@ public interface ICompanyRepository
     Address CreateAddress(string city, string streetname, string countryAlpha2Code, Action<Address>? setOptionalParameters = null);
 
     public void AttachAndModifyAddress(Guid AddressId, Action<Address>? initialize, Action<Address> modify);
-    
+
     Task<(string CompanyName, Guid CompanyId)> GetCompanyNameIdUntrackedAsync(string iamUserId);
 
     /// <summary>
@@ -67,7 +67,7 @@ public interface ICompanyRepository
     Task<(Guid CompanyId, bool IsServiceProviderCompany)> GetCompanyIdMatchingRoleAndIamUserOrTechnicalUserAsync(string iamUserId, CompanyRoleId companyRoleId);
 
     Task<Guid> CheckProviderCompanyDetailsExistsForUser(string iamUserId);
-    
+
     /// <summary>
     /// Creates service provider company details
     /// </summary>
@@ -83,7 +83,7 @@ public interface ICompanyRepository
     /// <param name="iamUserId">Id of the iam user</param>
     /// <returns>Returns the details data</returns>
     Task<(ProviderDetailReturnData ProviderDetailReturnData, bool IsProviderCompany)> GetProviderCompanyDetailAsync(CompanyRoleId companyRoleId, string iamUserId);
-    
+
     /// <summary>
     /// Updates the service provider company details
     /// </summary>

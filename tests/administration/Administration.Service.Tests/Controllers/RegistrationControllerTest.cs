@@ -26,8 +26,8 @@ using Microsoft.AspNetCore.Mvc;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Controllers;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Models;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared.Extensions;
 using Xunit;
 
@@ -87,16 +87,16 @@ public class RegistrationControllerTest
     [Fact]
     public async Task GetCompanyApplicationDetailsAsync_ReturnsCompanyApplicationDetails()
     {
-         //Arrange
+        //Arrange
         var paginationResponse = new Pagination.Response<CompanyApplicationDetails>(new Pagination.Metadata(15, 1, 1, 15), _fixture.CreateMany<CompanyApplicationDetails>(5));
-        A.CallTo(() => _logic.GetCompanyApplicationDetailsAsync(0, 15,null,null))
+        A.CallTo(() => _logic.GetCompanyApplicationDetailsAsync(0, 15, null, null))
                   .Returns(paginationResponse);
 
         //Act
-        var result = await this._controller.GetApplicationDetailsAsync(0, 15,null,null).ConfigureAwait(false);
+        var result = await this._controller.GetApplicationDetailsAsync(0, 15, null, null).ConfigureAwait(false);
 
         //Assert
-        A.CallTo(() => _logic.GetCompanyApplicationDetailsAsync(0, 15,null,null)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _logic.GetCompanyApplicationDetailsAsync(0, 15, null, null)).MustHaveHappenedOnceExactly();
         Assert.IsType<Pagination.Response<CompanyApplicationDetails>>(result);
         result.Content.Should().HaveCount(5);
     }
@@ -122,7 +122,7 @@ public class RegistrationControllerTest
     {
         //Arrange
         var applicationId = _fixture.Create<Guid>();
-         var data = _fixture.Create<CompanyWithAddressData>();
+        var data = _fixture.Create<CompanyWithAddressData>();
         A.CallTo(() => _logic.GetCompanyWithAddressAsync(applicationId))
             .ReturnsLazily(() => data);
 

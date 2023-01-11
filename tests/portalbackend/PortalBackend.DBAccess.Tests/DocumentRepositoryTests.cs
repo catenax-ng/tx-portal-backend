@@ -140,7 +140,7 @@ public class DocumentRepositoryTests : IAssemblyFixture<TestDbFixture>
 
         // Act
         sut.AttachAndModifyDocument(Guid.NewGuid(),
-            docstatusId =>{ docstatusId.DocumentStatusId = DocumentStatusId.LOCKED; });
+            docstatusId => { docstatusId.DocumentStatusId = DocumentStatusId.LOCKED; });
 
         // Assert
         var changeTracker = context.ChangeTracker;
@@ -162,10 +162,10 @@ public class DocumentRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var (sut, _) = await CreateSut().ConfigureAwait(false);
-    
+
         // Act
         var results = await sut.GetDocumentSeedDataByIdAsync(new Guid("fda6c9cb-62be-4a98-99c1-d9c5a2df4aad")).ConfigureAwait(false);
-    
+
         // Assert
         results.Should().NotBeNull();
         results!.DocumentStatusId.Should().Be(3);
@@ -178,7 +178,7 @@ public class DocumentRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var (sut, _) = await CreateSut().ConfigureAwait(false);
-    
+
         // Act
         var result = await sut.GetDocumentSeedDataByIdAsync(Guid.NewGuid()).ConfigureAwait(false);
 
@@ -187,7 +187,7 @@ public class DocumentRepositoryTests : IAssemblyFixture<TestDbFixture>
     }
 
     #endregion
-    
+
     private async Task<(DocumentRepository, PortalDbContext)> CreateSut()
     {
         var context = await _dbTestDbFixture.GetPortalDbContext().ConfigureAwait(false);

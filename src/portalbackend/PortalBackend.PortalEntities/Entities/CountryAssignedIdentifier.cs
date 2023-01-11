@@ -18,15 +18,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 
 public class CountryAssignedIdentifier
 {
-    private CountryAssignedIdentifier() 
+    private CountryAssignedIdentifier()
     {
         CountryAlpha2Code = null!;
     }
@@ -37,7 +37,7 @@ public class CountryAssignedIdentifier
         CountryAlpha2Code = countryAlpha2Code;
         UniqueIdentifierId = uniqueIdentifierId;
     }
-    
+
     [JsonPropertyName("country_alpha2code")]
     [StringLength(2, MinimumLength = 2)]
     public string CountryAlpha2Code { get; private set; }

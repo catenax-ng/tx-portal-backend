@@ -44,7 +44,7 @@ public static class EntityTypeBuilderV1Extension
         {
             throw new ConfigurationException($"{typeof(TEntity).Name} attribute {typeof(AuditEntityV1Attribute).Name} configured AuditEntityType {auditEntityType.Name} doesn't match {typeof(TAuditEntity).Name}");
         }
-        
+
         var sourceProperties = new List<PropertyInfo>();
         if (typeof(IBaseEntity).IsAssignableFrom(typeof(TEntity)))
         {

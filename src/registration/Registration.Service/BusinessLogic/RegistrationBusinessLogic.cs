@@ -208,7 +208,8 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
             addressId = companyApplicationData.AddressId.Value;
             companyRepository.AttachAndModifyAddress(
                 addressId,
-                a => {
+                a =>
+                {
                     a.City = companyApplicationData.City!;
                     a.Streetname = companyApplicationData.Streetname!;
                     a.CountryAlpha2Code = companyApplicationData.CountryAlpha2Code!;
@@ -217,7 +218,8 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
                     a.Streetadditional = companyApplicationData.Streetadditional;
                     a.Streetnumber = companyApplicationData.Streetnumber;
                 },
-                a => {
+                a =>
+                {
                     a.City = companyWithAddress.City;
                     a.Streetname = companyWithAddress.StreetName;
                     a.CountryAlpha2Code = companyWithAddress.CountryAlpha2Code;
@@ -234,7 +236,8 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
                 companyWithAddress.City,
                 companyWithAddress.StreetName,
                 companyWithAddress.CountryAlpha2Code,
-                a => {
+                a =>
+                {
                     a.Zipcode = companyWithAddress.Zipcode;
                     a.Region = companyWithAddress.Region;
                     a.Streetadditional = companyWithAddress.Streetadditional;
@@ -245,14 +248,16 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
 
         _portalRepositories.GetInstance<ICompanyRepository>().AttachAndModifyCompany(
             companyWithAddress.CompanyId,
-            c => {
+            c =>
+            {
                 c.BusinessPartnerNumber = companyApplicationData.BusinessPartnerNumber;
                 c.Name = companyApplicationData.Name;
                 c.Shortname = companyApplicationData.ShortName;
                 c.CompanyStatusId = companyApplicationData.CompanyStatusId;
                 c.AddressId = companyApplicationData.AddressId;
             },
-            c => {
+            c =>
+            {
                 c.BusinessPartnerNumber = companyWithAddress.BusinessPartnerNumber;
                 c.Name = companyWithAddress.Name;
                 c.Shortname = companyWithAddress.Shortname;
@@ -454,11 +459,11 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
         {
             throw new ForbiddenException($"iamUserId {iamUserId} is not assigned with CompanyApplication {applicationId}");
         }
-         
+
         if (applicationUserData.DocumentDatas.Any())
         {
             var documentRepository = _portalRepositories.GetInstance<IDocumentRepository>();
-            foreach(var document in applicationUserData.DocumentDatas) 
+            foreach (var document in applicationUserData.DocumentDatas)
             {
                 documentRepository.AttachAndModifyDocument(document.DocumentId, doc =>
                     doc.DocumentStatusId = DocumentStatusId.LOCKED);

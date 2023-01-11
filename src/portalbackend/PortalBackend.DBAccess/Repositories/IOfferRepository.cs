@@ -320,7 +320,7 @@ public interface IOfferRepository
     /// <param name="offerType">Type of the offer</param>
     /// <returns>Returns the data needed to decline an offer</returns>
     Task<(string? OfferName, OfferStatusId OfferStatus, Guid? CompanyId, bool IsUserOfProvider)> GetOfferDeclineDataAsync(Guid offerId, string iamUserId, OfferTypeId offerType);
-    
+
     /// <summary>
     /// Retireve and Validate Offer Status for App
     /// </summary>

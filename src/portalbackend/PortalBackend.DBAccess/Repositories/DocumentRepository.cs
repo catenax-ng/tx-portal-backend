@@ -125,7 +125,7 @@ public class DocumentRepository : IDocumentRepository
     /// <inheritdoc />
     public void AttachAndModifyDocument(Guid documentId, Action<Document> setOptionalParameters)
     {
-        var document = _dbContext.Attach(new Document(documentId, default!, default!, default!, default,default, default)).Entity;
+        var document = _dbContext.Attach(new Document(documentId, default!, default!, default!, default, default, default)).Entity;
         setOptionalParameters.Invoke(document);
     }
 

@@ -18,11 +18,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Microsoft.EntityFrameworkCore;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
-using Microsoft.EntityFrameworkCore;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 
@@ -84,7 +84,7 @@ public class CompanyRepository : ICompanyRepository
             .AsNoTracking()
             .Where(iamUser => iamUser.UserEntityId == iamUserId)
             .Select(iamUser => iamUser!.CompanyUser!.Company)
-            .Select(company => new ValueTuple<string,Guid>(company!.Name, company.Id))
+            .Select(company => new ValueTuple<string, Guid>(company!.Name, company.Id))
             .SingleOrDefaultAsync();
 
     /// <inheritdoc />
@@ -137,7 +137,7 @@ public class CompanyRepository : ICompanyRepository
             .Where(details => details.Company!.CompanyUsers.Any(user => user.IamUser!.UserEntityId == iamUserId))
             .Select(details => details.Id)
             .SingleOrDefaultAsync();
-    
+
     /// <inheritdoc />
     public ProviderCompanyDetail CreateProviderCompanyDetail(Guid companyId, string dataUrl) =>
         _context.ProviderCompanyDetails.Add(new ProviderCompanyDetail(Guid.NewGuid(), companyId, dataUrl, DateTimeOffset.UtcNow)).Entity;
@@ -146,7 +146,7 @@ public class CompanyRepository : ICompanyRepository
     public Task<(ProviderDetailReturnData ProviderDetailReturnData, bool IsProviderCompany)> GetProviderCompanyDetailAsync(CompanyRoleId companyRoleId, string iamUserId) =>
         _context.Companies
             .Where(company => company.CompanyUsers.Any(user => user.IamUser!.UserEntityId == iamUserId))
-            .Select(company => new ValueTuple<ProviderDetailReturnData,bool>(
+            .Select(company => new ValueTuple<ProviderDetailReturnData, bool>(
                 new ProviderDetailReturnData(
                     company.ProviderCompanyDetail!.Id,
                     company.Id,
@@ -160,7 +160,7 @@ public class CompanyRepository : ICompanyRepository
         var providerCompanyDetail = _context.Attach(new ProviderCompanyDetail(providerCompanyDetailId, Guid.Empty, null!, default)).Entity;
         setOptionalParameters.Invoke(providerCompanyDetail);
     }
-    
+
     /// <inheritdoc />
     public Task<string?> GetCompanyBpnByIdAsync(Guid companyId) =>
         _context.Companies.AsNoTracking()

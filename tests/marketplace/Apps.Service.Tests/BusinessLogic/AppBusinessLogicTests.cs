@@ -391,8 +391,8 @@ public class AppBusinessLogicTests
             ServiceManagerRoles = _fixture.Create<Dictionary<string, IEnumerable<string>>>(),
             BasePortalAddress = "test"
         };
-        var sut = new AppsBusinessLogic(null!,null!, _offerService, Options.Create(settings), _mailingService);
-        
+        var sut = new AppsBusinessLogic(null!, null!, _offerService, Options.Create(settings), _mailingService);
+
         // Act
         await sut.DeactivateOfferbyAppIdAsync(appId, IamUserId).ConfigureAwait(false);
 
@@ -401,7 +401,7 @@ public class AppBusinessLogicTests
     }
 
     #endregion
-    
+
     private (CompanyUser, IamUser) CreateTestUserPair()
     {
         var companyUser = _fixture.Build<CompanyUser>()

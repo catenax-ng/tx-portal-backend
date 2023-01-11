@@ -44,7 +44,7 @@ public class ServiceProviderBusinessLogic : IServiceProviderBusinessLogic
     public async Task<ProviderDetailReturnData> GetServiceProviderCompanyDetailsAsync(string iamUserId)
     {
         var result = await _portalRepositories.GetInstance<ICompanyRepository>()
-            .GetProviderCompanyDetailAsync( CompanyRoleId.SERVICE_PROVIDER, iamUserId)
+            .GetProviderCompanyDetailAsync(CompanyRoleId.SERVICE_PROVIDER, iamUserId)
             .ConfigureAwait(false);
         if (result == default)
         {
@@ -99,7 +99,7 @@ public class ServiceProviderBusinessLogic : IServiceProviderBusinessLogic
             throw new ControllerArgumentException("Url must start with https and the maximum allowed length is 100 characters", nameof(data.Url));
         }
     }
-    
+
     private async Task UpdateServiceProviderCompanyDetailsInternalAsync(ServiceProviderDetailData data, string iamUserId)
     {
         var serviceProviderDetailDataId = await _portalRepositories.GetInstance<ICompanyRepository>()
