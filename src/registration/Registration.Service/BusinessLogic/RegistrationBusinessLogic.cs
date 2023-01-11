@@ -482,7 +482,7 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
 
         if (applicationUserData.Email != null)
         {
-            await _mailingService.SendMails(applicationUserData.Email, mailParameters, new [] { "SubmitRegistrationTemplate" });
+            await _mailingService.SendMails(applicationUserData.Email, mailParameters, new[] { "SubmitRegistrationTemplate" });
         }
         else
         {

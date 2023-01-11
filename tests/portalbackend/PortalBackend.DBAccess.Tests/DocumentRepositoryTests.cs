@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -141,7 +141,7 @@ public class DocumentRepositoryTests : IAssemblyFixture<TestDbFixture>
         // Act
         sut.AttachAndModifyDocument(Guid.NewGuid(),
             null,
-            docstatusId =>{ docstatusId.DocumentStatusId = DocumentStatusId.LOCKED; });
+            docstatusId => { docstatusId.DocumentStatusId = DocumentStatusId.LOCKED; });
 
         // Assert
         var changeTracker = context.ChangeTracker;
@@ -162,8 +162,8 @@ public class DocumentRepositoryTests : IAssemblyFixture<TestDbFixture>
 
         // Act
         sut.AttachAndModifyDocument(Guid.NewGuid(),
-            docstatusId =>{ docstatusId.DocumentStatusId = DocumentStatusId.LOCKED; },
-            docstatusId =>{ docstatusId.DocumentStatusId = DocumentStatusId.LOCKED; });
+            docstatusId => { docstatusId.DocumentStatusId = DocumentStatusId.LOCKED; },
+            docstatusId => { docstatusId.DocumentStatusId = DocumentStatusId.LOCKED; });
 
         // Assert
         var changeTracker = context.ChangeTracker;

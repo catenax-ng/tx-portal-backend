@@ -37,8 +37,6 @@ public class ServiceProviderBusinessLogicTest
 {
     private static readonly string IamUserId = new Guid("4C1A6851-D4E7-4E10-A011-3732CD045E8A").ToString();
     private static readonly Guid ExistingCompanyId = new("857b93b1-8fcb-4141-81b0-ae81950d489e");
-    private static readonly Guid ExistingServiceProviderCompanyDetailId = new("5f68fdb2-991d-4222-ac31-d8ef2e42e8d0");
-    private static readonly Guid ExistingDetailId = new("80a5491e-1189-4e35-99b6-6495641d06ef");
 
     private readonly ICompanyRepository _companyRepository;
     private readonly IPortalRepositories _portalRepositories;
