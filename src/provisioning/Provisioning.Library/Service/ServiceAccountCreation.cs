@@ -1,4 +1,4 @@
-/********************************************************************************
+﻿/********************************************************************************
  * Copyright (c) 2021,2022 BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -22,6 +22,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Models;
@@ -47,13 +48,13 @@ public class ServiceAccountCreation : IServiceAccountCreation
 
     /// <inheritdoc />
     public async Task<(string clientId, ServiceAccountData serviceAccountData, Guid serviceAccountId, List<UserRoleData> userRoleData)> CreateServiceAccountAsync(
-        string name,
-        string description,
-        IamClientAuthMethod iamClientAuthMethod,
-        IEnumerable<Guid> userRoleIds,
+        ServiceAccountCreationInfo creationData,
         Guid companyId,
-        IEnumerable<string> bpns)
+        IEnumerable<string> bpns,
+        CompanyServiceAccountTypeId companyServiceAccountTypeId,
+        Action<CompanyServiceAccount>? setOptionalParameter = null)
     {
+        var (name, description, iamClientAuthMethod, userRoleIds) = creationData;
         var serviceAccountsRepository = _portalRepositories.GetInstance<IServiceAccountRepository>();
 
         var userRoleData = await _portalRepositories.GetInstance<IUserRolesRepository>()
@@ -83,18 +84,20 @@ public class ServiceAccountCreation : IServiceAccountCreation
                     .ToDictionary(group =>
                             group.Key,
                         group => group.Select(userRole => userRole.UserRoleText)))).ConfigureAwait(false);
-
+        
         if (bpns.Any())
         {
             await _provisioningManager.AddBpnAttributetoUserAsync(serviceAccountData.UserEntityId, bpns).ConfigureAwait(false);
             await _provisioningManager.AddProtocolMapperAsync(serviceAccountData.InternalClientId).ConfigureAwait(false);
         }
-
+        
         var serviceAccount = serviceAccountsRepository.CreateCompanyServiceAccount(
             companyId,
             CompanyServiceAccountStatusId.ACTIVE,
             name,
-            description);
+            description,
+            companyServiceAccountTypeId,
+            setOptionalParameter);
 
         serviceAccountsRepository.CreateIamServiceAccount(
             serviceAccountData.InternalClientId,

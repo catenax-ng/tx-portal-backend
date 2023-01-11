@@ -112,10 +112,10 @@ public class SdFactoryService : ISdFactoryService
         }
 
         var document = _portalRepositories.GetInstance<IDocumentRepository>().CreateDocument(
-            $"SelfDescription_{docTitle}.json",
-            documentContent,
-            hash,
-            DocumentTypeId.APP_TECHNICAL_INFORMATION,
+            $"SelfDescription_{docTitle}.json", 
+            documentContent, 
+            hash, 
+            DocumentTypeId.SELF_DESCRIPTION,
             doc =>
             {
                 doc.DocumentStatusId = DocumentStatusId.LOCKED;

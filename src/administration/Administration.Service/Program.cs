@@ -18,8 +18,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.FileProviders;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Custodian;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Token;
@@ -31,6 +29,8 @@ using Org.Eclipse.TractusX.Portal.Backend.Provisioning.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Service;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.ProvisioningEntities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 
 var VERSION = "v2";
 
@@ -65,7 +65,8 @@ builder.Services.AddTransient<IRegistrationBusinessLogic, RegistrationBusinessLo
 builder.Services.AddTransient<IServiceAccountBusinessLogic, ServiceAccountBusinessLogic>()
                 .ConfigureServiceAccountSettings(builder.Configuration.GetSection("ServiceAccount"));
 
-builder.Services.AddTransient<IDocumentsBusinessLogic, DocumentsBusinessLogic>();
+builder.Services.AddTransient<IDocumentsBusinessLogic, DocumentsBusinessLogic>()
+    .ConfigureDocumentSettings(builder.Configuration.GetSection("Document"));
 builder.Services.AddTransient<IStaticDataBusinessLogic, StaticDataBusinessLogic>();
 builder.Services.AddTransient<IPartnerNetworkBusinessLogic, PartnerNetworkBusinessLogic>();
 builder.Services.AddTransient<INotificationService, NotificationService>();
@@ -89,7 +90,7 @@ builder.Services.AddTransient<IConnectorsBusinessLogic, ConnectorsBusinessLogic>
 
 builder.Services.AddTransient<IServiceProviderBusinessLogic, ServiceProviderBusinessLogic>();
 
-builder.Services.AddDbContext<ProvisioningDBContext>(options =>
+builder.Services.AddDbContext<ProvisioningDbContext>(options =>
                     options.UseNpgsql(builder.Configuration.GetConnectionString("ProvisioningDB")));
 
 builder.Build()

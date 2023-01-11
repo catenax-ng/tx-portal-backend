@@ -48,7 +48,7 @@ public class ServiceProviderControllerTest
     {
         //Arrange
         var id = Guid.NewGuid();
-        var data = new ServiceProviderDetailData("https://this-is-a-test.de");
+        var data = new ServiceProviderDetailData("https://this-is-a-test.de");  
         A.CallTo(() => _logic.CreateServiceProviderCompanyDetailsAsync(data, IamUserId))
             .ReturnsLazily(() => id);
 
@@ -60,40 +60,41 @@ public class ServiceProviderControllerTest
         Assert.IsType<CreatedAtRouteResult>(result);
         result.Value.Should().Be(id);
     }
-
+    
     [Fact]
     public async Task GetServiceProviderCompanyDetail_WithValidData_ReturnsOk()
     {
         //Arrange
         var id = Guid.NewGuid();
-        var data = new ProviderDetailReturnData(id, CompanyId, "https://this-is-a-test.de");
-        A.CallTo(() => _logic.GetServiceProviderCompanyDetailsAsync(id, IamUserId))
+        var data = new ProviderDetailReturnData(id, CompanyId, "https://this-is-a-test.de");  
+        A.CallTo(() => _logic.GetServiceProviderCompanyDetailsAsync(IamUserId))
             .ReturnsLazily(() => data);
 
         //Act
-        var result = await this._controller.GetServiceProviderCompanyDetail(id).ConfigureAwait(false);
+        var result = await this._controller.GetServiceProviderCompanyDetail().ConfigureAwait(false);
 
         //Assert
-        A.CallTo(() => _logic.GetServiceProviderCompanyDetailsAsync(id, IamUserId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _logic.GetServiceProviderCompanyDetailsAsync(IamUserId)).MustHaveHappenedOnceExactly();
         Assert.IsType<ProviderDetailReturnData>(result);
         result.Id.Should().Be(id);
         result.CompanyId.Should().Be(CompanyId);
     }
-
+    
+    
     [Fact]
     public async Task UpdateServiceProviderCompanyDetail_WithValidData_ReturnsOk()
     {
         //Arrange
         var id = Guid.NewGuid();
-        var data = new ServiceProviderDetailData("https://this-is-a-test.de");
-        A.CallTo(() => _logic.UpdateServiceProviderCompanyDetailsAsync(id, data, IamUserId))
+        var data = new ServiceProviderDetailData("https://this-is-a-test.de");  
+        A.CallTo(() => _logic.UpdateServiceProviderCompanyDetailsAsync(data, IamUserId))
             .ReturnsLazily(() => Task.CompletedTask);
 
         //Act
-        var result = await this._controller.UpdateServiceProviderCompanyDetail(id, data).ConfigureAwait(false);
+        var result = await this._controller.UpdateServiceProviderCompanyDetail(data).ConfigureAwait(false);
 
         //Assert
-        A.CallTo(() => _logic.UpdateServiceProviderCompanyDetailsAsync(id, data, IamUserId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _logic.UpdateServiceProviderCompanyDetailsAsync(data, IamUserId)).MustHaveHappenedOnceExactly();
         Assert.IsType<NoContentResult>(result);
     }
 }

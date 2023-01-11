@@ -20,10 +20,11 @@
 
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using System.ComponentModel.DataAnnotations;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Base;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 
-public class Company
+public class Company : IBaseEntity
 {
     private Company()
     {
@@ -42,8 +43,9 @@ public class Company
         UseCases = new HashSet<UseCase>();
         ProvidedConnectors = new HashSet<Connector>();
         HostedConnectors = new HashSet<Connector>();
+        CompanyIdentifiers = new HashSet<CompanyIdentifier>();
     }
-
+    
     public Company(Guid id, string name, CompanyStatusId companyStatusId, DateTimeOffset dateCreated) : this()
     {
         Id = id;
@@ -59,9 +61,6 @@ public class Company
     [MaxLength(20)]
     public string? BusinessPartnerNumber { get; set; }
 
-    [MaxLength(20)]
-    public string? TaxId { get; set; }
-
     [MaxLength(255)]
     public string Name { get; set; }
 
@@ -76,7 +75,7 @@ public class Company
 
     // Navigation properties
     public virtual Address? Address { get; set; }
-
+    
     public virtual ProviderCompanyDetail? ProviderCompanyDetail { get; private set; }
     public virtual ICollection<Agreement> Agreements { get; private set; }
     public virtual ICollection<Offer> BoughtOffers { get; private set; }
@@ -94,4 +93,5 @@ public class Company
     public virtual ICollection<Offer> ProvidedOffers { get; private set; }
     public virtual ICollection<Connector> ProvidedConnectors { get; private set; }
     public virtual ICollection<UseCase> UseCases { get; private set; }
+    public virtual ICollection<CompanyIdentifier> CompanyIdentifiers { get; private set; }
 }

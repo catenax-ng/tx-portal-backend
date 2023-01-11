@@ -20,6 +20,21 @@
 
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\framework\Framework.Web\Framework.Web.csproj" />
+    <ProjectReference Include="..\..\provisioning\Provisioning.Library\Provisioning.Library.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.7">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
+    <PackageReference Include="PasswordGenerator" Version="2.1.0" />
+    <ProjectReference Include="..\..\framework\Framework.BaseDependencies\Framework.BaseDependencies.csproj" />
+  </ItemGroup>
+
   <PropertyGroup>
     <AssemblyName>Org.Eclipse.TractusX.Portal.Backend.Provisioning.Service</AssemblyName>
     <TargetFramework>net6.0</TargetFramework>
@@ -32,26 +47,10 @@
     <NoWarn>CS1591</NoWarn>
   </PropertyGroup>
 
-  <Target Name="DotnetFormat" BeforeTargets="Build">
-    <Exec Command="dotnet format --verify-no-changes --no-restore"/>
-  </Target>
-
   <ItemGroup>
     <SonarQubeSetting Include="sonar.coverage.exclusions">
       <Value>Program.cs</Value>
     </SonarQubeSetting>
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\framework\Framework.Web\Framework.Web.csproj" />
-    <ProjectReference Include="..\..\provisioning\Provisioning.Library\Provisioning.Library.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="6.0.4" />
-    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
-    <PackageReference Include="PasswordGenerator" Version="2.1.0" />
-    <ProjectReference Include="..\..\framework\Framework.BaseDependencies\Framework.BaseDependencies.csproj" />
   </ItemGroup>
 
 </Project>

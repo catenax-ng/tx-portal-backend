@@ -18,11 +18,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Microsoft.EntityFrameworkCore;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using Microsoft.EntityFrameworkCore;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 
@@ -89,15 +89,18 @@ public class ApplicationRepository : IApplicationRepository
     public Task<CompanyApplicationUserEmailData?> GetOwnCompanyApplicationUserEmailDataAsync(Guid applicationId, string iamUserId) =>
         _dbContext.CompanyApplications
             .Where(application => application.Id == applicationId)
-            .Select(application => new
-            {
-                Application = application,
-                CompanyUser = application.Company!.CompanyUsers.Where(companyUser => companyUser.IamUser!.UserEntityId == iamUserId).SingleOrDefault()
+            .Select(application => new {
+                Application = application, 
+                CompanyUser = application.Company!.CompanyUsers.Where(companyUser => companyUser.IamUser!.UserEntityId == iamUserId).SingleOrDefault(),
+                Documents = application.Company!.CompanyUsers.SelectMany(companyUser => companyUser.Documents).Where(Doc => Doc.DocumentStatusId != DocumentStatusId.LOCKED)
+                    .Select(document => new { document.Id, document.DocumentStatusId })
             })
             .Select(data => new CompanyApplicationUserEmailData(
                 data.Application.ApplicationStatusId,
                 data.CompanyUser!.Id,
-                data.CompanyUser!.Email))
+                data.CompanyUser!.Email,
+                data.Documents!.Select(doc => new DocumentStatusData(doc.Id, doc.DocumentStatusId))
+                ))
             .SingleOrDefaultAsync();
 
     public Task<CompanyWithAddress?> GetCompanyWithAdressUntrackedAsync(Guid companyApplicationId) =>
@@ -117,8 +120,7 @@ public class ApplicationRepository : IApplicationRepository
                     Streetadditional = companyApplication.Company.Address.Streetadditional,
                     Streetnumber = companyApplication.Company.Address.Streetnumber,
                     Zipcode = companyApplication.Company.Address.Zipcode,
-                    CountryDe = companyApplication.Company.Address.Country!.CountryNameDe, // FIXME internationalization, maybe move to separate endpoint that returns Contrynames for all (or a specific) language
-                    TaxId = companyApplication.Company.TaxId
+                    CountryDe = companyApplication.Company.Address.Country!.CountryNameDe // FIXME internationalization, maybe move to separate endpoint that returns Contrynames for all (or a specific) language
                 })
             .AsNoTracking()
             .SingleOrDefaultAsync();
@@ -130,20 +132,30 @@ public class ApplicationRepository : IApplicationRepository
             .SelectMany(company => company.CompanyApplications.Where(companyApplication =>
                 applicationStatusIds != null ? applicationStatusIds.Contains(companyApplication.ApplicationStatusId) : true));
 
-    public Task<CompanyApplicationWithCompanyAddressUserData?> GetCompanyApplicationWithCompanyAdressUserDataAsync(Guid applicationId, Guid companyId, string iamUserId) =>
+    public Task<CompanyApplicationWithCompanyAddressUserData?> GetCompanyApplicationWithCompanyAdressUserDataAsync (Guid applicationId, Guid companyId, string iamUserId) =>
         _dbContext.CompanyApplications
+            .AsNoTracking()
             .Where(application => application.Id == applicationId
                 && application.CompanyId == companyId)
-            .Include(application => application.Company)
-            .Include(application => application.Company!.Address)
             .Select(application => new CompanyApplicationWithCompanyAddressUserData(
-                application)
-            {
-                CompanyUserId = application.Company!.CompanyUsers
+                application.ApplicationStatusId,
+                application.Company!.Name,
+                application.Company.Shortname,
+                application.Company.BusinessPartnerNumber,
+                application.Company.CompanyStatusId,
+                application.Company.AddressId,
+                application.Company.Address!.Streetname,
+                application.Company.Address.Streetadditional,
+                application.Company.Address.Streetnumber,
+                application.Company.Address.Zipcode,
+                application.Company.Address.City,
+                application.Company.Address.Region,
+                application.Company.Address.CountryAlpha2Code,
+                application.Company.Address.Country!.CountryNameDe,
+                application.Company.CompanyUsers
                     .Where(companyUser => companyUser.IamUser!.UserEntityId == iamUserId)
                     .Select(companyUser => companyUser.Id)
-                    .SingleOrDefault()
-            })
+                    .SingleOrDefault()))
             .SingleOrDefaultAsync();
 
     public Task<CompanyApplication?> GetCompanyAndApplicationForSubmittedApplication(Guid applicationId) =>
@@ -209,7 +221,30 @@ public class ApplicationRepository : IApplicationRepository
             .AsAsyncEnumerable();
 
     public IQueryable<CompanyApplication> GetAllCompanyApplicationsDetailsQuery(string? companyName = null) =>
+         _dbContext.CompanyApplications
+            .AsNoTracking()
+            .Where(application => companyName != null ? EF.Functions.ILike(application.Company!.Name, $"%{companyName}%") : true);
+
+    public Task<CompanyUserRoleWithAddress?> GetCompanyUserRoleWithAdressUntrackedAsync(Guid companyApplicationId) =>
         _dbContext.CompanyApplications
-           .AsNoTracking()
-           .Where(application => companyName != null ? EF.Functions.ILike(application.Company!.Name, $"%{companyName}%") : true);
+            .AsSplitQuery()
+            .Where(companyApplication => companyApplication.Id == companyApplicationId)
+            .Select(
+                companyApplication => new CompanyUserRoleWithAddress(
+                    companyApplication.CompanyId,
+                    companyApplication.Company!.Name,
+                    companyApplication.Company.Shortname,
+                    companyApplication.Company.BusinessPartnerNumber,
+                    companyApplication.Company.Address!.City,
+                    companyApplication.Company.Address.Streetname,
+                    companyApplication.Company.Address.CountryAlpha2Code,
+                    companyApplication.Company.Address.Region,
+                    companyApplication.Company.Address.Streetadditional,
+                    companyApplication.Company.Address.Streetnumber,
+                    companyApplication.Company.Address.Zipcode,
+                    companyApplication.Company.Address.Country!.CountryNameDe,
+                    companyApplication.Company.CompanyRoles.SelectMany(companyRole => companyRole.AgreementAssignedCompanyRoles.Select(x => new AgreementsData(x.CompanyRoleId, x.AgreementId, x.Agreement!.Consents.SingleOrDefault(consent => consent.CompanyId == companyApplication.CompanyId)!.ConsentStatusId))),
+                    companyApplication.Invitations.Select(x => new InvitedCompanyUserData(x.CompanyUserId, x.CompanyUser!.Firstname, x.CompanyUser.Lastname, x.CompanyUser.Email))))
+            .AsNoTracking()
+            .SingleOrDefaultAsync();
 }

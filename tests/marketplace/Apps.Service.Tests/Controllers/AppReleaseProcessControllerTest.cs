@@ -72,7 +72,7 @@ public class AppReleaseProcessControllerTest
 
         // Act
         var result = await this._controller.UpdateApp(appId, data).ConfigureAwait(false);
-
+        
         // Assert
         Assert.IsType<NoContentResult>(result);
         A.CallTo(() => _logic.UpdateAppAsync(appId, data, IamUserId)).MustHaveHappenedOnceExactly();
@@ -82,7 +82,7 @@ public class AppReleaseProcessControllerTest
     public async Task UpdateAppDocument_ReturnsExpectedResult()
     {
         //Arrange
-        var appId = new Guid("5cf74ef8-e0b7-4984-a872-474828beb5d2");
+        Guid appId = new Guid("5cf74ef8-e0b7-4984-a872-474828beb5d2");
         var documentTypeId = DocumentTypeId.ADDITIONAL_DETAILS;
         var file = FormFileHelper.GetFormFile("this is just a test", "superFile.pdf", "application/pdf");
 
@@ -91,7 +91,7 @@ public class AppReleaseProcessControllerTest
 
         //Act
         await this._controller.UpdateAppDocumentAsync(appId, documentTypeId, file, CancellationToken.None).ConfigureAwait(false);
-
+        
         // Assert 
         A.CallTo(() => _logic.CreateAppDocumentAsync(appId, documentTypeId, file, IamUserId, CancellationToken.None))
             .MustHaveHappenedOnceExactly();
@@ -101,11 +101,11 @@ public class AppReleaseProcessControllerTest
     public async Task AddAppUserRole_AndUserRoleDescriptionWith201StatusCode()
     {
         //Arrange
-        var appId = new Guid("5cf74ef8-e0b7-4984-a872-474828beb5d2");
-        var userId = new Guid("7eab8e16-8298-4b41-953b-515745423658");
+        Guid appId = new Guid("5cf74ef8-e0b7-4984-a872-474828beb5d2");
+        Guid userId = new Guid("7eab8e16-8298-4b41-953b-515745423658");
         var appUserRoles = _fixture.CreateMany<AppUserRole>(3);
         var appRoleData = _fixture.CreateMany<AppRoleData>(3);
-        A.CallTo(() => _logic.AddAppUserRoleAsync(appId, appUserRoles, userId.ToString()))
+        A.CallTo(() => _logic.AddAppUserRoleAsync(appId, appUserRoles,userId.ToString()))
             .Returns(appRoleData);
 
         //Act
@@ -113,7 +113,7 @@ public class AppReleaseProcessControllerTest
         foreach (var item in result)
         {
             //Assert
-            A.CallTo(() => _logic.AddAppUserRoleAsync(appId, appUserRoles, userId.ToString())).MustHaveHappenedOnceExactly();
+            A.CallTo(() => _logic.AddAppUserRoleAsync(appId, appUserRoles,userId.ToString())).MustHaveHappenedOnceExactly();
             Assert.NotNull(item);
             Assert.IsType<AppRoleData>(item);
         }
@@ -129,7 +129,7 @@ public class AppReleaseProcessControllerTest
 
         //Act
         var result = await this._controller.GetOfferAgreementDataAsync().ToListAsync().ConfigureAwait(false);
-
+        
         // Assert 
         result.Should().HaveCount(5);
     }
@@ -145,7 +145,7 @@ public class AppReleaseProcessControllerTest
 
         //Act
         var result = await this._controller.GetOfferAgreementConsentById(appId).ConfigureAwait(false);
-
+        
         // Assert 
         result.Should().Be(data);
         A.CallTo(() => _logic.GetOfferAgreementConsentById(appId, IamUserId))
@@ -163,7 +163,7 @@ public class AppReleaseProcessControllerTest
 
         //Act
         var result = await this._controller.SubmitOfferConsentToAgreementsAsync(appId, data).ConfigureAwait(false);
-
+        
         // Assert 
         result.Should().Be(1);
         A.CallTo(() => _logic.SubmitOfferConsentAsync(appId, data, IamUserId))
@@ -181,7 +181,7 @@ public class AppReleaseProcessControllerTest
 
         //Act
         var result = await this._controller.GetAppDetailsForStatusAsync(appId).ConfigureAwait(false);
-
+        
         // Assert 
         result.Should().Be(data);
         A.CallTo(() => _logic.GetAppDetailsForStatusAsync(appId, IamUserId))
@@ -195,11 +195,11 @@ public class AppReleaseProcessControllerTest
         var appId = Guid.NewGuid();
         var roleId = Guid.NewGuid();
         A.CallTo(() => _logic.DeleteAppRoleAsync(A<Guid>._, A<Guid>._, A<string>._))
-            .ReturnsLazily(() => Task.CompletedTask);
+            .ReturnsLazily(()=> Task.CompletedTask);
 
         //Act
         var result = await this._controller.DeleteAppRoleAsync(appId, roleId).ConfigureAwait(false);
-
+        
         // Assert 
         Assert.IsType<NoContentResult>(result);
         A.CallTo(() => _logic.DeleteAppRoleAsync(appId, roleId, IamUserId))
@@ -216,7 +216,7 @@ public class AppReleaseProcessControllerTest
 
         //Act
         var result = await this._controller.GetAppProviderSalesManagerAsync().ToListAsync().ConfigureAwait(false);
-
+        
         // Assert 
         result.Should().HaveCount(5);
         A.CallTo(() => _logic.GetAppProviderSalesManagersAsync(IamUserId))
@@ -251,7 +251,7 @@ public class AppReleaseProcessControllerTest
             "Test Provider",
             "https://test.de",
             Guid.NewGuid(),
-            new[]
+            new []
             {
                 Guid.NewGuid()
             },
@@ -269,7 +269,7 @@ public class AppReleaseProcessControllerTest
 
         // Act
         var result = await this._controller.UpdateAppRelease(appId, data).ConfigureAwait(false);
-
+        
         // Assert
         Assert.IsType<NoContentResult>(result);
         A.CallTo(() => _logic.UpdateAppReleaseAsync(appId, data, IamUserId)).MustHaveHappenedOnceExactly();
@@ -280,14 +280,14 @@ public class AppReleaseProcessControllerTest
     {
         //Arrange
         var paginationResponse = new Pagination.Response<InReviewAppData>(new Pagination.Metadata(15, 1, 1, 15), _fixture.CreateMany<InReviewAppData>(5));
-        A.CallTo(() => _logic.GetAllInReviewStatusAppsAsync(A<int>._, A<int>._, A<OfferSorting?>._))
+        A.CallTo(() => _logic.GetAllInReviewStatusAppsAsync(A<int>._, A<int>._,A<OfferSorting?>._,null))
             .ReturnsLazily(() => paginationResponse);
 
         //Act
         var result = await this._controller.GetAllInReviewStatusAppsAsync().ConfigureAwait(false);
 
         //Assert
-        A.CallTo(() => _logic.GetAllInReviewStatusAppsAsync(0, 15, null)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _logic.GetAllInReviewStatusAppsAsync(0, 15, null, null)).MustHaveHappenedOnceExactly();
         result.Content.Should().HaveCount(5);
     }
 
@@ -329,7 +329,7 @@ public class AppReleaseProcessControllerTest
         }
     }
 
-    [Fact]
+     [Fact]
     public async Task ApproveAppRequest_ReturnsExpectedCount()
     {
         //Arrange

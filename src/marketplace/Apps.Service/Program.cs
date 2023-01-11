@@ -23,9 +23,9 @@ using Org.Eclipse.TractusX.Portal.Backend.Apps.Service.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Web;
 using Org.Eclipse.TractusX.Portal.Backend.Mailing.SendMail;
 using Org.Eclipse.TractusX.Portal.Backend.Notifications.Library;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.Offers.Library.DependencyInjection;
 using Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Service;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
 
 var VERSION = "v2";
@@ -45,16 +45,15 @@ builder.Services.AddDefaultServices<Program>(builder.Configuration, VERSION)
     .AddPortalRepositories(builder.Configuration)
     .AddProvisioningManager(builder.Configuration);
 
+builder.Services.AddTransient<INotificationService, NotificationService>();
 builder.Services.AddTransient<IAppsBusinessLogic, AppsBusinessLogic>()
+                .AddTransient<IOfferService, OfferService>()
                 .AddTransient<IOfferSubscriptionService, OfferSubscriptionService>()
                 .ConfigureAppsSettings(builder.Configuration.GetSection("AppMarketPlace"));
 
 builder.Services.AddOfferSetupService();
 
 builder.Services.AddTransient<IAppReleaseBusinessLogic, AppReleaseBusinessLogic>();
-
-builder.Services.AddTransient<INotificationService, NotificationService>();
-builder.Services.AddTransient<IOfferService, OfferService>();
 
 builder.Build()
     .CreateApp<Program>("apps", VERSION)

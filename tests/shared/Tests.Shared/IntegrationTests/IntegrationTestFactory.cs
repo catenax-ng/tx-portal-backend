@@ -18,6 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Configurations;
 using DotNet.Testcontainers.Containers;
@@ -28,13 +29,13 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Seeder;
 using Xunit;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Tests.Shared.IntegrationTests;
 
 public class IntegrationTestFactory<TTestClass> : WebApplicationFactory<TTestClass>, IAsyncLifetime
-    where TTestClass : class
+    where TTestClass : class 
 {
     private readonly TestcontainerDatabase _container;
     public IList<Action<PortalDbContext>>? SetupDbActions { get; set; }
@@ -69,7 +70,7 @@ public class IntegrationTestFactory<TTestClass> : WebApplicationFactory<TTestCla
             services.AddDbContext<PortalDbContext>(options =>
             {
                 options.UseNpgsql(_container.ConnectionString,
-                    x => x.MigrationsAssembly(typeof(PortalDbContextFactory).Assembly.GetName().Name)
+                    x => x.MigrationsAssembly(typeof(BatchSeeder).Assembly.GetName().Name)
                         .MigrationsHistoryTable("__efmigrations_history_portal"));
             });
             services.EnsureDbCreated(SetupDbActions);

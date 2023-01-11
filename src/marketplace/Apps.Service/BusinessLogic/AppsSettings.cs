@@ -33,15 +33,15 @@ public class AppsSettings
     /// </summary>
     /// <value></value>
     [Required]
-    public IDictionary<string, IEnumerable<string>> CompanyAdminRoles { get; set; } = null!;
+    public IDictionary<string,IEnumerable<string>> CompanyAdminRoles { get; set; } = null!;
 
     /// <summary>
     /// Notification Type Id
     /// </summary>
     /// <value></value>
     [Required]
-    public IEnumerable<NotificationTypeId> NotificationTypeIds { get; set; } = null!;
-
+    public IEnumerable<NotificationTypeId> SubmitAppNotificationTypeIds { get; set; } = null!;
+    
     /// <summary>
     /// Document Type Id
     /// </summary>
@@ -54,7 +54,7 @@ public class AppsSettings
     /// </summary>
     [Required(AllowEmptyStrings = false)]
     public string BasePortalAddress { get; init; } = null!;
-
+    
     /// <summary>
     /// AppOverview url required for the decline request email 
     /// </summary>
@@ -65,20 +65,20 @@ public class AppsSettings
     /// Service account roles
     /// </summary>
     [Required]
-    public IDictionary<string, IEnumerable<string>> ServiceAccountRoles { get; set; } = null!;
+    public IDictionary<string,IEnumerable<string>> ServiceAccountRoles { get; set; } = null!;
 
     /// <summary>
     /// Sales Manager roles
     /// </summary>
     [Required]
-    public IDictionary<string, IEnumerable<string>> SalesManagerRoles { get; set; } = null!;
-
+    public IDictionary<string,IEnumerable<string>> SalesManagerRoles { get; set; } = null!;
+    
     /// <summary>
     /// Roles to notify when a new subscription was created
     /// </summary>
     [Required]
     public IDictionary<string, IEnumerable<string>> ServiceManagerRoles { get; set; } = null!;
-
+    
     /// <summary>
     /// Document Content Type Settings
     /// </summary>
@@ -92,12 +92,12 @@ public class AppsSettings
     /// <value></value>
     [Required]
     public IEnumerable<OfferStatusId> OfferStatusIds { get; set; } = null!;
-    /// <summary>
+     /// <summary>
     /// Active App Company Admin Roles
     /// </summary>
     /// <value></value>
     [Required]
-    public IDictionary<string, IEnumerable<string>> ActiveAppCompanyAdminRoles { get; set; } = null!;
+    public IDictionary<string,IEnumerable<string>> ActiveAppCompanyAdminRoles { get; set; } = null!;
 
     /// <summary>
     /// Active App Notification Type Id
@@ -105,13 +105,13 @@ public class AppsSettings
     /// <value></value>
     [Required]
     public IEnumerable<NotificationTypeId> ActiveAppNotificationTypeIds { get; set; } = null!;
-
+    
     /// <summary>
     /// Approve App Notification Type Id
     /// </summary>
     /// <value></value>
     public IEnumerable<NotificationTypeId> ApproveAppNotificationTypeIds { get; set; } = null!;
-
+    
     /// <summary>
     /// Roles to notify when a new subscription was created for sales and App Manager
     /// </summary>

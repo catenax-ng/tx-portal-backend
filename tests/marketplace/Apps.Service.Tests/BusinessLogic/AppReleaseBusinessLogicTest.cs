@@ -25,6 +25,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Notifications.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Service;
@@ -82,17 +83,22 @@ public class AppReleaseBusinessLogicTest
             .With(u => u.CompanyUser, _companyUser)
             .Create();
         _companyUser.IamUser = _iamUser;
-
+        
         _settings = A.Fake<AppsSettings>();
-        _settings.ActiveAppNotificationTypeIds = new[]
+        _settings.OfferStatusIds = new [] 
+        {
+            OfferStatusId.IN_REVIEW,
+            OfferStatusId.ACTIVE
+        };
+        _settings.ActiveAppNotificationTypeIds = new []
         {
             NotificationTypeId.APP_ROLE_ADDED
         };
-        _settings.NotificationTypeIds = new[]
+        _settings.SubmitAppNotificationTypeIds = new []
         {
             NotificationTypeId.APP_RELEASE_REQUEST
         };
-        _settings.ActiveAppCompanyAdminRoles = new Dictionary<string, IEnumerable<string>>
+         _settings.ActiveAppCompanyAdminRoles = new Dictionary<string, IEnumerable<string>>
         {
             { ClientId, new [] { "Company Admin" } }
         };
@@ -115,7 +121,7 @@ public class AppReleaseBusinessLogicTest
         var appUserRoles = new AppUserRole[] {
             new("IT Admin",appUserRoleDescription)
         };
-        A.CallTo(() => _offerRepository.IsProviderCompanyUserAsync(A<Guid>.That.IsEqualTo(appId), A<string>.That.IsEqualTo(iamUserId), A<OfferTypeId>.That.IsEqualTo(OfferTypeId.APP))).Returns((true, true));
+        A.CallTo(() => _offerRepository.IsProviderCompanyUserAsync(A<Guid>.That.IsEqualTo(appId), A<string>.That.IsEqualTo(iamUserId), A<OfferTypeId>.That.IsEqualTo(OfferTypeId.APP))).Returns((true,true));
         var sut = new AppReleaseBusinessLogic(_portalRepositories, _options, null!, null!);
 
         // Act
@@ -123,10 +129,10 @@ public class AppReleaseBusinessLogicTest
 
         // Assert
         A.CallTo(() => _offerRepository.IsProviderCompanyUserAsync(A<Guid>._, A<string>._, A<OfferTypeId>._)).MustHaveHappened();
-        foreach (var appRole in appUserRoles)
+        foreach(var appRole in appUserRoles)
         {
             A.CallTo(() => _userRolesRepository.CreateAppUserRole(A<Guid>._, A<string>.That.IsEqualTo(appRole.role))).MustHaveHappened();
-            foreach (var item in appRole.descriptions)
+            foreach(var item in appRole.descriptions)
             {
                 A.CallTo(() => _userRolesRepository.CreateAppUserRoleDescription(A<Guid>._, A<string>.That.IsEqualTo(item.languageCode), A<string>.That.IsEqualTo(item.description))).MustHaveHappened();
             }
@@ -137,15 +143,15 @@ public class AppReleaseBusinessLogicTest
     }
 
     #region AddAppAsync
-
+    
     [Fact]
     public async Task AddAppAsync_WithoutEmptyLanguageCodes_ThrowsException()
     {
         // Arrange
-        var data = new AppRequestModel("test", "test", null, Guid.NewGuid(), new List<Guid>(), new List<LocalizedDescription>(), new[] { string.Empty }, "123");
+        var data = new AppRequestModel("test", "test", null, Guid.NewGuid(), new List<Guid>(), new List<LocalizedDescription>(), new [] { string.Empty }, "123");
         var settings = new AppsSettings();
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
-
+     
         // Act
         async Task Act() => await sut.AddAppAsync(data, _iamUser.UserEntityId).ConfigureAwait(false);
 
@@ -153,15 +159,15 @@ public class AppReleaseBusinessLogicTest
         var error = await Assert.ThrowsAsync<ControllerArgumentException>(Act).ConfigureAwait(false);
         error.ParamName.Should().Be("SupportedLanguageCodes");
     }
-
+    
     [Fact]
     public async Task AddAppAsync_WithEmptyUseCaseIds_ThrowsException()
     {
         // Arrange
-        var data = new AppRequestModel("test", "test", null, Guid.NewGuid(), new[] { Guid.Empty }, new List<LocalizedDescription>(), new[] { "de" }, "123");
+        var data = new AppRequestModel("test", "test", null, Guid.NewGuid(), new []{ Guid.Empty }, new List<LocalizedDescription>(), new [] { "de" }, "123");
         var settings = new AppsSettings();
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
-
+     
         // Act
         async Task Act() => await sut.AddAppAsync(data, _iamUser.UserEntityId).ConfigureAwait(false);
 
@@ -174,10 +180,10 @@ public class AppReleaseBusinessLogicTest
     public async Task AddAppAsync_WithSalesManagerValidData_ReturnsExpected()
     {
         // Arrange
-        var data = new AppRequestModel("test", "test", null, _companyUser.Id, new[] { Guid.NewGuid() }, new List<LocalizedDescription> { new("de", "Long description", "desc") }, new[] { "de" }, "123");
+        var data = new AppRequestModel("test", "test", null, _companyUser.Id, new []{ Guid.NewGuid() }, new List<LocalizedDescription>{ new("de", "Long description", "desc")}, new [] { "de" }, "123");
         var settings = new AppsSettings();
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
-
+     
         // Act
         await sut.AddAppAsync(data, _iamUser.UserEntityId).ConfigureAwait(false);
 
@@ -202,10 +208,10 @@ public class AppReleaseBusinessLogicTest
     {
         // Arrange
         A.CallTo(() => _userRepository.GetOwnCompanyId(A<string>.That.IsEqualTo(_iamUser.UserEntityId))).Returns(_companyUser.CompanyId);
-        var data = new AppRequestModel("test", "test", null, null, new[] { Guid.NewGuid() }, new List<LocalizedDescription> { new("de", "Long description", "desc") }, new[] { "de" }, "123");
+        var data = new AppRequestModel("test", "test", null, null, new []{ Guid.NewGuid() }, new List<LocalizedDescription>{ new("de", "Long description", "desc")}, new [] { "de" }, "123");
         var settings = new AppsSettings();
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
-
+     
         // Act
         await sut.AddAppAsync(data, _iamUser.UserEntityId).ConfigureAwait(false);
 
@@ -227,18 +233,18 @@ public class AppReleaseBusinessLogicTest
     }
 
     #endregion
-
+    
     #region UpdateAppReleaseAsync
-
+    
     [Fact]
     public async Task UpdateAppReleaseAsync_WithoutApp_ThrowsException()
     {
         // Arrange
         SetupUpdateApp();
-        var data = new AppRequestModel("test", "test", null, Guid.NewGuid(), new List<Guid>(), new List<LocalizedDescription>(), new[] { string.Empty }, "123");
+        var data = new AppRequestModel("test", "test", null, Guid.NewGuid(), new List<Guid>(), new List<LocalizedDescription>(), new [] { string.Empty }, "123");
         var settings = new AppsSettings();
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
-
+     
         // Act
         async Task Act() => await sut.UpdateAppReleaseAsync(_notExistingAppId, data, _iamUser.UserEntityId).ConfigureAwait(false);
 
@@ -246,16 +252,16 @@ public class AppReleaseBusinessLogicTest
         var error = await Assert.ThrowsAsync<NotFoundException>(Act).ConfigureAwait(false);
         error.Message.Should().Be($"App {_notExistingAppId} does not exists");
     }
-
+    
     [Fact]
     public async Task UpdateAppReleaseAsync_WithActiveApp_ThrowsException()
     {
         // Arrange
         SetupUpdateApp();
-        var data = new AppRequestModel("test", "test", null, Guid.NewGuid(), new[] { Guid.Empty }, new List<LocalizedDescription>(), new[] { "de" }, "123");
+        var data = new AppRequestModel("test", "test", null, Guid.NewGuid(), new []{ Guid.Empty }, new List<LocalizedDescription>(), new [] { "de" }, "123");
         var settings = new AppsSettings();
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
-
+     
         // Act
         async Task Act() => await sut.UpdateAppReleaseAsync(_activeAppId, data, _iamUser.UserEntityId).ConfigureAwait(false);
 
@@ -269,10 +275,10 @@ public class AppReleaseBusinessLogicTest
     {
         // Arrange
         SetupUpdateApp();
-        var data = new AppRequestModel("test", "test", null, Guid.NewGuid(), new[] { Guid.NewGuid() }, new List<LocalizedDescription>(), new[] { "de" }, "123");
+        var data = new AppRequestModel("test", "test", null, Guid.NewGuid(), new []{ Guid.NewGuid() }, new List<LocalizedDescription>(), new [] { "de" }, "123");
         var settings = new AppsSettings();
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
-
+     
         // Act
         async Task Act() => await sut.UpdateAppReleaseAsync(_differentCompanyAppId, data, _iamUser.UserEntityId).ConfigureAwait(false);
 
@@ -286,10 +292,10 @@ public class AppReleaseBusinessLogicTest
     {
         // Arrange
         SetupUpdateApp();
-        var data = new AppRequestModel("test", "test", null, _companyUser.Id, new[] { Guid.NewGuid() }, new List<LocalizedDescription>(), new[] { "de", "en", "invalid" }, "123");
+        var data = new AppRequestModel("test", "test", null, _companyUser.Id, new []{ Guid.NewGuid() }, new List<LocalizedDescription>(), new [] { "de", "en", "invalid" }, "123");
         var settings = new AppsSettings();
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
-
+        
         // Act
         async Task Act() => await sut.UpdateAppReleaseAsync(_existingAppId, data, _iamUser.UserEntityId).ConfigureAwait(false);
 
@@ -306,22 +312,22 @@ public class AppReleaseBusinessLogicTest
 
         var data = new AppRequestModel(
             "test",
-            "test",
-            null,
-            _companyUser.Id,
-            new[] { Guid.NewGuid() },
+            "test", 
+            null, 
+            _companyUser.Id, 
+            new [] { Guid.NewGuid() },
             new LocalizedDescription[]
             {
-               new("de", "Long description", "desc")
-            },
-            new[] { "de", "en" },
+               new("de", "Long description", "desc") 
+            }, 
+            new [] { "de", "en" },
             "43");
         var settings = new AppsSettings();
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
-
+        
         // Act
         await sut.UpdateAppReleaseAsync(_existingAppId, data, _iamUser.UserEntityId).ConfigureAwait(false);
-
+        
         // Assert
         A.CallTo(() => _offerRepository.AttachAndModifyOffer(A<Guid>._, A<Action<Offer>>._, A<Action<Offer>>._))
             .MustHaveHappenedOnceExactly();
@@ -329,7 +335,7 @@ public class AppReleaseBusinessLogicTest
             .MustHaveHappenedOnceExactly();
         A.CallTo(() => _offerRepository.AddAppLanguages(A<IEnumerable<(Guid appId, string languageShortName)>>._))
             .MustHaveHappenedOnceExactly();
-        A.CallTo(() => _offerRepository.RemoveAppLanguages(A<IEnumerable<(Guid, string)>>._))
+        A.CallTo(() => _offerRepository.RemoveAppLanguages(A<IEnumerable<(Guid,string)>>._))
             .MustHaveHappenedOnceExactly();
         A.CallTo(() => _offerRepository.AddAppAssignedUseCases(A<IEnumerable<(Guid appId, Guid useCaseId)>>._))
             .MustHaveHappenedOnceExactly();
@@ -337,9 +343,9 @@ public class AppReleaseBusinessLogicTest
     }
 
     #endregion
-
+    
     #region Create App Document
-
+        
     [Fact]
     public async Task CreateAppDocumentAsync_ExecutesSuccessfully()
     {
@@ -350,7 +356,7 @@ public class AppReleaseBusinessLogicTest
         var documents = new List<Document>();
         var offerAssignedDocuments = new List<OfferAssignedDocument>();
         SetupCreateAppDocument(appId);
-        A.CallTo(() => _documentRepository.CreateDocument(A<string>._, A<byte[]>._, A<byte[]>._, A<DocumentTypeId>._, A<Action<Document>?>._))
+        A.CallTo(() => _documentRepository.CreateDocument(A<string>._, A<byte[]>._, A<byte[]>._, A<DocumentTypeId>._,A<Action<Document>?>._))
             .Invokes((string documentName, byte[] documentContent, byte[] hash, DocumentTypeId documentType, Action<Document>? setupOptionalFields) =>
             {
                 var document = new Document(documentId, documentContent, hash, documentName, DateTimeOffset.UtcNow, DocumentStatusId.PENDING, documentType);
@@ -368,7 +374,7 @@ public class AppReleaseBusinessLogicTest
             ContentTypeSettings = new[] { "application/pdf" },
             DocumentTypeIds = new[] { DocumentTypeId.APP_CONTRACT }
         };
-
+        
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
 
         // Act
@@ -379,7 +385,7 @@ public class AppReleaseBusinessLogicTest
         documents.Should().HaveCount(1);
         offerAssignedDocuments.Should().HaveCount(1);
     }
-
+    
     [Fact]
     public async Task CreateAppDocumentAsync_WrongContentTypeThrows()
     {
@@ -394,14 +400,14 @@ public class AppReleaseBusinessLogicTest
             DocumentTypeIds = new[] { DocumentTypeId.APP_CONTRACT }
         };
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
-
+     
         // Act
         async Task Act() => await sut.CreateAppDocumentAsync(appId, DocumentTypeId.APP_CONTRACT, file, _iamUser.UserEntityId, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
-
+        
         var error = await Assert.ThrowsAsync<UnsupportedMediaTypeException>(Act).ConfigureAwait(false);
-
+       
         error.Message.Should().Be($"Document type not supported. File with contentType :{string.Join(",", settings.ContentTypeSettings)} are allowed.");
     }
 
@@ -422,7 +428,7 @@ public class AppReleaseBusinessLogicTest
             new("en","this is test2"),
         };
         var appAssignedRoleDesc = new AppUserRole[] { new("Legal Admin", appUserRoleDescription) };
-
+       
         A.CallTo(() => _portalRepositories.GetInstance<IOfferRepository>().GetOfferNameProviderCompanyUserAsync(appId, _iamUser.UserEntityId, OfferTypeId.APP))
             .ReturnsLazily(() => (true, appName, _companyUser.Id, companyId));
 
@@ -433,7 +439,7 @@ public class AppReleaseBusinessLogicTest
 
         //Assert
         A.CallTo(() => _portalRepositories.GetInstance<IOfferRepository>().GetOfferNameProviderCompanyUserAsync(appId, _iamUser.UserEntityId, OfferTypeId.APP)).MustHaveHappened();
-        foreach (var item in appAssignedRoleDesc)
+        foreach(var item in appAssignedRoleDesc)
         {
             A.CallTo(() => _userRolesRepository.CreateAppUserRole(A<Guid>._, A<string>.That.IsEqualTo(item.role))).MustHaveHappened();
             foreach (var indexItem in item.descriptions)
@@ -458,7 +464,7 @@ public class AppReleaseBusinessLogicTest
             new("en","this is test2"),
         };
         var appAssignedRoleDesc = new AppUserRole[] { new("Legal Admin", appUserRoleDescription) };
-
+       
         A.CallTo(() => _portalRepositories.GetInstance<IOfferRepository>().GetOfferNameProviderCompanyUserAsync(appId, _iamUser.UserEntityId, OfferTypeId.APP))
             .ReturnsLazily(() => (true, appName, Guid.Empty, null));
 
@@ -484,7 +490,7 @@ public class AppReleaseBusinessLogicTest
             new("en","this is test2"),
         };
         var appAssignedRoleDesc = new AppUserRole[] { new("Legal Admin", appUserRoleDescription) };
-
+       
         A.CallTo(() => _portalRepositories.GetInstance<IOfferRepository>().GetOfferNameProviderCompanyUserAsync(appId, _iamUser.UserEntityId, OfferTypeId.APP))
             .ReturnsLazily(() => (true, appName, _companyUser.Id, null));
 
@@ -512,7 +518,7 @@ public class AppReleaseBusinessLogicTest
         await sut.SubmitAppReleaseRequestAsync(_existingAppId, _iamUser.UserEntityId).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() =>
+        A.CallTo(() => 
                 _offerService.SubmitOfferAsync(
                     _existingAppId,
                     _iamUser.UserEntityId,
@@ -525,7 +531,7 @@ public class AppReleaseBusinessLogicTest
     #endregion
 
     #region SubmitOfferConsentAsync
-
+    
     [Fact]
     public async Task SubmitOfferConsentAsync_WithEmptyAppId_ThrowsControllerArgumentException()
     {
@@ -556,12 +562,74 @@ public class AppReleaseBusinessLogicTest
 
     #endregion
 
+    #region GetAllInReviewStatusApps
+
+    [Fact]
+    public async Task GetAllInReviewStatusAppsAsync_DefaultRequest()
+    {
+        // Arrange
+        var offerStatus = new[] { OfferStatusId.ACTIVE , OfferStatusId.IN_REVIEW };
+        var InReviewData = new[] {
+            new InReviewAppData(Guid.NewGuid(),null,null!, OfferStatusId.IN_REVIEW),
+            new InReviewAppData(Guid.NewGuid(),null,null!, OfferStatusId.IN_REVIEW),
+            new InReviewAppData(Guid.NewGuid(),null,null!, OfferStatusId.ACTIVE),
+            new InReviewAppData(Guid.NewGuid(),null,null!, OfferStatusId.ACTIVE),
+            new InReviewAppData(Guid.NewGuid(),null,null!, OfferStatusId.ACTIVE)
+        };
+        var paginationResult = (int skip, int take) => Task.FromResult(new Pagination.Source<InReviewAppData>(5, InReviewData.Skip(skip).Take(take)));
+        A.CallTo(() => _offerRepository.GetAllInReviewStatusAppsAsync(A<IEnumerable<OfferStatusId>>._,A<OfferSorting>._))
+            .Returns(paginationResult);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(_settings), _offerService, _notificationService);
+
+        // Act
+        var result = await sut.GetAllInReviewStatusAppsAsync(0, 5, OfferSorting.DateAsc, null).ConfigureAwait(false);
+        
+        // Assert
+        A.CallTo(() => _offerRepository.GetAllInReviewStatusAppsAsync(A<IEnumerable<OfferStatusId>>
+            .That.Matches(x => x.Count() == 2 && x.All(y => offerStatus.Contains(y))),A<OfferSorting>._)).MustHaveHappenedOnceExactly();
+        Assert.IsType<Pagination.Response<InReviewAppData>>(result);
+        result.Content.Should().HaveCount(5);
+        result.Content.Should().Contain(x => x.Status == OfferStatusId.ACTIVE);
+        result.Content.Should().Contain(x => x.Status == OfferStatusId.IN_REVIEW);
+    }
+
+    [Fact]
+    public async Task GetAllInReviewStatusAppsAsync_InReviewRequest()
+    { 
+        // Arrange
+        var offerStatus = new[] { OfferStatusId.IN_REVIEW };
+        var InReviewData = new[]{
+            new InReviewAppData(Guid.NewGuid(),null,null!, OfferStatusId.IN_REVIEW),
+            new InReviewAppData(Guid.NewGuid(),null,null!, OfferStatusId.IN_REVIEW),
+            new InReviewAppData(Guid.NewGuid(),null,null!, OfferStatusId.IN_REVIEW),
+            new InReviewAppData(Guid.NewGuid(),null,null!, OfferStatusId.IN_REVIEW),
+            new InReviewAppData(Guid.NewGuid(),null,null!, OfferStatusId.IN_REVIEW)
+        };
+        var paginationResult = (int skip, int take) => Task.FromResult(new Pagination.Source<InReviewAppData>(5, InReviewData.Skip(skip).Take(take)));
+        A.CallTo(() => _offerRepository.GetAllInReviewStatusAppsAsync(A<IEnumerable<OfferStatusId>>._,A<OfferSorting>._))
+            .Returns(paginationResult);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(_settings), _offerService, _notificationService);
+
+        // Act
+        var result = await sut.GetAllInReviewStatusAppsAsync(0, 5, OfferSorting.DateAsc, OfferStatusIdFilter.InReview).ConfigureAwait(false);
+        
+        // Assert
+        A.CallTo(() => _offerRepository.GetAllInReviewStatusAppsAsync(A<IEnumerable<OfferStatusId>>
+            .That.Matches(x => x.Count() == 1 && x.All(y => offerStatus.Contains(y))),A<OfferSorting>._)).MustHaveHappenedOnceExactly();
+        Assert.IsType<Pagination.Response<InReviewAppData>>(result);
+        result.Content.Should().HaveCount(5);
+        result.Content.Should().NotContain(x => x.Status == OfferStatusId.ACTIVE);
+        result.Content.Should().Contain(x => x.Status == OfferStatusId.IN_REVIEW);
+    }
+
+    #endregion
+
     #region Setup
 
     private void SetupUpdateApp()
     {
         A.CallTo(() => _languageRepository.GetLanguageCodesUntrackedAsync(A<IEnumerable<string>>._))
-            .Returns(new List<string>() { "de", "en" }.ToAsyncEnumerable());
+            .Returns(new List<string>() {"de", "en"}.ToAsyncEnumerable());
         A.CallTo(() => _offerRepository.GetAppUpdateData(_notExistingAppId, _iamUser.UserEntityId, A<IEnumerable<string>>._, A<IEnumerable<Guid>>._))
             .ReturnsLazily(() => (AppUpdateData?)null);
         A.CallTo(() => _offerRepository.GetAppUpdateData(_activeAppId, _iamUser.UserEntityId, A<IEnumerable<string>>._, A<IEnumerable<Guid>>._))
@@ -571,7 +639,7 @@ public class AppReleaseBusinessLogicTest
         A.CallTo(() => _offerRepository.GetAppUpdateData(_existingAppId, _iamUser.UserEntityId, A<IEnumerable<string>>._, A<IEnumerable<Guid>>._))
             .ReturnsLazily(() => new AppUpdateData(OfferStatusId.CREATED, true, Array.Empty<(string, string, string)>(), Array.Empty<(string Shortname, bool IsMatch)>(), Array.Empty<Guid>(), new ValueTuple<Guid, string, bool>(Guid.NewGuid(), "123", false), null));
         A.CallTo(() => _offerService.ValidateSalesManager(A<Guid>._, A<string>._, A<IDictionary<string, IEnumerable<string>>>._)).Returns(_companyUser.CompanyId);
-
+        
         A.CallTo(() => _portalRepositories.GetInstance<ILanguageRepository>()).Returns(_languageRepository);
     }
 

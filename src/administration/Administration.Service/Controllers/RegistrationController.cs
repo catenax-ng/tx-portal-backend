@@ -18,13 +18,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Authentication;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
+using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Controllers;
 
@@ -35,7 +37,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Controllers
 public class RegistrationController : ControllerBase
 {
     private readonly IRegistrationBusinessLogic _logic;
-
+    
     /// <summary>
     /// Creates a new instance of <see cref="RegistrationController"/>
     /// </summary>
@@ -57,21 +59,22 @@ public class RegistrationController : ControllerBase
     [HttpGet]
     [Authorize(Roles = "view_submitted_applications")]
     [Route("application/{applicationId}/companyDetailsWithAddress")]
-    [ProducesResponseType(typeof(CompanyWithAddress), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CompanyWithAddressData), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    public Task<CompanyWithAddress> GetCompanyWithAddressAsync([FromRoute] Guid applicationId) =>
+    public Task<CompanyWithAddressData> GetCompanyWithAddressAsync([FromRoute] Guid applicationId) =>
         _logic.GetCompanyWithAddressAsync(applicationId);
-
+    
     /// <summary>
     /// Get Application Detail by Company Name or Status
     /// </summary>
     /// <param name="page">page index start from 0</param>
     /// <param name="size">size to get number of records</param>
+    /// <param name="companyApplicationStatusFilter">Search by company applicationstatus</param>
     /// <param name="companyName">search by company name</param>
     /// <returns>Company Application Details</returns>
     /// <remarks>
-    /// Example: GET: api/administration/registration/applications?companyName=Car&amp;page=0&amp;size=4 <br />
+    /// Example: GET: api/administration/registration/applications?companyName=Car&amp;page=0&amp;size=4&amp;companyApplicationStatus=Closed <br />
     /// Example: GET: api/administration/registration/applications?page=0&amp;size=4
     /// </remarks>
     /// <response code="200">Result as a Company Application Details</response>
@@ -79,8 +82,8 @@ public class RegistrationController : ControllerBase
     [Authorize(Roles = "view_submitted_applications")]
     [Route("applications")]
     [ProducesResponseType(typeof(Pagination.Response<CompanyApplicationDetails>), StatusCodes.Status200OK)]
-    public Task<Pagination.Response<CompanyApplicationDetails>> GetApplicationDetailsAsync([FromQuery] int page, [FromQuery] int size, [FromQuery] string? companyName = null) =>
-        _logic.GetCompanyApplicationDetailsAsync(page, size, companyName);
+    public Task<Pagination.Response<CompanyApplicationDetails>> GetApplicationDetailsAsync([FromQuery]int page, [FromQuery]int size,[FromQuery] CompanyApplicationStatusFilter? companyApplicationStatusFilter = null, [FromQuery]string? companyName = null) =>
+        _logic.GetCompanyApplicationDetailsAsync(page, size,companyApplicationStatusFilter, companyName);
 
     /// <summary>
     /// Approves the partner request
@@ -158,6 +161,7 @@ public class RegistrationController : ControllerBase
     public Task UpdateCompanyBpn([FromRoute] Guid applicationId, [FromRoute] string bpn) =>
         _logic.UpdateCompanyBpn(applicationId, bpn);
 
+    
     /// <summary>
     /// Approves the partner request
     /// </summary>
