@@ -465,8 +465,10 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
             var documentRepository = _portalRepositories.GetInstance<IDocumentRepository>();
             foreach (var document in applicationUserData.DocumentDatas)
             {
-                documentRepository.AttachAndModifyDocument(document.DocumentId, doc =>
-                    doc.DocumentStatusId = DocumentStatusId.LOCKED);
+                documentRepository.AttachAndModifyDocument(
+                    document.DocumentId,
+                    doc => doc.DocumentStatusId = document.StatusId,
+                    doc => doc.DocumentStatusId = DocumentStatusId.LOCKED);
             }
         }
 
@@ -480,7 +482,7 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
 
         if (applicationUserData.Email != null)
         {
-            await _mailingService.SendMails(applicationUserData.Email, mailParameters, new List<string> { "SubmitRegistrationTemplate" });
+            await _mailingService.SendMails(applicationUserData.Email, mailParameters, new [] { "SubmitRegistrationTemplate" });
         }
         else
         {
