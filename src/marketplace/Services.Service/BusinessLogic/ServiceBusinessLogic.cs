@@ -204,4 +204,30 @@ public class ServiceBusinessLogic : IServiceBusinessLogic
     /// <inheritdoc />
     public Task DeclineServiceRequestAsync(Guid serviceId, string iamUserId, OfferDeclineRequest data) => 
         _offerService.DeclineOfferAsync(serviceId, iamUserId, data, OfferTypeId.SERVICE, NotificationTypeId.SERVICE_RELEASE_REJECTION, _settings.ServiceManagerRoles, _settings.ServiceMarketplaceAddress);
+    
+    /// <inheritdoc />
+    public Task<int> CreateServiceDocumentAsync(Guid serviceId, DocumentTypeId documentTypeId, IFormFile document, string iamUserId, CancellationToken cancellationToken)
+    {
+        if (serviceId == Guid.Empty)
+        {
+            throw new ControllerArgumentException($"ServiceId must not be empty");
+        }
+        if (!_settings.DocumentTypeIds.Contains(documentTypeId))
+        {
+            throw new ControllerArgumentException($"documentType must be: {string.Join(",", _settings.DocumentTypeIds)}");
+        }
+        if (string.IsNullOrEmpty(document.FileName))
+        {
+            throw new ControllerArgumentException("File name is must not be null");
+        }
+        // Check if document is a pdf file (also see https://www.rfc-editor.org/rfc/rfc3778.txt)
+        if (!_settings.ContentTypeSettings.Contains(document.ContentType))
+        {
+            throw new UnsupportedMediaTypeException($"Document type not supported. File with contentType :{string.Join(",", _settings.ContentTypeSettings)} are allowed.");
+        }
+        return UploadServiceDoc(serviceId, documentTypeId, document, iamUserId, cancellationToken, OfferTypeId.SERVICE);
+    }
+
+    private async Task<int> UploadServiceDoc(Guid serviceId, DocumentTypeId documentTypeId, IFormFile document, string iamUserId, CancellationToken cancellationToken, OfferTypeId offerTypeId) =>
+        await _offerService.UploadDocumentAsync(serviceId, documentTypeId, document, iamUserId, cancellationToken, offerTypeId).ConfigureAwait(false);
 }
