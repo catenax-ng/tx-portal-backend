@@ -680,7 +680,7 @@ public class ServiceBusinessLogicTests
         
         var error = await Assert.ThrowsAsync<ControllerArgumentException>(Act).ConfigureAwait(false);
        
-        error.Message.Should().Be($"ServiceId must not be empty");
+        error.Message.Should().Be($"serviceId must not be empty");
     }
 
     #endregion
