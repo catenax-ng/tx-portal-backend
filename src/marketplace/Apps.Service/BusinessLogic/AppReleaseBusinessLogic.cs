@@ -150,11 +150,11 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         {
             throw new UnsupportedMediaTypeException($"Document type not supported. File with contentType :{string.Join(",", _settings.ContentTypeSettings)} are allowed.");
         }
-        return UploadAppDoc(appId, documentTypeId, document, iamUserId, cancellationToken, OfferTypeId.APP);
+        return UploadAppDoc(appId, documentTypeId, document, iamUserId, OfferTypeId.APP, cancellationToken);
     }
     
-    private async Task<int> UploadAppDoc (Guid appId, DocumentTypeId documentTypeId, IFormFile document, string iamUserId, CancellationToken cancellationToken, OfferTypeId offerTypeId) =>
-        await _offerService.UploadDocumentAsync(appId, documentTypeId, document, iamUserId, cancellationToken, offerTypeId).ConfigureAwait(false);
+    private async Task<int> UploadAppDoc (Guid appId, DocumentTypeId documentTypeId, IFormFile document, string iamUserId, OfferTypeId offerTypeId, CancellationToken cancellationToken) =>
+        await _offerService.UploadDocumentAsync(appId, documentTypeId, document, iamUserId, offerTypeId, cancellationToken).ConfigureAwait(false);
     
     /// <inheritdoc/>
     public Task<IEnumerable<AppRoleData>> AddAppUserRoleAsync(Guid appId, IEnumerable<AppUserRole> appAssignedDesc, string iamUserId)

@@ -589,7 +589,7 @@ public class ServiceBusinessLogicTests
         await sut.CreateServiceDocumentAsync(serviceId, DocumentTypeId.ADDITIONAL_DETAILS, file, _iamUser.UserEntityId, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() => _offerService.UploadDocumentAsync(serviceId, DocumentTypeId.ADDITIONAL_DETAILS, file, _iamUser.UserEntityId, CancellationToken.None, OfferTypeId.SERVICE)).MustHaveHappened();
+        A.CallTo(() => _offerService.UploadDocumentAsync(serviceId, DocumentTypeId.ADDITIONAL_DETAILS, file, _iamUser.UserEntityId, OfferTypeId.SERVICE, CancellationToken.None)).MustHaveHappened();
     }
 
     [Fact]

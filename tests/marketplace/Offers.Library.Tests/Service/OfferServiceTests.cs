@@ -1265,7 +1265,7 @@ public class OfferServiceTests
         var sut = new OfferService(_portalRepositories, null!, null!, null!, null!);
 
         // Act
-        await sut.UploadDocumentAsync(Id, documentTypeId, file, _iamUser.UserEntityId, CancellationToken.None, offerTypeId).ConfigureAwait(false);
+        await sut.UploadDocumentAsync(Id, documentTypeId, file, _iamUser.UserEntityId, offerTypeId, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
@@ -1286,7 +1286,7 @@ public class OfferServiceTests
         var sut = new OfferService(_portalRepositories, null!, null!, null!, null!);
 
         // Act
-        async Task Act() => await sut.UploadDocumentAsync(Id, documentTypeId, file, _iamUser.UserEntityId, CancellationToken.None, offerTypeId).ConfigureAwait(false);
+        async Task Act() => await sut.UploadDocumentAsync(Id, documentTypeId, file, _iamUser.UserEntityId, offerTypeId, CancellationToken.None).ConfigureAwait(false);
 
         // Arrange
         var ex = await Assert.ThrowsAsync<NotFoundException>(Act).ConfigureAwait(false);
@@ -1306,7 +1306,7 @@ public class OfferServiceTests
         var sut = new OfferService(_portalRepositories, null!, null!, null!, null!);
 
         // Act
-        async Task Act() => await sut.UploadDocumentAsync(Id, documentTypeId, file, _iamUser.UserEntityId, CancellationToken.None, offerTypeId).ConfigureAwait(false);
+        async Task Act() => await sut.UploadDocumentAsync(Id, documentTypeId, file, _iamUser.UserEntityId, offerTypeId, CancellationToken.None).ConfigureAwait(false);
 
         // Arrange
         var ex = await Assert.ThrowsAsync<ForbiddenException>(Act).ConfigureAwait(false);

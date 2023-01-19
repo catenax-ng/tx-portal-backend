@@ -725,7 +725,7 @@ public class OfferService : IOfferService
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
 
-    public async Task<int> UploadDocumentAsync(Guid Id, DocumentTypeId documentTypeId, IFormFile document, string iamUserId, CancellationToken cancellationToken, OfferTypeId offertypeId)
+    public async Task<int> UploadDocumentAsync(Guid Id, DocumentTypeId documentTypeId, IFormFile document, string iamUserId, OfferTypeId offertypeId, CancellationToken cancellationToken)
     {
         var offerRepository = _portalRepositories.GetInstance<IOfferRepository>();
         var result = await offerRepository.GetProviderCompanyUserIdForOfferUntrackedAsync(Id, iamUserId, OfferStatusId.CREATED, offertypeId).ConfigureAwait(false);

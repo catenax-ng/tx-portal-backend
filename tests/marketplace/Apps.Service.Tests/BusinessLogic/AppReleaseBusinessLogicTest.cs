@@ -365,7 +365,7 @@ public class AppReleaseBusinessLogicTest
         await sut.CreateAppDocumentAsync(appId, DocumentTypeId.APP_CONTRACT, file, _iamUser.UserEntityId, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() => _offerService.UploadDocumentAsync(appId, DocumentTypeId.APP_CONTRACT, file, _iamUser.UserEntityId, CancellationToken.None, OfferTypeId.APP)).MustHaveHappened();
+        A.CallTo(() => _offerService.UploadDocumentAsync(appId, DocumentTypeId.APP_CONTRACT, file, _iamUser.UserEntityId, OfferTypeId.APP, CancellationToken.None)).MustHaveHappened();
     }
     
     [Fact]

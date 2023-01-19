@@ -210,7 +210,7 @@ public class ServiceBusinessLogic : IServiceBusinessLogic
     {
         if (serviceId == Guid.Empty)
         {
-            throw new ControllerArgumentException($"ServiceId must not be empty");
+            throw new ControllerArgumentException($"serviceId must not be empty");
         }
         if (!_settings.DocumentTypeIds.Contains(documentTypeId))
         {
@@ -225,9 +225,9 @@ public class ServiceBusinessLogic : IServiceBusinessLogic
         {
             throw new UnsupportedMediaTypeException($"Document type not supported. File with contentType :{string.Join(",", _settings.ContentTypeSettings)} are allowed.");
         }
-        return UploadServiceDoc(serviceId, documentTypeId, document, iamUserId, cancellationToken, OfferTypeId.SERVICE);
+        return UploadServiceDoc(serviceId, documentTypeId, document, iamUserId, OfferTypeId.SERVICE, cancellationToken);
     }
 
-    private async Task<int> UploadServiceDoc(Guid serviceId, DocumentTypeId documentTypeId, IFormFile document, string iamUserId, CancellationToken cancellationToken, OfferTypeId offerTypeId) =>
-        await _offerService.UploadDocumentAsync(serviceId, documentTypeId, document, iamUserId, cancellationToken, offerTypeId).ConfigureAwait(false);
+    private async Task<int> UploadServiceDoc(Guid serviceId, DocumentTypeId documentTypeId, IFormFile document, string iamUserId, OfferTypeId offerTypeId, CancellationToken cancellationToken) =>
+        await _offerService.UploadDocumentAsync(serviceId, documentTypeId, document, iamUserId, offerTypeId, cancellationToken).ConfigureAwait(false);
 }

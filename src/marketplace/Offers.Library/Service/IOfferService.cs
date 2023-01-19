@@ -188,5 +188,5 @@ public interface IOfferService
     /// <param name="iamUserId"></param>
     /// <param name="cancellationToken"></param>
     /// <param name="offertypeId"></param>
-    Task<int> UploadDocumentAsync(Guid Id, DocumentTypeId documentTypeId, IFormFile document, string iamUserId, CancellationToken cancellationToken, OfferTypeId offertypeId);
+    Task<int> UploadDocumentAsync(Guid Id, DocumentTypeId documentTypeId, IFormFile document, string iamUserId, OfferTypeId offertypeId, CancellationToken cancellationToken);
 }
