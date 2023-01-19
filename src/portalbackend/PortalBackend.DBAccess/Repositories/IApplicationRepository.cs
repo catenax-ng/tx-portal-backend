@@ -60,4 +60,18 @@ public interface IApplicationRepository
     /// <param name="applicationId">Id of the application</param>
     /// <returns>Returns the bpn</returns>
     Task<string?> GetBpnForApplicationIdAsync(Guid applicationId);
+
+    /// <summary>
+    /// Gets the data needed to make the clearinghouse request for the given application
+    /// </summary>
+    /// <param name="applicationId">Id of the application</param>
+    /// <returns>Return the data needed to make the clearinghouse request</returns>
+    Task<ClearinghouseData?> GetClearinghouseDataForApplicationId(Guid applicationId);
+
+    /// <summary>
+    /// Gets the submitted application id and the clearinghouse checklist state for the given bpn
+    /// </summary>
+    /// <param name="bpn">Bpn of the company to get the application for</param>
+    /// <returns></returns>
+    Task<(Guid ApplicationId, ApplicationChecklistEntryStatusId StatusId)> GetSubmittedIdAndClearinghouseChecklistStatusByBpn(string bpn);
 }

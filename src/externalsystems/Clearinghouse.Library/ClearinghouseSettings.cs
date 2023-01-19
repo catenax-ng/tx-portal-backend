@@ -1,4 +1,4 @@
-/********************************************************************************
+﻿/********************************************************************************
  * Copyright (c) 2021,2022 BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -18,19 +18,16 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
 using System.ComponentModel.DataAnnotations;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Custodian.Library
+namespace Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library;
+
+/// <summary>
+/// Settings used in business logic concerning connectors.
+/// </summary>
+public class ClearinghouseSettings : KeyVaultAuthSettings
 {
-    public class CustodianSettings : KeyVaultAuthSettings
-    {
-        public CustodianSettings()
-        {
-            BaseAdress = null!;
-        }
-
-        [Required(AllowEmptyStrings = false)]
-        public string BaseAdress { get; set; }
-    }
+    [Required(AllowEmptyStrings = false)]
+    public string BaseAdress { get; set; } = null!;
 }

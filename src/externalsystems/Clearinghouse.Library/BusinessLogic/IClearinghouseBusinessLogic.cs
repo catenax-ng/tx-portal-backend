@@ -1,5 +1,5 @@
-/********************************************************************************
- * Copyright (c) 2021,2022 BMW Group AG
+﻿/********************************************************************************
+ * Copyright (c) 2021,2022 Microsoft and BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
@@ -18,19 +18,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
-using System.ComponentModel.DataAnnotations;
+using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.Models;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Custodian.Library
+namespace Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.BusinessLogic;
+
+public interface IClearinghouseBusinessLogic
 {
-    public class CustodianSettings : KeyVaultAuthSettings
-    {
-        public CustodianSettings()
-        {
-            BaseAdress = null!;
-        }
-
-        [Required(AllowEmptyStrings = false)]
-        public string BaseAdress { get; set; }
-    }
+    Task ProcessClearinghouseResponseAsync(string bpn, ClearinghouseResponseData data, CancellationToken cancellationToken);
+    Task TriggerCompanyDataPost(ClearinghouseTransferData transferData, CancellationToken cancellationToken);
 }

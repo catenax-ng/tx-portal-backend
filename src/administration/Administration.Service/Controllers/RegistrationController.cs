@@ -22,6 +22,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Models;
+using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Authentication;
@@ -229,6 +230,29 @@ public class RegistrationController : ControllerBase
     public async Task<NoContentResult> DeclineApplication([FromRoute] Guid applicationId, [FromBody] string comment)
     {
         await _logic.SetRegistrationVerification(applicationId, false, comment).ConfigureAwait(false);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Processes the clearinghouse response
+    /// </summary>
+    /// <param name="bpn" example="">Id of the application that should be approved</param>
+    /// <param name="responseData">Response data from clearinghouse</param>
+    /// <param name="cancellationToken">Cancellation Token</param>
+    /// <returns>NoContent</returns>
+    /// Example: POST: api/administration/registration/clearinghouse/4f0146c6-32aa-4bb1-b844-df7e8babdcb4
+    /// <response code="200">the result as a boolean.</response>
+    /// <response code="400">Either the CompanyApplication is not in status SUBMITTED or the clearing_house process is not in status IN_PROGRESS.</response>
+    /// <response code="404">No application found for the bpn.</response>
+    [HttpPost]
+    [Authorize(Roles = "approve_new_partner")]
+    [Route("clearinghouse/{bpn}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<NoContentResult> ProcessClearinghouseResponse([FromRoute] string bpn, [FromBody] ClearinghouseResponseData responseData, CancellationToken cancellationToken)
+    {
+        await _logic.ProcessClearinghouseResponseAsync(bpn, responseData, cancellationToken).ConfigureAwait(false);
         return NoContent();
     }
 }

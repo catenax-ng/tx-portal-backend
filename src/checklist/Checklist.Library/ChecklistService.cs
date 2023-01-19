@@ -21,6 +21,8 @@
 using System.Net;
 using Microsoft.Extensions.Logging;
 using Org.Eclipse.TractusX.Portal.Backend.Bpdm.Library.BusinessLogic;
+using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.BusinessLogic;
+using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
@@ -34,13 +36,20 @@ public class ChecklistService : IChecklistService
     private readonly IPortalRepositories _portalRepositories;
     private readonly IBpdmBusinessLogic _bpdmBusinessLogic;
     private readonly ICustodianBusinessLogic _custodianBusinessLogic;
+    private readonly IClearinghouseBusinessLogic _clearinghouseBusinessLogic;
     private readonly ILogger<IChecklistService> _logger;
 
-    public ChecklistService(IPortalRepositories portalRepositories, IBpdmBusinessLogic bpdmBusinessLogic, ICustodianBusinessLogic custodianBusinessLogic, ILogger<IChecklistService> logger)
+    public ChecklistService(
+        IPortalRepositories portalRepositories,
+        IBpdmBusinessLogic bpdmBusinessLogic,
+        ICustodianBusinessLogic custodianBusinessLogic,
+        IClearinghouseBusinessLogic clearinghouseBusinessLogic,
+        ILogger<IChecklistService> logger)
     {
         _portalRepositories = portalRepositories;
         _bpdmBusinessLogic = bpdmBusinessLogic;
         _custodianBusinessLogic = custodianBusinessLogic;
+        _clearinghouseBusinessLogic = clearinghouseBusinessLogic;
         _logger = logger;
     }
 
@@ -60,15 +69,24 @@ public class ChecklistService : IChecklistService
     /// <inheritdoc />
     public async Task ProcessChecklist(Guid applicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries, CancellationToken cancellationToken)
     {
+        var stepExecutions = new Dictionary<ApplicationChecklistEntryTypeId, Func<Guid, Task>>
+        {
+            { ApplicationChecklistEntryTypeId.IDENTITY_WALLET, executionApplicationId => CreateWalletAsync(executionApplicationId, cancellationToken)},
+            { ApplicationChecklistEntryTypeId.CLEARING_HOUSE, executionApplicationId => HandleClearingHouse(executionApplicationId, cancellationToken)}
+        };
         var possibleSteps = GetNextPossibleTypesWithMatchingStatus(checklistEntries.ToDictionary(x => x.TypeId, x => x.StatusId), new[] { ApplicationChecklistEntryStatusId.TO_DO });
         _logger.LogInformation("Found {StepsCount} possible steps for application {ApplicationId}", possibleSteps.Count(), applicationId);
-        if (possibleSteps.Contains(ApplicationChecklistEntryTypeId.IDENTITY_WALLET))
+        foreach (var stepToExecute in possibleSteps)
         {
+            if (!stepExecutions.TryGetValue(stepToExecute, out var execution)) continue;
+
             try
             {
-                _logger.LogInformation("Executing wallet creation for application {ApplicationId}", applicationId);
-                await CreateWalletAsync(applicationId, cancellationToken).ConfigureAwait(false);
-                _logger.LogInformation("Wallet successfully created for application {ApplicationId}", applicationId);
+                _logger.LogInformation("Executing {StepToExecute} for application {ApplicationId}", stepToExecute,
+                    applicationId);
+                await execution.Invoke(applicationId).ConfigureAwait(false);
+                _logger.LogInformation("Executed step {StepToExecute} successfully executed for application {ApplicationId}", stepToExecute,
+                    applicationId);
             }
             catch (Exception ex)
             {
@@ -97,6 +115,53 @@ public class ChecklistService : IChecklistService
                     checklist.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE;
                     checklist.Comment = message;
                 });
+    }
+
+    private async Task HandleClearingHouse(Guid applicationId, CancellationToken cancellationToken)
+    {
+        var data = await _portalRepositories.GetInstance<IApplicationRepository>()
+            .GetClearinghouseDataForApplicationId(applicationId).ConfigureAwait(false);
+        if (data is null)
+        {
+            throw new NotFoundException($"Application {applicationId} does not exists.");
+        }
+
+        if (data.ApplicationStatusId != CompanyApplicationStatusId.SUBMITTED)
+        {
+            throw new ArgumentException($"CompanyApplication {applicationId} is not in status SUBMITTED", nameof(applicationId));
+        }
+
+        if (string.IsNullOrWhiteSpace(data.ParticipantDetails.Bpn))
+        {
+            throw new ConflictException("BusinessPartnerNumber is null");
+        }
+
+        var did = await GetDecentralizedId(data.ParticipantDetails.Bpn!, cancellationToken);
+        var transferData = new ClearinghouseTransferData(
+            data.ParticipantDetails,
+            new IdentityDetails(did, data.UniqueIds));
+
+        await _clearinghouseBusinessLogic.TriggerCompanyDataPost(transferData, cancellationToken).ConfigureAwait(false);
+        _portalRepositories.GetInstance<IApplicationChecklistRepository>()
+            .AttachAndModifyApplicationChecklist(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE,
+                checklist =>
+                {
+                    checklist.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.IN_PROGRESS;
+                });
+        
+        await _portalRepositories.SaveAsync().ConfigureAwait(false);
+    }
+
+    private async Task<string> GetDecentralizedId(string bpn, CancellationToken cancellationToken)
+    {
+        var walletData = await _custodianBusinessLogic.GetWalletByBpnAsync(bpn, cancellationToken)
+            .ConfigureAwait(false);
+        if (string.IsNullOrEmpty(walletData.Did))
+        {
+            throw new ConflictException($"Decentralized Identifier for bpn {bpn} is not set");
+        }
+
+        return walletData.Did;
     }
 
     /// <summary>

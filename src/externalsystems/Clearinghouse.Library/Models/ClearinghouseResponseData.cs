@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2021,2022 BMW Group AG
+ * Copyright (c) 2021,2022 Microsoft and BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
@@ -18,19 +18,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
-using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Custodian.Library
-{
-    public class CustodianSettings : KeyVaultAuthSettings
-    {
-        public CustodianSettings()
-        {
-            BaseAdress = null!;
-        }
+namespace Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.Models;
 
-        [Required(AllowEmptyStrings = false)]
-        public string BaseAdress { get; set; }
-    }
-}
+public record ClearinghouseResponseData(
+    [property: JsonPropertyName("status")] ClearinghouseResponseStatus Status,
+    [property: JsonPropertyName("message")] string? Message);

@@ -18,6 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.Custodian.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
@@ -52,4 +53,8 @@ public class CustodianBusinessLogic : ICustodianBusinessLogic
         
         return await _custodianService.CreateWalletAsync(businessPartnerNumber, companyName, cancellationToken).ConfigureAwait(false);
     }
+    
+    /// <inheritdoc />
+    public async Task<WalletData> GetWalletByBpnAsync(string bpn, CancellationToken cancellationToken) => 
+        await _custodianService.GetWalletByBpnAsync(bpn, cancellationToken).ConfigureAwait(false);
 }

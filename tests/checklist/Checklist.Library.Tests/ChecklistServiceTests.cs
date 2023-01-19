@@ -22,6 +22,8 @@ using System.Net;
 using Microsoft.Extensions.Logging;
 using Org.Eclipse.TractusX.Portal.Backend.Bpdm.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Custodian.Library.BusinessLogic;
+using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.Custodian.Models;
+using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
@@ -35,12 +37,15 @@ public class ChecklistServiceTests
 {
     private static readonly Guid IdWithoutBpn = new ("0a9bd7b1-e692-483e-8128-dbf52759c7a5");
     private static readonly Guid IdWithBpn = new ("c244f79a-7faf-4c59-bb85-fbfdf72ce46f");
+    private static readonly Guid IdWithApplicationCreated = new ("7a8f5cb6-6ad2-4b88-a765-ff1888fcedbe");
     private static readonly Guid IdWithFailingCustodian = new ("bda6d1b5-042e-493a-894c-11f3a89c12b1");
     private static readonly Guid IdWithCustodianUnavailable = new ("beaa6de5-d411-4da8-850e-06047d3170be");
     private static readonly Guid NotExistingApplicationId = new ("9f0cfd0d-c512-438e-a07e-3198bce873bf");
     private static readonly string IamUserId = new Guid("4C1A6851-D4E7-4E10-A011-3732CD045E8A").ToString();
     private static readonly Guid CompanyId = new("95c4339e-e087-4cd2-a5b8-44d385e64630");
     private const string ValidBpn = "BPNL123698762345";
+    private const string AlreadyTakenBpn = "BPNL123698762666";
+    private const string FailingBpn = "FAILINGBPN";
     private const string ValidCompanyName = "valid company";
 
     private readonly IFixture _fixture;
@@ -53,6 +58,7 @@ public class ChecklistServiceTests
     
     private readonly IBpdmBusinessLogic _bpdmBusinessLogic;
     private readonly ICustodianBusinessLogic _custodianBusinessLogic;
+    private readonly IClearinghouseBusinessLogic _clearinghouseBusinessLogic;
     private readonly ChecklistService _service;
 
     public ChecklistServiceTests()
@@ -70,13 +76,14 @@ public class ChecklistServiceTests
 
         _bpdmBusinessLogic = A.Fake<IBpdmBusinessLogic>();
         _custodianBusinessLogic = A.Fake<ICustodianBusinessLogic>();
+        _clearinghouseBusinessLogic = A.Fake<IClearinghouseBusinessLogic>();
 
         A.CallTo(() => _portalRepositories.GetInstance<IApplicationRepository>()).Returns(_applicationRepository);
         A.CallTo(() => _portalRepositories.GetInstance<IApplicationChecklistRepository>()).Returns(_applicationChecklistRepository);
         A.CallTo(() => _portalRepositories.GetInstance<ICompanyRepository>()).Returns(_companyRepository);
         A.CallTo(() => _portalRepositories.GetInstance<IUserRepository>()).Returns(_userRepository);
 
-        _service = new ChecklistService(_portalRepositories, _bpdmBusinessLogic, _custodianBusinessLogic, A.Fake<ILogger<IChecklistService>>());
+        _service = new ChecklistService(_portalRepositories, _bpdmBusinessLogic, _custodianBusinessLogic, _clearinghouseBusinessLogic, A.Fake<ILogger<IChecklistService>>());
     }
     
     #region TriggerBpnDataPush
@@ -136,10 +143,10 @@ public class ChecklistServiceTests
 
     #endregion
     
-    #region ProcessChecklist
+    #region ProcessChecklist CreateWallet
     
     [Fact]
-    public async Task ProcessChecklist_WithBpnNextStep_ExecutesNothing()
+    public async Task ProcessChecklistCreateWalletAsync_WithBpnNextStep_ExecutesNothing()
     {
         // Arrange
         var applicationId = Guid.NewGuid();
@@ -167,7 +174,7 @@ public class ChecklistServiceTests
     }
 
     [Fact]
-    public async Task ProcessChecklist_WithIdentityWalletAlreadyInProgress_ExecutesNothing()
+    public async Task ProcessChecklistCreateWalletAsync_WithIdentityWalletAlreadyInProgress_ExecutesNothing()
     {
         // Arrange
         var applicationId = Guid.NewGuid();
@@ -195,7 +202,7 @@ public class ChecklistServiceTests
     }
 
     [Fact]
-    public async Task ProcessChecklist_WithFailingCustodianCall_EntryIsUpdatedCorrectly()
+    public async Task ProcessChecklistCreateWalletAsync_WithFailingCustodianCall_UpdatesEntryExpected()
     {
         // Arrange
         var entry = new ApplicationChecklistEntry(IdWithFailingCustodian, ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow);
@@ -227,7 +234,7 @@ public class ChecklistServiceTests
     }
     
     [Fact]
-    public async Task ProcessChecklist_WithCustodianUnavailable_EntryIsUpdatedCorrectly()
+    public async Task ProcessChecklistCreateWalletAsync_WithCustodianUnavailable_EntryIsUpdatedCorrectly()
     {
         // Arrange
         var entry = new ApplicationChecklistEntry(IdWithCustodianUnavailable, ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow);
@@ -259,7 +266,7 @@ public class ChecklistServiceTests
     }
     
     [Fact]
-    public async Task ProcessChecklist_WithValidData_CallsExpected()
+    public async Task ProcessChecklistCreateWalletAsync_WithValidDataWalletData_CallsExpected()
     {
         // Arrange
         var entry = new ApplicationChecklistEntry(IdWithBpn, ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow);
@@ -288,6 +295,193 @@ public class ChecklistServiceTests
         A.CallTo(() => _portalRepositories.SaveAsync()).MustNotHaveHappened();
         entry.Comment.Should().Be("It worked.");
         entry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.DONE);
+    }
+
+    #endregion
+    
+    #region ProcessChecklist HandleClearinghouse
+    
+    [Fact]
+    public async Task ProcessChecklistHandleClearinghouse_WithoutExistingApplication_UpdatesEntryExpected()
+    {
+        // Arrange
+        var applicationId = Guid.NewGuid();
+        var checklist = new[]
+        {
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO)
+        };
+        var entry = new ApplicationChecklistEntry(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow);
+        SetupForClearinghouse(entry);
+
+        // Act
+        await _service.ProcessChecklist(applicationId, checklist, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        A.CallTo(() => _applicationChecklistRepository.AttachAndModifyApplicationChecklist(A<Guid>._, A<ApplicationChecklistEntryTypeId>._, A<Action<ApplicationChecklistEntry>>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
+        entry.Comment.Should().Contain($"Application {applicationId} does not exists.");
+        entry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.FAILED);
+    }
+
+    [Fact]
+    public async Task ProcessChecklistHandleClearinghouse_WithClearinghouseAlreadyInProgress_ExecutesNothing()
+    {
+        // Arrange
+        var applicationId = Guid.NewGuid();
+        var checklist = new[]
+        {
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.IN_PROGRESS),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO)
+        };
+        SetupForClearinghouse();
+
+        // Act
+        await _service.ProcessChecklist(applicationId, checklist, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        A.CallTo(() => _applicationChecklistRepository.AttachAndModifyApplicationChecklist(A<Guid>._, A<ApplicationChecklistEntryTypeId>._, A<Action<ApplicationChecklistEntry>>._)).MustNotHaveHappened();
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustNotHaveHappened();
+    }
+
+    [Fact]
+    public async Task ProcessChecklistHandleClearinghouse_WithCreatedApplication_UpdatesEntryExpected()
+    {
+        // Arrange
+        var checklist = new[]
+        {
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO)
+        };
+        var entry = new ApplicationChecklistEntry(IdWithApplicationCreated, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow);
+        SetupForClearinghouse(entry);
+
+        // Act
+        await _service.ProcessChecklist(IdWithApplicationCreated, checklist, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        A.CallTo(() => _applicationChecklistRepository.AttachAndModifyApplicationChecklist(A<Guid>._, A<ApplicationChecklistEntryTypeId>._, A<Action<ApplicationChecklistEntry>>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
+        entry.Comment.Should().Contain($"CompanyApplication {IdWithApplicationCreated} is not in status SUBMITTED");
+        entry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.FAILED);
+    }
+
+    [Fact]
+    public async Task ProcessChecklistHandleClearinghouse_WithoutBpn_UpdatesEntryExpected()
+    {
+        // Arrange
+        var checklist = new[]
+        {
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO)
+        };
+        var entry = new ApplicationChecklistEntry(IdWithoutBpn, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow);
+        SetupForClearinghouse(entry);
+
+        // Act
+        await _service.ProcessChecklist(IdWithoutBpn, checklist, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        A.CallTo(() => _applicationChecklistRepository.AttachAndModifyApplicationChecklist(A<Guid>._, A<ApplicationChecklistEntryTypeId>._, A<Action<ApplicationChecklistEntry>>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
+        entry.Comment.Should().Contain($"BusinessPartnerNumber is null");
+        entry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.FAILED);
+    }
+
+    [Fact]
+    public async Task ProcessChecklistHandleClearinghouse_WithFailingWalletCall_EntryIsUpdatedCorrectly()
+    {
+        // Arrange
+        var entry = new ApplicationChecklistEntry(IdWithCustodianUnavailable, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow);
+        var checklist = new[]
+        {
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO)
+        };
+        SetupForClearinghouse(entry);
+
+        // Act
+        await _service.ProcessChecklist(IdWithCustodianUnavailable, checklist, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        A.CallTo(() => _custodianBusinessLogic.GetWalletByBpnAsync(A<string>._, A<CancellationToken>._))
+            .MustHaveHappenedOnceExactly();
+        A.CallTo(() => _applicationChecklistRepository.AttachAndModifyApplicationChecklist(A<Guid>._, A<ApplicationChecklistEntryTypeId>._, A<Action<ApplicationChecklistEntry>>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
+        entry.Comment.Should().Contain("Decentralized Identifier for bpn FAILINGBPN is not set");
+        entry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.FAILED);
+    }
+    
+    [Fact]
+    public async Task ProcessChecklistHandleClearinghouse_WithValid_CallsExpected()
+    {
+        // Arrange
+        var entry = new ApplicationChecklistEntry(IdWithBpn, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow);
+        var checklist = new[]
+        {
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO)
+        };
+        SetupForClearinghouse(entry);
+
+        // Act
+        await _service.ProcessChecklist(IdWithBpn, checklist, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        A.CallTo(() => _custodianBusinessLogic.GetWalletByBpnAsync(ValidBpn, A<CancellationToken>._))
+            .MustHaveHappenedOnceExactly();
+        A.CallTo(() => _applicationChecklistRepository.AttachAndModifyApplicationChecklist(IdWithBpn, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, A<Action<ApplicationChecklistEntry>>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
+        entry.Comment.Should().BeNull();
+        entry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.IN_PROGRESS);
     }
 
     #endregion
@@ -349,6 +543,58 @@ public class ChecklistServiceTests
             .Throws(new ServiceException("Failed"));
         A.CallTo(() => _custodianBusinessLogic.CreateWalletAsync(IdWithCustodianUnavailable, CancellationToken.None))
             .Throws(new ServiceException("Failed", HttpStatusCode.ServiceUnavailable));
+    }
+
+    private void SetupForClearinghouse(ApplicationChecklistEntry? applicationChecklistEntry = null)
+    {
+        if (applicationChecklistEntry != null)
+        {
+            SetupForUpdate(applicationChecklistEntry);
+        }
+
+        var participantDetailsWithoutBpn = _fixture.Build<ParticipantDetails>()
+            .With(x => x.Bpn, (string?)null)
+            .Create();
+        var clearinghouseDataWithoutBpn = _fixture.Build<ClearinghouseData>()
+            .With(x => x.ApplicationStatusId, CompanyApplicationStatusId.SUBMITTED)
+            .With(x => x.ParticipantDetails, participantDetailsWithoutBpn)
+            .Create();
+        var participantDetails = _fixture.Build<ParticipantDetails>()
+            .With(x => x.Bpn, ValidBpn)
+            .Create();
+        var clearinghouseData = _fixture.Build<ClearinghouseData>()
+            .With(x => x.ApplicationStatusId, CompanyApplicationStatusId.SUBMITTED)
+            .With(x => x.ParticipantDetails, participantDetails)
+            .Create();
+        var chDataWithApplicationCreated = _fixture.Build<ClearinghouseData>()
+            .With(x => x.ApplicationStatusId, CompanyApplicationStatusId.CREATED)
+            .Create();
+        var failingCustodianPd = _fixture.Build<ParticipantDetails>()
+            .With(x => x.Bpn, FailingBpn)
+            .Create();
+        var clearinghouseDataWithFailingCustodian = _fixture.Build<ClearinghouseData>()
+            .With(x => x.ApplicationStatusId, CompanyApplicationStatusId.SUBMITTED)
+            .With(x => x.ParticipantDetails, failingCustodianPd)
+            .Create();
+        A.CallTo(() => _applicationRepository.GetClearinghouseDataForApplicationId(IdWithoutBpn))
+            .ReturnsLazily(() => clearinghouseDataWithoutBpn);
+        A.CallTo(() => _applicationRepository.GetClearinghouseDataForApplicationId(IdWithBpn))
+            .ReturnsLazily(() => clearinghouseData);
+        A.CallTo(() => _applicationRepository.GetClearinghouseDataForApplicationId(IdWithApplicationCreated))
+            .ReturnsLazily(() => chDataWithApplicationCreated);
+        A.CallTo(() => _applicationRepository.GetClearinghouseDataForApplicationId(IdWithCustodianUnavailable))
+            .ReturnsLazily(() => clearinghouseDataWithFailingCustodian);
+        A.CallTo(() => _applicationRepository.GetClearinghouseDataForApplicationId(A<Guid>.That.Not.Matches(x => x == IdWithoutBpn || x == IdWithBpn || x == IdWithApplicationCreated || x == IdWithCustodianUnavailable)))
+            .ReturnsLazily(() => (ClearinghouseData?)null);
+
+        var validWalletData = _fixture.Create<WalletData>();
+        var walletDataWithEmptyDid = _fixture.Build<WalletData>()
+            .With(x => x.Did, (string?)null)
+            .Create();
+        A.CallTo(() => _custodianBusinessLogic.GetWalletByBpnAsync(ValidBpn, CancellationToken.None))
+            .ReturnsLazily(() => validWalletData);
+        A.CallTo(() => _custodianBusinessLogic.GetWalletByBpnAsync(A<string>.That.Matches(x => x == FailingBpn), CancellationToken.None))
+            .ReturnsLazily(() => walletDataWithEmptyDid);
     }
 
     private void SetupForUpdate(ApplicationChecklistEntry applicationChecklistEntry)
