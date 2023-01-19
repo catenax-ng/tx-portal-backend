@@ -22,7 +22,6 @@ using System.Net;
 using Microsoft.Extensions.Logging;
 using Org.Eclipse.TractusX.Portal.Backend.Bpdm.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.BusinessLogic;
-using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
@@ -119,29 +118,13 @@ public class ChecklistService : IChecklistService
 
     private async Task HandleClearingHouse(Guid applicationId, CancellationToken cancellationToken)
     {
-        var data = await _portalRepositories.GetInstance<IApplicationRepository>()
-            .GetClearinghouseDataForApplicationId(applicationId).ConfigureAwait(false);
-        if (data is null)
+        var walletData = await _custodianBusinessLogic.GetWalletByBpnAsync(applicationId, cancellationToken);
+        if (walletData == null || string.IsNullOrEmpty(walletData.Did))
         {
-            throw new NotFoundException($"Application {applicationId} does not exists.");
+            throw new ConflictException($"Decentralized Identifier for application {applicationId} is not set");
         }
 
-        if (data.ApplicationStatusId != CompanyApplicationStatusId.SUBMITTED)
-        {
-            throw new ArgumentException($"CompanyApplication {applicationId} is not in status SUBMITTED", nameof(applicationId));
-        }
-
-        if (string.IsNullOrWhiteSpace(data.ParticipantDetails.Bpn))
-        {
-            throw new ConflictException("BusinessPartnerNumber is null");
-        }
-
-        var did = await GetDecentralizedId(data.ParticipantDetails.Bpn!, cancellationToken);
-        var transferData = new ClearinghouseTransferData(
-            data.ParticipantDetails,
-            new IdentityDetails(did, data.UniqueIds));
-
-        await _clearinghouseBusinessLogic.TriggerCompanyDataPost(transferData, cancellationToken).ConfigureAwait(false);
+        await _clearinghouseBusinessLogic.TriggerCompanyDataPost(applicationId, walletData.Did, cancellationToken).ConfigureAwait(false);
         _portalRepositories.GetInstance<IApplicationChecklistRepository>()
             .AttachAndModifyApplicationChecklist(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE,
                 checklist =>
@@ -150,18 +133,6 @@ public class ChecklistService : IChecklistService
                 });
         
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
-    }
-
-    private async Task<string> GetDecentralizedId(string bpn, CancellationToken cancellationToken)
-    {
-        var walletData = await _custodianBusinessLogic.GetWalletByBpnAsync(bpn, cancellationToken)
-            .ConfigureAwait(false);
-        if (string.IsNullOrEmpty(walletData.Did))
-        {
-            throw new ConflictException($"Decentralized Identifier for bpn {bpn} is not set");
-        }
-
-        return walletData.Did;
     }
 
     /// <summary>

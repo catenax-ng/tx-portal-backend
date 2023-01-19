@@ -24,6 +24,19 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.BusinessLogi
 
 public interface IClearinghouseBusinessLogic
 {
+    /// <summary>
+    /// Processes the clearinghouse response
+    /// </summary>
+    /// <param name="bpn">the business partner number</param>
+    /// <param name="data">the response data</param>
+    /// <param name="cancellationToken">CancellationToken</param>
     Task ProcessClearinghouseResponseAsync(string bpn, ClearinghouseResponseData data, CancellationToken cancellationToken);
-    Task TriggerCompanyDataPost(ClearinghouseTransferData transferData, CancellationToken cancellationToken);
+    
+    /// <summary>
+    /// Trigger the company data post to the clearinghouse service
+    /// </summary>
+    /// <param name="applicationId">Id of the application to get the company data for</param>
+    /// <param name="decentralizedIdentifier">The decentralized identifier</param>
+    /// <param name="cancellationToken">CancellationToken</param>
+    Task TriggerCompanyDataPost(Guid applicationId, string decentralizedIdentifier, CancellationToken cancellationToken);
 }
