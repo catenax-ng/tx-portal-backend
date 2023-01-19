@@ -55,6 +55,18 @@ public class CustodianBusinessLogic : ICustodianBusinessLogic
     }
     
     /// <inheritdoc />
-    public async Task<WalletData> GetWalletByBpnAsync(string bpn, CancellationToken cancellationToken) => 
-        await _custodianService.GetWalletByBpnAsync(bpn, cancellationToken).ConfigureAwait(false);
+    public async Task<WalletData?> GetWalletByBpnAsync(Guid applicationId, CancellationToken cancellationToken)
+    {
+        var bpn = await _portalRepositories.GetInstance<IApplicationRepository>()
+            .GetBpnForApplicationIdAsync(applicationId).ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(bpn))
+        {
+            throw new ConflictException("BusinessPartnerNumber is not set");
+        }
+
+        var walletData = await _custodianService.GetWalletByBpnAsync(bpn, cancellationToken)
+            .ConfigureAwait(false);
+        
+        return walletData;
+    }
 }

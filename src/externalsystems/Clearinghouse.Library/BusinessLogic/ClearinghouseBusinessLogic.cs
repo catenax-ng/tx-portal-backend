@@ -62,6 +62,29 @@ public class ClearinghouseBusinessLogic : IClearinghouseBusinessLogic
     }
 
     /// <inheritdoc />
-    public Task TriggerCompanyDataPost(ClearinghouseTransferData transferData, CancellationToken cancellationToken) =>
-        _clearinghouseService.TriggerCompanyDataPost(transferData, cancellationToken);
+    public async Task TriggerCompanyDataPost(Guid applicationId, string decentralizedIdentifier, CancellationToken cancellationToken)
+    {
+        var data = await _portalRepositories.GetInstance<IApplicationRepository>()
+            .GetClearinghouseDataForApplicationId(applicationId).ConfigureAwait(false);
+        if (data is null)
+        {
+            throw new NotFoundException($"Application {applicationId} does not exists.");
+        }
+
+        if (data.ApplicationStatusId != CompanyApplicationStatusId.SUBMITTED)
+        {
+            throw new ArgumentException($"CompanyApplication {applicationId} is not in status SUBMITTED", nameof(applicationId));
+        }
+
+        if (string.IsNullOrWhiteSpace(data.ParticipantDetails.Bpn))
+        {
+            throw new ConflictException("BusinessPartnerNumber is null");
+        }
+
+        var transferData = new ClearinghouseTransferData(
+            data.ParticipantDetails,
+            new IdentityDetails(decentralizedIdentifier, data.UniqueIds));
+
+        await _clearinghouseService.TriggerCompanyDataPost(transferData, cancellationToken).ConfigureAwait(false);
+    }
 }
