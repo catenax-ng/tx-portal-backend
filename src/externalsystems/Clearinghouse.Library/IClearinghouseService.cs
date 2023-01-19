@@ -18,19 +18,20 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
-using System.ComponentModel.DataAnnotations;
+using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.Models;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Custodian.Library
+namespace Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library;
+
+/// <summary>
+/// Service to call the clearinghouse endpoints
+/// </summary>
+public interface IClearinghouseService
 {
-    public class CustodianSettings : KeyVaultAuthSettings
-    {
-        public CustodianSettings()
-        {
-            BaseAdress = null!;
-        }
-
-        [Required(AllowEmptyStrings = false)]
-        public string BaseAdress { get; set; }
-    }
+    /// <summary>
+    /// Triggers the clearinghouse post
+    /// </summary>
+    /// <param name="data">The clearinghouse data</param>
+    /// <param name="cancellationToken">Cancellation Token</param>
+    /// <returns>Returns <c>true</c> if the service call was successful, otherwise <c>false</c></returns>
+    Task TriggerCompanyDataPost(ClearinghouseTransferData data, CancellationToken cancellationToken);
 }

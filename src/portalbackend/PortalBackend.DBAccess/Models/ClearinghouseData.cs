@@ -18,19 +18,25 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
-using System.ComponentModel.DataAnnotations;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using System.Text.Json.Serialization;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Custodian.Library
-{
-    public class CustodianSettings : KeyVaultAuthSettings
-    {
-        public CustodianSettings()
-        {
-            BaseAdress = null!;
-        }
+namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 
-        [Required(AllowEmptyStrings = false)]
-        public string BaseAdress { get; set; }
-    }
-}
+public record ClearinghouseData(
+    CompanyApplicationStatusId ApplicationStatusId,
+    ParticipantDetails ParticipantDetails,
+    IEnumerable<UniqueIdData> UniqueIds);
+
+public record ParticipantDetails(
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("city")] string? City,
+    [property: JsonPropertyName("street")] string Street,
+    [property: JsonPropertyName("bpn")] string? Bpn,
+    [property: JsonPropertyName("region")] string? Region,
+    [property: JsonPropertyName("zipCode")] string? ZipCode,
+    [property: JsonPropertyName("country")] string Country,
+    [property: JsonPropertyName("countryAlpha2Code")] string CountryAlpha2Code
+);
+
+public record UniqueIdData(string Type, string Value);

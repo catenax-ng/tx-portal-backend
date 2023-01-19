@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -20,30 +20,30 @@
 
 using System.Net;
 using Microsoft.Extensions.Options;
-using Org.Eclipse.TractusX.Portal.Backend.Bpdm.Library;
-using Org.Eclipse.TractusX.Portal.Backend.Bpdm.Library.Models;
+using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Token;
 using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.Tests.Bpdm;
+namespace Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.Tests;
 
-public class BpdmServiceTests
+public class ClearinghouseServiceTests
 {
     #region Initialization
 
     private readonly ITokenService _tokenService;
-    private readonly IOptions<BpdmServiceSettings> _options;
+    private readonly IOptions<ClearinghouseSettings> _options;
+    private readonly ClearinghouseService _sut;
     private readonly IFixture _fixture;
 
-    public BpdmServiceTests()
+    public ClearinghouseServiceTests()
     {
         _fixture = new Fixture().Customize(new AutoFakeItEasyCustomization {ConfigureMembers = true});
         _fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList()
             .ForEach(b => _fixture.Behaviors.Remove(b));
         _fixture.Behaviors.Add(new OmitOnRecursionBehavior());
-        
-        _options = Options.Create(new BpdmServiceSettings
+
+        _options = Options.Create(new ClearinghouseSettings
         {
             Password = "passWord",
             Scope = "test",
@@ -52,56 +52,75 @@ public class BpdmServiceTests
             ClientId = "CatenaX",
             ClientSecret = "pass@Secret",
             GrantType = "cred",
-            KeyCloakTokenAdress = "https://key.cloak.com",
+            KeyCloakTokenAdress = "https://key.cloak.com"
         });
         _tokenService = A.Fake<ITokenService>();
+        _sut = new ClearinghouseService(_tokenService, _options);
     }
 
     #endregion
 
-    #region Trigger BpnDataPush
+    #region TriggerCompanyDataPost
 
     [Fact]
-    public async Task TriggerBpnDataPush_WithValidData_DoesNotThrowException()
+    public async Task TriggerCompanyDataPost_WithValidData_DoesNotThrowException()
     {
         // Arrange
-        var data = _fixture.Create<BpdmTransferData>();
+        var data = _fixture.Create<ClearinghouseTransferData>();
         var httpMessageHandlerMock =
             new HttpMessageHandlerMock(HttpStatusCode.OK);
         var httpClient = new HttpClient(httpMessageHandlerMock)
         {
             BaseAddress = new Uri("https://base.address.com")
         };
-        A.CallTo(() => _tokenService.GetAuthorizedClient<BpdmService>(_options.Value, A<CancellationToken>._))
+        A.CallTo(() => _tokenService.GetAuthorizedClient<ClearinghouseService>(_options.Value, A<CancellationToken>._))
             .Returns(httpClient);
-        var sut = new BpdmService(_tokenService, _options);
         
         // Act
-        var result = await sut.TriggerBpnDataPush(data, CancellationToken.None).ConfigureAwait(false);
+        await _sut.TriggerCompanyDataPost(data, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
-        result.Should().BeTrue();
+        true.Should().BeTrue(); // One Assert is needed - just checking for no exception
     }
 
     [Fact]
-    public async Task TriggerBpnDataPush_WithInvalidData_ThrowsServiceException()
+    public async Task TriggerCompanyDataPost_WithInvalidData_ThrowsServiceException()
     {
         // Arrange
-        var data = _fixture.Create<BpdmTransferData>();
+        var data = _fixture.Create<ClearinghouseTransferData>();
         var httpMessageHandlerMock = new HttpMessageHandlerMock(HttpStatusCode.BadRequest);
         var httpClient = new HttpClient(httpMessageHandlerMock)
         {
             BaseAddress = new Uri("https://base.address.com")
         };
-        A.CallTo(() => _tokenService.GetAuthorizedClient<BpdmService>(_options.Value, A<CancellationToken>._)).Returns(httpClient);
-        var sut = new BpdmService(_tokenService, _options);
+        A.CallTo(() => _tokenService.GetAuthorizedClient<ClearinghouseService>(_options.Value, A<CancellationToken>._)).Returns(httpClient);
 
         // Act
-        async Task Act() => await sut.TriggerBpnDataPush(data, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.TriggerCompanyDataPost(data, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ServiceException>(Act);
-        ex.Message.Should().Contain("Bpdm Service Call failed");
+        ex.Message.Should().Contain("Clearinghouse Service Call failed with StatusCode");
+    }
+
+    [Fact]
+    public async Task TriggerCompanyDataPost_WitException_ThrowsServiceException()
+    {
+        // Arrange
+        var data = _fixture.Create<ClearinghouseTransferData>();
+        var httpMessageHandlerMock = new HttpMessageHandlerMock(HttpStatusCode.BadRequest, null, new Exception("random exception"));
+        var httpClient = new HttpClient(httpMessageHandlerMock)
+        {
+            BaseAddress = new Uri("https://base.address.com")
+        };
+        A.CallTo(() => _tokenService.GetAuthorizedClient<ClearinghouseService>(_options.Value, A<CancellationToken>._)).Returns(httpClient);
+
+        // Act
+        async Task Act() => await _sut.TriggerCompanyDataPost(data, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ServiceException>(Act);
+        ex.Message.Should().Contain("Clearinghouse Service Call failed");
     }
 
     #endregion

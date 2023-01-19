@@ -23,6 +23,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
+using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.BusinessLogic;
+using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Custodian.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
@@ -46,6 +48,7 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
     private readonly ISdFactoryService _sdFactoryService;
     private readonly IChecklistService _checklistService;
     private readonly ICustodianBusinessLogic _custodianBusinessLogic;
+    private readonly IClearinghouseBusinessLogic _clearinghouseBusinessLogic;
 
     public RegistrationBusinessLogic(
         IPortalRepositories portalRepositories, 
@@ -55,7 +58,8 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
         INotificationService notificationService,
         ISdFactoryService sdFactoryService,
         IChecklistService checklistService,
-        ICustodianBusinessLogic custodianBusinessLogic)
+        ICustodianBusinessLogic custodianBusinessLogic,
+        IClearinghouseBusinessLogic clearinghouseBusinessLogic)
     {
         _portalRepositories = portalRepositories;
         _settings = configuration.Value;
@@ -65,6 +69,7 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
         _sdFactoryService = sdFactoryService;
         _checklistService = checklistService;
         _custodianBusinessLogic = custodianBusinessLogic;
+        _clearinghouseBusinessLogic = clearinghouseBusinessLogic;
     }
 
     public Task<CompanyWithAddressData> GetCompanyWithAddressAsync(Guid applicationId)
@@ -428,6 +433,10 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
                 checklist => { checklist.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE; });
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
+
+    /// <inheritdoc />
+    public Task ProcessClearinghouseResponseAsync(string bpn, ClearinghouseResponseData data, CancellationToken cancellationToken) => 
+        _clearinghouseBusinessLogic.ProcessClearinghouseResponseAsync(bpn, data, cancellationToken);
 
     /// <inheritdoc />
     public async Task SetRegistrationVerification(Guid applicationId, bool approve, string? comment = null)
