@@ -22,7 +22,7 @@ using Microsoft.AspNetCore.Mvc;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Controllers;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Models;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
+using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared.Extensions;
 
@@ -154,6 +154,23 @@ public class RegistrationControllerTest
 
         //Assert
         A.CallTo(() => _logic.SetRegistrationVerification(applicationId, false, "test")).MustHaveHappenedOnceExactly();
+        Assert.IsType<NoContentResult>(result);
+    }
+
+    [Fact]
+    public async Task ProcessClearinghouseResponse_ReturnsExpectedResult()
+    {
+        //Arrange
+        var bpn = _fixture.Create<string>();
+        var data = _fixture.Create<ClearinghouseResponseData>();
+        A.CallTo(() => _logic.ProcessClearinghouseResponseAsync(bpn, data, A<CancellationToken>._))
+            .ReturnsLazily(() => Task.CompletedTask);
+
+        //Act
+        var result = await this._controller.ProcessClearinghouseResponse(bpn, data, CancellationToken.None).ConfigureAwait(false);
+
+        //Assert
+        A.CallTo(() => _logic.ProcessClearinghouseResponseAsync(bpn, data, CancellationToken.None)).MustHaveHappenedOnceExactly();
         Assert.IsType<NoContentResult>(result);
     }
 }

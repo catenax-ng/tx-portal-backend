@@ -18,39 +18,37 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Org.Eclipse.TractusX.Portal.Backend.Custodian.Library.BusinessLogic;
-using Org.Eclipse.TractusX.Portal.Backend.Framework.Token;
+using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Web;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Custodian.Library;
+namespace Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library;
 
-public static class CustodianServiceCollectionExtension
+public static class ClearinghouseServiceCollectionExtension
 {
-    public static IServiceCollection AddCustodianService(this IServiceCollection services, IConfigurationSection section)
+    public static IServiceCollection AddClearinghouseService(this IServiceCollection services, IConfigurationSection section)
     {
-        services.AddOptions<CustodianSettings>()
+        services.AddOptions<ClearinghouseSettings>()
             .Bind(section)
             .ValidateOnStart();
-        services.AddTransient<LoggingHandler<CustodianService>>();
+        services.AddTransient<LoggingHandler<ClearinghouseService>>();
 
         var sp = services.BuildServiceProvider();
-        var settings = sp.GetRequiredService<IOptions<CustodianSettings>>();
-        services.AddHttpClient(nameof(CustodianService), c =>
+        var settings = sp.GetRequiredService<IOptions<ClearinghouseSettings>>();
+        services.AddHttpClient(nameof(ClearinghouseService), c =>
         {
             c.BaseAddress = new Uri(settings.Value.BaseAdress);
-        }).AddHttpMessageHandler<LoggingHandler<CustodianService>>();
-        services.AddHttpClient($"{nameof(CustodianService)}Auth", c =>
+        }).AddHttpMessageHandler<LoggingHandler<ClearinghouseService>>();
+        services.AddHttpClient($"{nameof(ClearinghouseService)}Auth", c =>
         {
             c.BaseAddress = new Uri(settings.Value.KeyCloakTokenAdress);
-        }).AddHttpMessageHandler<LoggingHandler<CustodianService>>();
+        }).AddHttpMessageHandler<LoggingHandler<ClearinghouseService>>();
         services
-            .AddTransient<ICustodianService, CustodianService>();
-        services.AddTransient<ICustodianBusinessLogic, CustodianBusinessLogic>();
-        
+            .AddTransient<IClearinghouseService, ClearinghouseService>()
+            .AddTransient<IClearinghouseBusinessLogic, ClearinghouseBusinessLogic>();
+
         return services;
     }
 }

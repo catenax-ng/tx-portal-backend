@@ -292,4 +292,37 @@ public class ApplicationRepository : IApplicationRepository
              .Where(ca => ca.Id == applicationId)
              .Select(x => x.Company!.BusinessPartnerNumber)
              .SingleOrDefaultAsync();
+
+     /// <inheritdoc />
+     public Task<ClearinghouseData?> GetClearinghouseDataForApplicationId(Guid applicationId) =>
+         _dbContext.CompanyApplications
+             .AsNoTracking()
+             .Where(ca => ca.Id == applicationId)
+             .Select(ca => new { ca.ApplicationStatusId, ca.Company, ca.Company!.Address, ca.Company!.CompanyIdentifiers})
+             .Select(ca => new ClearinghouseData(
+                 ca.ApplicationStatusId,
+                 new ParticipantDetails(
+                        ca.Company!.Name,
+                        ca.Address!.City,
+                        ca.Address!.Streetname,
+                        ca.Company!.BusinessPartnerNumber,
+                        ca.Address!.Region,
+                        ca.Address!.Zipcode,
+                        ca.Address!.Country!.CountryNameEn,
+                        ca.Address!.CountryAlpha2Code),
+                 ca.CompanyIdentifiers.Select(ci => new UniqueIdData(ci.UniqueIdentifier!.Label, ci.Value))))
+             .SingleOrDefaultAsync();
+
+     /// <inheritdoc />
+     public Task<(Guid ApplicationId, ApplicationChecklistEntryStatusId StatusId)> GetSubmittedIdAndClearinghouseChecklistStatusByBpn(string bpn) =>
+         _dbContext.CompanyApplications
+             .Where(ca =>
+                 ca.Company!.BusinessPartnerNumber == bpn &&
+                 ca.ApplicationStatusId == CompanyApplicationStatusId.SUBMITTED)
+             .Select(ca => new ValueTuple<Guid, ApplicationChecklistEntryStatusId>(
+                 ca.Id,
+                 ca.ApplicationChecklistEntries
+                     .Where(x => x.ApplicationChecklistEntryTypeId == ApplicationChecklistEntryTypeId.CLEARING_HOUSE)
+                     .Select(x => x.ApplicationChecklistEntryStatusId).SingleOrDefault()))
+             .SingleOrDefaultAsync();
 }

@@ -22,6 +22,8 @@ using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
+using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.BusinessLogic;
+using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Custodian.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
@@ -81,6 +83,7 @@ public class RegistrationBusinessLogicTest
     private readonly IMailingService _mailingService;
     private readonly ICustodianBusinessLogic _custodianBusinessLogic;
     private readonly IChecklistService _checklistService;
+    private readonly IClearinghouseBusinessLogic _clearinghouseBusinessLogic;
 
     public RegistrationBusinessLogicTest()
     {
@@ -104,6 +107,7 @@ public class RegistrationBusinessLogicTest
         _notificationService = A.Fake<INotificationService>();
         var sdFactory = A.Fake<ISdFactoryService>();
         _custodianBusinessLogic = A.Fake<ICustodianBusinessLogic>();
+        _clearinghouseBusinessLogic = A.Fake<IClearinghouseBusinessLogic>();
         _checklistService = A.Fake<IChecklistService>();
 
         _settings.WelcomeNotificationTypeIds = new List<NotificationTypeId>
@@ -127,7 +131,7 @@ public class RegistrationBusinessLogicTest
         A.CallTo(() => _userRepository.GetCompanyUserIdForIamUserUntrackedAsync(IamUserId))
             .ReturnsLazily(Guid.NewGuid);
 
-        _logic = new RegistrationBusinessLogic(_portalRepositories, options, _provisioningManager, _mailingService, _notificationService, sdFactory, _checklistService, _custodianBusinessLogic);
+        _logic = new RegistrationBusinessLogic(_portalRepositories, options, _provisioningManager, _mailingService, _notificationService, sdFactory, _checklistService, _custodianBusinessLogic, _clearinghouseBusinessLogic);
     }
     
     #region ApprovePartnerRequest
@@ -524,6 +528,22 @@ public class RegistrationBusinessLogicTest
         A.CallTo(() => _applicationChecklistRepository.AttachAndModifyApplicationChecklist(IdWithoutBpn, ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, A<Action<ApplicationChecklistEntry>>._)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
         entry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.DONE);
+    }
+
+    #endregion
+
+    #region ProcessClearinghouseResponse
+    
+    [Fact]
+    public async Task ProcessClearinghouseResponseAsync_WithValidData_CallsExpected()
+    {
+        // Act
+        var data = _fixture.Create<ClearinghouseResponseData>();
+        await _logic.ProcessClearinghouseResponseAsync(BusinessPartnerNumber, data, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        A.CallTo(() => _clearinghouseBusinessLogic.ProcessClearinghouseResponseAsync(BusinessPartnerNumber, data, CancellationToken.None))
+            .MustHaveHappenedOnceExactly();
     }
 
     #endregion

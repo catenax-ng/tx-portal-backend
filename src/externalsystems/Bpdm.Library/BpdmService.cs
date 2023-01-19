@@ -29,13 +29,11 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Bpdm.Library;
 
 public class BpdmService : IBpdmService
 {
-    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ITokenService _tokenService;
     private readonly BpdmServiceSettings _settings;
 
-    public BpdmService(IHttpClientFactory httpClientFactory, ITokenService tokenService, IOptions<BpdmServiceSettings> options)
+    public BpdmService(ITokenService tokenService, IOptions<BpdmServiceSettings> options)
     {
-        _httpClientFactory = httpClientFactory;
         _tokenService = tokenService;
         _settings = options.Value;
     }
@@ -43,7 +41,7 @@ public class BpdmService : IBpdmService
     /// <inheritdoc />
     public async Task<bool> TriggerBpnDataPush(BpdmTransferData data, CancellationToken cancellationToken)
     {
-        var httpClient = await GetBpdmHttpClient(cancellationToken).ConfigureAwait(false);
+        var httpClient = await _tokenService.GetAuthorizedClient<BpdmService>(_settings, cancellationToken).ConfigureAwait(false);
 
         try
         {
@@ -92,23 +90,5 @@ public class BpdmService : IBpdmService
             }
             throw new ServiceException("Bpdm Service Call failed.", ex);
         }
-    }
-
-    private async Task<HttpClient> GetBpdmHttpClient(CancellationToken cancellationToken)
-    {
-        var tokenParameters = new GetTokenSettings(
-                $"{nameof(BpdmService)}Auth",
-                _settings.Username,
-                _settings.Password,
-                _settings.ClientId,
-                _settings.GrantType,
-                _settings.ClientSecret,
-                _settings.Scope);
-
-        var token = await _tokenService.GetTokenAsync(tokenParameters, cancellationToken).ConfigureAwait(false);
-
-        var httpClient = _httpClientFactory.CreateClient(nameof(BpdmService));
-        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        return httpClient;
     }
 }
