@@ -150,41 +150,11 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         {
             throw new UnsupportedMediaTypeException($"Document type not supported. File with contentType :{string.Join(",", _settings.ContentTypeSettings)} are allowed.");
         }
-        return UploadAppDoc(appId, documentTypeId, document, iamUserId, cancellationToken);
+        return UploadAppDoc(appId, documentTypeId, document, iamUserId, OfferTypeId.APP, cancellationToken);
     }
-
-    private async Task<int> UploadAppDoc(Guid appId, DocumentTypeId documentTypeId, IFormFile document, string iamUserId, CancellationToken cancellationToken)
-    {
-        var offerRepository = _portalRepositories.GetInstance<IOfferRepository>();
-        var result = await offerRepository.GetProviderCompanyUserIdForOfferUntrackedAsync(appId, iamUserId, OfferStatusId.CREATED, OfferTypeId.APP).ConfigureAwait(false);
-        if (result == default)
-        {
-            throw new NotFoundException($"app {appId} does not exist");
-        }
-        var companyUserId = result.CompanyUserId;
-        if (companyUserId == Guid.Empty)
-        {
-            throw new ForbiddenException($"user {iamUserId} is not a member of the providercompany of app {appId}");
-        }
-        var documentName = document.FileName;
-        using var sha512Hash = SHA512.Create();
-        using var ms = new MemoryStream((int)document.Length);
-
-        await document.CopyToAsync(ms, cancellationToken).ConfigureAwait(false);
-        var hash = sha512Hash.ComputeHash(ms);
-        var documentContent = ms.GetBuffer();
-        if (ms.Length != document.Length || documentContent.Length != document.Length)
-        {
-            throw new ControllerArgumentException($"document {document.FileName} transmitted length {document.Length} doesn't match actual length {ms.Length}.");
-        }
-        
-        var doc = _portalRepositories.GetInstance<IDocumentRepository>().CreateDocument(documentName, documentContent, hash, documentTypeId, x =>
-        {
-            x.CompanyUserId = companyUserId;
-        });
-        _portalRepositories.GetInstance<IOfferRepository>().CreateOfferAssignedDocument(appId, doc.Id);
-        return await _portalRepositories.SaveAsync().ConfigureAwait(false);
-    }
+    
+    private async Task<int> UploadAppDoc (Guid appId, DocumentTypeId documentTypeId, IFormFile document, string iamUserId, OfferTypeId offerTypeId, CancellationToken cancellationToken) =>
+        await _offerService.UploadDocumentAsync(appId, documentTypeId, document, iamUserId, offerTypeId, cancellationToken).ConfigureAwait(false);
     
     /// <inheritdoc/>
     public Task<IEnumerable<AppRoleData>> AddAppUserRoleAsync(Guid appId, IEnumerable<AppUserRole> appAssignedDesc, string iamUserId)
