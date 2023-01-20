@@ -72,15 +72,17 @@ public class CustodianService : ICustodianService
         }
 
         using var responseStream = await result.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-        var walletData = await JsonSerializer
-            .DeserializeAsync<WalletData>(responseStream, cancellationToken: cancellationToken)
-            .ConfigureAwait(false);
-        if (walletData == null)
+        try
+        {
+            var walletData = await JsonSerializer
+                .DeserializeAsync<WalletData>(responseStream, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+            return walletData!;
+        }
+        catch (JsonException)
         {
             throw new ServiceException("Couldn't resolve wallet data");
         }
-
-        return walletData;
     }
 
     /// <inhertidoc />
