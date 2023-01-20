@@ -18,7 +18,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using System.Net;
 using Microsoft.Extensions.Logging;
 using Org.Eclipse.TractusX.Portal.Backend.Bpdm.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.BusinessLogic;
@@ -27,6 +26,8 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Custodian.Library.BusinessLogic;
+using Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.BusinessLogic;
+using System.Net;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 
@@ -36,6 +37,7 @@ public class ChecklistService : IChecklistService
     private readonly IBpdmBusinessLogic _bpdmBusinessLogic;
     private readonly ICustodianBusinessLogic _custodianBusinessLogic;
     private readonly IClearinghouseBusinessLogic _clearinghouseBusinessLogic;
+    private readonly ISdFactoryBusinessLogic _sdFactoryBusinessLogic;
     private readonly ILogger<IChecklistService> _logger;
 
     public ChecklistService(
@@ -43,12 +45,14 @@ public class ChecklistService : IChecklistService
         IBpdmBusinessLogic bpdmBusinessLogic,
         ICustodianBusinessLogic custodianBusinessLogic,
         IClearinghouseBusinessLogic clearinghouseBusinessLogic,
+        ISdFactoryBusinessLogic sdFactoryBusinessLogic,
         ILogger<IChecklistService> logger)
     {
         _portalRepositories = portalRepositories;
         _bpdmBusinessLogic = bpdmBusinessLogic;
         _custodianBusinessLogic = custodianBusinessLogic;
         _clearinghouseBusinessLogic = clearinghouseBusinessLogic;
+        _sdFactoryBusinessLogic = sdFactoryBusinessLogic;
         _logger = logger;
     }
 
@@ -71,8 +75,10 @@ public class ChecklistService : IChecklistService
         var stepExecutions = new Dictionary<ApplicationChecklistEntryTypeId, Func<Guid, Task>>
         {
             { ApplicationChecklistEntryTypeId.IDENTITY_WALLET, executionApplicationId => CreateWalletAsync(executionApplicationId, cancellationToken)},
-            { ApplicationChecklistEntryTypeId.CLEARING_HOUSE, executionApplicationId => HandleClearingHouse(executionApplicationId, cancellationToken)}
+            { ApplicationChecklistEntryTypeId.CLEARING_HOUSE, executionApplicationId => HandleClearingHouse(executionApplicationId, cancellationToken)},
+            { ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, executionApplicationId => HandleSelfDescription(executionApplicationId, cancellationToken)},
         };
+
         var possibleSteps = GetNextPossibleTypesWithMatchingStatus(checklistEntries.ToDictionary(x => x.TypeId, x => x.StatusId), new[] { ApplicationChecklistEntryStatusId.TO_DO });
         _logger.LogInformation("Found {StepsCount} possible steps for application {ApplicationId}", possibleSteps.Count(), applicationId);
         foreach (var stepToExecute in possibleSteps)
@@ -90,7 +96,7 @@ public class ChecklistService : IChecklistService
             catch (Exception ex)
             {
                 var statusId = ApplicationChecklistEntryStatusId.FAILED;
-                if (ex is ServiceException serviceException && serviceException.StatusCode == HttpStatusCode.ServiceUnavailable)
+                if (ex is ServiceException { StatusCode: HttpStatusCode.ServiceUnavailable })
                 {
                     statusId = ApplicationChecklistEntryStatusId.TO_DO;
                 }
@@ -133,6 +139,19 @@ public class ChecklistService : IChecklistService
                 });
         
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
+    }
+
+    private async Task HandleSelfDescription(Guid applicationId, CancellationToken cancellationToken)
+    {
+        await _sdFactoryBusinessLogic
+            .RegisterSelfDescriptionAsync(applicationId, cancellationToken)
+            .ConfigureAwait(false);
+        _portalRepositories.GetInstance<IApplicationChecklistRepository>()
+            .AttachAndModifyApplicationChecklist(applicationId, ApplicationChecklistEntryTypeId.IDENTITY_WALLET,
+                checklist =>
+                {
+                    checklist.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE;
+                });
     }
 
     /// <summary>

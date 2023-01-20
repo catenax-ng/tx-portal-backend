@@ -21,6 +21,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
+using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.ApplicationActivation;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Async;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
@@ -60,6 +61,7 @@ public class ChecklistExecutionService
 
         using var checklistServiceScope = outerLoopScope.ServiceProvider.CreateScope();
         var checklistService = checklistServiceScope.ServiceProvider.GetRequiredService<IChecklistService>();
+        var applicationActivation = checklistServiceScope.ServiceProvider.GetRequiredService<IApplicationActivationService>();
         var checklistCreationService = checklistServiceScope.ServiceProvider.GetRequiredService<IChecklistCreationService>();
         var checklistRepositories = checklistServiceScope.ServiceProvider.GetRequiredService<IPortalRepositories>();
 
@@ -80,6 +82,11 @@ public class ChecklistExecutionService
                     }
 
                     await checklistService.ProcessChecklist(applicationId, checklistEntries, stoppingToken).ConfigureAwait(false);
+                    
+                    if (checklistEntries.All(x => x.Item2 == ApplicationChecklistEntryStatusId.DONE))
+                    {
+                        await applicationActivation.HandleApplicationActivation(applicationId).ConfigureAwait(false);
+                    }
                     await checklistRepositories.SaveAsync().ConfigureAwait(false);
                     checklistRepositories.Clear();
                 }

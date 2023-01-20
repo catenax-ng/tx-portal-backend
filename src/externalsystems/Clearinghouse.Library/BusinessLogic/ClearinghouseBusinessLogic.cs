@@ -62,7 +62,6 @@ public class ClearinghouseBusinessLogic : IClearinghouseBusinessLogic
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
 
-    /// <inheritdoc />
     public async Task TriggerCompanyDataPost(Guid applicationId, string decentralizedIdentifier, CancellationToken cancellationToken)
     {
         var data = await _portalRepositories.GetInstance<IApplicationRepository>()

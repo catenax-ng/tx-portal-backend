@@ -1,5 +1,5 @@
-/********************************************************************************
- * Copyright (c) 2021,2022 BMW Group AG
+﻿/********************************************************************************
+ * Copyright (c) 2021,2022 Microsoft and BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
@@ -18,24 +18,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using System.ComponentModel.DataAnnotations;
+namespace Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.BusinessLogic;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
-
-/// <summary>
-/// Settings used in business logic concerning connectors.
-/// </summary>
-public class SdFactorySettings
+public interface ISdFactoryBusinessLogic
 {
-    /// <summary>
-    /// SD Factory endpoint for registering connectors.
-    /// </summary>
-    [Required]
-    public string SdFactoryUrl { get; set; } = null!;
-
-    /// <summary>
-    /// BPN of the issuer for the sd factory
-    /// </summary>
-    [Required]
-    public string SdFactoryIssuerBpn { get; set; } = null!;
+    Task<Guid> RegisterConnectorAsync(string connectorUrl, string businessPartnerNumber, CancellationToken cancellationToken);
+    Task RegisterSelfDescriptionAsync(Guid applicationId, CancellationToken cancellationToken);
 }

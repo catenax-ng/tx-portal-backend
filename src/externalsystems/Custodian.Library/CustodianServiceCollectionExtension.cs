@@ -48,8 +48,8 @@ public static class CustodianServiceCollectionExtension
             c.BaseAddress = new Uri(settings.Value.KeyCloakTokenAdress);
         }).AddHttpMessageHandler<LoggingHandler<CustodianService>>();
         services
-            .AddTransient<ICustodianService, CustodianService>();
-        services.AddTransient<ICustodianBusinessLogic, CustodianBusinessLogic>();
+            .AddTransient<ICustodianService, CustodianService>()
+            .AddTransient<ICustodianBusinessLogic, CustodianBusinessLogic>();
         
         return services;
     }

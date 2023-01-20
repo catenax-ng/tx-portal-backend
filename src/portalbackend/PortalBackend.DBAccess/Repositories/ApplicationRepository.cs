@@ -345,4 +345,13 @@ public class ApplicationRepository : IApplicationRepository
                      .Where(x => x.ApplicationChecklistEntryTypeId == ApplicationChecklistEntryTypeId.CLEARING_HOUSE)
                      .Select(x => x.ApplicationChecklistEntryStatusId).SingleOrDefault()))
              .SingleOrDefaultAsync();
+
+     /// <inheritdoc />
+     public Task<Guid> GetCompanyIdForSubmittedApplicationId(Guid applicationId) =>
+         _dbContext.CompanyApplications
+             .Where(ca =>
+                 ca.Id == applicationId &&
+                 ca.ApplicationStatusId == CompanyApplicationStatusId.SUBMITTED)
+             .Select(ca => ca.CompanyId)
+             .FirstOrDefaultAsync();
 }

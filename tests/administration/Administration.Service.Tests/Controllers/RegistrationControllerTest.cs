@@ -47,39 +47,6 @@ public class RegistrationControllerTest
     }
 
     [Fact]
-    public async Task Test1()
-    {
-        //Arrange
-        var id = new Guid("d90995fe-1241-4b8d-9f5c-f3909acc6383");
-        A.CallTo(() => _logic.ApprovePartnerRequest(IamUserId, AccessToken, id, A<CancellationToken>._))
-                  .Returns(true);
-
-        //Act
-        var result = await this._controller.ApprovePartnerRequest(id, CancellationToken.None).ConfigureAwait(false);
-
-        //Assert
-        A.CallTo(() => _logic.ApprovePartnerRequest(IamUserId, AccessToken, id, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
-        Assert.IsType<bool>(result);
-        Assert.True(result);
-    }
-
-    [Fact]
-    public async Task Test2()
-    {
-        //Arrange
-        A.CallTo(() => _logic.ApprovePartnerRequest(IamUserId, AccessToken, Guid.Empty, A<CancellationToken>._))
-                  .Returns(false);
-
-        //Act
-        var result = await this._controller.ApprovePartnerRequest(Guid.Empty, CancellationToken.None).ConfigureAwait(false);
-
-        //Assert
-        A.CallTo(() => _logic.ApprovePartnerRequest(IamUserId, AccessToken, Guid.Empty, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
-        Assert.IsType<bool>(result);
-        Assert.False(result);
-    }
-
-    [Fact]
     public async Task GetCompanyApplicationDetailsAsync_ReturnsCompanyApplicationDetails()
     {
          //Arrange

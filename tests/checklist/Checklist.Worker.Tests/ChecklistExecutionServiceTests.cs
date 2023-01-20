@@ -21,6 +21,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
+using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.ApplicationActivation;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
@@ -33,6 +34,7 @@ public class ChecklistExecutionServiceTests
 
     private readonly IChecklistService _checklistService;
     private readonly IChecklistCreationService _checklistCreationService;
+    private readonly IApplicationActivationService _applicationActivationService;
     private readonly ChecklistExecutionService _service;
 
     public ChecklistExecutionServiceTests()
@@ -46,6 +48,7 @@ public class ChecklistExecutionServiceTests
         _applicationChecklistRepository = A.Fake<IApplicationChecklistRepository>();
         _checklistService = A.Fake<IChecklistService>();
         _checklistCreationService = A.Fake<IChecklistCreationService>();
+        _applicationActivationService = A.Fake<IApplicationActivationService>();
 
         A.CallTo(() => portalRepositories.GetInstance<IApplicationChecklistRepository>())
             .Returns(_applicationChecklistRepository);
@@ -54,6 +57,7 @@ public class ChecklistExecutionServiceTests
         A.CallTo(() => serviceProvider.GetService(typeof(IPortalRepositories))).Returns(portalRepositories);
         A.CallTo(() => serviceProvider.GetService(typeof(IChecklistService))).Returns(_checklistService);
         A.CallTo(() => serviceProvider.GetService(typeof(IChecklistCreationService))).Returns(_checklistCreationService);
+        A.CallTo(() => serviceProvider.GetService(typeof(IApplicationActivationService))).Returns(_applicationActivationService);
         var serviceScope = fixture.Create<IServiceScope>();
         A.CallTo(() => serviceScope.ServiceProvider).Returns(serviceProvider);
         var serviceScopeFactory = fixture.Create<IServiceScopeFactory>();
@@ -77,6 +81,37 @@ public class ChecklistExecutionServiceTests
         A.CallTo(() => _checklistService.ProcessChecklist(A<Guid>._,
             A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,
             CancellationToken.None)).MustNotHaveHappened();
+        A.CallTo(() => _applicationActivationService.HandleApplicationActivation(A<Guid>._)).MustNotHaveHappened();
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithAllEntriesDone_ActivatesApplication()
+    {
+        // Arrange
+        var applicationId = Guid.NewGuid();
+        var list = new List<ValueTuple<Guid, ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>>
+        {
+            new(applicationId, ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE),
+            new(applicationId, ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.DONE),
+            new(applicationId, ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.DONE),
+            new(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.DONE),
+            new(applicationId, ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.DONE),
+        };
+        A.CallTo(() => _applicationChecklistRepository.GetChecklistDataOrderedByApplicationId())
+            .Returns(list.ToAsyncEnumerable());
+        A.CallTo(() => _applicationActivationService.HandleApplicationActivation(applicationId))
+            .ReturnsLazily(() => Task.CompletedTask);
+
+        // Act
+        await _service.ExecuteAsync(CancellationToken.None);
+
+        // Assert
+        A.CallTo(() => _checklistService.ProcessChecklist(A<Guid>._,
+            A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,
+            CancellationToken.None)).MustNotHaveHappened();
+        A.CallTo(() => _checklistCreationService.CreateMissingChecklistItems(applicationId, A<IEnumerable<ApplicationChecklistEntryTypeId>>._))
+            .MustNotHaveHappened();
+        A.CallTo(() => _applicationActivationService.HandleApplicationActivation(applicationId)).MustHaveHappenedOnceExactly();
     }
 
     [Fact]
@@ -102,6 +137,7 @@ public class ChecklistExecutionServiceTests
 
         // Assert
         Environment.ExitCode.Should().Be(1);
+        A.CallTo(() => _applicationActivationService.HandleApplicationActivation(A<Guid>._)).MustNotHaveHappened();
     }
 
     [Fact]
@@ -151,6 +187,7 @@ public class ChecklistExecutionServiceTests
         A.CallTo(() => _checklistService.ProcessChecklist(A<Guid>._,
             A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,
             A<CancellationToken>._)).MustHaveHappened(5, Times.Exactly);
+        A.CallTo(() => _applicationActivationService.HandleApplicationActivation(A<Guid>._)).MustNotHaveHappened();
     }
     
     [Fact]
@@ -176,5 +213,6 @@ public class ChecklistExecutionServiceTests
             .MustHaveHappenedOnceExactly();
         A.CallTo(() => _checklistService.ProcessChecklist(A<Guid>._, A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._, A<CancellationToken>._))
             .MustHaveHappenedOnceExactly();
+        A.CallTo(() => _applicationActivationService.HandleApplicationActivation(A<Guid>._)).MustNotHaveHappened();
     }
 }

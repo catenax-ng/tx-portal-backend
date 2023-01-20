@@ -21,7 +21,7 @@
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Models;
+namespace Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.Models;
 
 /// <summary>
 /// Model used to request connector registration at sd factory.

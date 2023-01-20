@@ -18,42 +18,25 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using System.ComponentModel.DataAnnotations;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
+namespace Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library;
 
-public class RegistrationSettings
+/// <summary>
+/// Settings used in business logic concerning connectors.
+/// </summary>
+public class SdFactorySettings : KeyVaultAuthSettings
 {
-    public RegistrationSettings()
-    {
-        PartnerUserInitialRoles = null!;
-        DocumentTypeIds = null!;
-    }
-
-    public int ApplicationsMaxPageSize { get; set; }
-    
+    /// <summary>
+    /// SD Factory endpoint for registering connectors.
+    /// </summary>
     [Required]
-    public IDictionary<string,IEnumerable<string>> PartnerUserInitialRoles { get; set; }
+    public string SdFactoryUrl { get; set; } = null!;
 
     /// <summary>
-    /// Document Type Id
+    /// BPN of the issuer for the sd factory
     /// </summary>
-    /// <value></value>
     [Required]
-    public IEnumerable<DocumentTypeId?> DocumentTypeIds { get; set; }
-}
-
-public static class RegistrationSettingsExtension
-{
-    public static IServiceCollection ConfigureRegistrationSettings(
-        this IServiceCollection services,
-        IConfigurationSection section)
-    {
-        services.AddOptions<RegistrationSettings>()
-            .Bind(section)
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-        return services;
-    }
+    public string SdFactoryIssuerBpn { get; set; } = null!;
 }
