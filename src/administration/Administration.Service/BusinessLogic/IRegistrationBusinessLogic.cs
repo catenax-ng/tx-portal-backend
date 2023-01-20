@@ -44,5 +44,11 @@ public interface IRegistrationBusinessLogic
     /// <param name="comment">An additional comment, only set if the application got declined</param>
     Task SetRegistrationVerification(Guid applicationId, bool approve, string? comment = null);
     
+    /// <summary>
+    /// Processes the clearinghouse response
+    /// </summary>
+    /// <param name="bpn">the bpn of the company</param>
+    /// <param name="data">the response data</param>
+    /// <param name="cancellationToken">cancellation token</param>
     Task ProcessClearinghouseResponseAsync(string bpn, ClearinghouseResponseData data, CancellationToken cancellationToken);
 }
