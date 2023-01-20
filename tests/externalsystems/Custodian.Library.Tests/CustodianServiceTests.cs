@@ -163,7 +163,7 @@ public class CustodianServiceTests
 
     #endregion
     
-    #region GetWallet
+    #region GetWallet By Bpn
 
     [Fact]
     public async Task GetWalletByBpnAsync_WithValidData_ReturnsWallets()
@@ -192,6 +192,34 @@ public class CustodianServiceTests
         result.Bpn.Should().NotBeNullOrEmpty();
         result.Bpn.Should().Be(validBpn);
         result.Did.Should().Be("123");
+    }
+
+    [Fact]
+    public async Task GetWalletByBpnAsync_WithWalletDataNull_ThrowsServiceException()
+    {
+        // Arrange
+        const string validBpn = "BPNL00000003CRHK";
+        var data = JsonSerializer.Serialize(new WalletData("abc",
+            validBpn,
+            "123",
+            DateTime.Now,
+            false,
+            null));
+        var httpMessageHandlerMock = new HttpMessageHandlerMock(HttpStatusCode.OK);
+        var httpClient = new HttpClient(httpMessageHandlerMock)
+        {
+            BaseAddress = new Uri("https://base.address.com")
+        };
+        A.CallTo(() => _tokenService.GetAuthorizedClient<CustodianService>(_options.Value, A<CancellationToken>._))
+            .Returns(httpClient);
+        var sut = new CustodianService(_tokenService, _options);
+        
+        // Act
+        async Task Act() => await sut.GetWalletByBpnAsync(validBpn, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ServiceException>(Act);
+        ex.Message.Should().Be("Couldn't resolve wallet data");
     }
 
     [Fact]
