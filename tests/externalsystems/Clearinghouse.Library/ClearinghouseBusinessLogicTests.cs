@@ -70,6 +70,23 @@ public class ClearinghouseBusinessLogicTests
     #region ProcessClearinghouseResponse
 
     [Fact]
+    public async Task ProcessClearinghouseResponseAsync_WithoutCompanyForBpn_ThrowsNotFoundException()
+    {
+        // Arrange
+        var bpn = "fakebpn";
+        var data = _fixture.Build<ClearinghouseResponseData>()
+            .Create();
+        SetupForProcessClearinghouseResponse();
+
+        // Act
+        async Task Act() => await _logic.ProcessClearinghouseResponseAsync(bpn, data, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
+        ex.Message.Should().Be($"No companyApplication for BPN {bpn} is not in status SUBMITTED");
+    }
+
+    [Fact]
     public async Task ProcessClearinghouseResponseAsync_WithClearinghouseInTodo_ThrowsConflictException()
     {
         // Arrange
