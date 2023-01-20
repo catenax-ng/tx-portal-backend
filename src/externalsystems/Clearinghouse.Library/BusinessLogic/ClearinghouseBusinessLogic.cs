@@ -36,6 +36,7 @@ public class ClearinghouseBusinessLogic : IClearinghouseBusinessLogic
         _portalRepositories = portalRepositories;
         _clearinghouseService = clearinghouseService;
     }
+
     /// <inheritdoc />
     public async Task ProcessClearinghouseResponseAsync(string bpn, ClearinghouseResponseData data, CancellationToken cancellationToken)
     {
