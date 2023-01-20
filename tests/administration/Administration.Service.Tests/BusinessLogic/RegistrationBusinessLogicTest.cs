@@ -420,6 +420,7 @@ public class RegistrationBusinessLogicTest
 
         // Assert
         A.CallTo(() => _checklistService.TriggerBpnDataPush(ApplicationId, IamUserId, CancellationToken.None)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
     }
     
     #endregion

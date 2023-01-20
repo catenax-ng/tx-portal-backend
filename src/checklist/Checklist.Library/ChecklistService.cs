@@ -22,7 +22,6 @@ using System.Net;
 using Microsoft.Extensions.Logging;
 using Org.Eclipse.TractusX.Portal.Backend.Bpdm.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.BusinessLogic;
-using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
@@ -64,13 +63,12 @@ public class ChecklistService : IChecklistService
             {
                 checklist.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.IN_PROGRESS;
             });
-        await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public async Task ProcessChecklist(Guid applicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries, CancellationToken cancellationToken)
     {
-        var stepExecutions = new Dictionary<ApplicationChecklistEntryTypeId, Func<Guid, Task<bool>>>
+        var stepExecutions = new Dictionary<ApplicationChecklistEntryTypeId, Func<Guid, Task>>
         {
             { ApplicationChecklistEntryTypeId.IDENTITY_WALLET, executionApplicationId => CreateWalletAsync(executionApplicationId, cancellationToken)},
             { ApplicationChecklistEntryTypeId.CLEARING_HOUSE, executionApplicationId => HandleClearingHouse(executionApplicationId, cancellationToken)}
@@ -102,12 +100,23 @@ public class ChecklistService : IChecklistService
                             item.ApplicationChecklistEntryStatusId = statusId;
                             item.Comment = ex.ToString(); 
                         });
-                await _portalRepositories.SaveAsync().ConfigureAwait(false);
             }
         }
     }
 
-    private async Task<bool> HandleClearingHouse(Guid applicationId, CancellationToken cancellationToken)
+    private async Task CreateWalletAsync(Guid applicationId, CancellationToken cancellationToken)
+    {
+        var message = await _custodianBusinessLogic.CreateWalletAsync(applicationId, cancellationToken).ConfigureAwait(false);
+        _portalRepositories.GetInstance<IApplicationChecklistRepository>()
+            .AttachAndModifyApplicationChecklist(applicationId, ApplicationChecklistEntryTypeId.IDENTITY_WALLET,
+                checklist =>
+                {
+                    checklist.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE;
+                    checklist.Comment = message;
+                });
+    }
+
+    private async Task HandleClearingHouse(Guid applicationId, CancellationToken cancellationToken)
     {
         var walletData = await _custodianBusinessLogic.GetWalletByBpnAsync(applicationId, cancellationToken);
         if (walletData == null || string.IsNullOrEmpty(walletData.Did))
@@ -122,23 +131,6 @@ public class ChecklistService : IChecklistService
                 {
                     checklist.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.IN_PROGRESS;
                 });
-        
-        await _portalRepositories.SaveAsync().ConfigureAwait(false);
-        return true;
-    }
-
-    private async Task<bool> CreateWalletAsync(Guid applicationId, CancellationToken cancellationToken)
-    {
-        var message = await _custodianBusinessLogic.CreateWalletAsync(applicationId, cancellationToken).ConfigureAwait(false);
-        _portalRepositories.GetInstance<IApplicationChecklistRepository>()
-            .AttachAndModifyApplicationChecklist(applicationId, ApplicationChecklistEntryTypeId.IDENTITY_WALLET,
-                checklist =>
-                {
-                    checklist.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE;
-                    checklist.Comment = message;
-                });
-        await _portalRepositories.SaveAsync().ConfigureAwait(false);
-        return true;
     }
 
     /// <summary>
@@ -151,9 +143,11 @@ public class ChecklistService : IChecklistService
     private async Task CheckCanRunStepAsync(Guid applicationId, ApplicationChecklistEntryTypeId step, IEnumerable<ApplicationChecklistEntryStatusId> allowedStatus)
     {
         var checklistData = await _portalRepositories.GetInstance<IApplicationChecklistRepository>()
-            .GetChecklistDataAsync(applicationId).ToListAsync().ConfigureAwait(false);
+            .GetChecklistDataAsync(applicationId)
+            .ToDictionaryAsync(x => x.TypeId, x => x.StatusId)
+            .ConfigureAwait(false);
 
-        var possibleSteps = GetNextPossibleTypesWithMatchingStatus(checklistData.ToDictionary(x => x.TypeId, x => x.StatusId), allowedStatus);
+        var possibleSteps = GetNextPossibleTypesWithMatchingStatus(checklistData, allowedStatus);
         if (!possibleSteps.Contains(step))
         {
             throw new ConflictException($"{step} is not available as next step");

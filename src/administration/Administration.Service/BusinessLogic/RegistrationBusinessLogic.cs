@@ -473,18 +473,17 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
                 entry.ApplicationChecklistEntryStatusId = approve
                     ? ApplicationChecklistEntryStatusId.DONE
                     : ApplicationChecklistEntryStatusId.FAILED;
-
-                if (!string.IsNullOrWhiteSpace(comment))
-                {
-                    entry.Comment = comment;
-                }
+                entry.Comment = comment;
             });
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
 
     /// <inheritdoc />
-    public Task TriggerBpnDataPushAsync(string iamUserId, Guid applicationId, CancellationToken cancellationToken) =>
-        _checklistService.TriggerBpnDataPush(applicationId, iamUserId, cancellationToken);
+    public async Task TriggerBpnDataPushAsync(string iamUserId, Guid applicationId, CancellationToken cancellationToken)
+    {
+        await _checklistService.TriggerBpnDataPush(applicationId, iamUserId, cancellationToken).ConfigureAwait(false);
+        await _portalRepositories.SaveAsync().ConfigureAwait(false);
+    }
 
     private static async Task<List<UserRoleData>> GetRoleData(IUserRolesRepository userRolesRepository, IDictionary<string, IEnumerable<string>> roles)
     {
