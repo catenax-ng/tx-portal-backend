@@ -21,6 +21,7 @@
 using System.Net;
 using Microsoft.Extensions.Logging;
 using Org.Eclipse.TractusX.Portal.Backend.Bpdm.Library.BusinessLogic;
+using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.ApplicationActivation;
 using Org.Eclipse.TractusX.Portal.Backend.Custodian.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.Custodian.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.BusinessLogic;
@@ -30,6 +31,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.BusinessLogic;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.Tests;
 
@@ -57,6 +59,7 @@ public class ChecklistServiceTests
     private readonly IBpdmBusinessLogic _bpdmBusinessLogic;
     private readonly ICustodianBusinessLogic _custodianBusinessLogic;
     private readonly IClearinghouseBusinessLogic _clearinghouseBusinessLogic;
+    private readonly ISdFactoryBusinessLogic _sdFactoryBusinessLogic;
     private readonly ChecklistService _service;
 
     public ChecklistServiceTests()
@@ -74,12 +77,13 @@ public class ChecklistServiceTests
         _bpdmBusinessLogic = A.Fake<IBpdmBusinessLogic>();
         _custodianBusinessLogic = A.Fake<ICustodianBusinessLogic>();
         _clearinghouseBusinessLogic = A.Fake<IClearinghouseBusinessLogic>();
+        _sdFactoryBusinessLogic = A.Fake<ISdFactoryBusinessLogic>();
 
         A.CallTo(() => _portalRepositories.GetInstance<IApplicationRepository>()).Returns(_applicationRepository);
         A.CallTo(() => _portalRepositories.GetInstance<IApplicationChecklistRepository>()).Returns(_applicationChecklistRepository);
         A.CallTo(() => _portalRepositories.GetInstance<ICompanyRepository>()).Returns(_companyRepository);
 
-        _service = new ChecklistService(_portalRepositories, _bpdmBusinessLogic, _custodianBusinessLogic, _clearinghouseBusinessLogic, A.Fake<ILogger<IChecklistService>>());
+        _service = new ChecklistService(_portalRepositories, _bpdmBusinessLogic, _custodianBusinessLogic, _clearinghouseBusinessLogic, _sdFactoryBusinessLogic, A.Fake<ILogger<IChecklistService>>());
     }
     
     #region TriggerBpnDataPush
@@ -380,6 +384,8 @@ public class ChecklistServiceTests
 
         // Assert
         A.CallTo(() => _custodianBusinessLogic.GetWalletByBpnAsync(IdWithBpn, A<CancellationToken>._))
+            .MustHaveHappenedOnceExactly();
+        A.CallTo(() => _clearinghouseBusinessLogic.TriggerCompanyDataPost(IdWithBpn, A<string>._, A<CancellationToken>._))
             .MustHaveHappenedOnceExactly();
         A.CallTo(() => _applicationChecklistRepository.AttachAndModifyApplicationChecklist(IdWithBpn, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, A<Action<ApplicationChecklistEntry>>._)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _portalRepositories.SaveAsync()).MustNotHaveHappened();

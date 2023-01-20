@@ -74,4 +74,11 @@ public interface IApplicationRepository
     /// <param name="bpn">Bpn of the company to get the application for</param>
     /// <returns></returns>
     Task<(Guid ApplicationId, ApplicationChecklistEntryStatusId StatusId)> GetSubmittedIdAndClearinghouseChecklistStatusByBpn(string bpn);
+
+    /// <summary>
+    /// Gets the company id by the application id for submitted applications
+    /// </summary>
+    /// <param name="applicationId">The application id</param>
+    /// <returns>The company id</returns>
+    Task<Guid> GetCompanyIdForSubmittedApplicationId(Guid applicationId);
 }
