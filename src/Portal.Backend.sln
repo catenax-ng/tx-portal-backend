@@ -152,9 +152,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Framework.ErrorHandling.Web
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clearinghouse.Library", "externalsystems\Clearinghouse.Library\Clearinghouse.Library.csproj", "{5BA98BC4-941A-4911-9479-EA4ED48D6FF3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clearinghouse.Library", "..\tests\externalsystems\Clearinghouse.Library\Clearinghouse.Library.csproj", "{4F0E9174-5DB5-42C5-9AA2-4914BDD29AE6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clearinghouse.Library.Tests", "..\tests\externalsystems\Clearinghouse.Library.Tests\Clearinghouse.Library.Tests.csproj", "{4F0E9174-5DB5-42C5-9AA2-4914BDD29AE6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SdFactory.Library", "externalsystems\SdFactory.Library\SdFactory.Library.csproj", "{7D3D6277-6E91-4F66-AB07-5049A66B5B3D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SdFactory.Library.Tests", "..\tests\externalsystems\SdFactory.Library.Tests\SdFactory.Library.Tests.csproj", "{A4BF3A98-BE55-4816-991F-086DC3B9E5FB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -934,6 +936,18 @@ Global
 		{7D3D6277-6E91-4F66-AB07-5049A66B5B3D}.Release|x64.Build.0 = Release|Any CPU
 		{7D3D6277-6E91-4F66-AB07-5049A66B5B3D}.Release|x86.ActiveCfg = Release|Any CPU
 		{7D3D6277-6E91-4F66-AB07-5049A66B5B3D}.Release|x86.Build.0 = Release|Any CPU
+		{A4BF3A98-BE55-4816-991F-086DC3B9E5FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4BF3A98-BE55-4816-991F-086DC3B9E5FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4BF3A98-BE55-4816-991F-086DC3B9E5FB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A4BF3A98-BE55-4816-991F-086DC3B9E5FB}.Debug|x64.Build.0 = Debug|Any CPU
+		{A4BF3A98-BE55-4816-991F-086DC3B9E5FB}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A4BF3A98-BE55-4816-991F-086DC3B9E5FB}.Debug|x86.Build.0 = Debug|Any CPU
+		{A4BF3A98-BE55-4816-991F-086DC3B9E5FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4BF3A98-BE55-4816-991F-086DC3B9E5FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4BF3A98-BE55-4816-991F-086DC3B9E5FB}.Release|x64.ActiveCfg = Release|Any CPU
+		{A4BF3A98-BE55-4816-991F-086DC3B9E5FB}.Release|x64.Build.0 = Release|Any CPU
+		{A4BF3A98-BE55-4816-991F-086DC3B9E5FB}.Release|x86.ActiveCfg = Release|Any CPU
+		{A4BF3A98-BE55-4816-991F-086DC3B9E5FB}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1006,5 +1020,6 @@ Global
 		{5BA98BC4-941A-4911-9479-EA4ED48D6FF3} = {C8957230-4203-452C-A085-34091C5E370B}
 		{4F0E9174-5DB5-42C5-9AA2-4914BDD29AE6} = {323C198D-A8C6-4EB0-8B79-72624275E35F}
 		{7D3D6277-6E91-4F66-AB07-5049A66B5B3D} = {C8957230-4203-452C-A085-34091C5E370B}
+		{A4BF3A98-BE55-4816-991F-086DC3B9E5FB} = {323C198D-A8C6-4EB0-8B79-72624275E35F}
 	EndGlobalSection
 EndGlobal

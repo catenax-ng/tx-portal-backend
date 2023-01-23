@@ -191,7 +191,7 @@ public class RegistrationController : ControllerBase
     /// Declines the registration verification for the application with the given id
     /// </summary>
     /// <param name="applicationId">Id of the application that should be declined</param>
-    /// <param name="comment">Comment to explain why the application got declined</param>
+    /// <param name="data">Comment to explain why the application got declined</param>
     /// <remarks>
     /// Example: GET: api/administration/registration/application/4f0146c6-32aa-4bb1-b844-df7e8babdcb4/decline
     /// </remarks>
@@ -204,9 +204,9 @@ public class RegistrationController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    public async Task<NoContentResult> DeclineApplication([FromRoute] Guid applicationId, [FromBody] string comment)
+    public async Task<NoContentResult> DeclineApplication([FromRoute] Guid applicationId, [FromBody] RegistrationDeclineData data)
     {
-        await _logic.SetRegistrationVerification(applicationId, false, comment).ConfigureAwait(false);
+        await _logic.SetRegistrationVerification(applicationId, false, data.Comment).ConfigureAwait(false);
         return NoContent();
     }
 
