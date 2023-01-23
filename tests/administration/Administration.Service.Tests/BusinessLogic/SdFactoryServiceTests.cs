@@ -191,7 +191,6 @@ public class SdFactoryServiceTests
         // Arrange
         var httpMessageHandlerMock = new HttpMessageHandlerMock(HttpStatusCode.BadRequest);
         CreateHttpClient(httpMessageHandlerMock);
-        var accessToken = "this-is-a-super-secret-secret-not";
         var bpn = "BPNL000000000009";
         var service = new SdFactoryService(_portalRepositories, _tokenService, _options);
 
