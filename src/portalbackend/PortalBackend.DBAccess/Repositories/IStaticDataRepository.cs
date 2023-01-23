@@ -46,4 +46,6 @@ public interface IStaticDataRepository
     /// <param name="alpha2Code"></param>
     /// <returns>Returns  enumerable of <see cref="UniqueIdentifierData"/> and IsCountryCodeExist</returns>
     Task<(IEnumerable<UniqueIdentifierId> IdentifierIds, bool IsValidCountryCode)> GetCompanyIdentifiers(string alpha2Code);
+
+    Task<(bool IsValidCountry, IEnumerable<(BpdmIdentifierId BpdmIdentifierId, UniqueIdentifierId UniqueIdentifierId)> Identifiers)> GetCountryAssignedIdentifiers(IEnumerable<BpdmIdentifierId> bpdmIdentifierIds, string countryAlpha2Code);
 }
