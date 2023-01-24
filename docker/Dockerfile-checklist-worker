@@ -16,4 +16,4 @@ COPY --from=publish /app/publish .
 
 RUN chown -R 1000:3000 /app
 USER 1000:3000
-ENTRYPOINT ["dotnet", "Org.Eclipse.TractusX.Portal.Backend.Checklist.Worker.dll"]
+#ENTRYPOINT ["dotnet", "Org.Eclipse.TractusX.Portal.Backend.Checklist.Worker.dll"]
