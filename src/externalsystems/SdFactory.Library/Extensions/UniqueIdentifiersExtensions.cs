@@ -12,6 +12,6 @@ public static class UniqueIdentifiersExtensions
             UniqueIdentifierId.LEI_CODE => "leiCode",
             UniqueIdentifierId.VIES => "EUID",
             UniqueIdentifierId.EORI => "EORI",
-            _ => throw new ArgumentOutOfRangeException(nameof(uniqueIdentifierId), uniqueIdentifierId, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(uniqueIdentifierId), uniqueIdentifierId, "Unique Identifier not found for SdFactory Conversion")
         };
 }
