@@ -50,4 +50,4 @@ var host = Host.CreateDefaultBuilder(args)
         services.AddHostedService<ChecklistExecutionService>();
     }).Build();
 
-host.Run();
+await host.RunAsync();
