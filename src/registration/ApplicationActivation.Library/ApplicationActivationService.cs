@@ -64,13 +64,13 @@ public class ApplicationActivationService : IApplicationActivationService
         var result = await applicationRepository.GetCompanyAndApplicationDetailsForApprovalAsync(applicationId).ConfigureAwait(false);
         if (result == default)
         {
-            throw new NotFoundException($"CompanyApplication {applicationId} is not in status SUBMITTED");
+            throw new ConflictException($"CompanyApplication {applicationId} is not in status SUBMITTED");
         }
-        var (companyId, businessPartnerNumber, _) = result;
+        var (companyId, businessPartnerNumber) = result;
 
         if (string.IsNullOrWhiteSpace(businessPartnerNumber))
         {
-            throw new ControllerArgumentException($"BusinessPartnerNumber (bpn) for CompanyApplications {applicationId} company {companyId} is empty", "bpn");
+            throw new ConflictException($"BusinessPartnerNumber (bpn) for CompanyApplications {applicationId} company {companyId} is empty");
         }
 
         var userRolesRepository = _portalRepositories.GetInstance<IUserRolesRepository>();

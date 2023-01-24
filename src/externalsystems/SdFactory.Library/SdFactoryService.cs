@@ -61,7 +61,7 @@ public class SdFactoryService : ISdFactoryService
     {
         var httpClient = await _tokenService.GetAuthorizedClient<SdFactoryService>(_settings, cancellationToken)
             .ConfigureAwait(false);
-        // The hardcoded values (headquarterCountry, legalCountry, sdType, issuer) will be fetched from the user input or db in future
+        // TODO The hardcoded values (headquarterCountry, legalCountry, sdType, issuer) will be fetched from the user input or db in future
         var requestModel = new ConnectorSdFactoryRequestModel(
             SdFactoryRequestModelSdType.ServiceOffering,
             connectorUrl,

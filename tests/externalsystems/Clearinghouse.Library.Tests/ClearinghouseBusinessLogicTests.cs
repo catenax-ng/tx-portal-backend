@@ -150,7 +150,7 @@ public class ClearinghouseBusinessLogicTests
     #region TriggerCompanyDataPost
 
     [Fact]
-    public async Task TriggerCompanyDataPost_WithNotExistingApplication_ThrowsNotFoundException()
+    public async Task TriggerCompanyDataPost_WithNotExistingApplication_ThrowsConflictException()
     {
         // Arrange
         var applicationId = Guid.NewGuid();
@@ -160,12 +160,12 @@ public class ClearinghouseBusinessLogicTests
         async Task Act() => await _logic.TriggerCompanyDataPost(applicationId, ValidDid, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
-        var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
         ex.Message.Should().Be($"Application {applicationId} does not exists.");
     }
 
     [Fact]
-    public async Task TriggerCompanyDataPost_WithCreatedApplication_ThrowsArgumentException()
+    public async Task TriggerCompanyDataPost_WithCreatedApplication_ThrowsConflictException()
     {
         // Arrange
         SetupForTrigger();
@@ -174,8 +174,8 @@ public class ClearinghouseBusinessLogicTests
         async Task Act() => await _logic.TriggerCompanyDataPost(IdWithApplicationCreated, ValidDid, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
-        var ex = await Assert.ThrowsAsync<ArgumentException>(Act);
-        ex.Message.Should().Be($"CompanyApplication {IdWithApplicationCreated} is not in status SUBMITTED (Parameter 'applicationId')");
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be($"CompanyApplication {IdWithApplicationCreated} is not in status SUBMITTED");
     }
 
     [Fact]

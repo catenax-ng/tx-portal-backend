@@ -42,13 +42,13 @@ public class CustodianBusinessLogic : ICustodianBusinessLogic
         var result = await _portalRepositories.GetInstance<IApplicationRepository>().GetCompanyAndApplicationDetailsForCreateWalletAsync(applicationId).ConfigureAwait(false);
         if (result == default)
         {
-            throw new NotFoundException($"CompanyApplication {applicationId} is not in status SUBMITTED");
+            throw new ConflictException($"CompanyApplication {applicationId} is not in status SUBMITTED");
         }
         var (companyId, companyName, businessPartnerNumber) = result;
 
         if (string.IsNullOrWhiteSpace(businessPartnerNumber))
         {
-            throw new ControllerArgumentException($"BusinessPartnerNumber (bpn) for CompanyApplications {applicationId} company {companyId} is empty", "bpn");
+            throw new ConflictException($"BusinessPartnerNumber (bpn) for CompanyApplications {applicationId} company {companyId} is empty");
         }
         
         return await _custodianService.CreateWalletAsync(businessPartnerNumber, companyName, cancellationToken).ConfigureAwait(false);
