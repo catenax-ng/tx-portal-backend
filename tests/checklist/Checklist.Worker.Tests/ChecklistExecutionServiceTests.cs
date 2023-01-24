@@ -108,7 +108,7 @@ public class ChecklistExecutionServiceTests
         // Assert
         A.CallTo(() => _checklistService.ProcessChecklist(A<Guid>._,
             A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,
-            CancellationToken.None)).MustNotHaveHappened();
+            A<CancellationToken>._)).MustNotHaveHappened();
         A.CallTo(() => _checklistCreationService.CreateMissingChecklistItems(applicationId, A<IEnumerable<ApplicationChecklistEntryTypeId>>._))
             .MustNotHaveHappened();
         A.CallTo(() => _applicationActivationService.HandleApplicationActivation(applicationId)).MustHaveHappenedOnceExactly();

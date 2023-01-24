@@ -137,8 +137,6 @@ public class ChecklistService : IChecklistService
                 {
                     checklist.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.IN_PROGRESS;
                 });
-        
-        await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
 
     private async Task HandleSelfDescription(Guid applicationId, CancellationToken cancellationToken)

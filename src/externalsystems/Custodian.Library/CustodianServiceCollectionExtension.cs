@@ -18,13 +18,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Custodian.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Logging;
-using Org.Eclipse.TractusX.Portal.Backend.Framework.Token;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Custodian.Library;
 

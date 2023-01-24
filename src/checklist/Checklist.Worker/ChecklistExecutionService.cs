@@ -81,7 +81,10 @@ public class ChecklistExecutionService
                         checklistEntries.AddRange(newlyCreatedEntries);
                     }
 
-                    await checklistService.ProcessChecklist(applicationId, checklistEntries, stoppingToken).ConfigureAwait(false);
+                    if (checklistEntries.Any(x => x.Item2 == ApplicationChecklistEntryStatusId.TO_DO))
+                    {
+                        await checklistService.ProcessChecklist(applicationId, checklistEntries, stoppingToken).ConfigureAwait(false);
+                    }
                     
                     if (checklistEntries.All(x => x.Item2 == ApplicationChecklistEntryStatusId.DONE))
                     {
