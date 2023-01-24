@@ -1052,5 +1052,27 @@ public class PortalDbContext : DbContext
                     .Cast<ProcessStepTypeId>()
                     .Select(e => new ProcessStepType(e))
             );
+
+        modelBuilder.Entity<PrivacyPolicy>()
+            .HasData(
+                Enum.GetValues(typeof(PrivacyPolicyId))
+                    .Cast<PrivacyPolicyId>()
+                    .Select(e => new PrivacyPolicy(e))
+            );
+        
+        modelBuilder.Entity<OfferAssignedPrivacypolicy>(entity =>
+        {
+            entity.HasKey(e => new { e.OfferId, e.PrivacyPolicyId });
+
+            entity.HasOne(d => d.Offer)
+                .WithMany(p => p!.OfferAssignedPrivacypolicies)
+                .HasForeignKey(d => d.OfferId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+
+            entity.HasOne(d => d.PrivacyPolicy)
+                .WithMany(p => p!.OfferAssignedPrivacypolicies)
+                .HasForeignKey(d => d.PrivacyPolicyId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+        });
     }
 }

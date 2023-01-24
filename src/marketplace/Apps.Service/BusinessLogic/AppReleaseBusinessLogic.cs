@@ -284,6 +284,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         {
             throw new ControllerArgumentException($"At least One Privacy Policy {string.Join(",", appRequestModel.PrivacyPolicies.Except(inputPrivacyPolicies))} Not Existing", nameof(appRequestModel.PrivacyPolicies));
         }
+       
         return this.CreateAppAsync(appRequestModel, iamUserId);
     }
 

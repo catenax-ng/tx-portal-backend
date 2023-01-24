@@ -514,6 +514,4 @@ public class OfferRepository : IOfferRepository
         _context.PrivacyPolicies
             .Select(privacyPolicy => privacyPolicy.Label)
             .AsAsyncEnumerable();
-    
-   
 }
