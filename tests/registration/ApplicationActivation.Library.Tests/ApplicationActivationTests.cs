@@ -178,42 +178,41 @@ public class ApplicationActivationTests
     }
 
     [Fact]
-    public async Task HandleApplicationActivation_WithDefaultApplicationId_ThrowsArgumentNullException()
+    public async Task HandleApplicationActivation_WithDefaultApplicationId_ThrowsConflictException()
     {
         //Act
         async Task Action() => await _sut.HandleApplicationActivation(Guid.Empty).ConfigureAwait(false);
         
         // Assert
-        var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Action);
-        ex.Message.Should().Be($"BusinessPartnerNumber (bpn) for CompanyApplications {Guid.Empty} company {Guid.Empty} is empty (Parameter 'bpn')");
+        var ex = await Assert.ThrowsAsync<ConflictException>(Action);
+        ex.Message.Should().Be($"BusinessPartnerNumber (bpn) for CompanyApplications {Guid.Empty} company {Guid.Empty} is empty");
     }
 
     [Fact]
-    public async Task HandleApplicationActivation_WithoutCompanyApplication_ThrowsNotFoundException()
+    public async Task HandleApplicationActivation_WithoutCompanyApplication_ThrowsConflictException()
     {
         // Arrange
         var applicationId = Guid.NewGuid();
         A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsForApprovalAsync(applicationId))
-            .ReturnsLazily(() => new ValueTuple<Guid, string?, string>());
+            .ReturnsLazily(() => new ValueTuple<Guid, string?>());
 
         //Act
         async Task Action() => await _sut.HandleApplicationActivation(applicationId).ConfigureAwait(false);
 
         // Assert
-        var ex = await Assert.ThrowsAsync<NotFoundException>(Action);
+        var ex = await Assert.ThrowsAsync<ConflictException>(Action);
         ex.Message.Should().Be($"CompanyApplication {applicationId} is not in status SUBMITTED");
     }
 
     [Fact]
-    public async Task HandleApplicationActivation_WithCompanyWithoutBPN_ThrowsArgumentException()
+    public async Task HandleApplicationActivation_WithCompanyWithoutBPN_ThrowsConflictException()
     {
         //Act
         async Task Action() => await _sut.HandleApplicationActivation(IdWithoutBpn).ConfigureAwait(false);
 
         // Assert
-        var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Action);
-        ex.Message.Should().Be($"BusinessPartnerNumber (bpn) for CompanyApplications {IdWithoutBpn} company {Guid.Empty} is empty (Parameter 'bpn')");
-        ex.ParamName.Should().Be($"bpn");
+        var ex = await Assert.ThrowsAsync<ConflictException>(Action);
+        ex.Message.Should().Be($"BusinessPartnerNumber (bpn) for CompanyApplications {IdWithoutBpn} company {Guid.Empty} is empty");
     }
 
     #endregion
@@ -246,9 +245,9 @@ public class ApplicationActivationTests
         };
 
         A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsForApprovalAsync(A<Guid>.That.Matches(x => x == Id)))
-            .ReturnsLazily(() => new ValueTuple<Guid, string?, string>(company.Id, company.BusinessPartnerNumber!, "de"));
+            .ReturnsLazily(() => new ValueTuple<Guid, string?>(company.Id, company.BusinessPartnerNumber!));
         A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsForApprovalAsync(A<Guid>.That.Matches(x => x == IdWithoutBpn)))
-            .ReturnsLazily(() => new ValueTuple<Guid, string?, string>(IdWithoutBpn, null, "de"));
+            .ReturnsLazily(() => new ValueTuple<Guid, string?>(IdWithoutBpn, null));
 
         A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsForCreateWalletAsync(A<Guid>.That.Matches(x => x == Id)))
             .ReturnsLazily(() => new ValueTuple<Guid, string, string?>(company.Id, company.Name, company.BusinessPartnerNumber!));

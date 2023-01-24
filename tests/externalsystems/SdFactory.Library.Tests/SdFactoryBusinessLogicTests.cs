@@ -119,7 +119,7 @@ public class SdFactoryBusinessLogicTests
     }
 
     [Fact]
-    public async Task RegisterSelfDescriptionAsync_WithNoApplication_ThrowsNotFoundException()
+    public async Task RegisterSelfDescriptionAsync_WithNoApplication_ThrowsConflictException()
     {
         // Arrange
         A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsWithUniqueIdentifiersAsync(ApplicationId))
@@ -129,12 +129,12 @@ public class SdFactoryBusinessLogicTests
         async Task Act() => await _sut.RegisterSelfDescriptionAsync(ApplicationId, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
-        var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
         ex.Message.Should().Be($"CompanyApplication {ApplicationId} is not in status SUBMITTED");
     }
 
     [Fact]
-    public async Task RegisterSelfDescriptionAsync_WithBpnNotSet_ThrowsControllerArgumentException()
+    public async Task RegisterSelfDescriptionAsync_WithBpnNotSet_ThrowsConflictException()
     {
         // Arrange
         A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsWithUniqueIdentifiersAsync(ApplicationId))
@@ -144,8 +144,8 @@ public class SdFactoryBusinessLogicTests
         async Task Act() => await _sut.RegisterSelfDescriptionAsync(ApplicationId, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
-        var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Act);
-        ex.Message.Should().Be($"BusinessPartnerNumber (bpn) for CompanyApplications {ApplicationId} company {CompanyId} is empty (Parameter 'bpn')");
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be($"BusinessPartnerNumber (bpn) for CompanyApplications {ApplicationId} company {CompanyId} is empty");
     }
 
     #endregion

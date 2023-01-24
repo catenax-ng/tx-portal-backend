@@ -68,12 +68,12 @@ public class ClearinghouseBusinessLogic : IClearinghouseBusinessLogic
             .GetClearinghouseDataForApplicationId(applicationId).ConfigureAwait(false);
         if (data is null)
         {
-            throw new NotFoundException($"Application {applicationId} does not exists.");
+            throw new ConflictException($"Application {applicationId} does not exists.");
         }
 
         if (data.ApplicationStatusId != CompanyApplicationStatusId.SUBMITTED)
         {
-            throw new ArgumentException($"CompanyApplication {applicationId} is not in status SUBMITTED", nameof(applicationId));
+            throw new ConflictException($"CompanyApplication {applicationId} is not in status SUBMITTED");
         }
 
         if (string.IsNullOrWhiteSpace(data.ParticipantDetails.Bpn))
