@@ -494,4 +494,8 @@ public class OfferRepository : IOfferRepository
                 offer.OfferStatusId == OfferStatusId.ACTIVE,
                 offer.ProviderCompany!.CompanyUsers.Any(cu => cu.IamUser!.UserEntityId == iamUserId)))
             .SingleOrDefaultAsync();
+
+    /// <inheritdoc />
+    public void AddAppAssignedPrivacyPolicy(IEnumerable<(Guid appId, string privacyPolicy)> privacyPolicies) =>
+        _context.OfferAssignedPrivacypolicies.AddRange(privacyPolicies.Select(s => new OfferAssignedPrivacypolicy(s.appId, (PrivacyPolicyId) Enum.Parse(typeof(PrivacyPolicyId), s.privacyPolicy))));
 }

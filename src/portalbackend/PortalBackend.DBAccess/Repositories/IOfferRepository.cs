@@ -321,4 +321,6 @@ public interface IOfferRepository
     /// <param name="offerTypeId"></param>
     /// <returns></returns>
     Task<(bool IsStatusActive, bool IsUserCompanyProvider)> GetOfferActiveStatusDataByIdAsync(Guid appId, OfferTypeId offerTypeId, string iamUserId);
+
+    void AddAppAssignedPrivacyPolicy(IEnumerable<(Guid appId, string privacyPolicy)> privacyPolicies);
 }

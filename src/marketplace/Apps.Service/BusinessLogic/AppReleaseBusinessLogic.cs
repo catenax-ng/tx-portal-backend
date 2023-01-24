@@ -278,7 +278,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         {
             throw new ControllerArgumentException("Use Case Ids must not be null or empty", nameof(appRequestModel.UseCaseIds));
         }
-        
+       
         return this.CreateAppAsync(appRequestModel, iamUserId);
     }
 
@@ -317,6 +317,8 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
               (appId, c)));
         appRepository.AddAppAssignedUseCases(appRequestModel.UseCaseIds.Select(uc =>
               (appId, uc)));
+        appRepository.AddAppAssignedPrivacyPolicy(appRequestModel.PrivacyPolicies.Select(pp =>
+              (appId, pp)));
         var licenseId = appRepository.CreateOfferLicenses(appRequestModel.Price).Id;
         appRepository.CreateOfferAssignedLicense(appId, licenseId);
 

@@ -32,4 +32,5 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
 /// <param name="Descriptions">Descriptions</param>
 /// <param name="SupportedLanguageCodes">SupportedLanguageCodes</param>
 /// <param name="Price">Price</param>
-public record AppRequestModel(string? Title, string Provider, Guid? SalesManagerId, IEnumerable<Guid> UseCaseIds, IEnumerable<LocalizedDescription> Descriptions, IEnumerable<string> SupportedLanguageCodes, string Price);
+/// <param name="PrivacyPolicies">Price</param>
+public record AppRequestModel(string? Title, string Provider, Guid? SalesManagerId, IEnumerable<Guid> UseCaseIds, IEnumerable<LocalizedDescription> Descriptions, IEnumerable<string> SupportedLanguageCodes, string Price, IEnumerable<string> PrivacyPolicies);
