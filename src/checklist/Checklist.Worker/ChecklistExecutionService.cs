@@ -73,31 +73,8 @@ public class ChecklistExecutionService
                 await foreach (var entryData in checklistEntryData.ConfigureAwait(false).WithCancellation(stoppingToken))
                 {
                     var applicationId = entryData.Key;
-                    var existingChecklistTypes = entryData.Select(e => e.TypeId);
-                    var checklistEntries = entryData.Select(e => new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(e.TypeId, e.StatusId)).ToList();
-                    if(Enum.GetValues<ApplicationChecklistEntryTypeId>().Length != existingChecklistTypes.Count())
-                    {
-                        var newlyCreatedEntries = await checklistCreationService.CreateMissingChecklistItems(applicationId, existingChecklistTypes).ConfigureAwait(false);
-                        checklistEntries.AddRange(newlyCreatedEntries);
-                    }
-
-                    if (checklistEntries.Any(x => x.Item2 == ApplicationChecklistEntryStatusId.TO_DO))
-                    {
-                        await checklistService.ProcessChecklist(applicationId, checklistEntries, stoppingToken).ConfigureAwait(false);
-                    }
-                    
-                    if (checklistEntries.All(x => x.Item2 == ApplicationChecklistEntryStatusId.DONE))
-                    {
-                        try
-                        {
-                            await applicationActivation.HandleApplicationActivation(applicationId).ConfigureAwait(false);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError("Application activation for application {ApplicationId} failed with error {ErrorMessage}", applicationId, ex.ToString());
-                            checklistRepositories.Clear();
-                        }
-                    }
+                    var checklistEntries = await HandleChecklistProcessing(entryData, checklistCreationService, applicationId, checklistService, stoppingToken).ConfigureAwait(false);
+                    await HandleApplicationActivation(checklistEntries, applicationActivation, applicationId, checklistRepositories).ConfigureAwait(false);
                     await checklistRepositories.SaveAsync().ConfigureAwait(false);
                     checklistRepositories.Clear();
                 }
@@ -107,6 +84,50 @@ public class ChecklistExecutionService
             {
                 Environment.ExitCode = 1;
                 _logger.LogError("Checklist processing failed with following Exception {ExceptionMessage}", ex.Message);
+            }
+        }
+    }
+
+    private static async Task<List<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>> HandleChecklistProcessing(
+        IGrouping<Guid, (Guid ApplicationId, ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> entryData,
+        IChecklistCreationService checklistCreationService,
+        Guid applicationId,
+        IChecklistService checklistService,
+        CancellationToken stoppingToken)
+    {
+        var existingChecklistTypes = entryData.Select(e => e.TypeId);
+        var checklistEntries = entryData.Select(e =>
+                new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(e.TypeId, e.StatusId))
+            .ToList();
+        if (Enum.GetValues<ApplicationChecklistEntryTypeId>().Length != existingChecklistTypes.Count())
+        {
+            var newlyCreatedEntries = await checklistCreationService
+                .CreateMissingChecklistItems(applicationId, existingChecklistTypes).ConfigureAwait(false);
+            checklistEntries.AddRange(newlyCreatedEntries);
+        }
+
+        if (checklistEntries.Any(x => x.Item2 == ApplicationChecklistEntryStatusId.TO_DO))
+        {
+            await checklistService.ProcessChecklist(applicationId, checklistEntries, stoppingToken).ConfigureAwait(false);
+        }
+
+        return checklistEntries;
+    }
+
+    private async Task HandleApplicationActivation(List<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)> checklistEntries,
+        IApplicationActivationService applicationActivation, Guid applicationId, IPortalRepositories checklistRepositories)
+    {
+        if (checklistEntries.All(x => x.Item2 == ApplicationChecklistEntryStatusId.DONE))
+        {
+            try
+            {
+                await applicationActivation.HandleApplicationActivation(applicationId).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Application activation for application {ApplicationId} failed with error {ErrorMessage}",
+                    applicationId, ex.ToString());
+                checklistRepositories.Clear();
             }
         }
     }
