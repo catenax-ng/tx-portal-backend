@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -18,13 +18,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.ApplicationActivation;
-
-public interface IApplicationActivationService
-{
-    /// <summary>
-    /// Handles the application activation
-    /// </summary>
-    /// <param name="applicationId">Id of the application that should be activated</param>
-    Task HandleApplicationActivation(Guid applicationId);
-}
+global using AutoFixture;
+global using AutoFixture.AutoFakeItEasy;
+global using FakeItEasy;
+global using FluentAssertions;
+global using Xunit;

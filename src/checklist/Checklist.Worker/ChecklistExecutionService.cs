@@ -20,8 +20,8 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Org.Eclipse.TractusX.Portal.Backend.ApplicationActivation.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
-using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.ApplicationActivation;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Async;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
@@ -85,7 +85,15 @@ public class ChecklistExecutionService
                     
                     if (checklistEntries.All(x => x.Item2 == ApplicationChecklistEntryStatusId.DONE))
                     {
-                        await applicationActivation.HandleApplicationActivation(applicationId).ConfigureAwait(false);
+                        try
+                        {
+                            await applicationActivation.HandleApplicationActivation(applicationId).ConfigureAwait(false);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError("Application activation for application {ApplicationId} failed with error {ErrorMessage}", applicationId, ex.ToString());
+                            checklistRepositories.Clear();
+                        }
                     }
                     await checklistRepositories.SaveAsync().ConfigureAwait(false);
                     checklistRepositories.Clear();

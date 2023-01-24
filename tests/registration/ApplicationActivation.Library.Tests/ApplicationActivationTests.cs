@@ -20,8 +20,7 @@
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.ApplicationActivation;
-using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.ApplicationActivation.DependencyInjection;
+using Org.Eclipse.TractusX.Portal.Backend.ApplicationActivation.Library.DependencyInjection;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Mailing.SendMail;
 using Org.Eclipse.TractusX.Portal.Backend.Notifications.Library;
@@ -32,7 +31,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.Tests;
+namespace Org.Eclipse.TractusX.Portal.Backend.ApplicationActivation.Library.Tests;
 
 public class ApplicationActivationTests
 {
@@ -97,7 +96,7 @@ public class ApplicationActivationTests
         A.CallTo(() => _portalRepositories.GetInstance<ICompanyRepository>()).Returns(_companyRepository);
         A.CallTo(() => options.Value).Returns(_settings);
 
-        _sut = new ApplicationActivationService(_portalRepositories, _notificationService, _provisioningManager, _mailingService, options, A.Fake<ILogger<ApplicationActivationService>>());
+        _sut = new ApplicationActivationService(_portalRepositories, _notificationService, _provisioningManager, _mailingService, options);
     }
     
     #region HandleApplicationActivation
@@ -173,6 +172,7 @@ public class ApplicationActivationTests
         A.CallTo(() => _businessPartnerRepository.CreateCompanyUserAssignedBusinessPartner(CompanyUserId2, BusinessPartnerNumber)).MustNotHaveHappened();
         A.CallTo(() => _rolesRepository.CreateCompanyUserAssignedRole(CompanyUserId3, UserRoleId)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _businessPartnerRepository.CreateCompanyUserAssignedBusinessPartner(CompanyUserId3, BusinessPartnerNumber)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _mailingService.SendMails(A<string>._, A<IDictionary<string, string>>._, A<IEnumerable<string>>._)).MustHaveHappened(3, Times.Exactly);
         _notifications.Should().HaveCount(5);
         companyApplication.ApplicationStatusId.Should().Be(CompanyApplicationStatusId.CONFIRMED);
         company.CompanyStatusId.Should().Be(CompanyStatusId.ACTIVE);
