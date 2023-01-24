@@ -21,7 +21,6 @@
 using System.Net;
 using Microsoft.Extensions.Logging;
 using Org.Eclipse.TractusX.Portal.Backend.Bpdm.Library.BusinessLogic;
-using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.ApplicationActivation;
 using Org.Eclipse.TractusX.Portal.Backend.Custodian.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.Custodian.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.BusinessLogic;

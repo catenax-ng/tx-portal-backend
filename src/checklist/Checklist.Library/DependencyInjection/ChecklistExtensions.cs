@@ -21,8 +21,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Org.Eclipse.TractusX.Portal.Backend.Bpdm.Library;
-using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.ApplicationActivation;
-using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.ApplicationActivation.DependencyInjection;
 using Org.Eclipse.TractusX.Portal.Backend.Custodian.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Token;

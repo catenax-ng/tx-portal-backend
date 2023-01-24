@@ -24,7 +24,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Mailing.SendMail;
 using Org.Eclipse.TractusX.Portal.Backend.Notifications.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.ApplicationActivation.DependencyInjection;
+namespace Org.Eclipse.TractusX.Portal.Backend.ApplicationActivation.Library.DependencyInjection;
 
 public static class ApplicationActivationExtensions
 {

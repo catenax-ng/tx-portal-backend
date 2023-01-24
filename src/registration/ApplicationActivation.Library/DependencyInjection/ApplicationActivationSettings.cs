@@ -21,7 +21,7 @@
 using System.ComponentModel.DataAnnotations;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.ApplicationActivation.DependencyInjection;
+namespace Org.Eclipse.TractusX.Portal.Backend.ApplicationActivation.Library.DependencyInjection;
 
 public class ApplicationActivationSettings
 {

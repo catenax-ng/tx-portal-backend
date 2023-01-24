@@ -20,7 +20,7 @@
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.ApplicationActivation.DependencyInjection;
+using Org.Eclipse.TractusX.Portal.Backend.ApplicationActivation.Library.DependencyInjection;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Mailing.SendMail;
 using Org.Eclipse.TractusX.Portal.Backend.Notifications.Library;
@@ -30,7 +30,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.ApplicationActivation;
+namespace Org.Eclipse.TractusX.Portal.Backend.ApplicationActivation.Library;
 
 public class ApplicationActivationService : IApplicationActivationService
 {
@@ -38,7 +38,6 @@ public class ApplicationActivationService : IApplicationActivationService
     private readonly INotificationService _notificationService;
     private readonly IProvisioningManager _provisioningManager;
     private readonly IMailingService _mailingService;
-    private readonly ILogger<ApplicationActivationService> _logger;
     private readonly ApplicationActivationSettings _settings;
 
     public ApplicationActivationService(
@@ -46,35 +45,18 @@ public class ApplicationActivationService : IApplicationActivationService
         INotificationService notificationService,
         IProvisioningManager provisioningManager,
         IMailingService mailingService,
-        IOptions<ApplicationActivationSettings> options,
-        ILogger<ApplicationActivationService> logger)
+        IOptions<ApplicationActivationSettings> options)
     {
         _portalRepositories = portalRepositories;
         _notificationService = notificationService;
         _provisioningManager = provisioningManager;
         _mailingService = mailingService;
-        _logger = logger;
         _settings = options.Value;
     }
 
     public Task HandleApplicationActivation(Guid applicationId)
     {
-        if (!InProcessingTime())
-        {
-            return Task.CompletedTask;
-        }
-
-        try
-        {
-            return ApplicationActivation(applicationId);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError("Application activation for application {ApplicationId} failed with error {ErrorMessage}", applicationId, ex.ToString());
-            _portalRepositories.Clear();
-        }
-
-        return Task.CompletedTask;
+        return InProcessingTime() ? ApplicationActivation(applicationId) : Task.CompletedTask;
     }
 
     private async Task ApplicationActivation(Guid applicationId)
