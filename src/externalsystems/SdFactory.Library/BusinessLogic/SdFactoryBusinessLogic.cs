@@ -48,20 +48,20 @@ public class SdFactoryBusinessLogic : ISdFactoryBusinessLogic
         CancellationToken cancellationToken)
     {
         var result = await _portalRepositories.GetInstance<IApplicationRepository>()
-            .GetCompanyAndApplicationDetailsForApprovalAsync(applicationId)
+            .GetCompanyAndApplicationDetailsWithUniqueIdentifiersAsync(applicationId)
             .ConfigureAwait(false);
         if (result == default)
         {
             throw new NotFoundException($"CompanyApplication {applicationId} is not in status SUBMITTED");
         }
-        var (companyId, businessPartnerNumber, countryCode) = result;
+        var (companyId, businessPartnerNumber, countryCode, uniqueIdentifiers) = result;
 
         if (string.IsNullOrWhiteSpace(businessPartnerNumber))
         {
             throw new ControllerArgumentException($"BusinessPartnerNumber (bpn) for CompanyApplications {applicationId} company {companyId} is empty", "bpn");
         }
 
-        Guid? documentId = await _sdFactoryService.RegisterSelfDescriptionAsync(applicationId, countryCode, businessPartnerNumber, cancellationToken).ConfigureAwait(false);
+        Guid? documentId = await _sdFactoryService.RegisterSelfDescriptionAsync(uniqueIdentifiers, countryCode, businessPartnerNumber, cancellationToken).ConfigureAwait(false);
         _portalRepositories.GetInstance<ICompanyRepository>().AttachAndModifyCompany(companyId, null, c =>
         {
             c.SelfDescriptionDocumentId = documentId;

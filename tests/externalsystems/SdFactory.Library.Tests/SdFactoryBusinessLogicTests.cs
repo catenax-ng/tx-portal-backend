@@ -22,6 +22,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.BusinessLogic;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.Tests;
@@ -34,6 +35,11 @@ public class SdFactoryBusinessLogicTests
     private const string Bpn = "BPNL000000000009";
     private static readonly Guid ApplicationId = new("ac1cf001-7fbc-1f2f-817f-bce058020001");
     private static readonly Guid CompanyId = new("b4697623-dd87-410d-abb8-6d4f4d87ab58");
+    private static readonly IEnumerable<(UniqueIdentifierId Id, string Value)> UniqueIdentifiers = new List<(UniqueIdentifierId Id, string Value)>
+    {
+        new (UniqueIdentifierId.VAT_ID, "JUSTATEST")
+    };
+
     private readonly IApplicationRepository _applicationRepository;
     private readonly ICompanyRepository _companyRepository;
     private readonly IPortalRepositories _portalRepositories;
@@ -90,9 +96,9 @@ public class SdFactoryBusinessLogicTests
             .With(x => x.SelfDescriptionDocumentId, (Guid?)null)
             .Create();
         var documentId = Guid.NewGuid();
-        A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsForApprovalAsync(ApplicationId))
-            .ReturnsLazily(() => new ValueTuple<Guid, string?, string>(CompanyId, Bpn, CountryCode));
-        A.CallTo(() => _service.RegisterSelfDescriptionAsync(ApplicationId, CountryCode, Bpn, CancellationToken.None))
+        A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsWithUniqueIdentifiersAsync(ApplicationId))
+            .ReturnsLazily(() => new ValueTuple<Guid, string?, string, IEnumerable<(UniqueIdentifierId Id, string Value)>>(CompanyId, Bpn, CountryCode, UniqueIdentifiers));
+        A.CallTo(() => _service.RegisterSelfDescriptionAsync(UniqueIdentifiers, CountryCode, Bpn, CancellationToken.None))
             .ReturnsLazily(() => documentId);
         A.CallTo(() => _companyRepository.AttachAndModifyCompany(CompanyId, null, A<Action<Company>>._))
             .Invokes((Guid _, Action<Company>? initialize, Action<Company> modify) => 
@@ -105,7 +111,7 @@ public class SdFactoryBusinessLogicTests
         await _sut.RegisterSelfDescriptionAsync(ApplicationId, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() => _service.RegisterSelfDescriptionAsync(ApplicationId, CountryCode, Bpn, A<CancellationToken>._))
+        A.CallTo(() => _service.RegisterSelfDescriptionAsync(UniqueIdentifiers, CountryCode, Bpn, A<CancellationToken>._))
             .MustHaveHappenedOnceExactly();
         A.CallTo(() => _portalRepositories.SaveAsync())
             .MustNotHaveHappened();
@@ -116,8 +122,8 @@ public class SdFactoryBusinessLogicTests
     public async Task RegisterSelfDescriptionAsync_WithNoApplication_ThrowsNotFoundException()
     {
         // Arrange
-        A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsForApprovalAsync(ApplicationId))
-            .ReturnsLazily(() => new ValueTuple<Guid, string?, string>());
+        A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsWithUniqueIdentifiersAsync(ApplicationId))
+            .ReturnsLazily(() => new ValueTuple<Guid, string?, string, IEnumerable<(UniqueIdentifierId Id, string Value)>>());
 
         // Act
         async Task Act() => await _sut.RegisterSelfDescriptionAsync(ApplicationId, CancellationToken.None).ConfigureAwait(false);
@@ -131,8 +137,8 @@ public class SdFactoryBusinessLogicTests
     public async Task RegisterSelfDescriptionAsync_WithBpnNotSet_ThrowsControllerArgumentException()
     {
         // Arrange
-        A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsForApprovalAsync(ApplicationId))
-            .ReturnsLazily(() => new ValueTuple<Guid, string?, string>(CompanyId, null, CountryCode));
+        A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsWithUniqueIdentifiersAsync(ApplicationId))
+            .ReturnsLazily(() => new ValueTuple<Guid, string?, string, IEnumerable<(UniqueIdentifierId Id, string Value)>>(CompanyId, null, CountryCode, new List<(UniqueIdentifierId Id, string Value)>()));
 
         // Act
         async Task Act() => await _sut.RegisterSelfDescriptionAsync(ApplicationId, CancellationToken.None).ConfigureAwait(false);

@@ -156,6 +156,18 @@ public class ApplicationRepository : IApplicationRepository
                 ca.Company!.Address!.Country!.Alpha2Code))
             .SingleOrDefaultAsync();
 
+    /// <inheritdoc />
+    public Task<(Guid, string?, string, IEnumerable<(UniqueIdentifierId Id, string Value)>)> GetCompanyAndApplicationDetailsWithUniqueIdentifiersAsync(Guid applicationId) =>
+        _dbContext.CompanyApplications.Where(companyApplication =>
+                companyApplication.Id == applicationId &&
+                companyApplication.ApplicationStatusId == CompanyApplicationStatusId.SUBMITTED)
+            .Select(ca => new ValueTuple<Guid, string?, string, IEnumerable<(UniqueIdentifierId Id, string Value)>>(
+                ca.CompanyId,
+                ca.Company!.BusinessPartnerNumber,
+                ca.Company!.Address!.Country!.Alpha2Code,
+                ca.Company.CompanyIdentifiers.Select(x => new ValueTuple<UniqueIdentifierId, string>(x.UniqueIdentifierId, x.Value))))
+            .SingleOrDefaultAsync();
+
     public Task<(Guid companyId, string companyName, string? businessPartnerNumber)> GetCompanyAndApplicationDetailsForCreateWalletAsync(Guid applicationId) =>
         _dbContext.CompanyApplications.Where(companyApplication =>
                 companyApplication.Id == applicationId &&

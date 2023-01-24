@@ -27,13 +27,18 @@ namespace Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.Models;
 /// Model used to request connector registration at sd factory.
 /// </summary>
 public record SdFactoryRequestModel(
-    [property: JsonPropertyName("registrationNumber")] string RegistrationNumber,
+    [property: JsonPropertyName("registrationNumber")] IEnumerable<RegistrationNumber> RegistrationNumber,
     [property: JsonPropertyName("headquarterAddress.country")] string HeadquarterCountry,
     [property: JsonPropertyName("legalAddress.country")] string LegalCountry,
     [property: JsonPropertyName("type"), JsonConverter(typeof(JsonStringEnumConverter))] SdFactoryRequestModelSdType Type,
     [property: JsonPropertyName("bpn")] string Bpn,
     [property: JsonPropertyName("holder")] string Holder,
     [property: JsonPropertyName("issuer")] string Issuer);
+
+public record RegistrationNumber(
+    [property: JsonPropertyName("type")] string Type,
+    [property: JsonPropertyName("value")] string Value
+);
 
 /// <summary>
 /// Model used to request connector registration at sd factory.
