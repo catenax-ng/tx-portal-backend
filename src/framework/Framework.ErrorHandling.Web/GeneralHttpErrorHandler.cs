@@ -136,7 +136,7 @@ public class GeneralHttpErrorHandler
         );
     }
 
-    private class MetaData
+    private sealed class MetaData
     {
         public MetaData(string url, string description)
         {
