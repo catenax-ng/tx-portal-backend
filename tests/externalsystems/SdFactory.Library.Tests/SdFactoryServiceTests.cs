@@ -35,7 +35,11 @@ public class SdFactoryServiceTests
 {
     #region Initialization
     
-    private readonly Guid _applicationId = new("ac1cf001-7fbc-1f2f-817f-bce058020001");
+    private static readonly IEnumerable<(UniqueIdentifierId Id, string Value)> UniqueIdentifiers = new List<(UniqueIdentifierId Id, string Value)>
+    {
+        new (UniqueIdentifierId.VAT_ID, "JUSTATEST")
+    };
+    
     private readonly IPortalRepositories _portalRepositories;
     private readonly IDocumentRepository _documentRepository;
     private readonly ICollection<Document> _documents;
@@ -69,7 +73,8 @@ public class SdFactoryServiceTests
     public async Task RegisterConnectorAsync_WithValidData_CreatesDocumentInDatabase()
     {
         // Arrange
-        var contentJson = @"{
+        const string bpn = "BPNL000000000009";
+        const string contentJson = @"{
           'id': 'http://sdhub.int.demo.catena-x.net/selfdescription/vc/62a86c917ed7226dae676c86',
           '@context': [
             'https://www.w3.org/2018/credentials/v1',
@@ -101,7 +106,6 @@ public class SdFactoryServiceTests
         }";
         var httpMessageHandlerMock = new HttpMessageHandlerMock(HttpStatusCode.OK, contentJson.ToFormContent("application/vc+ld+json"));
         CreateHttpClient(httpMessageHandlerMock);
-        var bpn = "BPNL000000000009";
         var service = new SdFactoryService(_portalRepositories, _tokenService, _options);
 
         // Act
@@ -117,9 +121,9 @@ public class SdFactoryServiceTests
     public async Task  RegisterConnectorAsync_WithInvalidData_ThrowsException()
     {
         // Arrange
+        const string bpn = "BPNL000000000009";
         var httpMessageHandlerMock = new HttpMessageHandlerMock(HttpStatusCode.BadRequest);
         CreateHttpClient(httpMessageHandlerMock);
-        var bpn = "BPNL000000000009";
         var service = new SdFactoryService(_portalRepositories, _tokenService, _options);
 
         // Act
@@ -138,7 +142,8 @@ public class SdFactoryServiceTests
     public async Task RegisterSelfDescriptionAsync_WithValidData_CreatesDocumentInDatabase()
     {
         // Arrange
-        var contentJson = @"{
+        const string bpn = "BPNL000000000009";
+        const string contentJson = @"{
           'id': 'http://sdhub.int.demo.catena-x.net/selfdescription/vc/62a86c917ed7226dae676c86',
           '@context': [
             'https://www.w3.org/2018/credentials/v1',
@@ -170,11 +175,10 @@ public class SdFactoryServiceTests
         }";
         var httpMessageHandlerMock = new HttpMessageHandlerMock(HttpStatusCode.OK, contentJson.ToFormContent("application/vc+ld+json"));
         CreateHttpClient(httpMessageHandlerMock);
-        var bpn = "BPNL000000000009";
         var service = new SdFactoryService(_portalRepositories, _tokenService, _options);
 
         // Act
-        await service.RegisterSelfDescriptionAsync(_applicationId, "de", bpn, CancellationToken.None).ConfigureAwait(false);
+        await service.RegisterSelfDescriptionAsync(UniqueIdentifiers, "de", bpn, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         _documents.Should().HaveCount(1);
@@ -186,13 +190,13 @@ public class SdFactoryServiceTests
     public async Task  RegisterSelfDescriptionAsync_WithInvalidData_ThrowsException()
     {
         // Arrange
+        const string bpn = "BPNL000000000009";
         var httpMessageHandlerMock = new HttpMessageHandlerMock(HttpStatusCode.BadRequest);
         CreateHttpClient(httpMessageHandlerMock);
-        var bpn = "BPNL000000000009";
         var service = new SdFactoryService(_portalRepositories, _tokenService, _options);
 
         // Act
-        async Task Action() => await service.RegisterSelfDescriptionAsync(_applicationId, "de", bpn, CancellationToken.None).ConfigureAwait(false);
+        async Task Action() => await service.RegisterSelfDescriptionAsync(UniqueIdentifiers, "de", bpn, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         var exception = await Assert.ThrowsAsync<ServiceException>(Action);

@@ -18,6 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using System.Collections.Immutable;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using Microsoft.Extensions.Options;
@@ -26,6 +27,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Framework.Token;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.Extensions;
 using Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.Models;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library;
@@ -76,12 +78,12 @@ public class SdFactoryService : ISdFactoryService
     }
 
     /// <inheritdoc />
-    public async Task<Guid> RegisterSelfDescriptionAsync(Guid applicationId, string countryCode, string businessPartnerNumber, CancellationToken cancellationToken)
+    public async Task<Guid> RegisterSelfDescriptionAsync(IEnumerable<(UniqueIdentifierId Id, string Value)> uniqueIdentifiers, string countryCode, string businessPartnerNumber, CancellationToken cancellationToken)
     {
         var httpClient = await _tokenService.GetAuthorizedClient<SdFactoryService>(_settings, cancellationToken)
             .ConfigureAwait(false);
         var requestModel = new SdFactoryRequestModel(
-            applicationId.ToString(),
+            uniqueIdentifiers.Select(x => new RegistrationNumber(x.Id.GetSdUniqueIdentifierValue(), x.Value)),
             countryCode,
             countryCode,
             SdFactoryRequestModelSdType.LegalPerson,

@@ -46,6 +46,8 @@ public interface IApplicationRepository
     Task<(bool IsValidApplicationId, bool IsSameCompanyUser, RegistrationData? Data)> GetRegistrationDataUntrackedAsync(Guid applicationId, string iamUserId, IEnumerable<DocumentTypeId> documentTypes);
     Task<(string? Bpn, IEnumerable<ApplicationChecklistEntryTypeId> ExistingChecklistEntryTypeIds)> GetBpnAndChecklistCheckForApplicationIdAsync(Guid applicationId);
 
+    Task<(Guid, string?, string, IEnumerable<(UniqueIdentifierId Id, string Value)>)> GetCompanyAndApplicationDetailsWithUniqueIdentifiersAsync(Guid applicationId);
+    
     /// <summary>
     /// Gets the application status and the status of the application checklist entry of the given type
     /// </summary>
