@@ -427,7 +427,8 @@ public static class BaseSeed
 
         dbContext.CompanyIdentifiers.AddRange(new CompanyIdentifier[]
         {
-            new (new Guid("2dc4249f-b5ca-4d42-bef1-7a7a950a4f87"), UniqueIdentifierId.COMMERCIAL_REG_NUMBER, "REG08154711")
+            new (new Guid("2dc4249f-b5ca-4d42-bef1-7a7a950a4f87"), UniqueIdentifierId.COMMERCIAL_REG_NUMBER, "REG08154711"),
+            new (new Guid("27538eac-27a3-4f74-9306-e5149b93ade5"), UniqueIdentifierId.VAT_ID, "DE123456789")
         });
     };
 }

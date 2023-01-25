@@ -32,6 +32,7 @@ public class ChecklistExecutionServiceTests
 {
     private readonly IApplicationChecklistRepository _applicationChecklistRepository;
 
+    private readonly IPortalRepositories _portalRepositories;
     private readonly IChecklistService _checklistService;
     private readonly IChecklistCreationService _checklistCreationService;
     private readonly IApplicationActivationService _applicationActivationService;
@@ -44,17 +45,17 @@ public class ChecklistExecutionServiceTests
             .ForEach(b => fixture.Behaviors.Remove(b));
         fixture.Behaviors.Add(new OmitOnRecursionBehavior());
 
-        var portalRepositories = A.Fake<IPortalRepositories>();
+        _portalRepositories = A.Fake<IPortalRepositories>();
         _applicationChecklistRepository = A.Fake<IApplicationChecklistRepository>();
         _checklistService = A.Fake<IChecklistService>();
         _checklistCreationService = A.Fake<IChecklistCreationService>();
         _applicationActivationService = A.Fake<IApplicationActivationService>();
 
-        A.CallTo(() => portalRepositories.GetInstance<IApplicationChecklistRepository>())
+        A.CallTo(() => _portalRepositories.GetInstance<IApplicationChecklistRepository>())
             .Returns(_applicationChecklistRepository);
 
         var serviceProvider = fixture.Create<IServiceProvider>();
-        A.CallTo(() => serviceProvider.GetService(typeof(IPortalRepositories))).Returns(portalRepositories);
+        A.CallTo(() => serviceProvider.GetService(typeof(IPortalRepositories))).Returns(_portalRepositories);
         A.CallTo(() => serviceProvider.GetService(typeof(IChecklistService))).Returns(_checklistService);
         A.CallTo(() => serviceProvider.GetService(typeof(IChecklistCreationService))).Returns(_checklistCreationService);
         A.CallTo(() => serviceProvider.GetService(typeof(IApplicationActivationService))).Returns(_applicationActivationService);
@@ -112,6 +113,38 @@ public class ChecklistExecutionServiceTests
         A.CallTo(() => _checklistCreationService.CreateMissingChecklistItems(applicationId, A<IEnumerable<ApplicationChecklistEntryTypeId>>._))
             .MustNotHaveHappened();
         A.CallTo(() => _applicationActivationService.HandleApplicationActivation(applicationId)).MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithApplicationActivationFails_LogsErrorClearsRepositories()
+    {
+        // Arrange
+        var applicationId = Guid.NewGuid();
+        var list = new List<ValueTuple<Guid, ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>>
+        {
+            new(applicationId, ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE),
+            new(applicationId, ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.DONE),
+            new(applicationId, ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.DONE),
+            new(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.DONE),
+            new(applicationId, ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.DONE),
+        };
+        A.CallTo(() => _applicationChecklistRepository.GetChecklistDataOrderedByApplicationId())
+            .Returns(list.ToAsyncEnumerable());
+        A.CallTo(() => _applicationActivationService.HandleApplicationActivation(applicationId))
+            .Throws(new Exception("test error"));
+
+        // Act
+        await _service.ExecuteAsync(CancellationToken.None);
+
+        // Assert
+        A.CallTo(() => _checklistService.ProcessChecklist(A<Guid>._,
+            A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,
+            A<CancellationToken>._)).MustNotHaveHappened();
+        A.CallTo(() => _checklistCreationService.CreateMissingChecklistItems(applicationId, A<IEnumerable<ApplicationChecklistEntryTypeId>>._))
+            .MustNotHaveHappened();
+        A.CallTo(() => _applicationActivationService.HandleApplicationActivation(applicationId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.Clear()).MustHaveHappened(2, Times.Exactly);
     }
 
     [Fact]

@@ -218,6 +218,140 @@ public class ApplicationActivationTests
 
     #endregion
 
+    #region Validate ApplicationActivationSettings
+    
+    [Fact]
+    public void ApplicationActivationSettingsValidate_WithValidValues_ReturnsTrue()
+    {
+        //Arrange
+        var settings = new ApplicationActivationSettings
+        {
+            StartTime = new TimeSpan(1, 0, 0),
+            EndTime = new TimeSpan(12, 0, 0)
+        };
+        
+        //Act
+        var result = ApplicationActivationSettings.Validate(settings);
+
+        //Assert
+        result.Should().BeTrue();
+    }
+    
+    [Fact]
+    public void ApplicationActivationSettingsValidate_WithoutStartAndEndTime_ReturnsTrue()
+    {
+        //Arrange
+        var settings = new ApplicationActivationSettings();
+        
+        //Act
+        var result = ApplicationActivationSettings.Validate(settings);
+
+        //Assert
+        result.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ApplicationActivationSettingsValidate_WithOnlyStartTime_ReturnsFalse()
+    {
+        //Arrange
+        var settings = new ApplicationActivationSettings
+        {
+            StartTime = new TimeSpan(1, 0, 0),
+        };
+        
+        //Act
+        var result = ApplicationActivationSettings.Validate(settings);
+
+        //Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public void ApplicationActivationSettingsValidate_WithOnlyEndTime_ReturnsFalse()
+    {
+        //Arrange
+        var settings = new ApplicationActivationSettings
+        {
+            EndTime = new TimeSpan(1, 0, 0),
+        };
+        
+        //Act
+        var result = ApplicationActivationSettings.Validate(settings);
+
+        //Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public void ApplicationActivationSettingsValidate_WithEndTimeEarlierStartTime_ReturnsFalse()
+    {
+        //Arrange
+        var settings = new ApplicationActivationSettings
+        {
+            EndTime = new TimeSpan(1, 0, 0),
+            StartTime = new TimeSpan(12, 0, 0),
+        };
+        
+        //Act
+        var result = ApplicationActivationSettings.Validate(settings);
+
+        //Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public void ApplicationActivationSettingsValidate_WithEndTimeMoreThanADay_ReturnsFalse()
+    {
+        //Arrange
+        var settings = new ApplicationActivationSettings
+        {
+            EndTime = new TimeSpan(1, 2, 0, 0),
+            StartTime = new TimeSpan(1, 0, 0),
+        };
+        
+        //Act
+        var result = ApplicationActivationSettings.Validate(settings);
+
+        //Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public void ApplicationActivationSettingsValidate_WithEndTimeMoreThan24Hours_ReturnsFalse()
+    {
+        //Arrange
+        var settings = new ApplicationActivationSettings
+        {
+            EndTime = new TimeSpan(25, 0, 0),
+            StartTime = new TimeSpan(2, 0, 0),
+        };
+        
+        //Act
+        var result = ApplicationActivationSettings.Validate(settings);
+
+        //Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public void ApplicationActivationSettingsValidate_WithNegativeStartTime_ReturnsFalse()
+    {
+        //Arrange
+        var settings = new ApplicationActivationSettings
+        {
+            EndTime = new TimeSpan(14, 0, 0),
+            StartTime = new TimeSpan(-2, 0, 0),
+        };
+        
+        //Act
+        var result = ApplicationActivationSettings.Validate(settings);
+
+        //Assert
+        result.Should().BeFalse();
+    }
+
+    #endregion
+    
     #region Setup
     
     private void SetupFakes(

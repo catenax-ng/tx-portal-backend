@@ -24,6 +24,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.BusinessLogic;
+using Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.Extensions;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.Tests;
 
@@ -146,6 +147,39 @@ public class SdFactoryBusinessLogicTests
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
         ex.Message.Should().Be($"BusinessPartnerNumber (bpn) for CompanyApplications {ApplicationId} company {CompanyId} is empty");
+    }
+
+    #endregion
+    
+    #region GetSdUniqueIdentifierValue
+
+    [Theory]
+    [InlineData(UniqueIdentifierId.COMMERCIAL_REG_NUMBER, "local")]
+    [InlineData(UniqueIdentifierId.VAT_ID, "vatID")]
+    [InlineData(UniqueIdentifierId.LEI_CODE, "leiCode")]
+    [InlineData(UniqueIdentifierId.VIES, "EUID")]
+    [InlineData(UniqueIdentifierId.EORI, "EORI")]
+    public void GetSdUniqueIdentifierValue_WithIdentifier_ReturnsExpected(UniqueIdentifierId uiId, string expectedValue)
+    {
+        // Act
+        var result = uiId.GetSdUniqueIdentifierValue();
+        
+        // Assert
+        result.Should().Be(expectedValue);
+    }
+
+    [Fact]
+    public void GetSdUniqueIdentifierValue_WithNotYetConfiguredValue_ThrowsArgumentOutOfRangeException()
+    {
+        // Assert
+        UniqueIdentifierId id = default;
+        
+        // Act
+        Func<string> Act = () => id.GetSdUniqueIdentifierValue();
+        
+        // Assert
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(Act);
+        ex.ParamName.Should().Be("uniqueIdentifierId");
     }
 
     #endregion
