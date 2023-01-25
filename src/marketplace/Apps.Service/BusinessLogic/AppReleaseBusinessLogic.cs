@@ -137,14 +137,11 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
     private async Task<int> UploadAppDoc (Guid appId, DocumentTypeId documentTypeId, IFormFile document, string iamUserId, OfferTypeId offerTypeId, CancellationToken cancellationToken)
     {
         if (!_settings.DocumentTypeIds.Contains(documentTypeId))
-        {
             throw new ControllerArgumentException($"documentType must be either: {string.Join(",", _settings.DocumentTypeIds)}");
-        }
+
         // Check if document is a pdf,jpeg and png file (also see https://www.rfc-editor.org/rfc/rfc3778.txt)
         if (!_settings.ContentTypeSettings.Contains(document.ContentType))
-        {
             throw new UnsupportedMediaTypeException($"Document type not supported. File with contentType :{string.Join(",", _settings.ContentTypeSettings)} are allowed.");
-        }
         
         return await _offerService.UploadDocumentAsync(appId, documentTypeId, document, iamUserId, offerTypeId, cancellationToken).ConfigureAwait(false);
     }
