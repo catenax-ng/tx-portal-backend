@@ -118,7 +118,7 @@ public class CustodianServiceTests
         var data = JsonSerializer.Serialize(new WalletData("abc",
                 validBpn,
                 "123",
-                DateTime.Now,
+                DateTime.UtcNow,
                 false,
                 null));
         var httpMessageHandlerMock = new HttpMessageHandlerMock(HttpStatusCode.OK, data.ToFormContent("application/vc+ld+json"));
@@ -147,7 +147,7 @@ public class CustodianServiceTests
         var data = JsonSerializer.Serialize(new WalletData("abc",
             validBpn,
             "123",
-            DateTime.Now,
+            DateTime.UtcNow,
             false,
             null));
         var httpMessageHandlerMock = new HttpMessageHandlerMock(HttpStatusCode.OK);

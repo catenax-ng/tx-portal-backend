@@ -20,6 +20,7 @@
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.DateTimeProvider.DependencyInjection;
 using Org.Eclipse.TractusX.Portal.Backend.Mailing.SendMail;
 using Org.Eclipse.TractusX.Portal.Backend.Notifications.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
@@ -36,6 +37,7 @@ public static class ApplicationActivationExtensions
             .ValidateOnStart();
 
         return services
+            .AddDateTimeProvider()
             .AddTransient<INotificationService, NotificationService>()
             .AddMailingAndTemplateManager(config)
             .AddProvisioningManager(config)
