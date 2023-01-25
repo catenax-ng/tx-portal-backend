@@ -21,6 +21,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.ApplicationActivation.Library.DependencyInjection;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.DateTimeProvider;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Mailing.SendMail;
 using Org.Eclipse.TractusX.Portal.Backend.Notifications.Library;
@@ -61,6 +62,7 @@ public class ApplicationActivationTests
     private readonly IProvisioningManager _provisioningManager;
     private readonly ApplicationActivationSettings _settings;
     private readonly ApplicationActivationService _sut;
+    private readonly IDateTimeProvider _dateTimeProvider;
 
     public ApplicationActivationTests()
     {
@@ -75,12 +77,13 @@ public class ApplicationActivationTests
         _businessPartnerRepository = A.Fake<IUserBusinessPartnerRepository>();
         _companyRepository = A.Fake<ICompanyRepository>();
         _rolesRepository = A.Fake<IUserRolesRepository>();
+        _mailingService = A.Fake<IMailingService>();
+        _notificationService = A.Fake<INotificationService>();
+        _dateTimeProvider = A.Fake<IDateTimeProvider>();
         _settings = A.Fake<ApplicationActivationSettings>();
 
         var options = A.Fake<IOptions<ApplicationActivationSettings>>();
-        _mailingService = A.Fake<IMailingService>();
-        _notificationService = A.Fake<INotificationService>();
-
+        
         _settings.WelcomeNotificationTypeIds = new List<NotificationTypeId>
         {
             NotificationTypeId.WELCOME,
@@ -96,7 +99,7 @@ public class ApplicationActivationTests
         A.CallTo(() => _portalRepositories.GetInstance<ICompanyRepository>()).Returns(_companyRepository);
         A.CallTo(() => options.Value).Returns(_settings);
 
-        _sut = new ApplicationActivationService(_portalRepositories, _notificationService, _provisioningManager, _mailingService, options, A.Fake<ILogger<ApplicationActivationService>>());
+        _sut = new ApplicationActivationService(_portalRepositories, _notificationService, _provisioningManager, _mailingService, _dateTimeProvider, options, A.Fake<ILogger<ApplicationActivationService>>());
     }
     
     #region HandleApplicationActivation
@@ -107,9 +110,9 @@ public class ApplicationActivationTests
         //Arrange
         var companyUserAssignedRole = _fixture.Create<CompanyUserAssignedRole>();
         var companyUserAssignedBusinessPartner = _fixture.Create<CompanyUserAssignedBusinessPartner>();
-        var now = DateTime.UtcNow.TimeOfDay;
-        _settings.StartTime = now.Add(TimeSpan.FromHours(4));
-        _settings.EndTime = now.Subtract(TimeSpan.FromHours(4));
+        A.CallTo(() => _dateTimeProvider.Now).Returns(new DateTime(2022, 01, 01, 12, 0, 0));
+        _settings.StartTime = TimeSpan.FromHours(4);
+        _settings.EndTime = TimeSpan.FromHours(8);
         SetupFakes(new Dictionary<string, IEnumerable<string>>(), new List<UserRoleData>(), companyUserAssignedRole, companyUserAssignedBusinessPartner);
         
         //Act
@@ -126,6 +129,59 @@ public class ApplicationActivationTests
         A.CallTo(() => _businessPartnerRepository.CreateCompanyUserAssignedBusinessPartner(CompanyUserId3, BusinessPartnerNumber)).MustNotHaveHappened();
         A.CallTo(() => _portalRepositories.SaveAsync()).MustNotHaveHappened();
         _notifications.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task HandleApplicationActivation_WithMidnightRun_ApprovesRequestAndCreatesNotifications()
+    {
+        //Arrange
+        var roles = new List<string> { "Company Admin" };
+        var clientRoleNames = new Dictionary<string, IEnumerable<string>>
+        {
+            { ClientId, roles.AsEnumerable() }
+        };
+        var userRoleData = new List<UserRoleData> { new(UserRoleId, ClientId, "Company Admin") };
+
+        var companyUserAssignedRole = _fixture.Create<CompanyUserAssignedRole>();
+        var companyUserAssignedBusinessPartner = _fixture.Create<CompanyUserAssignedBusinessPartner>();
+        var companyApplication = _fixture.Build<CompanyApplication>()
+            .With(x => x.ApplicationStatusId, CompanyApplicationStatusId.SUBMITTED)
+            .Create();
+        var company = _fixture.Build<Company>()
+            .With(x => x.CompanyStatusId, CompanyStatusId.PENDING)
+            .Create();
+        SetupFakes(clientRoleNames, userRoleData, companyUserAssignedRole, companyUserAssignedBusinessPartner);
+        A.CallTo(() => _dateTimeProvider.Now).Returns(new DateTime(2022, 01, 01, 0, 0, 0));
+        _settings.StartTime = TimeSpan.FromHours(8);
+        _settings.EndTime = TimeSpan.FromHours(22);
+        A.CallTo(() =>
+                _applicationRepository.AttachAndModifyCompanyApplication(A<Guid>._, A<Action<CompanyApplication>>._))
+            .Invokes((Guid _, Action<CompanyApplication> setOptionalParameters) =>
+            {
+                setOptionalParameters.Invoke(companyApplication);
+            });
+        A.CallTo(() => _companyRepository.AttachAndModifyCompany(A<Guid>._, null, A<Action<Company>>._))
+            .Invokes((Guid _, Action<Company>? _, Action<Company> setOptionalParameters) =>
+            {
+                setOptionalParameters.Invoke(company);
+            });
+
+        //Act
+        await _sut.HandleApplicationActivation(Id).ConfigureAwait(false);
+
+        //Assert
+        A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsForApprovalAsync(Id)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _applicationRepository.GetInvitedUsersDataByApplicationIdUntrackedAsync(Id)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _rolesRepository.CreateCompanyUserAssignedRole(CompanyUserId1, UserRoleId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _businessPartnerRepository.CreateCompanyUserAssignedBusinessPartner(CompanyUserId1, BusinessPartnerNumber)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _rolesRepository.CreateCompanyUserAssignedRole(CompanyUserId2, UserRoleId)).MustNotHaveHappened();
+        A.CallTo(() => _businessPartnerRepository.CreateCompanyUserAssignedBusinessPartner(CompanyUserId2, BusinessPartnerNumber)).MustNotHaveHappened();
+        A.CallTo(() => _rolesRepository.CreateCompanyUserAssignedRole(CompanyUserId3, UserRoleId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _businessPartnerRepository.CreateCompanyUserAssignedBusinessPartner(CompanyUserId3, BusinessPartnerNumber)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _mailingService.SendMails(A<string>._, A<IDictionary<string, string>>._, A<IEnumerable<string>>._)).MustHaveHappened(3, Times.Exactly);
+        _notifications.Should().HaveCount(5);
+        companyApplication.ApplicationStatusId.Should().Be(CompanyApplicationStatusId.CONFIRMED);
+        company.CompanyStatusId.Should().Be(CompanyStatusId.ACTIVE);
     }
 
     [Fact]
@@ -256,7 +312,7 @@ public class ApplicationActivationTests
         //Arrange
         var settings = new ApplicationActivationSettings
         {
-            StartTime = new TimeSpan(1, 0, 0),
+            StartTime = new TimeSpan(1, 0, 0)
         };
         
         //Act
@@ -272,7 +328,7 @@ public class ApplicationActivationTests
         //Arrange
         var settings = new ApplicationActivationSettings
         {
-            EndTime = new TimeSpan(1, 0, 0),
+            EndTime = new TimeSpan(1, 0, 0)
         };
         
         //Act
@@ -283,13 +339,30 @@ public class ApplicationActivationTests
     }
 
     [Fact]
-    public void ApplicationActivationSettingsValidate_WithEndTimeEarlierStartTime_ReturnsFalse()
+    public void ApplicationActivationSettingsValidate_WithEndTimeEarlierStartTime_ReturnsTrue()
     {
         //Arrange
         var settings = new ApplicationActivationSettings
         {
-            EndTime = new TimeSpan(1, 0, 0),
-            StartTime = new TimeSpan(12, 0, 0),
+            StartTime = new TimeSpan(22, 0, 0),
+            EndTime = new TimeSpan(6, 0, 0)
+        };
+        
+        //Act
+        var result = ApplicationActivationSettings.Validate(settings);
+
+        //Assert
+        result.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ApplicationActivationSettingsValidate_WithStartTimeMoreThanADay_ReturnsFalse()
+    {
+        //Arrange
+        var settings = new ApplicationActivationSettings
+        {
+            StartTime = new TimeSpan(1, 5, 0, 0),
+            EndTime = new TimeSpan(2, 0, 0)
         };
         
         //Act
@@ -305,8 +378,25 @@ public class ApplicationActivationTests
         //Arrange
         var settings = new ApplicationActivationSettings
         {
-            EndTime = new TimeSpan(1, 2, 0, 0),
             StartTime = new TimeSpan(1, 0, 0),
+            EndTime = new TimeSpan(1, 2, 0, 0)
+        };
+        
+        //Act
+        var result = ApplicationActivationSettings.Validate(settings);
+
+        //Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public void ApplicationActivationSettingsValidate_WithStartTimeMoreThan24Hours_ReturnsFalse()
+    {
+        //Arrange
+        var settings = new ApplicationActivationSettings
+        {
+            StartTime = new TimeSpan(26, 0, 0),
+            EndTime = new TimeSpan(2, 0, 0)
         };
         
         //Act
@@ -322,8 +412,8 @@ public class ApplicationActivationTests
         //Arrange
         var settings = new ApplicationActivationSettings
         {
-            EndTime = new TimeSpan(25, 0, 0),
             StartTime = new TimeSpan(2, 0, 0),
+            EndTime = new TimeSpan(25, 0, 0)
         };
         
         //Act
@@ -339,8 +429,25 @@ public class ApplicationActivationTests
         //Arrange
         var settings = new ApplicationActivationSettings
         {
-            EndTime = new TimeSpan(14, 0, 0),
             StartTime = new TimeSpan(-2, 0, 0),
+            EndTime = new TimeSpan(14, 0, 0)
+        };
+        
+        //Act
+        var result = ApplicationActivationSettings.Validate(settings);
+
+        //Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public void ApplicationActivationSettingsValidate_WithNegativeEndTime_ReturnsFalse()
+    {
+        //Arrange
+        var settings = new ApplicationActivationSettings
+        {
+            StartTime = new TimeSpan(14, 0, 0),
+            EndTime = new TimeSpan(-2, 0, 0)
         };
         
         //Act

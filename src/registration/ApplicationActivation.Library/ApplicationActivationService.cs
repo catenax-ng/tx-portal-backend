@@ -21,6 +21,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.ApplicationActivation.Library.DependencyInjection;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.DateTimeProvider;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Mailing.SendMail;
 using Org.Eclipse.TractusX.Portal.Backend.Notifications.Library;
@@ -38,6 +39,7 @@ public class ApplicationActivationService : IApplicationActivationService
     private readonly INotificationService _notificationService;
     private readonly IProvisioningManager _provisioningManager;
     private readonly IMailingService _mailingService;
+    private readonly IDateTimeProvider _dateTime;
     private readonly ILogger<ApplicationActivationService> _logger;
     private readonly ApplicationActivationSettings _settings;
 
@@ -46,6 +48,7 @@ public class ApplicationActivationService : IApplicationActivationService
         INotificationService notificationService,
         IProvisioningManager provisioningManager,
         IMailingService mailingService,
+        IDateTimeProvider dateTime,
         IOptions<ApplicationActivationSettings> options,
         ILogger<ApplicationActivationService> logger)
     {
@@ -53,6 +56,7 @@ public class ApplicationActivationService : IApplicationActivationService
         _notificationService = notificationService;
         _provisioningManager = provisioningManager;
         _mailingService = mailingService;
+        _dateTime = dateTime;
         _logger = logger;
         _settings = options.Value;
     }
@@ -128,10 +132,15 @@ public class ApplicationActivationService : IApplicationActivationService
             return true;
         }
 
-        var now = DateTime.UtcNow;
+        var now = _dateTime.Now;
         var startDate = now.Date + startTime;
-        var endDate = now.Date + endTime;
-        return now > startDate && now < endDate;
+        var endDate = startTime > endTime ? 
+                now.Date + endTime :
+                now.Date.AddDays(-1) + endTime ;
+
+        return startTime > endTime ?
+            now > startDate && now < endDate :
+            now < startDate && now > endDate;
     }
 
     private async Task<IDictionary<string, IEnumerable<string>>?> AssignRolesAndBpn(Guid applicationId, IUserRolesRepository userRolesRepository, IApplicationRepository applicationRepository, string businessPartnerNumber)
