@@ -95,8 +95,7 @@ public class ChecklistExecutionService
         CancellationToken stoppingToken)
     {
         var existingChecklistTypes = entryData.Select(e => e.TypeId);
-        var checklistEntries = entryData.Select(e =>
-                new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(e.TypeId, e.StatusId))
+        var checklistEntries = entryData.Select(e => (e.TypeId, e.StatusId))
             .ToList();
         if (Enum.GetValues<ApplicationChecklistEntryTypeId>().Length != existingChecklistTypes.Count())
         {
@@ -105,7 +104,7 @@ public class ChecklistExecutionService
             checklistEntries.AddRange(newlyCreatedEntries);
         }
 
-        if (checklistEntries.Any(x => x.Item2 == ApplicationChecklistEntryStatusId.TO_DO))
+        if (checklistEntries.Any(x => x.StatusId == ApplicationChecklistEntryStatusId.TO_DO))
         {
             await checklistService.ProcessChecklist(applicationId, checklistEntries, stoppingToken).ConfigureAwait(false);
         }
@@ -115,10 +114,10 @@ public class ChecklistExecutionService
         return checklistEntries;
     }
 
-    private async Task HandleApplicationActivation(List<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)> checklistEntries,
+    private async Task HandleApplicationActivation(IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries,
         IApplicationActivationService applicationActivation, Guid applicationId, IPortalRepositories checklistRepositories)
     {
-        if (checklistEntries.All(x => x.Item2 == ApplicationChecklistEntryStatusId.DONE))
+        if (checklistEntries.All(x => x.StatusId == ApplicationChecklistEntryStatusId.DONE))
         {
             try
             {
