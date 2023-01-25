@@ -84,29 +84,4 @@ public class CustodianService : ICustodianService
             throw new ServiceException("Couldn't resolve wallet data");
         }
     }
-
-    /// <inhertidoc />
-    public async IAsyncEnumerable<WalletListItem> GetWalletsAsync([EnumeratorCancellation] CancellationToken cancellationToken)
-    {
-        var httpClient = await _tokenService.GetAuthorizedClient<CustodianService>(_settings, cancellationToken).ConfigureAwait(false);
-
-        const string url = "/api/wallets";
-        var result = await httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
-        
-        if (result.IsSuccessStatusCode)
-        {
-            using var responseStream = await result.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-            await foreach (var wallet in JsonSerializer.DeserializeAsyncEnumerable<WalletListItem>(responseStream, cancellationToken: cancellationToken).ConfigureAwait(false))
-            {
-                if (wallet != null)
-                {
-                    yield return wallet;
-                }
-            }
-        }
-        else
-        {
-            throw new ServiceException("Error on retrieving Wallets HTTP Response Code {StatusCode}", result.StatusCode);
-        }
-    }
 }

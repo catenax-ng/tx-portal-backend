@@ -29,13 +29,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Custodian.Library;
 public interface ICustodianService
 {
     /// <summary>
-    /// Gets a collection of wallets
-    /// </summary>
-    /// <param name="cancellationToken">Cancellation Token</param>
-    /// <returns>AsyncEnumerable of wallet data</returns>
-    IAsyncEnumerable<WalletListItem> GetWalletsAsync(CancellationToken cancellationToken);
-
-    /// <summary>
     /// Gets a wallet by the bpn
     /// </summary>
     /// <param name="bpn">bpn to get the wallet for</param>

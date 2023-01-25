@@ -18,6 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.ApplicationActivation.Library.DependencyInjection;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
@@ -95,7 +96,7 @@ public class ApplicationActivationTests
         A.CallTo(() => _portalRepositories.GetInstance<ICompanyRepository>()).Returns(_companyRepository);
         A.CallTo(() => options.Value).Returns(_settings);
 
-        _sut = new ApplicationActivationService(_portalRepositories, _notificationService, _provisioningManager, _mailingService, options);
+        _sut = new ApplicationActivationService(_portalRepositories, _notificationService, _provisioningManager, _mailingService, options, A.Fake<ILogger<ApplicationActivationService>>());
     }
     
     #region HandleApplicationActivation
@@ -149,7 +150,7 @@ public class ApplicationActivationTests
         SetupFakes(clientRoleNames, userRoleData, companyUserAssignedRole, companyUserAssignedBusinessPartner);
         A.CallTo(() =>
                 _applicationRepository.AttachAndModifyCompanyApplication(A<Guid>._, A<Action<CompanyApplication>>._))
-            .Invokes((Guid id, Action<CompanyApplication> setOptionalParameters) =>
+            .Invokes((Guid _, Action<CompanyApplication> setOptionalParameters) =>
             {
                 setOptionalParameters.Invoke(companyApplication);
             });

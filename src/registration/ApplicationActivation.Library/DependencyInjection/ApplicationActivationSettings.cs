@@ -55,11 +55,15 @@ public class ApplicationActivationSettings
         {
             case false when !endSet:
                 return true;
-            case true when !settings.EndTime.HasValue:
-            case false when settings.EndTime.HasValue:
+            case true when !endSet:
+            case false when endSet:
                 return false;
-            case true when settings.EndTime.HasValue:
-                return settings.StartTime < settings.EndTime;
+            case true when endSet:
+                return settings.StartTime < settings.EndTime && 
+                       settings.StartTime.Value < TimeSpan.FromDays(1) && 
+                       settings.EndTime.Value < TimeSpan.FromDays(1) &&
+                       settings.StartTime.Value > TimeSpan.Zero &&
+                       settings.EndTime.Value > TimeSpan.Zero;
         }
 
         return false;
