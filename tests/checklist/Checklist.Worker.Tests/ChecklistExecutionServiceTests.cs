@@ -100,6 +100,11 @@ public class ChecklistExecutionServiceTests
         };
         A.CallTo(() => _applicationChecklistRepository.GetChecklistDataOrderedByApplicationId())
             .Returns(list.ToAsyncEnumerable());
+        A.CallTo(() => _checklistService.ProcessChecklist(A<Guid>._,
+            A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,
+            A<CancellationToken>._))
+            .ReturnsLazily((Guid applicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries, CancellationToken cancellationToken) =>
+                checklistEntries.Select(entry => (entry.TypeId, entry.StatusId, false)).ToAsyncEnumerable());
         A.CallTo(() => _applicationActivationService.HandleApplicationActivation(applicationId))
             .ReturnsLazily(() => Task.CompletedTask);
 
@@ -107,12 +112,85 @@ public class ChecklistExecutionServiceTests
         await _service.ExecuteAsync(CancellationToken.None);
 
         // Assert
-        A.CallTo(() => _checklistService.ProcessChecklist(A<Guid>._,
-            A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,
-            A<CancellationToken>._)).MustNotHaveHappened();
+        A.CallTo(() => _checklistService.ProcessChecklist(applicationId,
+            A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>.That.IsSameSequenceAs(list.Select(entry => new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(entry.Item2, entry.Item3))),
+            A<CancellationToken>._)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _checklistCreationService.CreateMissingChecklistItems(applicationId, A<IEnumerable<ApplicationChecklistEntryTypeId>>._))
             .MustNotHaveHappened();
         A.CallTo(() => _applicationActivationService.HandleApplicationActivation(applicationId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithEntriesProcessedAllDone_ActivatesApplication()
+    {
+        // Arrange
+        var applicationId = Guid.NewGuid();
+        var list = new List<ValueTuple<Guid, ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>>
+        {
+            new(applicationId, ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.TO_DO),
+            new(applicationId, ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.TO_DO),
+            new(applicationId, ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.DONE),
+            new(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO),
+            new(applicationId, ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.DONE),
+        };
+        A.CallTo(() => _applicationChecklistRepository.GetChecklistDataOrderedByApplicationId())
+            .Returns(list.ToAsyncEnumerable());
+        A.CallTo(() => _checklistService.ProcessChecklist(A<Guid>._,
+            A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,
+            A<CancellationToken>._))
+            .ReturnsLazily((Guid applicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries, CancellationToken cancellationToken) =>
+                checklistEntries.Select(entry => (entry.TypeId, ApplicationChecklistEntryStatusId.DONE, entry.StatusId == ApplicationChecklistEntryStatusId.TO_DO)).ToAsyncEnumerable());
+        A.CallTo(() => _applicationActivationService.HandleApplicationActivation(applicationId))
+            .ReturnsLazily(() => Task.CompletedTask);
+
+        // Act
+        await _service.ExecuteAsync(CancellationToken.None);
+
+        // Assert
+        A.CallTo(() => _checklistService.ProcessChecklist(applicationId,
+            A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>.That.IsSameSequenceAs(list.Select(entry => new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(entry.Item2, entry.Item3))),
+            A<CancellationToken>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _checklistCreationService.CreateMissingChecklistItems(applicationId, A<IEnumerable<ApplicationChecklistEntryTypeId>>._))
+            .MustNotHaveHappened();
+        A.CallTo(() => _applicationActivationService.HandleApplicationActivation(applicationId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappened(4, Times.Exactly);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithEntriesProcessedFailed_DoesNotActivateApplication()
+    {
+        // Arrange
+        var applicationId = Guid.NewGuid();
+        var list = new List<ValueTuple<Guid, ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>>
+        {
+            new(applicationId, ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.TO_DO),
+            new(applicationId, ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.TO_DO),
+            new(applicationId, ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.DONE),
+            new(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO),
+            new(applicationId, ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.DONE),
+        };
+        A.CallTo(() => _applicationChecklistRepository.GetChecklistDataOrderedByApplicationId())
+            .Returns(list.ToAsyncEnumerable());
+        A.CallTo(() => _checklistService.ProcessChecklist(A<Guid>._,
+            A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,
+            A<CancellationToken>._))
+            .ReturnsLazily((Guid applicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries, CancellationToken cancellationToken) =>
+                checklistEntries.Select(entry => (entry.TypeId, ApplicationChecklistEntryStatusId.FAILED, entry.StatusId == ApplicationChecklistEntryStatusId.TO_DO)).ToAsyncEnumerable());
+        A.CallTo(() => _applicationActivationService.HandleApplicationActivation(applicationId))
+            .ReturnsLazily(() => Task.CompletedTask);
+
+        // Act
+        await _service.ExecuteAsync(CancellationToken.None);
+
+        // Assert
+        A.CallTo(() => _checklistService.ProcessChecklist(applicationId,
+            A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>.That.IsSameSequenceAs(list.Select(entry => new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(entry.Item2, entry.Item3))),
+            A<CancellationToken>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _checklistCreationService.CreateMissingChecklistItems(applicationId, A<IEnumerable<ApplicationChecklistEntryTypeId>>._))
+            .MustNotHaveHappened();
+        A.CallTo(() => _applicationActivationService.HandleApplicationActivation(applicationId)).MustNotHaveHappened();
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappened(3, Times.Exactly);
     }
 
     [Fact]
@@ -130,6 +208,11 @@ public class ChecklistExecutionServiceTests
         };
         A.CallTo(() => _applicationChecklistRepository.GetChecklistDataOrderedByApplicationId())
             .Returns(list.ToAsyncEnumerable());
+        A.CallTo(() => _checklistService.ProcessChecklist(A<Guid>._,
+            A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,
+            A<CancellationToken>._))
+            .ReturnsLazily((Guid applicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries, CancellationToken cancellationToken) =>
+                checklistEntries.Select(entry => (entry.Item1, entry.Item2, false)).ToAsyncEnumerable());
         A.CallTo(() => _applicationActivationService.HandleApplicationActivation(applicationId))
             .Throws(new Exception("test error"));
 
@@ -139,12 +222,12 @@ public class ChecklistExecutionServiceTests
         // Assert
         A.CallTo(() => _checklistService.ProcessChecklist(A<Guid>._,
             A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,
-            A<CancellationToken>._)).MustNotHaveHappened();
+            A<CancellationToken>._)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _checklistCreationService.CreateMissingChecklistItems(applicationId, A<IEnumerable<ApplicationChecklistEntryTypeId>>._))
             .MustNotHaveHappened();
         A.CallTo(() => _applicationActivationService.HandleApplicationActivation(applicationId)).MustHaveHappenedOnceExactly();
-        A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
-        A.CallTo(() => _portalRepositories.Clear()).MustHaveHappened(2, Times.Exactly);
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustNotHaveHappened();
+        A.CallTo(() => _portalRepositories.Clear()).MustHaveHappened(1, Times.Exactly);
     }
 
     [Fact]
@@ -213,6 +296,12 @@ public class ChecklistExecutionServiceTests
         A.CallTo(() => _applicationChecklistRepository.GetChecklistDataOrderedByApplicationId())
             .Returns(list.ToAsyncEnumerable());
 
+        A.CallTo(() => _checklistService.ProcessChecklist(A<Guid>._,
+            A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,
+            A<CancellationToken>._))
+            .ReturnsLazily((Guid applicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries, CancellationToken cancellationToken) =>
+                checklistEntries.Select(entry => (entry.TypeId, entry.StatusId, false)).ToAsyncEnumerable());
+
         // Act
         await _service.ExecuteAsync(CancellationToken.None);
 
@@ -237,6 +326,12 @@ public class ChecklistExecutionServiceTests
         };
         A.CallTo(() => _applicationChecklistRepository.GetChecklistDataOrderedByApplicationId())
             .Returns(list.ToAsyncEnumerable());
+
+        A.CallTo(() => _checklistService.ProcessChecklist(A<Guid>._,
+            A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,
+            A<CancellationToken>._))
+            .ReturnsLazily((Guid applicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries, CancellationToken cancellationToken) =>
+                checklistEntries.Select(entry => (entry.TypeId, entry.StatusId, false)).ToAsyncEnumerable());
 
         // Act
         await _service.ExecuteAsync(CancellationToken.None);

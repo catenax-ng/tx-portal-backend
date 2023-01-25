@@ -165,7 +165,7 @@ public class ChecklistServiceTests
         SetupForCreateWallet();
 
         // Act
-        await _service.ProcessChecklist(applicationId, checklist, CancellationToken.None).ConfigureAwait(false);
+        await _service.ProcessChecklist(applicationId, checklist, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _applicationChecklistRepository.AttachAndModifyApplicationChecklist(A<Guid>._, A<ApplicationChecklistEntryTypeId>._, A<Action<ApplicationChecklistEntry>>._)).MustNotHaveHappened();
@@ -193,7 +193,7 @@ public class ChecklistServiceTests
         SetupForCreateWallet();
 
         // Act
-        await _service.ProcessChecklist(applicationId, checklist, CancellationToken.None).ConfigureAwait(false);
+        await _service.ProcessChecklist(applicationId, checklist, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _applicationChecklistRepository.AttachAndModifyApplicationChecklist(A<Guid>._, A<ApplicationChecklistEntryTypeId>._, A<Action<ApplicationChecklistEntry>>._)).MustNotHaveHappened();
@@ -221,7 +221,7 @@ public class ChecklistServiceTests
         SetupForCreateWallet(entry);
 
         // Act
-        await _service.ProcessChecklist(IdWithFailingCustodian, checklist, CancellationToken.None).ConfigureAwait(false);
+        await _service.ProcessChecklist(IdWithFailingCustodian, checklist, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _custodianBusinessLogic.CreateWalletAsync(A<Guid>._, A<CancellationToken>._))
@@ -253,7 +253,7 @@ public class ChecklistServiceTests
         SetupForCreateWallet(entry);
 
         // Act
-        await _service.ProcessChecklist(IdWithCustodianUnavailable, checklist, CancellationToken.None).ConfigureAwait(false);
+        await _service.ProcessChecklist(IdWithCustodianUnavailable, checklist, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _custodianBusinessLogic.CreateWalletAsync(A<Guid>._, A<CancellationToken>._))
@@ -285,7 +285,7 @@ public class ChecklistServiceTests
         SetupForCreateWallet(entry);
 
         // Act
-        await _service.ProcessChecklist(IdWithBpn, checklist, CancellationToken.None).ConfigureAwait(false);
+        await _service.ProcessChecklist(IdWithBpn, checklist, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _custodianBusinessLogic.CreateWalletAsync(IdWithBpn, A<CancellationToken>._))
@@ -321,7 +321,7 @@ public class ChecklistServiceTests
         SetupForClearinghouse();
 
         // Act
-        await _service.ProcessChecklist(applicationId, checklist, CancellationToken.None).ConfigureAwait(false);
+        await _service.ProcessChecklist(applicationId, checklist, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _applicationChecklistRepository.AttachAndModifyApplicationChecklist(A<Guid>._, A<ApplicationChecklistEntryTypeId>._, A<Action<ApplicationChecklistEntry>>._)).MustNotHaveHappened();
@@ -349,7 +349,7 @@ public class ChecklistServiceTests
         SetupForClearinghouse(entry);
 
         // Act
-        await _service.ProcessChecklist(IdWithoutBpn, checklist, CancellationToken.None).ConfigureAwait(false);
+        await _service.ProcessChecklist(IdWithoutBpn, checklist, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _applicationChecklistRepository.AttachAndModifyApplicationChecklist(A<Guid>._, A<ApplicationChecklistEntryTypeId>._, A<Action<ApplicationChecklistEntry>>._)).MustHaveHappenedOnceExactly();
@@ -379,7 +379,7 @@ public class ChecklistServiceTests
         SetupForClearinghouse(entry);
 
         // Act
-        await _service.ProcessChecklist(IdWithBpn, checklist, CancellationToken.None).ConfigureAwait(false);
+        await _service.ProcessChecklist(IdWithBpn, checklist, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _custodianBusinessLogic.GetWalletByBpnAsync(IdWithBpn, A<CancellationToken>._))
@@ -417,7 +417,7 @@ public class ChecklistServiceTests
         SetupForClearinghouse();
 
         // Act
-        await _service.ProcessChecklist(applicationId, checklist, CancellationToken.None).ConfigureAwait(false);
+        await _service.ProcessChecklist(applicationId, checklist, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _applicationChecklistRepository.AttachAndModifyApplicationChecklist(A<Guid>._, A<ApplicationChecklistEntryTypeId>._, A<Action<ApplicationChecklistEntry>>._)).MustNotHaveHappened();
@@ -447,7 +447,7 @@ public class ChecklistServiceTests
             .ReturnsLazily(() => Task.CompletedTask);
 
         // Act
-        await _service.ProcessChecklist(IdWithBpn, checklist, CancellationToken.None).ConfigureAwait(false);
+        await _service.ProcessChecklist(IdWithBpn, checklist, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _sdFactoryBusinessLogic.RegisterSelfDescriptionAsync(IdWithBpn, A<CancellationToken>._))
