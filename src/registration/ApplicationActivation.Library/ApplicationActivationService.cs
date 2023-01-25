@@ -132,15 +132,10 @@ public class ApplicationActivationService : IApplicationActivationService
             return true;
         }
 
-        var now = _dateTime.Now;
-        var startDate = now.Date + startTime;
-        var endDate = startTime > endTime ? 
-                now.Date + endTime :
-                now.Date.AddDays(-1) + endTime ;
-
-        return startTime > endTime ?
-            now > startDate && now < endDate :
-            now < startDate && now > endDate;
+        var now = _dateTime.Now.TimeOfDay;
+        return startTime > endTime ? 
+            now >= startTime || now <= endTime :
+            now >= startTime && now <= endTime;
     }
 
     private async Task<IDictionary<string, IEnumerable<string>>?> AssignRolesAndBpn(Guid applicationId, IUserRolesRepository userRolesRepository, IApplicationRepository applicationRepository, string businessPartnerNumber)
