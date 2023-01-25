@@ -152,8 +152,8 @@ public class ApplicationActivationTests
             .Create();
         SetupFakes(clientRoleNames, userRoleData, companyUserAssignedRole, companyUserAssignedBusinessPartner);
         A.CallTo(() => _dateTimeProvider.Now).Returns(new DateTime(2022, 01, 01, 0, 0, 0));
-        _settings.StartTime = TimeSpan.FromHours(8);
-        _settings.EndTime = TimeSpan.FromHours(22);
+        _settings.StartTime = TimeSpan.FromHours(22);
+        _settings.EndTime = TimeSpan.FromHours(8);
         A.CallTo(() =>
                 _applicationRepository.AttachAndModifyCompanyApplication(A<Guid>._, A<Action<CompanyApplication>>._))
             .Invokes((Guid _, Action<CompanyApplication> setOptionalParameters) =>
