@@ -156,7 +156,7 @@ public class ApplicationRepository : IApplicationRepository
             .SingleOrDefaultAsync();
 
     /// <inheritdoc />
-    public Task<(Guid, string?, string, IEnumerable<(UniqueIdentifierId Id, string Value)>)> GetCompanyAndApplicationDetailsWithUniqueIdentifiersAsync(Guid applicationId) =>
+    public Task<(Guid CompanyId, string? BusinessPartnerNumber, string Alpha2Code, IEnumerable<(UniqueIdentifierId Id, string Value)> UniqueIdentifiers)> GetCompanyAndApplicationDetailsWithUniqueIdentifiersAsync(Guid applicationId) =>
         _dbContext.CompanyApplications.Where(companyApplication =>
                 companyApplication.Id == applicationId &&
                 companyApplication.ApplicationStatusId == CompanyApplicationStatusId.SUBMITTED)

@@ -32,9 +32,9 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Tests;
 public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
 {
     private static readonly Guid ApplicationWithBpn = new("4829b64c-de6a-426c-81fc-c0bcf95bcb76");
-    private static readonly Guid SubmittedApplicationWithBpn = new("1b86d973-3aac-4dcd-a9e9-0c222766202b");
+    private static readonly Guid SubmittedApplicationWithBpn = new("2bb2005f-6e8d-41eb-967b-cde67546cafc");
     private static readonly Guid ApplicationWithoutBpn = new("1b86d973-3aac-4dcd-a9e9-0c222766202b");
-    private static readonly Guid CompanyId = new("2dc4249f-b5ca-4d42-bef1-7a7a950a4f99");
+    private static readonly Guid CompanyId = new("27538eac-27a3-4f74-9306-e5149b93ade5");
     private readonly IFixture _fixture;
     private readonly TestDbFixture _dbTestDbFixture;
 
@@ -368,6 +368,70 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
         
         // Assert
         data.Should().Be(Guid.Empty);
+    }
+
+    #endregion
+    
+    #region GetCompanyAndApplicationDetailsForApprovalAsync
+
+    [Fact]
+    public async Task GetCompanyAndApplicationDetailsForApprovalAsync_WithSubmittedApplication_ReturnsExpected()
+    {
+        // Arrange
+        var sut = await CreateSut().ConfigureAwait(false);
+        
+        // Act
+        var data = await sut.GetCompanyAndApplicationDetailsForApprovalAsync(SubmittedApplicationWithBpn).ConfigureAwait(false);
+        
+        // Assert
+        data.companyId.Should().Be(CompanyId);
+        data.businessPartnerNumber.Should().NotBeNullOrEmpty().And.Be("CAXSTESTYCATENAZZ");
+    }
+
+    [Fact]
+    public async Task GetCompanyAndApplicationDetailsForApprovalAsync_WithNotExistingApplication_ReturnsDefault()
+    {
+        // Arrange
+        var sut = await CreateSut().ConfigureAwait(false);
+        
+        // Act
+        var data = await sut.GetCompanyAndApplicationDetailsForApprovalAsync(Guid.NewGuid()).ConfigureAwait(false);
+        
+        // Assert
+        data.Should().Be(default);
+    }
+
+    #endregion
+
+    #region GetCompanyAndApplicationDetailsWithUniqueIdentifiersAsync
+
+    [Fact]
+    public async Task GetCompanyAndApplicationDetailsWithUniqueIdentifiersAsync_WithSubmittedApplication_ReturnsExpected()
+    {
+        // Arrange
+        var sut = await CreateSut().ConfigureAwait(false);
+        
+        // Act
+        var data = await sut.GetCompanyAndApplicationDetailsWithUniqueIdentifiersAsync(SubmittedApplicationWithBpn).ConfigureAwait(false);
+        
+        // Assert
+        data.CompanyId.Should().Be(CompanyId);
+        data.BusinessPartnerNumber.Should().NotBeNullOrEmpty().And.Be("CAXSTESTYCATENAZZ");
+        data.Alpha2Code.Should().Be("DE");
+        data.UniqueIdentifiers.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task GetCompanyAndApplicationDetailsWithUniqueIdentifiersAsync_WithNotExistingApplication_ReturnsDefault()
+    {
+        // Arrange
+        var sut = await CreateSut().ConfigureAwait(false);
+        
+        // Act
+        var data = await sut.GetCompanyAndApplicationDetailsWithUniqueIdentifiersAsync(Guid.NewGuid()).ConfigureAwait(false);
+        
+        // Assert
+        data.Should().Be(default);
     }
 
     #endregion

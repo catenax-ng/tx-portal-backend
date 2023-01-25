@@ -394,6 +394,73 @@ public class ChecklistServiceTests
 
     #endregion
     
+    #region ProcessChecklist HandleSelfDescription
+    
+    [Fact]
+    public async Task ProcessChecklistHandleSelfDescription_WithSdFactoryAlreadyInProgress_ExecutesNothing()
+    {
+        // Arrange
+        var applicationId = Guid.NewGuid();
+        var checklist = new[]
+        {
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.IN_PROGRESS)
+        };
+        SetupForClearinghouse();
+
+        // Act
+        await _service.ProcessChecklist(applicationId, checklist, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        A.CallTo(() => _applicationChecklistRepository.AttachAndModifyApplicationChecklist(A<Guid>._, A<ApplicationChecklistEntryTypeId>._, A<Action<ApplicationChecklistEntry>>._)).MustNotHaveHappened();
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustNotHaveHappened();
+    }
+
+    [Fact]
+    public async Task ProcessChecklistHandleSelfDescription_WithValid_CallsExpected()
+    {
+        // Arrange
+        var entry = new ApplicationChecklistEntry(IdWithBpn, ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow);
+        var checklist = new[]
+        {
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(
+                ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO)
+        };
+        SetupForUpdate(entry);
+        A.CallTo(() => _sdFactoryBusinessLogic.RegisterSelfDescriptionAsync(IdWithBpn, A<CancellationToken>._))
+            .ReturnsLazily(() => Task.CompletedTask);
+
+        // Act
+        await _service.ProcessChecklist(IdWithBpn, checklist, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        A.CallTo(() => _sdFactoryBusinessLogic.RegisterSelfDescriptionAsync(IdWithBpn, A<CancellationToken>._))
+            .MustHaveHappenedOnceExactly();
+        A.CallTo(() => _applicationChecklistRepository.AttachAndModifyApplicationChecklist(IdWithBpn, ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, A<Action<ApplicationChecklistEntry>>._))
+            .MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustNotHaveHappened();
+        entry.Comment.Should().BeNull();
+        entry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.DONE);
+    }
+
+    #endregion
+    
     #region Setup
 
     private void SetupFakesForTrigger(ApplicationChecklistEntry? applicationChecklistEntry = null)

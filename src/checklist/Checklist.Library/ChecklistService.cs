@@ -145,7 +145,7 @@ public class ChecklistService : IChecklistService
             .RegisterSelfDescriptionAsync(applicationId, cancellationToken)
             .ConfigureAwait(false);
         _portalRepositories.GetInstance<IApplicationChecklistRepository>()
-            .AttachAndModifyApplicationChecklist(applicationId, ApplicationChecklistEntryTypeId.IDENTITY_WALLET,
+            .AttachAndModifyApplicationChecklist(applicationId, ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP,
                 checklist =>
                 {
                     checklist.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE;
