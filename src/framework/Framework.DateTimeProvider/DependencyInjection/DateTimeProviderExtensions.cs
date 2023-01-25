@@ -26,6 +26,6 @@ public static class DateTimeProviderExtensions
 {
     public static IServiceCollection AddDateTimeProvider(this IServiceCollection services)
     {
-        return services.AddSingleton<IDateTimeProvider, UtcDateTimeProvider>();
+        return services.AddTransient<IDateTimeProvider, UtcDateTimeProvider>();
     }
 }
