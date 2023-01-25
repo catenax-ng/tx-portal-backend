@@ -22,17 +22,6 @@ using System.Text.Json.Serialization;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.Custodian.Models;
 
-public record WalletListItem(
-    [property: JsonPropertyName("bpn")] string? Bpn,
-    [property: JsonPropertyName("createdAt")] DateTime CreatedAt,
-    [property: JsonPropertyName("did")] string? Did,
-    [property: JsonPropertyName("name")] string? Name,
-    [property: JsonPropertyName("pendingMembershipIssuance")] bool PendingMembershipIssuance,
-    [property: JsonPropertyName("revocationListName")] string? RevocationListName,
-    [property: JsonPropertyName("verKey")] string? VerKey,
-    [property: JsonPropertyName("vcs")] object[]? Vcs
-);
-
 public record WalletData(
     [property: JsonPropertyName("name")] string? Name,
     [property: JsonPropertyName("bpn")] string? Bpn,
