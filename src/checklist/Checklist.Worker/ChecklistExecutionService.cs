@@ -73,10 +73,8 @@ public class ChecklistExecutionService
                 await foreach (var entryData in checklistEntryData.ConfigureAwait(false).WithCancellation(stoppingToken))
                 {
                     var applicationId = entryData.Key;
-                    var checklistEntries = await HandleChecklistProcessing(entryData, checklistCreationService, applicationId, checklistService, stoppingToken).ConfigureAwait(false);
+                    var checklistEntries = await HandleChecklistProcessing(entryData, checklistCreationService, applicationId, checklistService, checklistRepositories, stoppingToken).ConfigureAwait(false);
                     await HandleApplicationActivation(checklistEntries, applicationActivation, applicationId, checklistRepositories).ConfigureAwait(false);
-                    await checklistRepositories.SaveAsync().ConfigureAwait(false);
-                    checklistRepositories.Clear();
                 }
                 _logger.LogInformation("Processed checklist items");
             }
@@ -93,6 +91,7 @@ public class ChecklistExecutionService
         IChecklistCreationService checklistCreationService,
         Guid applicationId,
         IChecklistService checklistService,
+        IPortalRepositories checklistRepositories,
         CancellationToken stoppingToken)
     {
         var existingChecklistTypes = entryData.Select(e => e.TypeId);
@@ -111,6 +110,8 @@ public class ChecklistExecutionService
             await checklistService.ProcessChecklist(applicationId, checklistEntries, stoppingToken).ConfigureAwait(false);
         }
 
+        await checklistRepositories.SaveAsync().ConfigureAwait(false);
+        checklistRepositories.Clear();
         return checklistEntries;
     }
 
@@ -122,13 +123,14 @@ public class ChecklistExecutionService
             try
             {
                 await applicationActivation.HandleApplicationActivation(applicationId).ConfigureAwait(false);
+                await checklistRepositories.SaveAsync().ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 _logger.LogError("Application activation for application {ApplicationId} failed with error {ErrorMessage}",
                     applicationId, ex.ToString());
-                checklistRepositories.Clear();
             }
+            checklistRepositories.Clear();
         }
     }
 }

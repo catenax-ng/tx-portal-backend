@@ -18,6 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.ApplicationActivation.Library.DependencyInjection;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
@@ -37,6 +38,7 @@ public class ApplicationActivationService : IApplicationActivationService
     private readonly INotificationService _notificationService;
     private readonly IProvisioningManager _provisioningManager;
     private readonly IMailingService _mailingService;
+    private readonly ILogger<ApplicationActivationService> _logger;
     private readonly ApplicationActivationSettings _settings;
 
     public ApplicationActivationService(
@@ -44,12 +46,14 @@ public class ApplicationActivationService : IApplicationActivationService
         INotificationService notificationService,
         IProvisioningManager provisioningManager,
         IMailingService mailingService,
-        IOptions<ApplicationActivationSettings> options)
+        IOptions<ApplicationActivationSettings> options,
+        ILogger<ApplicationActivationService> logger)
     {
         _portalRepositories = portalRepositories;
         _notificationService = notificationService;
         _provisioningManager = provisioningManager;
         _mailingService = mailingService;
+        _logger = logger;
         _settings = options.Value;
     }
 
@@ -90,20 +94,28 @@ public class ApplicationActivationService : IApplicationActivationService
         var notifications = _settings.WelcomeNotificationTypeIds.Select(x => (default(string), x));
         await _notificationService.CreateNotifications(_settings.CompanyAdminRoles, null, notifications, companyId).ConfigureAwait(false);
 
-        await PostRegistrationWelcomeEmailAsync(userRolesRepository, applicationRepository, applicationId).ConfigureAwait(false);
-
-        if (assignedRoles == null) return;
-        
-        var unassignedClientRoles = _settings.ApplicationApprovalInitialRoles
-            .Select(initialClientRoles => (
-                client: initialClientRoles.Key,
-                roles: initialClientRoles.Value.Except(assignedRoles[initialClientRoles.Key])))
-            .Where(clientRoles => clientRoles.roles.Any())
-            .ToList();
-
-        if (unassignedClientRoles.Any())
+        // If an error occurs in the following code we only log an error but won't throw an exception since that would result in a rollback of the database changes 
+        try
         {
-            throw new UnexpectedConditionException($"inconsistent data, roles not assigned in keycloak: {string.Join(", ", unassignedClientRoles.Select(clientRoles => $"client: {clientRoles.client}, roles: [{string.Join(", ", clientRoles.roles)}]"))}");
+            await PostRegistrationWelcomeEmailAsync(userRolesRepository, applicationRepository, applicationId).ConfigureAwait(false);
+
+            if (assignedRoles == null) return;
+        
+            var unassignedClientRoles = _settings.ApplicationApprovalInitialRoles
+                .Select(initialClientRoles => (
+                    client: initialClientRoles.Key,
+                    roles: initialClientRoles.Value.Except(assignedRoles[initialClientRoles.Key])))
+                .Where(clientRoles => clientRoles.roles.Any())
+                .ToList();
+
+            if (unassignedClientRoles.Any())
+            {
+                throw new UnexpectedConditionException($"inconsistent data, roles not assigned in keycloak: {string.Join(", ", unassignedClientRoles.Select(clientRoles => $"client: {clientRoles.client}, roles: [{string.Join(", ", clientRoles.roles)}]"))}");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "{ErrorMessage}", ex.Message);
         }
     }
 
@@ -139,13 +151,10 @@ public class ApplicationActivationService : IApplicationActivationService
                 .ToDictionaryAsync(assigned => assigned.Client, assigned => assigned.Roles)
                 .ConfigureAwait(false);
 
-            foreach (var roleData in initialRolesData)
+            foreach (var roleData in initialRolesData.Where(roleData => !userData.RoleIds.Contains(roleData.UserRoleId) &&
+                                                                        assignedRoles[roleData.ClientClientId].Contains(roleData.UserRoleText)))
             {
-                if (!userData.RoleIds.Contains(roleData.UserRoleId) &&
-                    assignedRoles[roleData.ClientClientId].Contains(roleData.UserRoleText))
-                {
-                    userRolesRepository.CreateCompanyUserAssignedRole(userData.CompanyUserId, roleData.UserRoleId);
-                }
+                userRolesRepository.CreateCompanyUserAssignedRole(userData.CompanyUserId, roleData.UserRoleId);
             }
 
             if (userData.BusinessPartnerNumbers.Contains(businessPartnerNumber)) continue;

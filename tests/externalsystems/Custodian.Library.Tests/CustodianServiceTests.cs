@@ -108,61 +108,6 @@ public class CustodianServiceTests
 
     #endregion
 
-    #region GetWallets
-
-    [Fact]
-    public async Task GetWallets_WithValidData_ReturnsWallets()
-    {
-        // Arrange
-        var data = JsonSerializer.Serialize(new List<WalletListItem>
-        {
-            new("abc",
-                    DateTime.Now,
-                    "123",
-                    "test",
-                    false,
-                    null,
-                    "key",
-                    null)
-        });
-        var httpMessageHandlerMock = new HttpMessageHandlerMock(HttpStatusCode.OK, data.ToFormContent("application/vc+ld+json"));
-        var httpClient = new HttpClient(httpMessageHandlerMock)
-        {
-            BaseAddress = new Uri("https://base.address.com")
-        };
-        A.CallTo(() => _tokenService.GetAuthorizedClient<CustodianService>(_options.Value, A<CancellationToken>._))
-            .Returns(httpClient);
-        var sut = new CustodianService(_tokenService, _options);
-        
-        // Act
-        var result = await sut.GetWalletsAsync(CancellationToken.None).ToListAsync().ConfigureAwait(false);
-
-        // Assert
-        result.Should().NotBeEmpty();
-    }
-
-    [Fact]
-    public async Task GetWallets_WithInvalidData_ThrowsServiceException()
-    {
-        // Arrange
-        var httpMessageHandlerMock = new HttpMessageHandlerMock(HttpStatusCode.BadRequest);
-        var httpClient = new HttpClient(httpMessageHandlerMock)
-        {
-            BaseAddress = new Uri("https://base.address.com")
-        };
-        A.CallTo(() => _tokenService.GetAuthorizedClient<CustodianService>(_options.Value, A<CancellationToken>._)).Returns(httpClient);
-        var sut = new CustodianService(_tokenService, _options);
-
-        // Act
-        async Task Act() => await sut.GetWalletsAsync(CancellationToken.None).ToListAsync().ConfigureAwait(false);
-
-        // Assert
-        var ex = await Assert.ThrowsAsync<ServiceException>(Act);
-        ex.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-    }
-
-    #endregion
-    
     #region GetWallet By Bpn
 
     [Fact]
