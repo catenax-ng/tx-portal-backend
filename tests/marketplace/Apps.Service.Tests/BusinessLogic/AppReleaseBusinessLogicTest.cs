@@ -414,51 +414,6 @@ public class AppReleaseBusinessLogicTest
         error.Message.Should().Be($"documentType must be either: {string.Join(",", settings.DocumentTypeIds)}");
     }
 
-    [Fact]
-    public async Task CreateAppDocumentAsync_FileNameEmptyException()
-    {
-        // Arrange
-        var appId = _fixture.Create<Guid>();
-        var file = FormFileHelper.GetFormFile("this is just a test", "", "application/pdf");
-        var settings = new AppsSettings()
-        {
-            ContentTypeSettings = new[] { "application/pdf" },
-            DocumentTypeIds = new[] { DocumentTypeId.APP_CONTRACT }
-        };
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
-     
-        // Act
-        async Task Act() => await sut.CreateAppDocumentAsync(appId, DocumentTypeId.APP_CONTRACT, file, _iamUser.UserEntityId, CancellationToken.None).ConfigureAwait(false);
-
-        // Assert
-        
-        var error = await Assert.ThrowsAsync<ControllerArgumentException>(Act).ConfigureAwait(false);
-       
-        error.Message.Should().Be("File name is must not be null");
-    }
-    
-    [Fact]
-    public async Task CreateAppDocumentAsync_AppIdEmptyException()
-    {
-        // Arrange
-        var file = FormFileHelper.GetFormFile("this is just a test", "superFile.pdf", "application/pdf");
-        var settings = new AppsSettings()
-        {
-            ContentTypeSettings = new[] { "application/pdf" },
-            DocumentTypeIds = new[] { DocumentTypeId.APP_CONTRACT }
-        };
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
-     
-        // Act
-        async Task Act() => await sut.CreateAppDocumentAsync(Guid.Empty, DocumentTypeId.APP_CONTRACT, file, _iamUser.UserEntityId, CancellationToken.None).ConfigureAwait(false);
-
-        // Assert
-        
-        var error = await Assert.ThrowsAsync<ControllerArgumentException>(Act).ConfigureAwait(false);
-       
-        error.Message.Should().Be($"AppId must not be empty");
-    }
-
     #endregion
 
     #region  AddActiveAppUserRole

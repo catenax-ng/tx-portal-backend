@@ -727,6 +727,14 @@ public class OfferService : IOfferService
 
     public async Task<int> UploadDocumentAsync(Guid Id, DocumentTypeId documentTypeId, IFormFile document, string iamUserId, OfferTypeId offertypeId, CancellationToken cancellationToken)
     {
+        if (Id == Guid.Empty)
+        {
+            throw new ControllerArgumentException($"{offertypeId}id should not be null");
+        }
+        if (string.IsNullOrEmpty(document.FileName))
+        {
+            throw new ControllerArgumentException("File name should not be null");
+        }
         var offerRepository = _portalRepositories.GetInstance<IOfferRepository>();
         var result = await offerRepository.GetProviderCompanyUserIdForOfferUntrackedAsync(Id, iamUserId, OfferStatusId.CREATED, offertypeId).ConfigureAwait(false);
         if (result == default)

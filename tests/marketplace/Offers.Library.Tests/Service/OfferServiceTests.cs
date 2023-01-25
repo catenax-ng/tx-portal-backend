@@ -1313,6 +1313,41 @@ public class OfferServiceTests
         ex.Message.Should().Be($"user {_iamUser.UserEntityId} is not a member of the providercompany of {offerTypeId} {Id}");
     }
 
+    [Theory]
+    [InlineData(OfferTypeId.APP, DocumentTypeId.APP_CONTRACT)]
+    [InlineData(OfferTypeId.SERVICE, DocumentTypeId.ADDITIONAL_DETAILS)]
+    public async Task UploadDocumentAsync_EmptyId_ThrowsControllerArgumentException(OfferTypeId offerTypeId, DocumentTypeId documentTypeId)
+    {
+        // Arrange
+        var file = FormFileHelper.GetFormFile("this is just a test", "superFile.pdf", "application/pdf");
+        var sut = new OfferService(_portalRepositories, null!, null!, null!, null!);
+
+        // Act
+        async Task Act() => await sut.UploadDocumentAsync(Guid.Empty, documentTypeId, file, _iamUser.UserEntityId, offerTypeId, CancellationToken.None).ConfigureAwait(false);
+
+        // Arrange
+        var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Act).ConfigureAwait(false);
+        ex.Message.Should().Be($"{offerTypeId}id should not be null");
+    }
+
+    [Theory]
+    [InlineData(OfferTypeId.APP, DocumentTypeId.APP_CONTRACT)]
+    [InlineData(OfferTypeId.SERVICE, DocumentTypeId.ADDITIONAL_DETAILS)]
+    public async Task UploadDocumentAsync_EmptyFileName_ThrowsControllerArgumentException(OfferTypeId offerTypeId, DocumentTypeId documentTypeId)
+    {
+        // Arrange
+        var Id = _fixture.Create<Guid>();
+        var file = FormFileHelper.GetFormFile("this is just a test", "", "application/pdf");
+        var sut = new OfferService(_portalRepositories, null!, null!, null!, null!);
+
+        // Act
+        async Task Act() => await sut.UploadDocumentAsync(Id, documentTypeId, file, _iamUser.UserEntityId, offerTypeId, CancellationToken.None).ConfigureAwait(false);
+
+        // Arrange
+        var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Act).ConfigureAwait(false);
+        ex.Message.Should().Be($"File name should not be null");
+    }
+
     #endregion
     
     #region Setup

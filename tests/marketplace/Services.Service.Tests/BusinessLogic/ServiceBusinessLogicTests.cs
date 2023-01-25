@@ -638,51 +638,6 @@ public class ServiceBusinessLogicTests
         error.Message.Should().Be($"documentType must be: {string.Join(",", settings.DocumentTypeIds)}");
     }
 
-    [Fact]
-    public async Task CreateServiceDocumentAsync_FileNameEmptyException()
-    {
-        // Arrange
-        var appId = _fixture.Create<Guid>();
-        var file = FormFileHelper.GetFormFile("this is just a test", "", "application/pdf");
-        var settings = new ServiceSettings()
-        {
-            ContentTypeSettings = new[] { "application/pdf" },
-            DocumentTypeIds = new[] { DocumentTypeId.ADDITIONAL_DETAILS }
-        };
-        var sut = new ServiceBusinessLogic(_portalRepositories, _offerService, null!, Options.Create(settings));
-     
-        // Act
-        async Task Act() => await sut.CreateServiceDocumentAsync(appId, DocumentTypeId.ADDITIONAL_DETAILS, file, _iamUser.UserEntityId, CancellationToken.None).ConfigureAwait(false);
-
-        // Assert
-        
-        var error = await Assert.ThrowsAsync<ControllerArgumentException>(Act).ConfigureAwait(false);
-       
-        error.Message.Should().Be("File name should not be null");
-    }
-    
-    [Fact]
-    public async Task CreateServiceDocumentAsync_ServiceIdEmptyException()
-    {
-        // Arrange
-        var file = FormFileHelper.GetFormFile("this is just a test", "superFile.pdf", "application/pdf");
-        var settings = new ServiceSettings()
-        {
-            ContentTypeSettings = new[] { "application/pdf" },
-            DocumentTypeIds = new[] { DocumentTypeId.ADDITIONAL_DETAILS }
-        };
-        var sut = new ServiceBusinessLogic(_portalRepositories, _offerService, null!, Options.Create(settings));
-     
-        // Act
-        async Task Act() => await sut.CreateServiceDocumentAsync(Guid.Empty, DocumentTypeId.ADDITIONAL_DETAILS, file, _iamUser.UserEntityId, CancellationToken.None).ConfigureAwait(false);
-
-        // Assert
-        
-        var error = await Assert.ThrowsAsync<ControllerArgumentException>(Act).ConfigureAwait(false);
-       
-        error.Message.Should().Be($"serviceId should not be null");
-    }
-
     #endregion
     
     #region Setup

@@ -131,24 +131,14 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
     }
 
     /// <inheritdoc/>
-    public Task<int> CreateAppDocumentAsync(Guid appId, DocumentTypeId documentTypeId, IFormFile document, string iamUserId, CancellationToken cancellationToken)
-    {
-        return UploadAppDoc(appId, documentTypeId, document, iamUserId, OfferTypeId.APP, cancellationToken);
-    }
+    public Task<int> CreateAppDocumentAsync(Guid appId, DocumentTypeId documentTypeId, IFormFile document, string iamUserId, CancellationToken cancellationToken) =>
+        UploadAppDoc(appId, documentTypeId, document, iamUserId, OfferTypeId.APP, cancellationToken);
     
     private async Task<int> UploadAppDoc (Guid appId, DocumentTypeId documentTypeId, IFormFile document, string iamUserId, OfferTypeId offerTypeId, CancellationToken cancellationToken)
     {
-        if (appId == Guid.Empty)
-        {
-            throw new ControllerArgumentException($"AppId must not be empty");
-        }
         if (!_settings.DocumentTypeIds.Contains(documentTypeId))
         {
             throw new ControllerArgumentException($"documentType must be either: {string.Join(",", _settings.DocumentTypeIds)}");
-        }
-        if (string.IsNullOrEmpty(document.FileName))
-        {
-            throw new ControllerArgumentException("File name is must not be null");
         }
         // Check if document is a pdf,jpeg and png file (also see https://www.rfc-editor.org/rfc/rfc3778.txt)
         if (!_settings.ContentTypeSettings.Contains(document.ContentType))
