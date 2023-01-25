@@ -214,7 +214,7 @@ public class ServiceBusinessLogic : IServiceBusinessLogic
         if (!_settings.DocumentTypeIds.Contains(documentTypeId))
             throw new ControllerArgumentException($"documentType must be: {string.Join(",", _settings.DocumentTypeIds)}");
 
-        if (_settings.ContentTypeSettings.Contains(document.ContentType))
+        if (!_settings.ContentTypeSettings.Contains(document.ContentType))
             throw new UnsupportedMediaTypeException($"document type not supported. File with contentType :{string.Join(",", _settings.ContentTypeSettings)} are only allowed.");
 
         return await _offerService.UploadDocumentAsync(serviceId, documentTypeId, document, iamUserId, offerTypeId, cancellationToken).ConfigureAwait(false);
