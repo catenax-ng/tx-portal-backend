@@ -61,8 +61,8 @@ public class ApplicationActivationSettings
             case true when endSet:
                 return settings.StartTime!.Value.TotalDays < 1 &&
                        settings.EndTime!.Value.TotalDays < 1 &&
-                       settings.StartTime.Value > TimeSpan.Zero &&
-                       settings.EndTime.Value > TimeSpan.Zero;
+                       settings.StartTime.Value >= TimeSpan.Zero &&
+                       settings.EndTime.Value >= TimeSpan.Zero;
         }
 
         return false;

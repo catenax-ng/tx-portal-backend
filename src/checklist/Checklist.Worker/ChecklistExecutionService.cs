@@ -26,6 +26,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Framework.Async;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using System.Runtime.CompilerServices;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Worker;
 
@@ -70,10 +71,10 @@ public class ChecklistExecutionService
             try
             {
                 var checklistEntryData = outerLoopRepositories.GetInstance<IApplicationChecklistRepository>().GetChecklistDataOrderedByApplicationId().PreSortedGroupBy(x => x.ApplicationId).ConfigureAwait(false);
-                await foreach (var entryData in checklistEntryData.ConfigureAwait(false).WithCancellation(stoppingToken))
+                await foreach (var entryData in checklistEntryData.WithCancellation(stoppingToken).ConfigureAwait(false))
                 {
                     var applicationId = entryData.Key;
-                    var checklistEntries = await HandleChecklistProcessing(entryData, checklistCreationService, applicationId, checklistService, checklistRepositories, stoppingToken).ConfigureAwait(false);
+                    var checklistEntries = await HandleChecklistProcessing(entryData, checklistCreationService, applicationId, checklistService, checklistRepositories, stoppingToken).ToListAsync(stoppingToken).ConfigureAwait(false);
                     await HandleApplicationActivation(checklistEntries, applicationActivation, applicationId, checklistRepositories).ConfigureAwait(false);
                 }
                 _logger.LogInformation("Processed checklist items");
@@ -86,13 +87,13 @@ public class ChecklistExecutionService
         }
     }
 
-    private static async Task<List<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>> HandleChecklistProcessing(
-        IGrouping<Guid, (Guid ApplicationId, ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> entryData,
+    private static async IAsyncEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)> HandleChecklistProcessing(
+        IEnumerable<(Guid ApplicationId, ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> entryData,
         IChecklistCreationService checklistCreationService,
         Guid applicationId,
         IChecklistService checklistService,
         IPortalRepositories checklistRepositories,
-        CancellationToken stoppingToken)
+        [EnumeratorCancellation] CancellationToken stoppingToken)
     {
         var existingChecklistTypes = entryData.Select(e => e.TypeId);
         var checklistEntries = entryData.Select(e => (e.TypeId, e.StatusId))
@@ -102,16 +103,19 @@ public class ChecklistExecutionService
             var newlyCreatedEntries = await checklistCreationService
                 .CreateMissingChecklistItems(applicationId, existingChecklistTypes).ConfigureAwait(false);
             checklistEntries.AddRange(newlyCreatedEntries);
+            await checklistRepositories.SaveAsync().ConfigureAwait(false);
+            checklistRepositories.Clear();
         }
 
-        if (checklistEntries.Any(x => x.StatusId == ApplicationChecklistEntryStatusId.TO_DO))
+        await foreach (var (typeId, statusId, processed) in checklistService.ProcessChecklist(applicationId, checklistEntries, stoppingToken).ConfigureAwait(false))
         {
-            await checklistService.ProcessChecklist(applicationId, checklistEntries, stoppingToken).ConfigureAwait(false);
+            if (processed)
+            {
+                await checklistRepositories.SaveAsync().ConfigureAwait(false);
+                checklistRepositories.Clear();
+            }
+            yield return (typeId, statusId);
         }
-
-        await checklistRepositories.SaveAsync().ConfigureAwait(false);
-        checklistRepositories.Clear();
-        return checklistEntries;
     }
 
     private async Task HandleApplicationActivation(IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries,

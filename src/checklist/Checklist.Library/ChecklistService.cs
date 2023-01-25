@@ -28,6 +28,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Custodian.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.BusinessLogic;
 using System.Net;
+using System.Runtime.CompilerServices;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 
@@ -70,9 +71,9 @@ public class ChecklistService : IChecklistService
     }
 
     /// <inheritdoc />
-    public async Task ProcessChecklist(Guid applicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries, CancellationToken cancellationToken)
+    public async IAsyncEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId, bool Processed)> ProcessChecklist(Guid applicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        var stepExecutions = new Dictionary<ApplicationChecklistEntryTypeId, Func<Guid, Task>>
+        var stepExecutions = new Dictionary<ApplicationChecklistEntryTypeId, Func<Guid, Task<ApplicationChecklistEntryStatusId>>>
         {
             { ApplicationChecklistEntryTypeId.IDENTITY_WALLET, executionApplicationId => CreateWalletAsync(executionApplicationId, cancellationToken)},
             { ApplicationChecklistEntryTypeId.CLEARING_HOUSE, executionApplicationId => HandleClearingHouse(executionApplicationId, cancellationToken)},
@@ -81,36 +82,44 @@ public class ChecklistService : IChecklistService
 
         var possibleSteps = GetNextPossibleTypesWithMatchingStatus(checklistEntries.ToDictionary(x => x.TypeId, x => x.StatusId), new[] { ApplicationChecklistEntryStatusId.TO_DO });
         _logger.LogInformation("Found {StepsCount} possible steps for application {ApplicationId}", possibleSteps.Count(), applicationId);
-        foreach (var stepToExecute in possibleSteps)
+
+        foreach (var (stepToExecute, status) in checklistEntries)
         {
-            if (!stepExecutions.TryGetValue(stepToExecute, out var execution)) continue;
-
-            try
+            if (possibleSteps.Contains(stepToExecute) && stepExecutions.TryGetValue(stepToExecute, out var execution))
             {
-                _logger.LogInformation("Executing {StepToExecute} for application {ApplicationId}", stepToExecute,
-                    applicationId);
-                await execution.Invoke(applicationId).ConfigureAwait(false);
-                _logger.LogInformation("Executed step {StepToExecute} successfully executed for application {ApplicationId}", stepToExecute,
-                    applicationId);
-            }
-            catch (Exception ex)
-            {
-                var statusId = ApplicationChecklistEntryStatusId.FAILED;
-                if (ex is ServiceException { StatusCode: HttpStatusCode.ServiceUnavailable })
+                var newStatus = status;
+                try
                 {
-                    statusId = ApplicationChecklistEntryStatusId.TO_DO;
+                    _logger.LogInformation("Executing {StepToExecute} for application {ApplicationId}", stepToExecute,
+                        applicationId);
+                    newStatus = await execution.Invoke(applicationId).ConfigureAwait(false);
+                    _logger.LogInformation("Executed step {StepToExecute} successfully executed for application {ApplicationId}", stepToExecute,
+                        applicationId);
                 }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    newStatus = ApplicationChecklistEntryStatusId.FAILED;
+                    if (ex is ServiceException { StatusCode: HttpStatusCode.ServiceUnavailable })
+                    {
+                        newStatus = ApplicationChecklistEntryStatusId.TO_DO;
+                    }
 
-                _portalRepositories.GetInstance<IApplicationChecklistRepository>().AttachAndModifyApplicationChecklist(applicationId, ApplicationChecklistEntryTypeId.IDENTITY_WALLET,
-                        item => { 
-                            item.ApplicationChecklistEntryStatusId = statusId;
-                            item.Comment = ex.ToString(); 
-                        });
+                    _portalRepositories.GetInstance<IApplicationChecklistRepository>().AttachAndModifyApplicationChecklist(applicationId, ApplicationChecklistEntryTypeId.IDENTITY_WALLET,
+                            item => { 
+                                item.ApplicationChecklistEntryStatusId = newStatus;
+                                item.Comment = ex.ToString(); 
+                            });
+                }
+                yield return (stepToExecute, newStatus, true);
+            }
+            else
+            {
+                yield return (stepToExecute, status, false);                
             }
         }
     }
 
-    private async Task CreateWalletAsync(Guid applicationId, CancellationToken cancellationToken)
+    private async Task<ApplicationChecklistEntryStatusId> CreateWalletAsync(Guid applicationId, CancellationToken cancellationToken)
     {
         var message = await _custodianBusinessLogic.CreateWalletAsync(applicationId, cancellationToken).ConfigureAwait(false);
         _portalRepositories.GetInstance<IApplicationChecklistRepository>()
@@ -120,9 +129,10 @@ public class ChecklistService : IChecklistService
                     checklist.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE;
                     checklist.Comment = message;
                 });
+        return ApplicationChecklistEntryStatusId.DONE;
     }
 
-    private async Task HandleClearingHouse(Guid applicationId, CancellationToken cancellationToken)
+    private async Task<ApplicationChecklistEntryStatusId> HandleClearingHouse(Guid applicationId, CancellationToken cancellationToken)
     {
         var walletData = await _custodianBusinessLogic.GetWalletByBpnAsync(applicationId, cancellationToken);
         if (walletData == null || string.IsNullOrEmpty(walletData.Did))
@@ -137,9 +147,10 @@ public class ChecklistService : IChecklistService
                 {
                     checklist.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.IN_PROGRESS;
                 });
+        return ApplicationChecklistEntryStatusId.IN_PROGRESS;
     }
 
-    private async Task HandleSelfDescription(Guid applicationId, CancellationToken cancellationToken)
+    private async Task<ApplicationChecklistEntryStatusId> HandleSelfDescription(Guid applicationId, CancellationToken cancellationToken)
     {
         await _sdFactoryBusinessLogic
             .RegisterSelfDescriptionAsync(applicationId, cancellationToken)
@@ -150,6 +161,7 @@ public class ChecklistService : IChecklistService
                 {
                     checklist.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE;
                 });
+        return ApplicationChecklistEntryStatusId.DONE;
     }
 
     /// <summary>
