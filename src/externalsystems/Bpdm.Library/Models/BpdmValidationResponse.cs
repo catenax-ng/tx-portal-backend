@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 Microsoft and BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -18,17 +18,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Bpdm.Library.BusinessLogic;
+namespace Org.Eclipse.TractusX.Portal.Backend.Bpdm.Library.Models;
 
-public interface IBpdmBusinessLogic
-{
-    /// <summary>
-    /// Triggers the bpn data push
-    /// </summary>
-    /// <param name="applicationId">Id of the application</param>
-    /// <param name="iamUserId">Id of the current user</param>
-    /// <param name="cancellationToken">Cancellation Token</param>
-    /// <returns>Returns <c>true</c> if the service call was successful, otherwise <c>false</c></returns>
-    Task<bool> PushLegalEntity(Guid applicationId, string iamUserId, CancellationToken cancellationToken);
-    Task<bool> PullLegalEntity(Guid applicationId, CancellationToken cancellationToken);
-}
+public record BpdmValidationResponse(
+    string Status,
+    IEnumerable<string> Errors
+);

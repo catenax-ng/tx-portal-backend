@@ -61,7 +61,7 @@ public class ChecklistService : IChecklistService
     public async Task TriggerBpnDataPush(Guid applicationId, string iamUserId, CancellationToken cancellationToken)
     {
         await CheckCanRunStepAsync(applicationId, ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, new []{ ApplicationChecklistEntryStatusId.TO_DO, ApplicationChecklistEntryStatusId.FAILED }).ConfigureAwait(false);
-        await _bpdmBusinessLogic.TriggerBpnDataPush(applicationId, iamUserId, cancellationToken).ConfigureAwait(false);
+        await _bpdmBusinessLogic.PushLegalEntity(applicationId, iamUserId, cancellationToken).ConfigureAwait(false);
         
         _portalRepositories.GetInstance<IApplicationChecklistRepository>()
             .AttachAndModifyApplicationChecklist(applicationId, ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, checklist =>
@@ -78,6 +78,7 @@ public class ChecklistService : IChecklistService
             { ApplicationChecklistEntryTypeId.IDENTITY_WALLET, executionApplicationId => CreateWalletAsync(executionApplicationId, cancellationToken)},
             { ApplicationChecklistEntryTypeId.CLEARING_HOUSE, executionApplicationId => HandleClearingHouse(executionApplicationId, cancellationToken)},
             { ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, executionApplicationId => HandleSelfDescription(executionApplicationId, cancellationToken)},
+            { ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, executionApplicationId => HandleBpdmDataPull(executionApplicationId, cancellationToken)},
         };
 
         var possibleSteps = GetNextPossibleTypesWithMatchingStatus(checklistEntries.ToDictionary(x => x.TypeId, x => x.StatusId), new[] { ApplicationChecklistEntryStatusId.TO_DO });
@@ -162,6 +163,22 @@ public class ChecklistService : IChecklistService
                     checklist.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE;
                 });
         return ApplicationChecklistEntryStatusId.DONE;
+    }
+
+    private async Task<ApplicationChecklistEntryStatusId> HandleBpdmDataPull(Guid applicationId, CancellationToken cancellationToken)
+    {
+        var success = await _bpdmBusinessLogic.PullLegalEntity(applicationId,cancellationToken).ConfigureAwait(false);
+        if (success)
+        {
+            _portalRepositories.GetInstance<IApplicationChecklistRepository>()
+                .AttachAndModifyApplicationChecklist(applicationId, ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER,
+                    checklist =>
+                    {
+                        checklist.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE;
+                    });
+            return ApplicationChecklistEntryStatusId.DONE;
+        }
+        return ApplicationChecklistEntryStatusId.IN_PROGRESS;
     }
 
     /// <summary>

@@ -30,6 +30,19 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 /// <param name="AlphaCode2">AlphaCode 2 of the company.</param>
 /// <param name="ZipCode">Zipcode of the company's address.</param>
 /// <param name="City">City of the company's address.</param>
-/// <param name="Street">Street of the company's address.</param>
+/// <param name="StreetName">Street of the company's address.</param>
 /// <param name="IsUserInCompany"><c>true</c> if the user is part of the company, otherwise <c>false</c>.</param>
-public record BpdmData(CompanyApplicationStatusId ApplicationStatusId, string CompanyName, string AlphaCode2, string? ZipCode, string City, string Street, bool IsUserInCompany);
+public record BpdmData(
+    CompanyApplicationStatusId ApplicationStatusId,
+    Guid CompanyId,
+    string CompanyName,
+    string? ShortName,
+    string? BusinessPartnerNumber,
+    string? Alpha2Code,
+    string? ZipCode,
+    string? City,
+    string? StreetName,
+    string? StreetNumber,
+    string? Region,
+    IEnumerable<(BpdmIdentifierId UniqueIdentifierId, string Value)> Identifiers
+);

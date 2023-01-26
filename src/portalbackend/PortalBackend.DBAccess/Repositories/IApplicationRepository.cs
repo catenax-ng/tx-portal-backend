@@ -83,4 +83,13 @@ public interface IApplicationRepository
     /// <param name="applicationId">The application id</param>
     /// <returns>The company id</returns>
     Task<Guid> GetCompanyIdForSubmittedApplicationId(Guid applicationId);
+
+    /// <summary>
+    /// Gets the bpdm data for the given application
+    /// </summary>
+    /// <param name="iamUserId">Id of the user</param>
+    /// <param name="applicationId">Id of the application</param>
+    /// <returns>Returns the bpdm data</returns>
+    Task<(bool IsValidApplicationId, BpdmData? BpdmData, bool IsUserInCompany)> GetBpdmDataForApplicationAsync(string iamUserId, Guid applicationId);
+    Task<BpdmData?> GetBpdmDataForApplicationAsync(Guid applicationId);
 }

@@ -37,30 +37,102 @@ public class BpdmBusinessLogic : IBpdmBusinessLogic
         _bpdmService = bpdmService;
     }
 
-    public async Task<bool> TriggerBpnDataPush(Guid applicationId, string iamUserId, CancellationToken cancellationToken)
+    public async Task<bool> PushLegalEntity(Guid applicationId, string iamUserId, CancellationToken cancellationToken)
     {
-        var data = await _portalRepositories.GetInstance<ICompanyRepository>().GetBpdmDataForApplicationAsync(iamUserId, applicationId).ConfigureAwait(false);
-        if (data is null)
+        var (isValidApplicationId, data, isUserInCompany) = await _portalRepositories.GetInstance<IApplicationRepository>().GetBpdmDataForApplicationAsync(iamUserId, applicationId).ConfigureAwait(false);
+        if (!isValidApplicationId)
         {
             throw new NotFoundException($"Application {applicationId} does not exists.");
         }
 
-        if (!data.IsUserInCompany)
+        if (!isUserInCompany)
         {
             throw new ForbiddenException($"User is not allowed to trigger Bpn Data Push for the application {applicationId}");
         }
-        
+
+        if (data == null)
+        {
+            throw new UnexpectedConditionException($"BpdmData should never be null here");
+        }
+
         if (data.ApplicationStatusId != CompanyApplicationStatusId.SUBMITTED)
         {
-            throw new ArgumentException($"CompanyApplication {applicationId} is not in status SUBMITTED", nameof(applicationId));
+            throw new ConflictException($"CompanyApplication {applicationId} is not in status SUBMITTED");
         }
 
-        if (string.IsNullOrWhiteSpace(data.ZipCode))
+        if (!string.IsNullOrWhiteSpace(data.BusinessPartnerNumber))
         {
-            throw new ConflictException("ZipCode must not be empty");
+            throw new ConflictException($"BusinessPartnerNumber is already set");
         }
 
-        var bpdmTransferData = new BpdmTransferData(data.CompanyName, data.AlphaCode2, data.ZipCode, data.City, data.Street);
-        return await _bpdmService.TriggerBpnDataPush(bpdmTransferData, cancellationToken).ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(data.Alpha2Code))
+        {
+            throw new ConflictException("Alpha2Code must not be empty");
+        }
+
+        if (string.IsNullOrWhiteSpace(data.City))
+        {
+            throw new ConflictException("City must not be empty");
+        }
+
+        if (string.IsNullOrWhiteSpace(data.StreetName))
+        {
+            throw new ConflictException("StreetName must not be empty");
+        }
+
+        var bpdmTransferData = new BpdmTransferData(
+            data.CompanyId,
+            data.CompanyName,
+            data.ShortName,
+            data.Alpha2Code,
+            data.ZipCode,
+            data.City,
+            data.StreetName,
+            data.StreetNumber,
+            data.Region,
+            data.Identifiers);
+        return await _bpdmService.PutInputLegalEntity(bpdmTransferData, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<bool> PullLegalEntity(Guid applicationId, CancellationToken cancellationToken)
+    {
+        var data = await _portalRepositories.GetInstance<IApplicationRepository>().GetBpdmDataForApplicationAsync(applicationId).ConfigureAwait(false);
+        
+        if (data == null)
+        {
+            throw new ConflictException($"CompanyApplication {applicationId} does not exist");
+        }
+
+        if (data.ApplicationStatusId != CompanyApplicationStatusId.SUBMITTED)
+        {
+            throw new ConflictException($"CompanyApplication {applicationId} is not in status SUBMITTED");
+        }
+
+        var legalEntity = await _bpdmService.FetchInputLegalEntity(data.CompanyId, cancellationToken).ConfigureAwait(false);
+
+        if (legalEntity == null)
+        {
+            throw new ConflictException($"legal-entity not found in bpdm for companyId {data.CompanyId}");
+        }
+
+        if (string.IsNullOrEmpty(legalEntity.Bpn))
+        {
+            return false;
+        }
+
+        // TODO: either throw error if address- or identifier-data returned by bpdm does not match what is stored in portal-db or modify in portal-db based on bpdm-response
+
+        _portalRepositories.GetInstance<ICompanyRepository>().AttachAndModifyCompany(
+            data.CompanyId,
+            company => 
+            {
+                company.BusinessPartnerNumber = data.BusinessPartnerNumber;
+            },
+            company =>
+            {
+                company.BusinessPartnerNumber = legalEntity.Bpn;
+            });
+
+        return true;
     }
 }

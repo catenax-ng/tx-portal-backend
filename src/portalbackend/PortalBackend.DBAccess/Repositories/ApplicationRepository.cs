@@ -366,4 +366,59 @@ public class ApplicationRepository : IApplicationRepository
                  ca.ApplicationStatusId == CompanyApplicationStatusId.SUBMITTED)
              .Select(ca => ca.CompanyId)
              .SingleOrDefaultAsync();
+
+    /// <inheritdoc />
+    public Task<(bool IsValidApplicationId, BpdmData? BpdmData, bool IsUserInCompany)> GetBpdmDataForApplicationAsync(string iamUserId, Guid applicationId) =>
+        _dbContext.CompanyApplications.AsNoTracking()
+            .Where(x => x.Id == applicationId)
+            .Select(x => new {
+                ApplicationStatusId = x.ApplicationStatusId,
+                Company = x.Company,
+                IsUserInCompany = x.Company!.CompanyUsers.Any(cu => cu.IamUser!.UserEntityId == iamUserId)
+            })
+            .Select(x => new ValueTuple<bool,BpdmData?,bool>(
+                true,
+                x.IsUserInCompany
+                    ? new BpdmData(
+                        x.ApplicationStatusId,
+                        x.Company!.Id,
+                        x.Company.Name,
+                        x.Company.Shortname,
+                        x.Company.BusinessPartnerNumber,
+                        x.Company.Address!.CountryAlpha2Code,
+                        x.Company.Address.Zipcode,
+                        x.Company.Address.City,
+                        x.Company.Address.Streetname,
+                        x.Company.Address.Streetnumber,
+                        x.Company.Address.Region,
+                        x.Company.CompanyIdentifiers.Join(
+                            x.Company.Address.Country!.CountryAssignedIdentifiers.Where(cai => cai.BpdmIdentifierId != null),
+                            companyIdentifier => companyIdentifier.UniqueIdentifierId,
+                            countryAssignedIdentifier => countryAssignedIdentifier.UniqueIdentifierId,
+                            (companyIdentifier,countryAssignedIdentifier) => new ValueTuple<BpdmIdentifierId,string>(countryAssignedIdentifier.BpdmIdentifierId!.Value, companyIdentifier.Value)))
+                    : (BpdmData?)null,
+                x.IsUserInCompany))
+            .SingleOrDefaultAsync();
+
+    public Task<BpdmData?> GetBpdmDataForApplicationAsync(Guid applicationId) =>
+        _dbContext.CompanyApplications.AsNoTracking()
+            .Where(x => x.Id == applicationId)
+            .Select(x => new BpdmData(
+                    x.ApplicationStatusId,
+                    x.CompanyId,
+                    x.Company!.Name,
+                    x.Company.Shortname,
+                    x.Company.BusinessPartnerNumber,
+                    x.Company.Address!.CountryAlpha2Code,
+                    x.Company.Address.Zipcode,
+                    x.Company.Address.City,
+                    x.Company.Address.Streetname,
+                    x.Company.Address.Streetnumber,
+                    x.Company.Address.Region,
+                    x.Company.CompanyIdentifiers.Join(
+                        x.Company.Address.Country!.CountryAssignedIdentifiers.Where(cai => cai.BpdmIdentifierId != null),
+                        companyIdentifier => companyIdentifier.UniqueIdentifierId,
+                        countryAssignedIdentifier => countryAssignedIdentifier.UniqueIdentifierId,
+                        (companyIdentifier,countryAssignedIdentifier) => new ValueTuple<BpdmIdentifierId,string>(countryAssignedIdentifier.BpdmIdentifierId!.Value, companyIdentifier.Value))))
+            .SingleOrDefaultAsync();
 }

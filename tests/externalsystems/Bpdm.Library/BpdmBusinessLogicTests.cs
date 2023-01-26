@@ -39,7 +39,7 @@ public class BpdmBusinessLogicTests
     private const string ValidCompanyName = "valid company";
 
     private readonly IFixture _fixture;
-    private readonly ICompanyRepository _companyRepository;
+    private readonly IApplicationRepository _applicationRepository;
     
     private readonly IBpdmService _bpdmService;
     
@@ -53,27 +53,27 @@ public class BpdmBusinessLogicTests
         _fixture.Behaviors.Add(new OmitOnRecursionBehavior());
 
         var portalRepository = A.Fake<IPortalRepositories>();
-        _companyRepository = A.Fake<ICompanyRepository>();
+        _applicationRepository = A.Fake<IApplicationRepository>();
         _bpdmService = A.Fake<IBpdmService>();
 
-        A.CallTo(() => portalRepository.GetInstance<ICompanyRepository>()).Returns(_companyRepository);
+        A.CallTo(() => portalRepository.GetInstance<IApplicationRepository>()).Returns(_applicationRepository);
 
         _logic = new BpdmBusinessLogic(portalRepository, _bpdmService);
     }
 
     #endregion
 
-    #region Trigger BpnDataPush
+    #region Trigger PushLegalEntity
 
     [Fact]
-    public async Task TriggerBpnDataPush_WithoutExistingApplication_ThrowsNotFoundException()
+    public async Task PushLegalEntity_WithoutExistingApplication_ThrowsNotFoundException()
     {
         // Arrange
         var applicationId = Guid.NewGuid();
         SetupFakesForTrigger();
 
         // Act
-        async Task Act() => await _logic.TriggerBpnDataPush(applicationId, IamUserId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _logic.PushLegalEntity(applicationId, IamUserId, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
@@ -81,14 +81,14 @@ public class BpdmBusinessLogicTests
     }
 
     [Fact]
-    public async Task TriggerBpnDataPush_WithInvalidUser_ThrowsForbiddenException()
+    public async Task PushLegalEntity_WithInvalidUser_ThrowsForbiddenException()
     {
         // Arrange
         var user = Guid.NewGuid().ToString();
         SetupFakesForTrigger();
 
         // Act
-        async Task Act() => await _logic.TriggerBpnDataPush(IdWithBpn, user, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _logic.PushLegalEntity(IdWithBpn, user, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ForbiddenException>(Act);
@@ -96,45 +96,45 @@ public class BpdmBusinessLogicTests
     }
 
     [Fact]
-    public async Task TriggerBpnDataPush_WithCreatedApplication_ThrowsArgumentException()
+    public async Task PushLegalEntity_WithCreatedApplication_ThrowsArgumentException()
     {
         // Arrange
         SetupFakesForTrigger();
 
         // Act
-        async Task Act() => await _logic.TriggerBpnDataPush(IdWithStateCreated, IamUserId, CancellationToken.None).ConfigureAwait(false);
-
-        // Assert
-        var ex = await Assert.ThrowsAsync<ArgumentException>(Act);
-        ex.Message.Should().Be($"CompanyApplication {IdWithStateCreated} is not in status SUBMITTED (Parameter 'applicationId')");
-    }
-
-    [Fact]
-    public async Task TriggerBpnDataPush_WithEmptyZipCode_ThrowsConflictException()
-    {
-        // Arrange
-        SetupFakesForTrigger();
-
-        // Act
-        async Task Act() => await _logic.TriggerBpnDataPush(IdWithoutZipCode, IamUserId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _logic.PushLegalEntity(IdWithStateCreated, IamUserId, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
-        ex.Message.Should().Be("ZipCode must not be empty");
+        ex.Message.Should().Be($"CompanyApplication {IdWithStateCreated} is not in status SUBMITTED");
     }
 
     [Fact]
-    public async Task TriggerBpnDataPush_WithValidData_CallsExpected()
+    public async Task PushLegalEntity_WithEmptyZipCode_ThrowsConflictException()
     {
         // Arrange
         SetupFakesForTrigger();
 
         // Act
-        var result = await _logic.TriggerBpnDataPush(IdWithBpn, IamUserId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _logic.PushLegalEntity(IdWithoutZipCode, IamUserId, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be("Alpha2Code must not be empty");
+    }
+
+    [Fact]
+    public async Task PushLegalEntity_WithValidData_CallsExpected()
+    {
+        // Arrange
+        SetupFakesForTrigger();
+
+        // Act
+        var result = await _logic.PushLegalEntity(IdWithBpn, IamUserId, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         result.Should().BeTrue();
-        A.CallTo(() => _bpdmService.TriggerBpnDataPush(
+        A.CallTo(() => _bpdmService.PutInputLegalEntity(
                 A<BpdmTransferData>.That.Matches(x => x.ZipCode == "50668" && x.CompanyName == ValidCompanyName),
                 A<CancellationToken>._))
             .MustHaveHappenedOnceExactly();
@@ -148,23 +148,23 @@ public class BpdmBusinessLogicTests
     {
         var validData = _fixture.Build<BpdmData>()
             .With(x => x.ApplicationStatusId, CompanyApplicationStatusId.SUBMITTED)
-            .With(x => x.IsUserInCompany, true)
+            .With(x => x.BusinessPartnerNumber, (string?)null)
             .With(x => x.ZipCode, "50668")
             .With(x => x.CompanyName, ValidCompanyName)
             .Create();
 
-        A.CallTo(() => _companyRepository.GetBpdmDataForApplicationAsync(A<string>.That.Not.Matches(x => x == IamUserId), IdWithBpn))
-            .ReturnsLazily(() => new BpdmData(CompanyApplicationStatusId.SUBMITTED, null!, null!, null!, null!, null!, false));
-        A.CallTo(() => _companyRepository.GetBpdmDataForApplicationAsync(IamUserId, A<Guid>.That.Matches(x => x == IdWithBpn)))
-            .ReturnsLazily(() => validData);
-        A.CallTo(() => _companyRepository.GetBpdmDataForApplicationAsync(IamUserId, A<Guid>.That.Matches(x => x == IdWithStateCreated)))
-            .ReturnsLazily(() => new BpdmData(CompanyApplicationStatusId.CREATED, ValidCompanyName, null!, null!, null!, null!, true));
-        A.CallTo(() => _companyRepository.GetBpdmDataForApplicationAsync(IamUserId, A<Guid>.That.Matches(x => x == IdWithoutZipCode)))
-            .ReturnsLazily(() => new BpdmData(CompanyApplicationStatusId.SUBMITTED, ValidCompanyName, null!, null!, null!, null!, true));
-        A.CallTo(() => _companyRepository.GetBpdmDataForApplicationAsync(IamUserId, A<Guid>.That.Not.Matches(x => x == IdWithStateCreated || x == IdWithBpn || x == IdWithoutZipCode)))
-            .ReturnsLazily(() => (BpdmData?)null);
+        A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(A<string>.That.Not.Matches(x => x == IamUserId), IdWithBpn))
+            .Returns((true, (BpdmData?)null, false));
+        A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(IamUserId, A<Guid>.That.Matches(x => x == IdWithBpn)))
+            .Returns((true, validData, true));
+        A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(IamUserId, A<Guid>.That.Matches(x => x == IdWithStateCreated)))
+            .Returns((true, new BpdmData(CompanyApplicationStatusId.CREATED, Guid.Empty, ValidCompanyName, null!, null, null, null, null, null, null, null, null!), true));
+        A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(IamUserId, A<Guid>.That.Matches(x => x == IdWithoutZipCode)))
+            .Returns((true, new BpdmData(CompanyApplicationStatusId.SUBMITTED, Guid.Empty, ValidCompanyName, null!, null, null, null, null, null, null, null, null!), true));
+        A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(IamUserId, A<Guid>.That.Not.Matches(x => x == IdWithStateCreated || x == IdWithBpn || x == IdWithoutZipCode)))
+            .Returns((false, (BpdmData?)null, false));
 
-        A.CallTo(() => _bpdmService.TriggerBpnDataPush(
+        A.CallTo(() => _bpdmService.PutInputLegalEntity(
                 A<BpdmTransferData>.That.Matches(x => x.CompanyName == ValidCompanyName && x.ZipCode == "50668"),
                 A<CancellationToken>._))
             .ReturnsLazily(() => true);

@@ -243,10 +243,10 @@ public class RegistrationBusinessLogicTest
         var data = _fixture
             .Build<BpdmData>()
             .With(x => x.ApplicationStatusId, CompanyApplicationStatusId.SUBMITTED)
-            .With(x => x.IsUserInCompany, true)
+            .With(x => x.BusinessPartnerNumber, (string?)null)
             .Create();
-        A.CallTo(() => _companyRepository.GetBpdmDataForApplicationAsync(IamUserId, ApplicationId))
-            .ReturnsLazily(() => data);
+        A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(IamUserId, ApplicationId))
+            .Returns((true, data, true));
 
         await _logic.TriggerBpnDataPushAsync(IamUserId, ApplicationId, CancellationToken.None).ConfigureAwait(false);
 
