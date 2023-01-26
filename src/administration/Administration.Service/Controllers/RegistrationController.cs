@@ -232,4 +232,28 @@ public class RegistrationController : ControllerBase
         await _logic.ProcessClearinghouseResponseAsync(bpn, responseData, cancellationToken).ConfigureAwait(false);
         return NoContent();
     }
+    
+    /// <summary>
+    /// Triggers the next possible checklist step or retriggers the last failed step 
+    /// </summary>
+    /// <param name="applicationId" example="">Id of the application that should be triggered</param>
+    /// <param name="checklistEntryTypeId">Response data from clearinghouse</param>
+    /// <param name="cancellationToken">Cancellation Token</param>
+    /// <returns>NoContent</returns>
+    /// Example: POST: api/administration/registration/application/4f0146c6-32aa-4bb1-b844-df7e8babdcb4/trigger <br />
+    /// Example: POST: api/administration/registration/application/4f0146c6-32aa-4bb1-b844-df7e8babdcb4/trigger?checklistEntryTypeId=CLEARING_HOUSE <br />
+    /// <response code="200">the result as a boolean.</response>
+    /// <response code="400">Either the CompanyApplication is not in status SUBMITTED or the next step can't automatically triggered / retriggered.</response>
+    /// <response code="404">No application found for the applicationId.</response>
+    [HttpPost]
+    [Authorize(Roles = "approve_new_partner")]
+    [Route("application/{applicationId}/trigger")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<NoContentResult> TriggerChecklist([FromRoute] Guid applicationId, CancellationToken cancellationToken, [FromRoute] ApplicationChecklistEntryTypeId? checklistEntryTypeId = null)
+    {
+        await _logic.TriggerChecklistAsync(applicationId, checklistEntryTypeId, cancellationToken).ConfigureAwait(false);
+        return NoContent();
+    }
 }

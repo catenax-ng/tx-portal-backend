@@ -165,7 +165,7 @@ public class ChecklistServiceTests
         SetupForCreateWallet();
 
         // Act
-        await _service.ProcessChecklist(applicationId, checklist, CancellationToken.None).ToListAsync().ConfigureAwait(false);
+        await _service.ProcessChecklist(applicationId, checklist, null, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _applicationChecklistRepository.AttachAndModifyApplicationChecklist(A<Guid>._, A<ApplicationChecklistEntryTypeId>._, A<Action<ApplicationChecklistEntry>>._)).MustNotHaveHappened();
@@ -193,7 +193,7 @@ public class ChecklistServiceTests
         SetupForCreateWallet();
 
         // Act
-        await _service.ProcessChecklist(applicationId, checklist, CancellationToken.None).ToListAsync().ConfigureAwait(false);
+        await _service.ProcessChecklist(applicationId, checklist, null, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _applicationChecklistRepository.AttachAndModifyApplicationChecklist(A<Guid>._, A<ApplicationChecklistEntryTypeId>._, A<Action<ApplicationChecklistEntry>>._)).MustNotHaveHappened();
@@ -221,7 +221,7 @@ public class ChecklistServiceTests
         SetupForCreateWallet(entry);
 
         // Act
-        await _service.ProcessChecklist(IdWithFailingCustodian, checklist, CancellationToken.None).ToListAsync().ConfigureAwait(false);
+        await _service.ProcessChecklist(IdWithFailingCustodian, checklist, null, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _custodianBusinessLogic.CreateWalletAsync(A<Guid>._, A<CancellationToken>._))
@@ -253,7 +253,7 @@ public class ChecklistServiceTests
         SetupForCreateWallet(entry);
 
         // Act
-        await _service.ProcessChecklist(IdWithCustodianUnavailable, checklist, CancellationToken.None).ToListAsync().ConfigureAwait(false);
+        await _service.ProcessChecklist(IdWithCustodianUnavailable, checklist, null, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _custodianBusinessLogic.CreateWalletAsync(A<Guid>._, A<CancellationToken>._))
@@ -285,7 +285,7 @@ public class ChecklistServiceTests
         SetupForCreateWallet(entry);
 
         // Act
-        await _service.ProcessChecklist(IdWithBpn, checklist, CancellationToken.None).ToListAsync().ConfigureAwait(false);
+        await _service.ProcessChecklist(IdWithBpn, checklist, null, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _custodianBusinessLogic.CreateWalletAsync(IdWithBpn, A<CancellationToken>._))
@@ -321,7 +321,7 @@ public class ChecklistServiceTests
         SetupForClearinghouse();
 
         // Act
-        await _service.ProcessChecklist(applicationId, checklist, CancellationToken.None).ToListAsync().ConfigureAwait(false);
+        await _service.ProcessChecklist(applicationId, checklist, null, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _applicationChecklistRepository.AttachAndModifyApplicationChecklist(A<Guid>._, A<ApplicationChecklistEntryTypeId>._, A<Action<ApplicationChecklistEntry>>._)).MustNotHaveHappened();
@@ -349,7 +349,7 @@ public class ChecklistServiceTests
         SetupForClearinghouse(entry);
 
         // Act
-        await _service.ProcessChecklist(IdWithoutBpn, checklist, CancellationToken.None).ToListAsync().ConfigureAwait(false);
+        await _service.ProcessChecklist(IdWithoutBpn, checklist, null, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _applicationChecklistRepository.AttachAndModifyApplicationChecklist(A<Guid>._, A<ApplicationChecklistEntryTypeId>._, A<Action<ApplicationChecklistEntry>>._)).MustHaveHappenedOnceExactly();
@@ -379,7 +379,7 @@ public class ChecklistServiceTests
         SetupForClearinghouse(entry);
 
         // Act
-        await _service.ProcessChecklist(IdWithBpn, checklist, CancellationToken.None).ToListAsync().ConfigureAwait(false);
+        await _service.ProcessChecklist(IdWithBpn, checklist, null, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _custodianBusinessLogic.GetWalletByBpnAsync(IdWithBpn, A<CancellationToken>._))
@@ -417,7 +417,7 @@ public class ChecklistServiceTests
         SetupForClearinghouse();
 
         // Act
-        await _service.ProcessChecklist(applicationId, checklist, CancellationToken.None).ToListAsync().ConfigureAwait(false);
+        await _service.ProcessChecklist(applicationId, checklist, null, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _applicationChecklistRepository.AttachAndModifyApplicationChecklist(A<Guid>._, A<ApplicationChecklistEntryTypeId>._, A<Action<ApplicationChecklistEntry>>._)).MustNotHaveHappened();
@@ -447,7 +447,7 @@ public class ChecklistServiceTests
             .ReturnsLazily(() => Task.CompletedTask);
 
         // Act
-        await _service.ProcessChecklist(IdWithBpn, checklist, CancellationToken.None).ToListAsync().ConfigureAwait(false);
+        await _service.ProcessChecklist(IdWithBpn, checklist, null, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _sdFactoryBusinessLogic.RegisterSelfDescriptionAsync(IdWithBpn, A<CancellationToken>._))
@@ -457,6 +457,132 @@ public class ChecklistServiceTests
         A.CallTo(() => _portalRepositories.SaveAsync()).MustNotHaveHappened();
         entry.Comment.Should().BeNull();
         entry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.DONE);
+    }
+
+    #endregion
+    
+    #region GetNextPossibleTypesWithMatchingStatus
+
+    [Fact]
+    public void GetNextPossibleTypesWithMatchingStatus_WithAllTodo_ReturnsBpnAndRegistration()
+    {
+        // Arrange
+        var checklist = new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
+        {
+            { ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.TO_DO },
+            { ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.TO_DO },
+            { ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.TO_DO },
+            { ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO },
+            { ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO }
+        };
+
+        // Act
+        var result = ChecklistService.GetNextPossibleTypesWithMatchingStatus(checklist, new[]
+        {
+            ApplicationChecklistEntryStatusId.TO_DO
+        });
+
+        // Assert
+        result.Should().HaveCount(2);
+        result.Should()
+            .Contain(ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER)
+            .And
+            .Contain(ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION);
+    }
+
+    [Fact]
+    public void GetNextPossibleTypesWithMatchingStatus_WithRegistrationAndBpnDone_ReturnsIdentity()
+    {
+        // Arrange
+        var checklist = new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
+        {
+            { ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE },
+            { ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.DONE },
+            { ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.TO_DO },
+            { ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO },
+            { ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO }
+        };
+
+        // Act
+        var result = ChecklistService.GetNextPossibleTypesWithMatchingStatus(checklist, new[]
+        {
+            ApplicationChecklistEntryStatusId.TO_DO
+        });
+
+        // Assert
+        result.Should().HaveCount(1);
+        result.Should().Contain(ApplicationChecklistEntryTypeId.IDENTITY_WALLET);
+    }
+
+    [Fact]
+    public void GetNextPossibleTypesWithMatchingStatus_WithIdentityDone_ReturnsClearingHouse()
+    {
+        // Arrange
+        var checklist = new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
+        {
+            { ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE },
+            { ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.DONE },
+            { ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.DONE },
+            { ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO },
+            { ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO }
+        };
+
+        // Act
+        var result = ChecklistService.GetNextPossibleTypesWithMatchingStatus(checklist, new[]
+        {
+            ApplicationChecklistEntryStatusId.TO_DO
+        });
+
+        // Assert
+        result.Should().HaveCount(1);
+        result.Should().Contain(ApplicationChecklistEntryTypeId.CLEARING_HOUSE);
+    }
+
+    [Fact]
+    public void GetNextPossibleTypesWithMatchingStatus_WithClearingHouse_ReturnsSelfDescription()
+    {
+        // Arrange
+        var checklist = new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
+        {
+            { ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE },
+            { ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.DONE },
+            { ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.DONE },
+            { ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.DONE },
+            { ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO }
+        };
+
+        // Act
+        var result = ChecklistService.GetNextPossibleTypesWithMatchingStatus(checklist, new[]
+        {
+            ApplicationChecklistEntryStatusId.TO_DO
+        });
+
+        // Assert
+        result.Should().HaveCount(1);
+        result.Should().Contain(ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP);
+    }
+
+    [Fact]
+    public void GetNextPossibleTypesWithMatchingStatus_WithAllDone_ReturnsEmpty()
+    {
+        // Arrange
+        var checklist = new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
+        {
+            { ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE },
+            { ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.DONE },
+            { ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.DONE },
+            { ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.DONE },
+            { ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.DONE }
+        };
+
+        // Act
+        var result = ChecklistService.GetNextPossibleTypesWithMatchingStatus(checklist, new[]
+        {
+            ApplicationChecklistEntryStatusId.TO_DO
+        });
+
+        // Assert
+        result.Should().BeEmpty();
     }
 
     #endregion

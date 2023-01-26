@@ -490,6 +490,176 @@ public class RegistrationBusinessLogicTest
     }
 
     #endregion
+
+    #region TriggerChecklistAsync
+
+    [Fact]
+    public async Task TriggerChecklist_WithNotAutomatedStep_ThrowsConflictException()
+    {
+        // Arrange
+        var checklistEntryTypeId = ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER;
+
+        // Act
+        async Task Act() => await _logic.TriggerChecklistAsync(IdWithBpn, checklistEntryTypeId, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be($"The {checklistEntryTypeId} is currently not automated and can't therefore be triggered");
+    }
+
+    [Fact]
+    public async Task TriggerChecklist_WithExistingApplication_ThrowsNotFoundException()
+    {
+        // Arrange
+        var applicationId = Guid.NewGuid();
+        A.CallTo(() => _applicationRepository.GetApplicationStatusWithChecklistDataAsync(applicationId))
+            .ReturnsLazily(() => new ValueTuple<CompanyApplicationStatusId, IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>());
+
+        // Act
+        async Task Act() => await _logic.TriggerChecklistAsync(applicationId, null, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
+        ex.Message.Should().Be($"Application {applicationId} does not exists");
+    }
+
+    [Fact]
+    public async Task TriggerChecklist_WithNotSubmitted_ThrowsConflictException()
+    {
+        // Arrange
+        A.CallTo(() => _applicationRepository.GetApplicationStatusWithChecklistDataAsync(IdWithStateCreated))
+            .ReturnsLazily(() => new ValueTuple<CompanyApplicationStatusId, IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>(CompanyApplicationStatusId.CREATED, new List<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>()));
+
+        // Act
+        async Task Act() => await _logic.TriggerChecklistAsync(IdWithStateCreated, null, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be($"Application {IdWithStateCreated} is not SUBMITTED");
+    }
+
+    [Fact]
+    public async Task TriggerChecklist_WithOnlyNotAutomatedSteps_ThrowsConflictException()
+    {
+        // Arrange
+        var checklistEntries = new[]
+        {
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.TO_DO),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.TO_DO),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.DONE),
+        };
+        A.CallTo(() => _applicationRepository.GetApplicationStatusWithChecklistDataAsync(IdWithBpn))
+            .ReturnsLazily(() => new ValueTuple<CompanyApplicationStatusId, IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>(CompanyApplicationStatusId.SUBMITTED, checklistEntries));
+
+        // Act
+        async Task Act() => await _logic.TriggerChecklistAsync(IdWithBpn, null, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be("No automatic processable step found");
+    }
+
+    [Fact]
+    public async Task TriggerChecklist_WithNextPossibleStepIsNotAutomated_ThrowsConflictException()
+    {
+        // Arrange
+        var checklistEntries = new[]
+        {
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.TO_DO),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.TO_DO),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.TO_DO),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO),
+        };
+        A.CallTo(() => _applicationRepository.GetApplicationStatusWithChecklistDataAsync(IdWithBpn))
+            .ReturnsLazily(() => new ValueTuple<CompanyApplicationStatusId, IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>(CompanyApplicationStatusId.SUBMITTED, checklistEntries));
+
+        // Act
+        async Task Act() => await _logic.TriggerChecklistAsync(IdWithBpn, null, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be("No possible steps to proceed found");
+    }
+
+    [Fact]
+    public async Task TriggerChecklist_WithAllStepsDone_ReturnsWithoutCalling()
+    {
+        // Arrange
+        var checklistEntries = new[]
+        {
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.DONE),
+        };
+        A.CallTo(() => _applicationRepository.GetApplicationStatusWithChecklistDataAsync(IdWithBpn))
+            .ReturnsLazily(() => new ValueTuple<CompanyApplicationStatusId, IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>(CompanyApplicationStatusId.SUBMITTED, checklistEntries));
+
+        // Act
+        await _logic.TriggerChecklistAsync(IdWithBpn, null, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        A.CallTo(() => _checklistService.ProcessChecklist(IdWithBpn, checklistEntries, null, A<CancellationToken>._))
+            .MustNotHaveHappened();
+        A.CallTo(() => _portalRepositories.SaveAsync())
+            .MustNotHaveHappened();
+    }
+
+    [Fact]
+    public async Task TriggerChecklist_WithNextStepIsAutomated_ProcessesChecklist()
+    {
+        // Arrange
+        var checklistEntries = new[]
+        {
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.TO_DO),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO),
+        };
+        A.CallTo(() => _applicationRepository.GetApplicationStatusWithChecklistDataAsync(IdWithBpn))
+            .ReturnsLazily(() => new ValueTuple<CompanyApplicationStatusId, IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>(CompanyApplicationStatusId.SUBMITTED, checklistEntries));
+
+        // Act
+        await _logic.TriggerChecklistAsync(IdWithBpn, null, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        A.CallTo(() => _checklistService.ProcessChecklist(IdWithBpn, checklistEntries, null, A<CancellationToken>._))
+            .MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.SaveAsync())
+            .MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task TriggerChecklist_WithFailedNextStep_ProcessesChecklist()
+    {
+        // Arrange
+        var checklistEntries = new[]
+        {
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.FAILED),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO),
+            new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO),
+        };
+        A.CallTo(() => _applicationRepository.GetApplicationStatusWithChecklistDataAsync(IdWithBpn))
+            .ReturnsLazily(() => new ValueTuple<CompanyApplicationStatusId, IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>(CompanyApplicationStatusId.SUBMITTED, checklistEntries));
+
+        // Act
+        await _logic.TriggerChecklistAsync(IdWithBpn, null, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        A.CallTo(() => _checklistService.ProcessChecklist(IdWithBpn, checklistEntries, null, A<CancellationToken>._))
+            .MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.SaveAsync())
+            .MustHaveHappenedOnceExactly();
+    }
+
+    #endregion
     
     #region Setup
 

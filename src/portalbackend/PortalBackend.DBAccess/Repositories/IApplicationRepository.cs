@@ -78,9 +78,9 @@ public interface IApplicationRepository
     Task<(Guid ApplicationId, ApplicationChecklistEntryStatusId StatusId)> GetSubmittedIdAndClearinghouseChecklistStatusByBpn(string bpn);
 
     /// <summary>
-    /// Gets the company id by the application id for submitted applications
+    /// Gets the application status and all checklist entries for the given application
     /// </summary>
-    /// <param name="applicationId">The application id</param>
-    /// <returns>The company id</returns>
-    Task<Guid> GetCompanyIdForSubmittedApplicationId(Guid applicationId);
+    /// <param name="applicationId">Id of the application to get the data for</param>
+    /// <returns>Returns the application status and all related checklist entries</returns>
+    Task<(CompanyApplicationStatusId ApplicationStatusId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)>ChecklistEntries)> GetApplicationStatusWithChecklistDataAsync(Guid applicationId);
 }

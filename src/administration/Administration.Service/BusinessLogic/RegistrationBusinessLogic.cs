@@ -283,6 +283,72 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
         _clearinghouseBusinessLogic.ProcessClearinghouseResponseAsync(bpn, data, cancellationToken);
 
     /// <inheritdoc />
+    public async Task TriggerChecklistAsync(Guid applicationId, ApplicationChecklistEntryTypeId? checklistEntryTypeId, CancellationToken cancellationToken)
+    {
+        if (checklistEntryTypeId.HasValue && !checklistEntryTypeId.Value.IsAutomated())
+        {
+            throw new ConflictException($"The {checklistEntryTypeId} is currently not automated and can't therefore be triggered");
+        }
+
+        var result = await _portalRepositories.GetInstance<IApplicationRepository>()
+            .GetApplicationStatusWithChecklistDataAsync(applicationId)
+            .ConfigureAwait(false);
+
+        if (result == default)
+        {
+            throw new NotFoundException($"Application {applicationId} does not exists");
+        }
+
+        var (status, checklistEntries) = result;
+        if (status != CompanyApplicationStatusId.SUBMITTED)
+        {
+            throw new ConflictException($"Application {applicationId} is not SUBMITTED");
+        }
+
+        if (checklistEntries.All(x => x.StatusId == ApplicationChecklistEntryStatusId.DONE))
+        {
+            return;
+        }
+
+        if (!checklistEntries.Any(x => x.TypeId.IsAutomated() &&
+                                       x.StatusId is ApplicationChecklistEntryStatusId.TO_DO or ApplicationChecklistEntryStatusId.FAILED))
+        {
+            throw new ConflictException("No automatic processable step found");
+        }
+
+        var possibleSteps = ChecklistService.GetNextPossibleTypesWithMatchingStatus(
+            checklistEntries.ToDictionary(x => x.TypeId, x => x.StatusId), new[]
+            {
+                ApplicationChecklistEntryStatusId.TO_DO, ApplicationChecklistEntryStatusId.FAILED
+            });
+
+        if (!possibleSteps.Any(x => x.IsAutomated()) || 
+            (checklistEntryTypeId != null && !possibleSteps.Any(x => x == checklistEntryTypeId)))
+        {
+            throw new ConflictException("No possible steps to proceed found");
+        }
+
+        if (checklistEntries.Count(x => possibleSteps.Contains(x.TypeId) &&
+                                        x.StatusId == ApplicationChecklistEntryStatusId.FAILED) > 1 &&
+            checklistEntryTypeId == null)
+        {
+            throw new ConflictException("More than 1 Step is failed.");
+        }
+
+        var triggerFailedProcess = checklistEntryTypeId.HasValue && checklistEntries.Any(x =>
+            x.StatusId == ApplicationChecklistEntryStatusId.FAILED &&
+            x.TypeId == checklistEntryTypeId.Value &&
+            possibleSteps.Contains(checklistEntryTypeId.Value));
+        await _checklistService.ProcessChecklist(applicationId,
+            result.ChecklistEntries,
+            triggerFailedProcess ? checklistEntryTypeId : null,
+            cancellationToken)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        await _portalRepositories.SaveAsync().ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
     public async Task SetRegistrationVerification(Guid applicationId, bool approve, string? comment = null)
     {
         if (!approve && string.IsNullOrWhiteSpace(comment))

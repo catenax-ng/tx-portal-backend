@@ -71,7 +71,11 @@ public class ChecklistService : IChecklistService
     }
 
     /// <inheritdoc />
-    public async IAsyncEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId, bool Processed)> ProcessChecklist(Guid applicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId, bool Processed)> ProcessChecklist(
+            Guid applicationId,
+            IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries,
+            ApplicationChecklistEntryTypeId? stepToRun,
+            [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var stepExecutions = new Dictionary<ApplicationChecklistEntryTypeId, Func<Guid, Task<ApplicationChecklistEntryStatusId>>>
         {
@@ -184,7 +188,7 @@ public class ChecklistService : IChecklistService
         }
     }
 
-    private static IEnumerable<ApplicationChecklistEntryTypeId> GetNextPossibleTypesWithMatchingStatus(IDictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId> currentStatus, IEnumerable<ApplicationChecklistEntryStatusId> checklistEntryStatusIds)
+    public static IEnumerable<ApplicationChecklistEntryTypeId> GetNextPossibleTypesWithMatchingStatus(IDictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId> currentStatus, IEnumerable<ApplicationChecklistEntryStatusId> checklistEntryStatusIds, ApplicationChecklistEntryTypeId? stepToRun = null)
     {
         var possibleTypes = new List<ApplicationChecklistEntryTypeId>();
         if (currentStatus.TryGetValue(ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, out var bpnStatus) && checklistEntryStatusIds.Contains(bpnStatus))
@@ -206,6 +210,11 @@ public class ChecklistService : IChecklistService
         if (currentStatus.TryGetValue(ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, out var selfDescriptionStatus) && checklistEntryStatusIds.Contains(selfDescriptionStatus) && clearingHouseStatus == ApplicationChecklistEntryStatusId.DONE)
         {
             possibleTypes.Add(ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP);
+        }
+
+        if (stepToRun != null && possibleTypes.Contains(stepToRun.Value))
+        {
+            return Enumerable.Repeat(stepToRun.Value, 1);
         }
 
         return possibleTypes;

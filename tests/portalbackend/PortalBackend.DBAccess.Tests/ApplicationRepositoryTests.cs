@@ -340,38 +340,7 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
     }
     
     #endregion
-    
-    #region GetCompanyIdForSubmittedApplicationId
-    
-    [Fact]
-    public async Task GetCompanyIdForSubmittedApplicationId_WithValidApplicationId_ReturnsCorrectData()
-    {
-        // Arrange
-        var sut = await CreateSut().ConfigureAwait(false);
-        
-        // Act
-        var data = await sut.GetCompanyIdForSubmittedApplicationId(SubmittedApplicationWithBpn).ConfigureAwait(false);
-        
-        // Assert
-        data.Should().NotBeEmpty();
-        data.Should().Be(CompanyId);
-    }
 
-    [Fact]
-    public async Task GetCompanyIdForSubmittedApplicationId_WithNotExistingApplicationId_ReturnsDefault()
-    {
-        // Arrange
-        var sut = await CreateSut().ConfigureAwait(false);
-        
-        // Act
-        var data = await sut.GetCompanyIdForSubmittedApplicationId(Guid.NewGuid()).ConfigureAwait(false);
-        
-        // Assert
-        data.Should().Be(Guid.Empty);
-    }
-
-    #endregion
-    
     #region GetCompanyAndApplicationDetailsForApprovalAsync
 
     [Fact]
@@ -434,6 +403,37 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
         data.Should().Be(default);
     }
 
+    #endregion
+    
+    #region GetApplicationStatusWithChecklistDataAsync
+    
+    [Fact]
+    public async Task GetApplicationStatusWithChecklistDataAsync_WithSubmittedApplication_ReturnsExpected()
+    {
+        // Arrange
+        var sut = await CreateSut().ConfigureAwait(false);
+        
+        // Act
+        var data = await sut.GetApplicationStatusWithChecklistDataAsync(SubmittedApplicationWithBpn).ConfigureAwait(false);
+        
+        // Assert
+        data.ApplicationStatusId.Should().Be(CompanyApplicationStatusId.SUBMITTED);
+        data.ChecklistEntries.Should().HaveCount(5);
+    }
+
+    [Fact]
+    public async Task GetApplicationStatusWithChecklistDataAsync_WithNotExistingApplication_ReturnsDefault()
+    {
+        // Arrange
+        var sut = await CreateSut().ConfigureAwait(false);
+        
+        // Act
+        var data = await sut.GetApplicationStatusWithChecklistDataAsync(Guid.NewGuid()).ConfigureAwait(false);
+        
+        // Assert
+        data.Should().Be(default);
+    }
+    
     #endregion
     
     private async Task<ApplicationRepository> CreateSut()

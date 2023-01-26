@@ -107,7 +107,7 @@ public class ChecklistExecutionService
             checklistRepositories.Clear();
         }
 
-        await foreach (var (typeId, statusId, processed) in checklistService.ProcessChecklist(applicationId, checklistEntries, stoppingToken).ConfigureAwait(false))
+        await foreach (var (typeId, statusId, processed) in checklistService.ProcessChecklist(applicationId, checklistEntries, null, stoppingToken).ConfigureAwait(false))
         {
             if (processed)
             {

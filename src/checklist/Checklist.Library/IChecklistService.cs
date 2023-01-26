@@ -31,12 +31,17 @@ public interface IChecklistService
     /// <param name="iamUserId">the current user</param>
     /// <param name="cancellationToken">Cancellation Token</param>
     Task TriggerBpnDataPush(Guid applicationId, string iamUserId, CancellationToken cancellationToken);
-    
+
     /// <summary>
     /// Processes the possible automated steps of the checklist
     /// </summary>
     /// <param name="applicationId">Id of the application to process the checklist</param>
     /// <param name="checklistEntries">The checklist entries to process</param>
+    /// <param name="stepToRun">OPTIONAL: Step to run, only use to set if multiple possible steps can occur and a specific step should be set</param>
     /// <param name="cancellationToken">Cancellation Token</param>
-    IAsyncEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId, bool Processed)> ProcessChecklist(Guid applicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries, CancellationToken cancellationToken);
+    IAsyncEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId, bool Processed)> ProcessChecklist(
+        Guid applicationId,
+        IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries,
+        ApplicationChecklistEntryTypeId? stepToRun,
+        CancellationToken cancellationToken);
 }

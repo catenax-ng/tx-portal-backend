@@ -359,11 +359,13 @@ public class ApplicationRepository : IApplicationRepository
              .SingleOrDefaultAsync();
 
      /// <inheritdoc />
-     public Task<Guid> GetCompanyIdForSubmittedApplicationId(Guid applicationId) =>
+     public Task<(CompanyApplicationStatusId ApplicationStatusId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> ChecklistEntries)> GetApplicationStatusWithChecklistDataAsync(Guid applicationId) =>
          _dbContext.CompanyApplications
-             .Where(ca =>
-                 ca.Id == applicationId &&
-                 ca.ApplicationStatusId == CompanyApplicationStatusId.SUBMITTED)
-             .Select(ca => ca.CompanyId)
+             .AsNoTracking()
+             .Where(ca => ca.Id == applicationId)
+             .Select(ca => new ValueTuple<CompanyApplicationStatusId, IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>(
+                 ca.ApplicationStatusId,
+                 ca.ApplicationChecklistEntries
+                     .Select(x => new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(x.ApplicationChecklistEntryTypeId, x.ApplicationChecklistEntryStatusId))))
              .SingleOrDefaultAsync();
 }

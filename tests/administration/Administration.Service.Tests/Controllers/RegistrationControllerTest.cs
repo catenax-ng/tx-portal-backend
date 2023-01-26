@@ -24,6 +24,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Controllers;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared.Extensions;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Tests.Controllers;
@@ -138,6 +139,23 @@ public class RegistrationControllerTest
 
         //Assert
         A.CallTo(() => _logic.ProcessClearinghouseResponseAsync(bpn, data, CancellationToken.None)).MustHaveHappenedOnceExactly();
+        Assert.IsType<NoContentResult>(result);
+    }
+    
+    [Fact]
+    public async Task TriggerChecklist_ReturnsExpectedResult()
+    {
+        //Arrange
+        var applicationId = _fixture.Create<Guid>();
+        var checklistEntryTypeId = _fixture.Create<ApplicationChecklistEntryTypeId>();
+        A.CallTo(() => _logic.TriggerChecklistAsync(applicationId, checklistEntryTypeId, A<CancellationToken>._))
+            .ReturnsLazily(() => Task.CompletedTask);
+
+        //Act
+        var result = await this._controller.TriggerChecklist(applicationId, CancellationToken.None, checklistEntryTypeId).ConfigureAwait(false);
+
+        //Assert
+        A.CallTo(() => _logic.TriggerChecklistAsync(applicationId, checklistEntryTypeId, CancellationToken.None)).MustHaveHappenedOnceExactly();
         Assert.IsType<NoContentResult>(result);
     }
 }
