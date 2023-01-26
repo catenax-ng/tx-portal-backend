@@ -29,7 +29,6 @@ public class RegistrationSettings
     {
         PartnerUserInitialRoles = null!;
         DocumentTypeIds = null!;
-        BasePortalAddress = null!;
     }
 
     public int ApplicationsMaxPageSize { get; set; }
@@ -43,9 +42,6 @@ public class RegistrationSettings
     /// <value></value>
     [Required]
     public IEnumerable<DocumentTypeId?> DocumentTypeIds { get; set; }
-
-    [Required(AllowEmptyStrings = false)]
-    public string BasePortalAddress { get; set; }
 }
 
 public static class RegistrationSettingsExtension

@@ -37,6 +37,9 @@ public class ApplicationActivationSettings
     [Required]
     public IEnumerable<NotificationTypeId> WelcomeNotificationTypeIds { get; set; } = null!;
 
+    [Required(AllowEmptyStrings = false)] 
+    public string BasePortalAddress { get; set; } = null!;
+
     /// <summary>
     /// Earliest time to start the activation process
     /// </summary>
