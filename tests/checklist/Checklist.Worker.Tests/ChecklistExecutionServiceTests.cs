@@ -105,7 +105,7 @@ public class ChecklistExecutionServiceTests
             A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,
             A<ApplicationChecklistEntryTypeId?>._,
             A<CancellationToken>._))
-            .ReturnsLazily((Guid _, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries, CancellationToken _) =>
+            .ReturnsLazily((Guid _, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries, ApplicationChecklistEntryTypeId? _, CancellationToken _) =>
                 checklistEntries.Select(entry => (entry.TypeId, entry.StatusId, false)).ToAsyncEnumerable());
         A.CallTo(() => _applicationActivationService.HandleApplicationActivation(applicationId))
             .ReturnsLazily(() => Task.CompletedTask);
@@ -143,7 +143,7 @@ public class ChecklistExecutionServiceTests
             A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,
             A<ApplicationChecklistEntryTypeId?>._,
             A<CancellationToken>._))
-            .ReturnsLazily((Guid _, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries, CancellationToken _) =>
+            .ReturnsLazily((Guid _, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries, ApplicationChecklistEntryTypeId? _, CancellationToken _) =>
                 checklistEntries.Select(entry => (entry.TypeId, ApplicationChecklistEntryStatusId.DONE, entry.StatusId == ApplicationChecklistEntryStatusId.TO_DO)).ToAsyncEnumerable());
         A.CallTo(() => _applicationActivationService.HandleApplicationActivation(applicationId))
             .ReturnsLazily(() => Task.CompletedTask);
@@ -181,7 +181,7 @@ public class ChecklistExecutionServiceTests
             A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,
             A<ApplicationChecklistEntryTypeId?>._,
             A<CancellationToken>._))
-            .ReturnsLazily((Guid _, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries, CancellationToken _) =>
+            .ReturnsLazily((Guid _, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries, ApplicationChecklistEntryTypeId? _, CancellationToken _) =>
                 checklistEntries.Select(entry => (entry.TypeId, ApplicationChecklistEntryStatusId.FAILED, entry.StatusId == ApplicationChecklistEntryStatusId.TO_DO)).ToAsyncEnumerable());
         A.CallTo(() => _applicationActivationService.HandleApplicationActivation(applicationId))
             .ReturnsLazily(() => Task.CompletedTask);
@@ -219,7 +219,7 @@ public class ChecklistExecutionServiceTests
             A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,
             A<ApplicationChecklistEntryTypeId?>._,
             A<CancellationToken>._))
-            .ReturnsLazily((Guid _, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries, CancellationToken _) =>
+            .ReturnsLazily((Guid _, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries, ApplicationChecklistEntryTypeId? _, CancellationToken _) =>
                 checklistEntries.Select(entry => (entry.Item1, entry.Item2, false)).ToAsyncEnumerable());
         A.CallTo(() => _applicationActivationService.HandleApplicationActivation(applicationId))
             .Throws(new Exception("test error"));
@@ -309,7 +309,7 @@ public class ChecklistExecutionServiceTests
             A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,
             A<ApplicationChecklistEntryTypeId?>._,
             A<CancellationToken>._))
-            .ReturnsLazily((Guid _, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries, CancellationToken _) =>
+            .ReturnsLazily((Guid _, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries, ApplicationChecklistEntryTypeId? _, CancellationToken _) =>
                 checklistEntries.Select(entry => (entry.TypeId, entry.StatusId, false)).ToAsyncEnumerable());
 
         // Act
@@ -318,7 +318,7 @@ public class ChecklistExecutionServiceTests
         // Assert
         A.CallTo(() => _checklistService.ProcessChecklist(A<Guid>._,
             A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,
-            A<ApplicationChecklistEntryTypeId?>._,
+            null,
             A<CancellationToken>._)).MustHaveHappened(5, Times.Exactly);
         A.CallTo(() => _applicationActivationService.HandleApplicationActivation(A<Guid>._)).MustNotHaveHappened();
     }
@@ -338,10 +338,10 @@ public class ChecklistExecutionServiceTests
         A.CallTo(() => _applicationChecklistRepository.GetChecklistDataOrderedByApplicationId())
             .Returns(list.ToAsyncEnumerable());
 
-        A.CallTo(() => _checklistService.ProcessChecklist(A<Guid>._,
-            A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,
-            A<ApplicationChecklistEntryTypeId?>._,
-            A<CancellationToken>._))
+        A.CallTo(() => _checklistService.ProcessChecklist(A<Guid>._, 
+                A<IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)>>._, 
+                A<ApplicationChecklistEntryTypeId?>._, 
+                A<CancellationToken>._))
             .ReturnsLazily((Guid _, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries, CancellationToken _) =>
                 checklistEntries.Select(entry => (entry.TypeId, entry.StatusId, false)).ToAsyncEnumerable());
 

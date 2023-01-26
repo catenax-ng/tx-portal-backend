@@ -84,7 +84,7 @@ public class ChecklistService : IChecklistService
             { ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, executionApplicationId => HandleSelfDescription(executionApplicationId, cancellationToken)},
         };
 
-        var possibleSteps = GetNextPossibleTypesWithMatchingStatus(checklistEntries.ToDictionary(x => x.TypeId, x => x.StatusId), new[] { ApplicationChecklistEntryStatusId.TO_DO });
+        var possibleSteps = GetNextPossibleTypesWithMatchingStatus(checklistEntries.ToDictionary(x => x.TypeId, x => x.StatusId), new[] { ApplicationChecklistEntryStatusId.TO_DO }, stepToRun);
         _logger.LogInformation("Found {StepsCount} possible steps for application {ApplicationId}", possibleSteps.Count(), applicationId);
 
         foreach (var (stepToExecute, status) in checklistEntries)
