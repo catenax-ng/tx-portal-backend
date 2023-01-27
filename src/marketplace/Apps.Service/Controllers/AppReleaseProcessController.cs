@@ -349,4 +349,16 @@ public class AppReleaseProcessController : ControllerBase
         await this.WithIamUserId(userId => _appReleaseBusinessLogic.DeclineAppRequestAsync(appId, userId, data)).ConfigureAwait(false);
         return NoContent();
     }
+
+    /// Retrieve Privacy Policies
+    /// </summary>
+    /// <returns>Collection of all Privacy Policy.</returns>
+    /// <remarks>Example: GET: /api/apps/appreleaseprocess/privacyPolicies</remarks>
+    /// <response code="200">Return the privacy policies</response>
+    [HttpGet]
+    [Route("privacyPolicies")]
+    [Authorize(Roles = "add_apps")]
+    [ProducesResponseType(typeof(PrivacyPolicyData), StatusCodes.Status200OK)]
+    public Task<PrivacyPolicyData> GetPrivacyPolicyDataAsync() =>
+        _appReleaseBusinessLogic.GetPrivacyPolicyDataAsync();
 }

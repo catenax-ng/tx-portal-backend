@@ -501,12 +501,19 @@ public class OfferRepository : IOfferRepository
     /// <inheritdoc />
     public void AddAppAssignedPrivacyPolicy(IEnumerable<(Guid appId, string privacyPolicy)> privacyPolicies) =>
         _context.OfferAssignedPrivacypolicies.AddRange(privacyPolicies.Select(s => new OfferAssignedPrivacypolicy(s.appId, (PrivacyPolicyId) Enum.Parse(typeof(PrivacyPolicyId), s.privacyPolicy))));
-
+    
+    /// <inheritdoc />
     public void CreateDeleteAppAssignedPrivacyPolicy(Guid appId, IEnumerable<string> initialPrivacyPolicy, IEnumerable<string> modifyPrivacyPolicy)=>
         _context.AddRemoveRange(
             initialPrivacyPolicy,
             modifyPrivacyPolicy,
             privacyPolicy => new OfferAssignedPrivacypolicy(appId, (PrivacyPolicyId) Enum.Parse(typeof(PrivacyPolicyId), privacyPolicy)));
+
+    /// <inheritdoc />
+    public IAsyncEnumerable<string> GetPrivacyPolicyDataAsync() =>
+        _context.PrivacyPolicies
+            .Select(privacyPolicy => privacyPolicy.Label)
+            .AsAsyncEnumerable();
     
    
 }
