@@ -258,7 +258,11 @@ public class AppReleaseProcessControllerTest
             {
                 "https://test.com/image.jpg"
             },
-            "19€");
+            "19€",
+            new[]
+            {
+              "COMPANY_DATA"  
+            });
         A.CallTo(() => _logic.UpdateAppReleaseAsync(A<Guid>._, A<AppRequestModel>._, A<string>._))
             .ReturnsLazily(() => Task.CompletedTask);
 
@@ -324,7 +328,7 @@ public class AppReleaseProcessControllerTest
         }
     }
 
-     [Fact]
+    [Fact]
     public async Task ApproveAppRequest_ReturnsExpectedCount()
     {
         //Arrange
@@ -355,5 +359,21 @@ public class AppReleaseProcessControllerTest
         //Assert
         A.CallTo(() => _logic.DeclineAppRequestAsync(appId, IamUserId, data)).MustHaveHappenedOnceExactly();
         result.Should().BeOfType<NoContentResult>();
+    }
+
+    [Fact]
+    public async Task GetPrivacyPolicy_ReturnsExpectedResult()
+    {
+        //Arrange
+       var privacyPolicyData = _fixture.Create<PrivacyPolicyData>();
+        A.CallTo(() => _logic.GetPrivacyPolicyDataAsync())
+            .ReturnsLazily(() => privacyPolicyData);
+
+        //Act
+        var result = await this._controller.GetPrivacyPolicyDataAsync().ConfigureAwait(false);
+
+        //Assert
+        A.CallTo(() => _logic.GetPrivacyPolicyDataAsync()).MustHaveHappenedOnceExactly();
+        Assert.IsType<PrivacyPolicyData>(result);
     }
 }
