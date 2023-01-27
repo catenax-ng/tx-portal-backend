@@ -285,7 +285,7 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
     /// <inheritdoc />
     public async Task TriggerChecklistAsync(Guid applicationId, ApplicationChecklistEntryTypeId? checklistEntryTypeId, CancellationToken cancellationToken)
     {
-        if (checklistEntryTypeId.HasValue && !checklistEntryTypeId.Value.IsAutomated())
+        if (checklistEntryTypeId != null && !checklistEntryTypeId.Value.IsAutomated())
         {
             throw new ConflictException($"The {checklistEntryTypeId} is currently not automated and can't therefore be triggered");
         }
@@ -293,25 +293,42 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
         var result = await _portalRepositories.GetInstance<IApplicationRepository>()
             .GetApplicationStatusWithChecklistDataAsync(applicationId)
             .ConfigureAwait(false);
+        
+        if (SkipChecklistProcessing(applicationId, checklistEntryTypeId, result)) return;
+        
+        await _checklistService.ProcessChecklist(applicationId,
+            result.ChecklistEntries,
+            checklistEntryTypeId,
+            cancellationToken)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        await _portalRepositories.SaveAsync().ConfigureAwait(false);
+    }
 
-        if (result == default)
+    private static bool SkipChecklistProcessing(
+            Guid applicationId,
+            ApplicationChecklistEntryTypeId? checklistEntryTypeId,
+            (CompanyApplicationStatusId ApplicationStatusId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)>ChecklistEntries) checklistData)
+    {
+        if (checklistData == default)
         {
             throw new NotFoundException($"Application {applicationId} does not exists");
         }
 
-        var (status, checklistEntries) = result;
+        var (status, checklistEntries) = checklistData;
         if (status != CompanyApplicationStatusId.SUBMITTED)
         {
             throw new ConflictException($"Application {applicationId} is not SUBMITTED");
         }
-
+        
         if (checklistEntries.All(x => x.StatusId == ApplicationChecklistEntryStatusId.DONE))
         {
-            return;
+            return true;
         }
-
+        
         if (!checklistEntries.Any(x => x.TypeId.IsAutomated() &&
-                                       x.StatusId is ApplicationChecklistEntryStatusId.TO_DO or ApplicationChecklistEntryStatusId.FAILED))
+                                       x.StatusId is ApplicationChecklistEntryStatusId.TO_DO
+                                           or ApplicationChecklistEntryStatusId.FAILED))
         {
             throw new ConflictException("No automatic processable step found");
         }
@@ -322,7 +339,7 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
                 ApplicationChecklistEntryStatusId.TO_DO, ApplicationChecklistEntryStatusId.FAILED
             });
 
-        if (!possibleSteps.Any(x => x.IsAutomated()) || 
+        if (!possibleSteps.Any(x => x.IsAutomated()) ||
             (checklistEntryTypeId != null && !possibleSteps.Any(x => x == checklistEntryTypeId)))
         {
             throw new ConflictException("No possible steps to proceed found");
@@ -335,17 +352,7 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
             throw new ConflictException("More than 1 Step is failed.");
         }
 
-        var triggerFailedProcess = checklistEntryTypeId.HasValue && checklistEntries.Any(x =>
-            x.StatusId == ApplicationChecklistEntryStatusId.FAILED &&
-            x.TypeId == checklistEntryTypeId.Value &&
-            possibleSteps.Contains(checklistEntryTypeId.Value));
-        await _checklistService.ProcessChecklist(applicationId,
-            result.ChecklistEntries,
-            triggerFailedProcess ? checklistEntryTypeId : null,
-            cancellationToken)
-            .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
-        await _portalRepositories.SaveAsync().ConfigureAwait(false);
+        return false;
     }
 
     /// <inheritdoc />
