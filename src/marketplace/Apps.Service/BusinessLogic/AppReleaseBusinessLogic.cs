@@ -369,7 +369,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         }
 
         var inputPrivacyPolicies = Enum.GetNames(typeof(PrivacyPolicyId));
-        if(appRequestModel.PrivacyPolicies.Except(inputPrivacyPolicies).Any())
+        if (appRequestModel.PrivacyPolicies.Except(inputPrivacyPolicies).Any())
         {
             throw new ControllerArgumentException($"At least One Privacy Policy {string.Join(",", appRequestModel.PrivacyPolicies.Except(inputPrivacyPolicies))} Not Existing", nameof(appRequestModel.PrivacyPolicies));
         }
