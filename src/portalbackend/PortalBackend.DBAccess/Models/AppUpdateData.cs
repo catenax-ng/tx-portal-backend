@@ -29,4 +29,5 @@ public record AppUpdateData
     IEnumerable<(string Shortname, bool IsMatch)> Languages,
     IEnumerable<Guid> MatchingUseCases, 
     ValueTuple<Guid, string, bool> OfferLicense,
-    Guid? SalesManagerId);
+    Guid? SalesManagerId,
+    IEnumerable<string> MatchingPrivacyPolicies);

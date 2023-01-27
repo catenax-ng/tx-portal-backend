@@ -278,7 +278,12 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         {
             throw new ControllerArgumentException("Use Case Ids must not be null or empty", nameof(appRequestModel.UseCaseIds));
         }
-       
+        
+        var inputPrivacyPolicies = Enum.GetNames(typeof(PrivacyPolicyId));
+        if(appRequestModel.PrivacyPolicies.Except(inputPrivacyPolicies).Any())
+        {
+            throw new ControllerArgumentException($"At least One Privacy Policy {string.Join(",", appRequestModel.PrivacyPolicies.Except(inputPrivacyPolicies))} Not Existing", nameof(appRequestModel.PrivacyPolicies));
+        }
         return this.CreateAppAsync(appRequestModel, iamUserId);
     }
 
@@ -362,6 +367,12 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
             await _offerService.ValidateSalesManager(appRequestModel.SalesManagerId.Value, iamUserId, _settings.SalesManagerRoles).ConfigureAwait(false);
         }
 
+        var inputPrivacyPolicies = Enum.GetNames(typeof(PrivacyPolicyId));
+        if(appRequestModel.PrivacyPolicies.Except(inputPrivacyPolicies).Any())
+        {
+            throw new ControllerArgumentException($"At least One Privacy Policy {string.Join(",", appRequestModel.PrivacyPolicies.Except(inputPrivacyPolicies))} Not Existing", nameof(appRequestModel.PrivacyPolicies));
+        }
+
         var newSupportedLanguages = appRequestModel.SupportedLanguageCodes.Except(appData.Languages.Where(x => x.IsMatch).Select(x => x.Shortname));
         var existingLanguageCodes = await _portalRepositories.GetInstance<ILanguageRepository>().GetLanguageCodesUntrackedAsync(newSupportedLanguages).ToListAsync().ConfigureAwait(false);
         if (newSupportedLanguages.Except(existingLanguageCodes).Any())
@@ -388,6 +399,8 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         UpdateAppSupportedLanguages(appId, newSupportedLanguages, appData.Languages.Where(x => !x.IsMatch).Select(x => x.Shortname), appRepository);
 
         appRepository.CreateDeleteAppAssignedUseCases(appId, appData.MatchingUseCases, appRequestModel.UseCaseIds);
+
+        appRepository.CreateDeleteAppAssignedPrivacyPolicy(appId, appData.MatchingPrivacyPolicies, appRequestModel.PrivacyPolicies);
 
         _offerService.CreateOrUpdateOfferLicense(appId, appRequestModel.Provider, appData.OfferLicense);
         
