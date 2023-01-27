@@ -491,6 +491,51 @@ public class RegistrationBusinessLogicTest
 
     #endregion
     
+    #region GetChecklistForApplicationAsync
+
+    [Fact]
+    public async Task GetChecklistForApplicationAsync_WithNotExistingApplication_ThrowsNotFoundException()
+    {
+        // Arrange
+        var applicationId = _fixture.Create<Guid>();
+        A.CallTo(() => _applicationRepository.GetApplicationChecklistData(applicationId))
+            .ReturnsLazily(() => new ValueTuple<bool, IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId, string?)>>());
+        
+        //Act
+        async Task Act() => await _logic.GetChecklistForApplicationAsync(applicationId).ConfigureAwait(false);
+        
+        // Assert
+        var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
+        ex.Message.Should().Be($"Application {applicationId} does not exists");
+    }
+
+    [Fact]
+    public async Task GetChecklistForApplicationAsync_WithValidApplication_ReturnsExpected()
+    {
+        // Arrange
+        var applicationId = _fixture.Create<Guid>();
+        var list = new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId, string?>[]
+        {
+            new(ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE, null),
+            new(ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.DONE, null),
+            new(ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.FAILED, "error occured"),
+            new(ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.IN_PROGRESS, null),
+            new(ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.IN_PROGRESS, null),
+        };
+        A.CallTo(() => _applicationRepository.GetApplicationChecklistData(applicationId))
+            .ReturnsLazily(() => new ValueTuple<bool, IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId, string?)>>(true, list));
+        
+        //Act
+        var result = await _logic.GetChecklistForApplicationAsync(applicationId).ConfigureAwait(false);
+        
+        // Assert
+        result.Should().NotBeNull().And.NotBeEmpty().And.HaveCount(5);
+        result.Where(x => x.Retriggerable).Should().HaveCount(3);
+        result.Where(x => x.Status == ApplicationChecklistEntryStatusId.FAILED).Should().ContainSingle();
+    }
+
+    #endregion
+    
     #region Setup
 
     private void SetupForUpdateCompanyBpn(ApplicationChecklistEntry? applicationChecklistEntry = null)

@@ -317,6 +317,21 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
     }
 
     /// <inheritdoc />
+    public async Task<IEnumerable<ChecklistDetails>> GetChecklistForApplicationAsync(Guid applicationId)
+    {
+        var data = await _portalRepositories.GetInstance<IApplicationRepository>()
+            .GetApplicationChecklistData(applicationId)
+            .ConfigureAwait(false);
+        if (data == default)
+        {
+            throw new NotFoundException($"Application {applicationId} does not exists");
+        }
+
+        return data.ChecklistData
+            .Select(x => new ChecklistDetails(x.TypeId, x.StatusId, x.Comment, x.TypeId.IsAutomated()));
+    }
+
+    /// <inheritdoc />
     public Task SetRegistrationVerification(Guid applicationId, bool approve, string? comment)
     {
         if (!approve && string.IsNullOrWhiteSpace(comment))

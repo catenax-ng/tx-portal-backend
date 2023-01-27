@@ -436,6 +436,37 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
 
     #endregion
     
+    #region GetApplicationChecklistData
+
+    [Fact]
+    public async Task GetApplicationChecklistData_WithExistingApplication_ReturnsExpected()
+    {
+        // Arrange
+        var sut = await CreateSut().ConfigureAwait(false);
+        
+        // Act
+        var data = await sut.GetApplicationChecklistData(SubmittedApplicationWithBpn).ConfigureAwait(false);
+        
+        // Assert
+        data.Exists.Should().BeTrue();
+        data.ChecklistData.Should().HaveCount(5);
+    }
+
+    [Fact]
+    public async Task GetApplicationChecklistData_WithNotExistingApplication_ReturnsDefault()
+    {
+        // Arrange
+        var sut = await CreateSut().ConfigureAwait(false);
+        
+        // Act
+        var data = await sut.GetApplicationChecklistData(Guid.NewGuid()).ConfigureAwait(false);
+        
+        // Assert
+        data.Should().Be(default);
+    }
+
+    #endregion
+
     private async Task<ApplicationRepository> CreateSut()
     {
         var context = await _dbTestDbFixture.GetPortalDbContext().ConfigureAwait(false);
