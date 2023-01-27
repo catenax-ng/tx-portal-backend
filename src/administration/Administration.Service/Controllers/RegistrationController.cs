@@ -232,4 +232,21 @@ public class RegistrationController : ControllerBase
         await _logic.ProcessClearinghouseResponseAsync(bpn, responseData, cancellationToken).ConfigureAwait(false);
         return NoContent();
     }
+    
+    /// <summary>
+    /// Gets the information of an applications checklist
+    /// </summary>
+    /// <param name="applicationId">Id of the application the checklist should be provided for</param>
+    /// <remarks>
+    /// Example: GET: api/administration/registration/application/4f0146c6-32aa-4bb1-b844-df7e8babdcb4/checklistDetails
+    /// </remarks>
+    /// <response code="200">The checklist information for the application</response>
+    /// <response code="404">Application ID not found.</response>
+    [HttpGet]
+    [Authorize(Roles = "approve_new_partner")]
+    [Route("applications/{applicationId}/checklistDetails")]
+    [ProducesResponseType(typeof(ChecklistDetails), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    public Task<IEnumerable<ChecklistDetails>> GetChecklistForApplication([FromRoute] Guid applicationId) =>
+        _logic.GetChecklistForApplicationAsync(applicationId);
 }

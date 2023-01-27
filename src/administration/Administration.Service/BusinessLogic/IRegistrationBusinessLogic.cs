@@ -50,4 +50,11 @@ public interface IRegistrationBusinessLogic
     /// <param name="data">the response data</param>
     /// <param name="cancellationToken">cancellation token</param>
     Task ProcessClearinghouseResponseAsync(string bpn, ClearinghouseResponseData data, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Gets the checklist details for the given application
+    /// </summary>
+    /// <param name="applicationId">Id of the application</param>
+    /// <returns>Returns the checklist details</returns>
+    Task<IEnumerable<ChecklistDetails>> GetChecklistForApplicationAsync(Guid applicationId);
 }

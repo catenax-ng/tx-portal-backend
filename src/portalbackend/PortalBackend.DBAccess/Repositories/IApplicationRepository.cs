@@ -18,6 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using System.Collections;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
@@ -93,4 +94,10 @@ public interface IApplicationRepository
     Task<(bool IsValidApplicationId, CompanyApplicationStatusId ApplicationStatusId, BpdmData? BpdmData, bool IsUserInCompany)> GetBpdmDataForApplicationAsync(string iamUserId, Guid applicationId);
 
     Task<(Guid CompanyId, BpdmData)> GetBpdmDataForApplicationAsync(Guid applicationId);
+
+    /// Gets the checklist data for a specific application
+    /// </summary>
+    /// <param name="applicationId">Id of the application</param>
+    /// <returns>Returns the checklist data</returns>
+    Task<(bool Exists, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId, string? Comment)> ChecklistData)> GetApplicationChecklistData(Guid applicationId);
 }
