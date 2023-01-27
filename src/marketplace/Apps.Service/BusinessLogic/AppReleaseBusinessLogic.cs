@@ -278,9 +278,9 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         {
             throw new ControllerArgumentException("Use Case Ids must not be null or empty", nameof(appRequestModel.UseCaseIds));
         }
-        
+
         var inputPrivacyPolicies = Enum.GetNames(typeof(PrivacyPolicyId));
-        if(appRequestModel.PrivacyPolicies.Except(inputPrivacyPolicies).Any())
+        if (appRequestModel.PrivacyPolicies.Except(inputPrivacyPolicies).Any())
         {
             throw new ControllerArgumentException($"At least One Privacy Policy {string.Join(",", appRequestModel.PrivacyPolicies.Except(inputPrivacyPolicies))} Not Existing", nameof(appRequestModel.PrivacyPolicies));
         }
@@ -368,7 +368,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         }
 
         var inputPrivacyPolicies = Enum.GetNames(typeof(PrivacyPolicyId));
-        if(appRequestModel.PrivacyPolicies.Except(inputPrivacyPolicies).Any())
+        if (appRequestModel.PrivacyPolicies.Except(inputPrivacyPolicies).Any())
         {
             throw new ControllerArgumentException($"At least One Privacy Policy {string.Join(",", appRequestModel.PrivacyPolicies.Except(inputPrivacyPolicies))} Not Existing", nameof(appRequestModel.PrivacyPolicies));
         }
@@ -452,6 +452,6 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         var data = await _portalRepositories.GetInstance<IOfferRepository>().GetPrivacyPolicyDataAsync().ToListAsync().ConfigureAwait(false);
         return new PrivacyPolicyData(data);
     }
-        
+      
     
 }
