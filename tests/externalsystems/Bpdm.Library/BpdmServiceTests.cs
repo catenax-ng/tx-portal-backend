@@ -51,7 +51,7 @@ public class BpdmServiceTests
             ClientId = "CatenaX",
             ClientSecret = "pass@Secret",
             GrantType = "cred",
-            KeyCloakTokenAddress = "https://key.cloak.com",
+            KeycloakTokenAddress = "https://key.cloak.com",
         });
         _tokenService = A.Fake<ITokenService>();
     }

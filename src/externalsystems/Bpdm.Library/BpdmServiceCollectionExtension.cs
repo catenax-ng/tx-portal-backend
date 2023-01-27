@@ -43,7 +43,7 @@ public static class BpdmServiceCollectionExtension
         }).AddHttpMessageHandler<LoggingHandler<BpdmService>>();
         services.AddHttpClient($"{nameof(BpdmService)}Auth", c =>
         {
-            c.BaseAddress = new Uri(settings.Value.KeyCloakTokenAddress);
+            c.BaseAddress = new Uri(settings.Value.KeycloakTokenAddress);
         }).AddHttpMessageHandler<LoggingHandler<BpdmService>>();
         services.AddTransient<IBpdmService, BpdmService>()
             .AddTransient<IBpdmBusinessLogic, BpdmBusinessLogic>();

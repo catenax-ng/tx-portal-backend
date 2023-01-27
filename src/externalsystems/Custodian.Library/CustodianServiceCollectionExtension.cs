@@ -43,7 +43,7 @@ public static class CustodianServiceCollectionExtension
         }).AddHttpMessageHandler<LoggingHandler<CustodianService>>();
         services.AddHttpClient($"{nameof(CustodianService)}Auth", c =>
         {
-            c.BaseAddress = new Uri(settings.Value.KeyCloakTokenAddress);
+            c.BaseAddress = new Uri(settings.Value.KeycloakTokenAddress);
         }).AddHttpMessageHandler<LoggingHandler<CustodianService>>();
         services
             .AddTransient<ICustodianService, CustodianService>()

@@ -43,7 +43,7 @@ public static class ClearinghouseServiceCollectionExtension
         }).AddHttpMessageHandler<LoggingHandler<ClearinghouseService>>();
         services.AddHttpClient($"{nameof(ClearinghouseService)}Auth", c =>
         {
-            c.BaseAddress = new Uri(settings.Value.KeyCloakTokenAddress);
+            c.BaseAddress = new Uri(settings.Value.KeycloakTokenAddress);
         }).AddHttpMessageHandler<LoggingHandler<ClearinghouseService>>();
         services
             .AddTransient<IClearinghouseService, ClearinghouseService>()
