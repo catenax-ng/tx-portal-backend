@@ -161,7 +161,7 @@ public interface IAppReleaseBusinessLogic
     /// <param name="iamUserId">Id of the iamUser</param>
     /// <param name="data">The decline request data</param>
     Task DeclineAppRequestAsync(Guid appId, string iamUserId, OfferDeclineRequest data);
-    
+
     /// <summary>
     /// Get All Privacy Policy
     /// </summary>
