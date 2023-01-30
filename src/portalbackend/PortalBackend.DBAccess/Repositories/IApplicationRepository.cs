@@ -84,6 +84,7 @@ public interface IApplicationRepository
     /// <returns>Returns the bpdm data</returns>
     Task<(Guid CompanyId, BpdmData BpdmData)> GetBpdmDataForApplicationAsync(Guid applicationId);
 
+    /// <summary>
     /// Gets the checklist data for a specific application
     /// </summary>
     /// <param name="applicationId">Id of the application</param>
@@ -91,4 +92,5 @@ public interface IApplicationRepository
     Task<(bool Exists, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId, string? Comment)> ChecklistData)> GetApplicationChecklistData(Guid applicationId);
 
     IAsyncEnumerable<UserRoleDeletionData> GetUserDataForRoleDeletionByIamClientIdsAsync(Guid applicationId, IEnumerable<string> iamClientIds);
+    IAsyncEnumerable<UserRoleDeletionData> GetUserDataForRoleDeletionByIamClientIds(Guid applicationId, IEnumerable<string> iamClientIds);
 }

@@ -390,7 +390,7 @@ public class ApplicationRepository : IApplicationRepository
             .SingleOrDefaultAsync();
     
     /// <inheritdoc />
-    public IAsyncEnumerable<UserRoleDeletionData> GetUserDataForRoleDeletionByIamClientIdsAsync(Guid applicationId, IEnumerable<string> iamClientIds) =>
+    public IAsyncEnumerable<UserRoleDeletionData> GetUserDataForRoleDeletionByIamClientIds(Guid applicationId, IEnumerable<string> iamClientIds) =>
         _dbContext.Invitations
             .AsNoTracking()
             .Where(invitation => invitation.CompanyApplicationId == applicationId)
@@ -401,10 +401,9 @@ public class ApplicationRepository : IApplicationRepository
                 companyUser.IamUser!.UserEntityId,
                 companyUser.CompanyUserAssignedRoles
                     .Where(x => x.UserRole!.Offer!.AppInstances.Any(ai => iamClientIds.Contains(ai.IamClient!.ClientClientId)))
-                    .Select(companyUserAssignedRole => new UserRoleModificationData(
+                    .Select(companyUserAssignedRole => new ValueTuple<string, Guid>(
                         companyUserAssignedRole.UserRole!.UserRoleText,
-                        companyUserAssignedRole.UserRoleId,
-                        companyUserAssignedRole.CompanyUserId == companyUser.Id
+                        companyUserAssignedRole.UserRoleId
                     ))))
             .AsAsyncEnumerable();
 }

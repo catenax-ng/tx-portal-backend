@@ -245,13 +245,15 @@ public class ApplicationActivationService : IApplicationActivationService
     {
         var iamClientIds = _settings.ClientToRemoveRolesOnActivation;
         var invitedUsersData = applicationRepository
-            .GetUserDataForRoleDeletionByIamClientIdsAsync(applicationId, iamClientIds);
+            .GetUserDataForRoleDeletionByIamClientIds(applicationId, iamClientIds);
         await foreach (var userData in invitedUsersData.ConfigureAwait(false))
         {
-            var roleNamesToDelete = iamClientIds.ToDictionary(clientId => clientId, _ => userData.RolesToDelete.Select(x => x.CompanyUserRoleText));
+            if (!userData.RolesToDelete.Any()) continue;
+
+            var roleNamesToDelete = iamClientIds.ToDictionary(clientId => clientId, _ => userData.RolesToDelete.Select(x => x.UserRoleText));
             await _provisioningManager.DeleteClientRolesFromCentralUserAsync(userData.UserEntityId, roleNamesToDelete)
                 .ConfigureAwait(false);
-            userRolesRepository.DeleteCompanyUserAssignedRoles(userData.RolesToDelete.Select(x => (userData.CompanyUserId, x.CompanyUserRoleId)));
+            userRolesRepository.DeleteCompanyUserAssignedRoles(userData.RolesToDelete.Select(x => (userData.CompanyUserId, x.UserRoleId)));
         }
     }
 

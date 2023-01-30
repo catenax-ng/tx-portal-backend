@@ -309,6 +309,38 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
 
     #endregion
 
+    #region GetSubmittedIdAndClearinghouseChecklistStatusByBpn
+    
+    [Fact]
+    public async Task GetSubmittedIdAndClearinghouseChecklistStatusByBpn_WithValidApplicationId_ReturnsCorrectData()
+    {
+        // Arrange
+        var sut = await CreateSut().ConfigureAwait(false);
+        
+        // Act
+        var data = await sut.GetSubmittedIdAndClearinghouseChecklistStatusByBpn("CAXSTESTYCATENAZZ").ConfigureAwait(false);
+        
+        // Assert
+        data.Should().NotBeNull();
+        data.ApplicationId.Should().Be(new Guid("2bb2005f-6e8d-41eb-967b-cde67546cafc"));
+        data.StatusId.Should().Be(ApplicationChecklistEntryStatusId.TO_DO);
+    }
+
+    [Fact]
+    public async Task GetSubmittedIdAndClearinghouseChecklistStatusByBpn_WithNotExistingApplicationId_ReturnsNull()
+    {
+        // Arrange
+        var sut = await CreateSut().ConfigureAwait(false);
+        
+        // Act
+        var result = await sut.GetSubmittedIdAndClearinghouseChecklistStatusByBpn("notexisting").ConfigureAwait(false);
+        
+        // Assert
+        result.Should().Be(default);
+    }
+    
+    #endregion
+    
     #region GetCompanyAndApplicationDetailsForApprovalAsync
 
     [Fact]
@@ -400,6 +432,26 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
         
         // Assert
         data.Should().Be(default);
+    }
+
+    #endregion
+
+
+    #region GetUserDataForRoleDeletionByIamClientIdsAsync
+
+    [Fact]
+    public async Task GetUserDataForRoleDeletionByIamClientIdsAsync_WithValidData_ReturnsExpected()
+    {
+        
+        // Arrange
+        var sut = await CreateSut().ConfigureAwait(false);
+        
+        // Act
+        var data = await sut.GetUserDataForRoleDeletionByIamClientIds(ApplicationWithBpn, Enumerable.Repeat("Cl1-CX-Registration", 1)).ToListAsync().ConfigureAwait(false);
+        
+        // Assert
+        data.Should().HaveCount(2);
+        data.First().RolesToDelete.Should().ContainSingle();
     }
 
     #endregion

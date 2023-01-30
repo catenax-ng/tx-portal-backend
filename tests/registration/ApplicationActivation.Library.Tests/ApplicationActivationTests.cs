@@ -93,6 +93,10 @@ public class ApplicationActivationTests
             NotificationTypeId.WELCOME_CONNECTOR_REGISTRATION
         };
 
+        _settings.ClientToRemoveRolesOnActivation = new[]
+        {
+            "remove-id"
+        };
         A.CallTo(() => _portalRepositories.GetInstance<IApplicationRepository>()).Returns(_applicationRepository);
         A.CallTo(() => _portalRepositories.GetInstance<IUserBusinessPartnerRepository>()).Returns(_businessPartnerRepository);
         A.CallTo(() => _portalRepositories.GetInstance<IUserRolesRepository>()).Returns(_rolesRepository);
@@ -204,6 +208,7 @@ public class ApplicationActivationTests
             .With(x => x.CompanyStatusId, CompanyStatusId.PENDING)
             .Create();
         SetupFakes(clientRoleNames, userRoleData, companyUserAssignedRole, companyUserAssignedBusinessPartner);
+        SetupForDelete();
         A.CallTo(() =>
                 _applicationRepository.AttachAndModifyCompanyApplication(A<Guid>._, A<Action<CompanyApplication>>._))
             .Invokes((Guid _, Action<CompanyApplication> setOptionalParameters) =>
@@ -228,6 +233,10 @@ public class ApplicationActivationTests
         A.CallTo(() => _businessPartnerRepository.CreateCompanyUserAssignedBusinessPartner(CompanyUserId2, BusinessPartnerNumber)).MustNotHaveHappened();
         A.CallTo(() => _rolesRepository.CreateCompanyUserAssignedRole(CompanyUserId3, UserRoleId)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _businessPartnerRepository.CreateCompanyUserAssignedBusinessPartner(CompanyUserId3, BusinessPartnerNumber)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _provisioningManager.DeleteClientRolesFromCentralUserAsync("1", A<IDictionary<string, IEnumerable<string>>>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _provisioningManager.DeleteClientRolesFromCentralUserAsync("2", A<IDictionary<string, IEnumerable<string>>>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _provisioningManager.DeleteClientRolesFromCentralUserAsync("3", A<IDictionary<string, IEnumerable<string>>>._)).MustNotHaveHappened();
+        A.CallTo(() => _rolesRepository.DeleteCompanyUserAssignedRoles(A<IEnumerable<(Guid CompanyUserId, Guid UserRoleId)>>._)).MustHaveHappened(2, Times.Exactly);
         A.CallTo(() => _mailingService.SendMails(A<string>._, A<IDictionary<string, string>>._, A<IEnumerable<string>>._)).MustHaveHappened(3, Times.Exactly);
         _notifications.Should().HaveCount(5);
         companyApplication.ApplicationStatusId.Should().Be(CompanyApplicationStatusId.CONFIRMED);
@@ -564,6 +573,33 @@ public class ApplicationActivationTests
                     _notifications.Add(notification);
                 }
             });
+    }
+
+    private void SetupForDelete()
+    {
+        var result = new List<UserRoleDeletionData>
+        {
+            new(
+                CompanyUserId1,
+                "1",
+                new[]
+                {
+                    new ValueTuple<string, Guid>("Company Admin", CompanyUserRoleId)
+                }),
+            new(
+                CompanyUserId2,
+                "2",
+                new[]
+                {
+                    new ValueTuple<string, Guid>("Company Admin", CompanyUserRoleId)
+                }),
+            new(
+                CompanyUserId3,
+                "3",
+                new List<(string UserRoleText, Guid UserRoleId)>())
+        };
+        A.CallTo(() => _applicationRepository.GetUserDataForRoleDeletionByIamClientIds(Id, A<IEnumerable<string>>.That.Matches(x => x.Contains("remove-id") && x.Count() == 1)))
+            .Returns(result.ToAsyncEnumerable());
     }
 
     #endregion
