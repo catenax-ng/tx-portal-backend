@@ -32,6 +32,10 @@
     <NoWarn>CS1591</NoWarn>
   </PropertyGroup>
 
+  <Target Name="DotnetFormat" BeforeTargets="Build">
+    <Exec Command="dotnet format --verify-no-changes --no-restore"/>
+  </Target>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.7">
       <PrivateAssets>all</PrivateAssets>

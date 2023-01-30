@@ -1,4 +1,4 @@
-name: Unit-Tests
+name: PR-Quality
 
 on:
   push:
@@ -6,14 +6,14 @@ on:
       - main
   pull_request:
     types: [opened, synchronize, reopened]
+  workflow_dispatch:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        dotnet-version: ['6.0']
+        dotnet-version: ["6.0"]
 
     steps:
       - uses: actions/checkout@v3
@@ -21,9 +21,13 @@ jobs:
         uses: actions/setup-dotnet@v2
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
+      - name: Install dotnet-format
+        run: dotnet tool install -g dotnet-format
       - name: Install dependencies
         run: dotnet restore src
       - name: Build
         run: dotnet build src --configuration Release --no-restore
+      - name: Check Format
+        run: dotnet format src --verify-no-changes --no-restore
       - name: Test
         run: dotnet test src --no-restore --verbosity normal

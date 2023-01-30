@@ -35,6 +35,10 @@
     <ProjectReference Include="..\..\framework\Framework.BaseDependencies\Framework.BaseDependencies.csproj" />
   </ItemGroup>
 
+  <Target Name="DotnetFormat" BeforeTargets="Build">
+    <Exec Command="dotnet format --verify-no-changes --no-restore"/>
+  </Target>
+
   <PropertyGroup>
     <AssemblyName>Org.Eclipse.TractusX.Portal.Backend.Provisioning.Service</AssemblyName>
     <TargetFramework>net6.0</TargetFramework>
