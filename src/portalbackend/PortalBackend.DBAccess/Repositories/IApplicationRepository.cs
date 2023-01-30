@@ -78,13 +78,6 @@ public interface IApplicationRepository
     IAsyncEnumerable<Guid> GetSubmittedApplicationIdsByBpn(string bpn);
 
     /// <summary>
-    /// Gets the company id by the application id for submitted applications
-    /// </summary>
-    /// <param name="applicationId">The application id</param>
-    /// <returns>The company id</returns>
-    Task<Guid> GetCompanyIdForSubmittedApplicationId(Guid applicationId);
-
-    /// <summary>
     /// Gets the checklist data for a specific application
     /// </summary>
     /// <param name="applicationId">Id of the application</param>
