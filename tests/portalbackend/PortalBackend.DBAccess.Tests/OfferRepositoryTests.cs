@@ -80,9 +80,9 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     }
 
     #endregion
-    
+
     #region GetOfferProviderDetailsAsync
-    
+
     [Fact]
     public async Task GetOfferProviderDetailsAsync_ReturnsExpectedResult()
     {
@@ -124,9 +124,9 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     }
 
     #endregion
-    
+
     #region GetAllActiveApps
-    
+
     [Fact]
     public async Task GetAllActiveApps_ReturnsExpectedResult()
     {
@@ -143,7 +143,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     #endregion
 
     #region GetAllActiveApps
-    
+
     [Fact]
     public async Task GetOfferDetailsByIdAsync_ReturnsExpectedResult()
     {
@@ -189,9 +189,9 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     }
 
     #endregion
-    
+
     #region AttachAndModifyOffer
-    
+
     [Fact]
     public async Task AttachAndModifyOffer_WithExistingOffer_UpdatesStatus()
     {
@@ -214,11 +214,11 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         changedEntity.State.Should().Be(EntityState.Modified);
         changedEntity.Entity.Should().BeOfType<Offer>().Which.Name.Should().Be("test abc");
     }
-    
+
     #endregion
 
     #region Delete Offer
-    
+
     [Fact]
     public async Task DeleteOffer_WithExistingOffer_RemovesOffer()
     {
@@ -239,7 +239,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     }
 
     #endregion
-    
+
     #region Create Offer
 
     [Fact]
@@ -264,7 +264,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     #endregion
 
     #region AttachAndModifyOfferLicense
-    
+
     [Fact]
     public async Task AttachAndModifyOfferLicense_WithExistingOfferLicense_UpdatesLicenseText()
     {
@@ -284,11 +284,11 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         changedEntity.State.Should().Be(EntityState.Modified);
         changedEntity.Entity.Should().BeOfType<OfferLicense>().Which.Licensetext.Should().Be("666");
     }
-    
+
     #endregion
 
     #region Remove Offer Assigned License
-    
+
     [Fact]
     public async Task RemoveOfferAssignedLicense_WithExisting_RemovesOfferAssignedLicense()
     {
@@ -311,7 +311,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     #endregion
 
     #region RemoveAppLanguages
-    
+
     [Fact]
     public async Task RemoveAppLanguages_WithExisting_RemovesAppLanguages()
     {
@@ -319,7 +319,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         var (sut, dbContext) = await CreateSutWithContext().ConfigureAwait(false);
 
         // Act
-        sut.RemoveAppLanguages(new [] { (new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4"), "de") });
+        sut.RemoveAppLanguages(new[] { (new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4"), "de") });
 
         // Assert
         var changeTracker = dbContext.ChangeTracker;
@@ -332,9 +332,9 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     }
 
     #endregion
-    
+
     #region GetAppUpdateData
-    
+
     [Fact]
     public async Task GetAppUpdateData_ReturnsExpectedResult()
     {
@@ -342,7 +342,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         var sut = await CreateSut().ConfigureAwait(false);
 
         // Act
-        var offerDetail = await sut.GetAppUpdateData(new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4"), "623770c5-cf38-4b9f-9a35-f8b9ae972e2e", new []{"de"}).ConfigureAwait(false);
+        var offerDetail = await sut.GetAppUpdateData(new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4"), "623770c5-cf38-4b9f-9a35-f8b9ae972e2e", new[] { "de" }).ConfigureAwait(false);
 
         // Assert
         offerDetail.Should().NotBeNull();
@@ -350,9 +350,9 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     }
 
     #endregion
-    
+
     #region RemoveServiceAssignedServiceTypes
-    
+
     [Fact]
     public async Task AddServiceAssignedServiceTypes_WithExisting_RemovesServiceAssignedServiceType()
     {
@@ -360,7 +360,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         var (sut, context) = await CreateSutWithContext().ConfigureAwait(false);
 
         // Act
-        sut.AddServiceAssignedServiceTypes(new [] { (new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA5"), ServiceTypeId.DATASPACE_SERVICE) });
+        sut.AddServiceAssignedServiceTypes(new[] { (new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA5"), ServiceTypeId.DATASPACE_SERVICE) });
 
         // Assert
         var changeTracker = context.ChangeTracker;
@@ -374,7 +374,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     #endregion
 
     #region RemoveServiceAssignedServiceTypes
-    
+
     [Fact]
     public async Task RemoveServiceAssignedServiceTypes_WithExisting_RemovesServiceAssignedServiceType()
     {
@@ -382,7 +382,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         var (sut, dbContext) = await CreateSutWithContext().ConfigureAwait(false);
 
         // Act
-        sut.RemoveServiceAssignedServiceTypes(new [] { (new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA5"), ServiceTypeId.CONSULTANCE_SERVICE) });
+        sut.RemoveServiceAssignedServiceTypes(new[] { (new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA5"), ServiceTypeId.CONSULTANCE_SERVICE) });
 
         // Assert
         var changeTracker = dbContext.ChangeTracker;
@@ -395,14 +395,14 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     }
 
     #endregion
-    
+
     #region GetActiveServices
-    
+
     [Theory]
-    [InlineData(ServiceOverviewSorting.ProviderAsc, new [] { "Newest Service", "Newest Service 2" }, new [] { "some short Description", null })]
-    [InlineData(ServiceOverviewSorting.ProviderDesc, new [] { "Newest Service 2", "Newest Service" }, new [] { null, "some short Description" })]
-    [InlineData(ServiceOverviewSorting.ReleaseDateAsc, new [] { "Newest Service", "Newest Service 2" }, new [] { "some short Description", null })]
-    [InlineData(ServiceOverviewSorting.ReleaseDateDesc, new [] { "Newest Service 2", "Newest Service" }, new [] { null, "some short Description" })]
+    [InlineData(ServiceOverviewSorting.ProviderAsc, new[] { "Newest Service", "Newest Service 2" }, new[] { "some short Description", null })]
+    [InlineData(ServiceOverviewSorting.ProviderDesc, new[] { "Newest Service 2", "Newest Service" }, new[] { null, "some short Description" })]
+    [InlineData(ServiceOverviewSorting.ReleaseDateAsc, new[] { "Newest Service", "Newest Service 2" }, new[] { "some short Description", null })]
+    [InlineData(ServiceOverviewSorting.ReleaseDateDesc, new[] { "Newest Service 2", "Newest Service" }, new[] { null, "some short Description" })]
     public async Task GetActiveServices_ReturnsExpectedResult(ServiceOverviewSorting sorting, IEnumerable<string> names, IEnumerable<string> descriptions)
     {
         // Arrange
@@ -449,7 +449,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     #endregion
 
     #region GetServiceDetailById
-    
+
     [Fact]
     public async Task GetServiceDetailByIdUntrackedAsync_ReturnsExpectedResult()
     {
@@ -467,7 +467,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     #endregion
 
     #region GetOfferDeclineDataAsync
-    
+
     [Fact]
     public async Task GetOfferDeclineDataAsync_ReturnsExpectedResult()
     {
@@ -496,8 +496,8 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         var sut = await CreateSut().ConfigureAwait(false);
 
         // Act
-        var result = await sut.GetProviderOfferDataWithConsentStatusAsync(new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4"),"3d8142f1-860b-48aa-8c2b-1ccb18699f65",OfferTypeId.APP).ConfigureAwait(false);
-        
+        var result = await sut.GetProviderOfferDataWithConsentStatusAsync(new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4"), "3d8142f1-860b-48aa-8c2b-1ccb18699f65", OfferTypeId.APP).ConfigureAwait(false);
+
         // Assert
         result.OfferProviderData.Should().NotBeNull();
         result.OfferProviderData.LeadPictureId.Should().NotBeEmpty();
@@ -509,9 +509,9 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     #region GetProvidedOffersData
 
     [Theory]
-    [InlineData(OfferTypeId.APP, "3d8142f1-860b-48aa-8c2b-1ccb18699f65", new [] { "90a24c6d-1092-4590-ae89-a9d2bff1ea41", "00000000-0000-0000-0000-000000000000" })]
-    [InlineData(OfferTypeId.SERVICE, "3d8142f1-860b-48aa-8c2b-1ccb18699f65", new [] { "00000000-0000-0000-0000-000000000000" })]
-    [InlineData(OfferTypeId.CORE_COMPONENT, "3d8142f1-860b-48aa-8c2b-1ccb18699f65", new string[] {})]
+    [InlineData(OfferTypeId.APP, "3d8142f1-860b-48aa-8c2b-1ccb18699f65", new[] { "90a24c6d-1092-4590-ae89-a9d2bff1ea41", "00000000-0000-0000-0000-000000000000" })]
+    [InlineData(OfferTypeId.SERVICE, "3d8142f1-860b-48aa-8c2b-1ccb18699f65", new[] { "00000000-0000-0000-0000-000000000000" })]
+    [InlineData(OfferTypeId.CORE_COMPONENT, "3d8142f1-860b-48aa-8c2b-1ccb18699f65", new string[] { })]
     [InlineData(OfferTypeId.APP, "no such user", new string[] { })]
     public async Task GetProvidedOffersData_ReturnsExpectedResult(OfferTypeId offerTypeId, string iamUserId, IEnumerable<string> leadPictureIds)
     {
@@ -528,14 +528,14 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
 
     #endregion
 
-#region CreateDeleteAppAssignedUseCases
+    #region CreateDeleteAppAssignedUseCases
 
     [Theory]
     [InlineData(
-        new [] { "8895a7b6-39bc-4483-a1de-958e19eb9109", "eac5baeb-65ce-47fd-954e-bf5b4d411ba0", "581aafa7-f43c-40fc-a64c-e7be13e6c861" },                                         // initialKeys
-        new [] { "581aafa7-f43c-40fc-a64c-e7be13e6c861", "09986f28-a8be-4df7-a61b-2a1e9c243b74", "f5e5cc9a-eb76-4d72-bd0f-09af6dcd7190", "a69f819b-9d27-43c6-9ca0-fe37f11cfbdc" }, // updateKeys
-        new [] { "09986f28-a8be-4df7-a61b-2a1e9c243b74", "f5e5cc9a-eb76-4d72-bd0f-09af6dcd7190", "a69f819b-9d27-43c6-9ca0-fe37f11cfbdc" },                                         // addedEntityKeys
-        new [] { "8895a7b6-39bc-4483-a1de-958e19eb9109", "eac5baeb-65ce-47fd-954e-bf5b4d411ba0" }                                                                                  // removedEntityKeys
+        new[] { "8895a7b6-39bc-4483-a1de-958e19eb9109", "eac5baeb-65ce-47fd-954e-bf5b4d411ba0", "581aafa7-f43c-40fc-a64c-e7be13e6c861" },                                         // initialKeys
+        new[] { "581aafa7-f43c-40fc-a64c-e7be13e6c861", "09986f28-a8be-4df7-a61b-2a1e9c243b74", "f5e5cc9a-eb76-4d72-bd0f-09af6dcd7190", "a69f819b-9d27-43c6-9ca0-fe37f11cfbdc" }, // updateKeys
+        new[] { "09986f28-a8be-4df7-a61b-2a1e9c243b74", "f5e5cc9a-eb76-4d72-bd0f-09af6dcd7190", "a69f819b-9d27-43c6-9ca0-fe37f11cfbdc" },                                         // addedEntityKeys
+        new[] { "8895a7b6-39bc-4483-a1de-958e19eb9109", "eac5baeb-65ce-47fd-954e-bf5b4d411ba0" }                                                                                  // removedEntityKeys
     )]
 
     public async Task CreateDeleteAppAssignedUseCases_Success(
@@ -566,12 +566,12 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         modified.Should().BeEmpty();
         deleted.Should().HaveSameCount(removedEntities);
         deleted.OrderBy(x => x.UseCaseId).Zip(removedEntities).Should().AllSatisfy(x => (x.First.AppId == x.Second.AppId && x.First.UseCaseId == x.Second.UseCaseId).Should().BeTrue());
-   }
+    }
 
     #endregion
 
     #region Setup
-    
+
     private async Task<OfferRepository> CreateSut()
     {
         var context = await _dbTestDbFixture.GetPortalDbContext().ConfigureAwait(false);

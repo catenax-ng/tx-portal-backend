@@ -18,9 +18,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Base;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using System.ComponentModel.DataAnnotations;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Base;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 
@@ -33,7 +33,7 @@ public class CompanyServiceAccount : IBaseEntity
         UserRoles = new HashSet<UserRole>();
         CompanyServiceAccountAssignedRoles = new HashSet<CompanyServiceAccountAssignedRole>();
     }
-    
+
     public CompanyServiceAccount(Guid id, Guid serviceAccountOwnerId, CompanyServiceAccountStatusId companyServiceAccountStatusId, string name, string description, DateTimeOffset dateCreated, CompanyServiceAccountTypeId companyServiceAccountTypeId) : this()
     {
         Id = id;

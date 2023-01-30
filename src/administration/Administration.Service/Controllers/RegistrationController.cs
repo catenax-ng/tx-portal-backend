@@ -38,7 +38,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Controllers
 public class RegistrationController : ControllerBase
 {
     private readonly IRegistrationBusinessLogic _logic;
-    
+
     /// <summary>
     /// Creates a new instance of <see cref="RegistrationController"/>
     /// </summary>
@@ -65,7 +65,7 @@ public class RegistrationController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public Task<CompanyWithAddressData> GetCompanyWithAddressAsync([FromRoute] Guid applicationId) =>
         _logic.GetCompanyWithAddressAsync(applicationId);
-    
+
     /// <summary>
     /// Get Application Detail by Company Name or Status
     /// </summary>
@@ -84,7 +84,7 @@ public class RegistrationController : ControllerBase
     [Route("applications")]
     [ProducesResponseType(typeof(Pagination.Response<CompanyApplicationDetails>), StatusCodes.Status200OK)]
     public Task<Pagination.Response<CompanyApplicationDetails>> GetApplicationDetailsAsync([FromQuery] int page, [FromQuery] int size, [FromQuery] CompanyApplicationStatusFilter? companyApplicationStatusFilter = null, [FromQuery] string? companyName = null) =>
-        _logic.GetCompanyApplicationDetailsAsync(page, size,companyApplicationStatusFilter, companyName);
+        _logic.GetCompanyApplicationDetailsAsync(page, size, companyApplicationStatusFilter, companyName);
 
     /// <summary>
     /// Decline the Partner Registration Request
@@ -164,7 +164,7 @@ public class RegistrationController : ControllerBase
         await this.WithIamUserId(user => _logic.TriggerBpnDataPushAsync(user, applicationId, cancellationToken)).ConfigureAwait(false);
         return NoContent();
     }
-    
+
     /// <summary>
     /// Approves the registration verification for the application with the given id
     /// </summary>

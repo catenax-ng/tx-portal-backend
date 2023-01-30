@@ -51,7 +51,7 @@ public class ConnectorsControllerTests
     {
         //Arrange
         var connectorInputModel = new ConnectorInputModel(
-            "New Connector", 
+            "New Connector",
             "https://connec-tor.com",
             ConnectorStatusId.ACTIVE,
             "the location",
@@ -68,13 +68,13 @@ public class ConnectorsControllerTests
         Assert.IsType<CreatedAtRouteResult>(result);
         result.Value.Should().Be(connectorResult);
     }
-    
+
     [Fact]
     public async Task CreateManagedConnectorAsync_WithValidData_ReturnsExpectedResult()
     {
         //Arrange
         var connectorInputModel = new ManagedConnectorInputModel(
-            "New Connector", 
+            "New Connector",
             "https://connec-tor.com",
             ConnectorStatusId.ACTIVE,
             "the location",
@@ -92,7 +92,7 @@ public class ConnectorsControllerTests
         Assert.IsType<CreatedAtRouteResult>(result);
         result.Value.Should().Be(connectorResult);
     }
-    
+
     [Fact]
     public async Task TriggerDaps_WithValidData_ReturnsExpectedResult()
     {
@@ -109,7 +109,7 @@ public class ConnectorsControllerTests
         A.CallTo(() => _logic.TriggerDapsAsync(connectorId, file, AccessToken, IamUserId, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
         result.Should().BeTrue();
     }
-    
+
     [Fact]
     public async Task GetCompanyConnectorsForCurrentUser_WithValidData_ReturnsExpectedResult()
     {
@@ -125,7 +125,7 @@ public class ConnectorsControllerTests
         A.CallTo(() => _logic.GetAllCompanyConnectorDatasForIamUserAsyncEnum(IamUserId, 0, 15)).MustHaveHappenedOnceExactly();
         result.Content.Should().HaveCount(5);
     }
-    
+
     [Fact]
     public async Task GetCompanyConnectorByIdForCurrentUser_WithValidData_ReturnsExpectedResult()
     {
@@ -142,7 +142,7 @@ public class ConnectorsControllerTests
         A.CallTo(() => _logic.GetCompanyConnectorDataForIdIamUserAsync(connectorId, IamUserId)).MustHaveHappenedOnceExactly();
         result.Should().Be(data);
     }
-    
+
     [Fact]
     public async Task DeleteConnector_WithValidData_ReturnsExpectedResult()
     {
@@ -178,5 +178,4 @@ public class ConnectorsControllerTests
         A.CallTo(() => _logic.GetCompanyConnectorEndPointAsync(bpns)).MustHaveHappenedOnceExactly();
         result.Should().HaveCount(5);
     }
-
 }

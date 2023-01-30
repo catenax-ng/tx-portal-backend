@@ -31,7 +31,7 @@ public interface IChecklistService
     /// <param name="iamUserId">the current user</param>
     /// <param name="cancellationToken">Cancellation Token</param>
     Task TriggerBpnDataPush(Guid applicationId, string iamUserId, CancellationToken cancellationToken);
-    
+
     /// <summary>
     /// Processes the possible automated steps of the checklist
     /// </summary>

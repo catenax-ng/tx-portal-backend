@@ -32,10 +32,6 @@
         <RootNamespace>Org.Eclipse.TractusX.Portal.Backend.Notifications.Service</RootNamespace>
     </PropertyGroup>
   
-    <Target Name="DotnetFormat" BeforeTargets="Build">
-      <Exec Command="dotnet format --verify-no-changes --no-restore"/>
-    </Target>
-
     <ItemGroup>
         <ProjectReference Include="..\..\framework\Framework.Cors\Framework.Cors.csproj" />
         <ProjectReference Include="..\..\framework\Framework.ErrorHandling.Library\Framework.ErrorHandling.Library.csproj" />

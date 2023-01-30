@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 Microsoft and BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -31,7 +31,7 @@ public interface ICustodianBusinessLogic
     /// <param name="cancellationToken">CancellationToken</param>
     /// <returns>Returns the response message</returns>
     Task<string> CreateWalletAsync(Guid applicationId, CancellationToken cancellationToken);
-    
+
     /// <summary>
     /// Gets the wallet data for the given application
     /// </summary>

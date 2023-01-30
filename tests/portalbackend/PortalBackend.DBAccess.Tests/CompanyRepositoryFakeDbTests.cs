@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -38,8 +38,8 @@ public class CompanyRepositoryFakeDbTests
 {
     private readonly IFixture _fixture;
     private readonly PortalDbContext _contextFake;
-    private readonly Guid _validCompanyId = Guid.NewGuid(); 
-    private readonly Guid _companyWithoutBpnId = Guid.NewGuid(); 
+    private readonly Guid _validCompanyId = Guid.NewGuid();
+    private readonly Guid _companyWithoutBpnId = Guid.NewGuid();
     private readonly List<Company> _companies = new();
 
     public CompanyRepositoryFakeDbTests()
@@ -104,7 +104,7 @@ public class CompanyRepositoryFakeDbTests
             BusinessPartnerNumber = "BUISNESSPARTNERNO"
         });
         _companies.Add(new Company(_companyWithoutBpnId, "withoutBpn", CompanyStatusId.ACTIVE, DateTimeOffset.UtcNow));
-        
+
         A.CallTo(() => _contextFake.Companies).Returns(_companies.AsFakeDbSet());
     }
 
@@ -123,5 +123,5 @@ public class CompanyRepositoryFakeDbTests
         // Assert
         results.Should().NotBeNullOrEmpty();
     }
-     #endregion
+    #endregion
 }

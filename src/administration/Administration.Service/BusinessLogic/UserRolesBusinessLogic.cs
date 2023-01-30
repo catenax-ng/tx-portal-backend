@@ -29,7 +29,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
 
-public class UserRolesBusinessLogic: IUserRolesBusinessLogic
+public class UserRolesBusinessLogic : IUserRolesBusinessLogic
 {
     private readonly IPortalRepositories _portalRepositories;
     private readonly IProvisioningManager _provisioningManager;
@@ -43,7 +43,7 @@ public class UserRolesBusinessLogic: IUserRolesBusinessLogic
     public IAsyncEnumerable<OfferRoleInfos> GetCoreOfferRoles(string iamUserId, string? languageShortName) =>
         _portalRepositories.GetInstance<IUserRolesRepository>().GetCoreOfferRolesAsync(iamUserId, languageShortName ?? IUserRolesBusinessLogic.DEFAULT_LANGUAGE)
             .PreSortedGroupBy(x => x.OfferId)
-            .Select(x => new OfferRoleInfos(x.Key, x.Select(s => new OfferRoleInfo(s.RoleId,s.RoleText,s.Description))));
+            .Select(x => new OfferRoleInfos(x.Key, x.Select(s => new OfferRoleInfo(s.RoleId, s.RoleText, s.Description))));
 
     public IAsyncEnumerable<OfferRoleInfo> GetAppRolesAsync(Guid appId, string iamUserId, string? languageShortName) =>
         _portalRepositories.GetInstance<IUserRolesRepository>()
@@ -76,7 +76,7 @@ public class UserRolesBusinessLogic: IUserRolesBusinessLogic
 
     private async Task<IEnumerable<UserRoleWithId>> ModifyUserRolesInternal(
         Func<Task<OfferIamUserData?>> getIamUserData,
-        Func<Guid,IEnumerable<string>,Guid,IAsyncEnumerable<UserRoleModificationData>> getUserRoleModificationData,
+        Func<Guid, IEnumerable<string>, Guid, IAsyncEnumerable<UserRoleModificationData>> getUserRoleModificationData,
         Guid offerId, Guid companyUserId, IEnumerable<string> roles, string iamUserId)
     {
         var result = await getIamUserData().ConfigureAwait(false);
@@ -84,7 +84,7 @@ public class UserRolesBusinessLogic: IUserRolesBusinessLogic
         {
             throw new NotFoundException($"iamUserId for user {companyUserId} not found");
         }
-        
+
         if (!result.IsSameCompany)
         {
             throw new ForbiddenException(
@@ -109,7 +109,7 @@ public class UserRolesBusinessLogic: IUserRolesBusinessLogic
             throw new ControllerArgumentException($"Invalid roles {string.Join(",", nonExistingRoles)}", nameof(roles));
         }
         var rolesToAdd = existingRoles.Where(role => !role.IsAssignedToUser);
-        var rolesToDelete =  existingRoles.Where(x => x.IsAssignedToUser).ExceptBy(distinctRoles, role => role.CompanyUserRoleText);
+        var rolesToDelete = existingRoles.Where(x => x.IsAssignedToUser).ExceptBy(distinctRoles, role => role.CompanyUserRoleText);
 
         var rolesNotAdded = rolesToAdd.Any()
             ? rolesToAdd.Except(await AddRoles(companyUserId, result.IamClientIds, rolesToAdd, result.IamUserId).ConfigureAwait(false))
@@ -121,7 +121,7 @@ public class UserRolesBusinessLogic: IUserRolesBusinessLogic
         }
 
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
-        
+
         return rolesNotAdded.Select(x => new UserRoleWithId(x.CompanyUserRoleText, x.CompanyUserRoleId));
     }
 

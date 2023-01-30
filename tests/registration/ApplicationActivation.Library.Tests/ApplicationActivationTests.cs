@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -69,7 +69,7 @@ public class ApplicationActivationTests
         _fixture = new Fixture().Customize(new AutoFakeItEasyCustomization { ConfigureMembers = true });
         _fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList()
             .ForEach(b => _fixture.Behaviors.Remove(b));
-        _fixture.Behaviors.Add(new OmitOnRecursionBehavior());  
+        _fixture.Behaviors.Add(new OmitOnRecursionBehavior());
 
         _provisioningManager = A.Fake<IProvisioningManager>();
         _portalRepositories = A.Fake<IPortalRepositories>();
@@ -83,7 +83,7 @@ public class ApplicationActivationTests
         _settings = A.Fake<ApplicationActivationSettings>();
 
         var options = A.Fake<IOptions<ApplicationActivationSettings>>();
-        
+
         _settings.WelcomeNotificationTypeIds = new List<NotificationTypeId>
         {
             NotificationTypeId.WELCOME,
@@ -101,7 +101,7 @@ public class ApplicationActivationTests
 
         _sut = new ApplicationActivationService(_portalRepositories, _notificationService, _provisioningManager, _mailingService, _dateTimeProvider, options, A.Fake<ILogger<ApplicationActivationService>>());
     }
-    
+
     #region HandleApplicationActivation
 
     [Fact]
@@ -114,7 +114,7 @@ public class ApplicationActivationTests
         _settings.StartTime = TimeSpan.FromHours(4);
         _settings.EndTime = TimeSpan.FromHours(8);
         SetupFakes(new Dictionary<string, IEnumerable<string>>(), new List<UserRoleData>(), companyUserAssignedRole, companyUserAssignedBusinessPartner);
-        
+
         //Act
         await _sut.HandleApplicationActivation(Id).ConfigureAwait(false);
 
@@ -239,7 +239,7 @@ public class ApplicationActivationTests
     {
         //Act
         async Task Action() => await _sut.HandleApplicationActivation(Guid.Empty).ConfigureAwait(false);
-        
+
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Action);
         ex.Message.Should().Be($"BusinessPartnerNumber (bpn) for CompanyApplications {Guid.Empty} company {Guid.Empty} is empty");
@@ -275,7 +275,7 @@ public class ApplicationActivationTests
     #endregion
 
     #region Validate ApplicationActivationSettings
-    
+
     [Fact]
     public void ApplicationActivationSettingsValidate_WithValidValues_ReturnsTrue()
     {
@@ -285,20 +285,20 @@ public class ApplicationActivationTests
             StartTime = new TimeSpan(1, 0, 0),
             EndTime = new TimeSpan(12, 0, 0)
         };
-        
+
         //Act
         var result = ApplicationActivationSettings.Validate(settings);
 
         //Assert
         result.Should().BeTrue();
     }
-    
+
     [Fact]
     public void ApplicationActivationSettingsValidate_WithoutStartAndEndTime_ReturnsTrue()
     {
         //Arrange
         var settings = new ApplicationActivationSettings();
-        
+
         //Act
         var result = ApplicationActivationSettings.Validate(settings);
 
@@ -314,7 +314,7 @@ public class ApplicationActivationTests
         {
             StartTime = new TimeSpan(1, 0, 0)
         };
-        
+
         //Act
         var result = ApplicationActivationSettings.Validate(settings);
 
@@ -330,7 +330,7 @@ public class ApplicationActivationTests
         {
             EndTime = new TimeSpan(1, 0, 0)
         };
-        
+
         //Act
         var result = ApplicationActivationSettings.Validate(settings);
 
@@ -347,7 +347,7 @@ public class ApplicationActivationTests
             StartTime = new TimeSpan(22, 0, 0),
             EndTime = new TimeSpan(6, 0, 0)
         };
-        
+
         //Act
         var result = ApplicationActivationSettings.Validate(settings);
 
@@ -364,7 +364,7 @@ public class ApplicationActivationTests
             StartTime = new TimeSpan(1, 5, 0, 0),
             EndTime = new TimeSpan(2, 0, 0)
         };
-        
+
         //Act
         var result = ApplicationActivationSettings.Validate(settings);
 
@@ -381,7 +381,7 @@ public class ApplicationActivationTests
             StartTime = new TimeSpan(1, 0, 0),
             EndTime = new TimeSpan(1, 2, 0, 0)
         };
-        
+
         //Act
         var result = ApplicationActivationSettings.Validate(settings);
 
@@ -398,7 +398,7 @@ public class ApplicationActivationTests
             StartTime = new TimeSpan(26, 0, 0),
             EndTime = new TimeSpan(2, 0, 0)
         };
-        
+
         //Act
         var result = ApplicationActivationSettings.Validate(settings);
 
@@ -415,7 +415,7 @@ public class ApplicationActivationTests
             StartTime = new TimeSpan(2, 0, 0),
             EndTime = new TimeSpan(25, 0, 0)
         };
-        
+
         //Act
         var result = ApplicationActivationSettings.Validate(settings);
 
@@ -432,7 +432,7 @@ public class ApplicationActivationTests
             StartTime = new TimeSpan(-2, 0, 0),
             EndTime = new TimeSpan(14, 0, 0)
         };
-        
+
         //Act
         var result = ApplicationActivationSettings.Validate(settings);
 
@@ -449,7 +449,7 @@ public class ApplicationActivationTests
             StartTime = new TimeSpan(14, 0, 0),
             EndTime = new TimeSpan(-2, 0, 0)
         };
-        
+
         //Act
         var result = ApplicationActivationSettings.Validate(settings);
 
@@ -458,9 +458,9 @@ public class ApplicationActivationTests
     }
 
     #endregion
-    
+
     #region Setup
-    
+
     private void SetupFakes(
         IDictionary<string, IEnumerable<string>> clientRoleNames,
         IEnumerable<UserRoleData> userRoleData,
@@ -548,9 +548,9 @@ public class ApplicationActivationTests
 
         A.CallTo(() => _notificationService.CreateNotifications(A<IDictionary<string, IEnumerable<string>>>._, A<Guid?>._, A<IEnumerable<(string? content, NotificationTypeId notificationTypeId)>>._, A<Guid>._))
             .Invokes((
-                IDictionary<string,IEnumerable<string>> _, 
-                Guid? creatorId, 
-                IEnumerable<(string? content, NotificationTypeId notificationTypeId)> notifications, 
+                IDictionary<string, IEnumerable<string>> _,
+                Guid? creatorId,
+                IEnumerable<(string? content, NotificationTypeId notificationTypeId)> notifications,
                 Guid _) =>
             {
                 foreach (var notificationData in notifications)

@@ -19,15 +19,15 @@
  ********************************************************************************/
 
 using AutoFixture;
-using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
-using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared.Extensions;
 using FakeItEasy;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Notifications.Service.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Notifications.Service.Controllers;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared.Extensions;
 using Xunit;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Notifications.Service.Tests.Controllers;
@@ -72,8 +72,8 @@ public class ServiceControllerTest
     {
         //Arrange
         var paginationResponse = new Pagination.Response<NotificationDetailData>(new Pagination.Metadata(15, 1, 1, 15), _fixture.CreateMany<NotificationDetailData>(5));
-        A.CallTo(() => _logic.GetNotificationsAsync(A<int>._, A<int>._, A<string>._, A<bool?>._, A<NotificationTypeId?>._,  A<NotificationTopicId?>._, A<NotificationSorting?>._))
-            .ReturnsLazily(()=> paginationResponse);
+        A.CallTo(() => _logic.GetNotificationsAsync(A<int>._, A<int>._, A<string>._, A<bool?>._, A<NotificationTypeId?>._, A<NotificationTopicId?>._, A<NotificationSorting?>._))
+            .ReturnsLazily(() => paginationResponse);
 
         //Act
         var result = await this._controller.GetNotifications().ConfigureAwait(false);
@@ -83,7 +83,7 @@ public class ServiceControllerTest
         Assert.IsType<Pagination.Response<NotificationDetailData>>(result);
         result.Content.Should().HaveCount(5);
     }
-        
+
     [Fact]
     public async Task GetNotification_ReturnsExpectedData()
     {
@@ -100,7 +100,7 @@ public class ServiceControllerTest
         A.CallTo(() => _logic.GetNotificationDetailDataAsync(IamUserId, notificationId)).MustHaveHappenedOnceExactly();
         result.Should().Be(data);
     }
-        
+
     [Fact]
     public async Task NotificationCountDetails_ReturnsExpectedData()
     {
@@ -117,7 +117,7 @@ public class ServiceControllerTest
         Assert.IsType<NotificationCountDetails>(result);
         result.Should().Be(data);
     }
-        
+
     [Fact]
     public async Task SetNotificationToRead_ReturnsNoContent()
     {

@@ -67,14 +67,14 @@ public interface IOfferService
     /// <param name="offerTypeId"></param>
     /// <returns>Returns the details</returns>
     Task<ConsentDetailData> GetConsentDetailDataAsync(Guid consentId, OfferTypeId offerTypeId);
-    
+
     /// <summary>
     /// Return Agreements for App_Contract Category
     /// </summary>
     /// <param name="offerTypeId">OfferTypeId the agreement is associated with</param>
     /// <returns></returns>
     IAsyncEnumerable<AgreementData> GetOfferTypeAgreementsAsync(OfferTypeId offerTypeId);
-    
+
     /// <summary>
     /// Return Offer Agreement Consent
     /// </summary>
@@ -83,7 +83,7 @@ public interface IOfferService
     /// <param name="offerTypeId">OfferTypeId the agreements are associated with</param>
     /// <returns></returns>
     Task<OfferAgreementConsent> GetProviderOfferAgreementConsentById(Guid offerId, string iamUserId, OfferTypeId offerTypeId);
-    
+
     /// <summary>
     /// Create or Update consent to agreements associated with an offer
     /// </summary>
@@ -104,7 +104,7 @@ public interface IOfferService
     /// <param name="offerTypeId">OfferTypeId of offer to be created</param>
     /// <param name="basePortalAddress">Address of the portal</param>
     /// <returns>Returns the response data</returns>
-    Task<OfferAutoSetupResponseData> AutoSetupServiceAsync(OfferAutoSetupData data, IDictionary<string,IEnumerable<string>> serviceAccountRoles, IDictionary<string,IEnumerable<string>> companyAdminRoles, string iamUserId, OfferTypeId offerTypeId, string basePortalAddress);
+    Task<OfferAutoSetupResponseData> AutoSetupServiceAsync(OfferAutoSetupData data, IDictionary<string, IEnumerable<string>> serviceAccountRoles, IDictionary<string, IEnumerable<string>> companyAdminRoles, string iamUserId, OfferTypeId offerTypeId, string basePortalAddress);
 
     /// <summary>
     /// Creates a new service offering
@@ -114,7 +114,7 @@ public interface IOfferService
     /// <param name="offerTypeId">Id of the offer type</param>
     /// <returns>The id of the newly created service</returns>
     Task<Guid> CreateServiceOfferingAsync(ServiceOfferingData data, string iamUserId, OfferTypeId offerTypeId);
-    
+
     /// <summary>
     /// 
     /// </summary>
@@ -132,7 +132,7 @@ public interface IOfferService
     /// <param name="salesManagerRoles">the sales manager roles</param>
     /// <returns>Returns the company id of the user</returns>
     Task<Guid> ValidateSalesManager(Guid salesManagerId, string iamUserId, IDictionary<string, IEnumerable<string>> salesManagerRoles);
-    
+
     void UpsertRemoveOfferDescription(Guid offerId, IEnumerable<Localization> updateDescriptions, IEnumerable<(string LanguageShortName, string DescriptionLong, string DescriptionShort)> existingDescriptions);
 
     void CreateOrUpdateOfferLicense(Guid offerId, string licenseText, (Guid OfferLicenseId, string LicenseText, bool AssignedToMultipleOffers) offerLicense);
@@ -145,7 +145,7 @@ public interface IOfferService
     /// <param name="notificationTypeIds"></param>
     /// <param name="approveOfferRoles"></param>
     /// <returns></returns>
-    Task ApproveOfferRequestAsync(Guid offerId, string iamUserId, OfferTypeId offerTypeId, IEnumerable<NotificationTypeId> notificationTypeIds, IDictionary<string,IEnumerable<string>> approveOfferRoles);
+    Task ApproveOfferRequestAsync(Guid offerId, string iamUserId, OfferTypeId offerTypeId, IEnumerable<NotificationTypeId> notificationTypeIds, IDictionary<string, IEnumerable<string>> approveOfferRoles);
 
     /// <summary>
     /// Update offer status and create notification
@@ -156,7 +156,7 @@ public interface IOfferService
     /// <param name="notificationTypeIds">Ids for the notifications that are created</param>
     /// <param name="companyAdminRoles">Company Admin Roles</param>
     /// <returns></returns>
-    Task SubmitOfferAsync(Guid offerId, string iamUserId, OfferTypeId offerTypeId, IEnumerable<NotificationTypeId> notificationTypeIds, IDictionary<string,IEnumerable<string>> companyAdminRoles);
+    Task SubmitOfferAsync(Guid offerId, string iamUserId, OfferTypeId offerTypeId, IEnumerable<NotificationTypeId> notificationTypeIds, IDictionary<string, IEnumerable<string>> companyAdminRoles);
 
     /// <summary>
     /// Declines the given offer
@@ -168,8 +168,8 @@ public interface IOfferService
     /// <param name="notificationTypeId">Id of the notification that should be send</param>
     /// <param name="notificationRecipients">Recipients of the notifications</param>
     /// <param name="basePortalAddress">the base portal address</param>
-    Task DeclineOfferAsync(Guid offerId, string iamUserId, OfferDeclineRequest data, OfferTypeId offerType, NotificationTypeId notificationTypeId, IDictionary<string,IEnumerable<string>> notificationRecipients, string basePortalAddress);
- 
+    Task DeclineOfferAsync(Guid offerId, string iamUserId, OfferDeclineRequest data, OfferTypeId offerType, NotificationTypeId notificationTypeId, IDictionary<string, IEnumerable<string>> notificationRecipients, string basePortalAddress);
+
     /// <summary>
     /// Deactivate the given offerStatus by appsId
     /// </summary>

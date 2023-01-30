@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -32,17 +32,17 @@ public class ServiceSettings
     public int ApplicationsMaxPageSize { get; init; }
 
     [Required]
-    public IDictionary<string,IEnumerable<string>> CompanyAdminRoles { get; init; } = null!;
-    
-    [Required]
-    public IDictionary<string,IEnumerable<string>> ServiceAccountRoles { get; init; } = null!;
+    public IDictionary<string, IEnumerable<string>> CompanyAdminRoles { get; init; } = null!;
 
     [Required]
-    public IDictionary<string,IEnumerable<string>> ServiceManagerRoles { get; init; } = null!;
+    public IDictionary<string, IEnumerable<string>> ServiceAccountRoles { get; init; } = null!;
 
     [Required]
-    public IDictionary<string,IEnumerable<string>> SalesManagerRoles { get; init; } = null!;
-    
+    public IDictionary<string, IEnumerable<string>> ServiceManagerRoles { get; init; } = null!;
+
+    [Required]
+    public IDictionary<string, IEnumerable<string>> SalesManagerRoles { get; init; } = null!;
+
     /// <summary>
     /// Notification Type Id
     /// </summary>

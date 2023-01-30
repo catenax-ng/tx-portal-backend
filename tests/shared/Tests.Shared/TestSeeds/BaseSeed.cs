@@ -45,12 +45,12 @@ public static class BaseSeed
                 Alpha3Code = "PRT"
             }
         });
-        
+
         dbContext.UseCases.AddRange(new List<UseCase>
         {
             new(new Guid("06b243a4-ba51-4bf3-bc40-5d79a2231b90"), "Modular Production", "MP")
         });
-        
+
         dbContext.Addresses.AddRange(new List<Address>
         {
             new(new Guid("b4db3945-19a7-4a50-97d6-e66e8dfd04fb"), "Munich", "Street", "DE", DateTimeOffset.UtcNow)
@@ -106,20 +106,20 @@ public static class BaseSeed
             new (new Guid("1b86d973-3aac-4dcd-a9e9-0c222766202b"), ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow),
             new (new Guid("1b86d973-3aac-4dcd-a9e9-0c222766202b"), ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow),
             new (new Guid("1b86d973-3aac-4dcd-a9e9-0c222766202b"), ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow),
-            
+
             new (new Guid("4829b64c-de6a-426c-81fc-c0bcf95bcb76"), ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow),
             new (new Guid("4829b64c-de6a-426c-81fc-c0bcf95bcb76"), ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow),
             new (new Guid("4829b64c-de6a-426c-81fc-c0bcf95bcb76"), ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow),
             new (new Guid("4829b64c-de6a-426c-81fc-c0bcf95bcb76"), ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow),
             new (new Guid("4829b64c-de6a-426c-81fc-c0bcf95bcb76"), ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow),
-            
+
             new (new Guid("2bb2005f-6e8d-41eb-967b-cde67546cafc"), ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow),
             new (new Guid("2bb2005f-6e8d-41eb-967b-cde67546cafc"), ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow),
             new (new Guid("2bb2005f-6e8d-41eb-967b-cde67546cafc"), ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow),
             new (new Guid("2bb2005f-6e8d-41eb-967b-cde67546cafc"), ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow),
             new (new Guid("2bb2005f-6e8d-41eb-967b-cde67546cafc"), ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow),
         });
-        
+
         dbContext.Invitations.AddRange(new List<Invitation>
         {
             new (new Guid("aa6cdb72-22d8-4f4f-8a0b-5f8c4b59a407"), new Guid("4829b64c-de6a-426c-81fc-c0bcf95bcb76"), new Guid("ac1cf001-7fbc-1f2f-817f-bce058019990"), InvitationStatusId.ACCEPTED, DateTimeOffset.UtcNow),
@@ -242,7 +242,7 @@ public static class BaseSeed
                 OfferSubscriptionId = new Guid("eb98bdf5-14e1-4feb-a954-453eac0b93cd")
             }
         });
-        
+
         dbContext.IamClients.AddRange(new List<IamClient>
         {
             new (new Guid("0c9051d0-d032-11ec-9d64-0242ac120002"), "Cl2-CX-Portal"),
@@ -389,7 +389,7 @@ public static class BaseSeed
             new(NotificationTypeId.APP_RELEASE_REJECTION, NotificationTopicId.OFFER),
             new(NotificationTypeId.SERVICE_RELEASE_REJECTION, NotificationTopicId.OFFER)
         });
-        
+
         dbContext.Notifications.AddRange(new List<Notification>
         {
             new (new Guid("94F22922-04F6-4A4E-B976-1BF2FF3DE973"), new Guid("ac1cf001-7fbc-1f2f-817f-bce058020001"), DateTimeOffset.UtcNow, NotificationTypeId.ACTION, false),
@@ -408,7 +408,7 @@ public static class BaseSeed
                 HostId = new Guid("2dc4249f-b5ca-4d42-bef1-7a7a950a4f87"),
                 TypeId = ConnectorTypeId.COMPANY_CONNECTOR,
                 StatusId =ConnectorStatusId.ACTIVE,
-                
+
             },
             new(new Guid("f7310cff-a51d-4af8-9bc3-1525e9d1601b"), "Con on Air", "PT", "https://api.con-on-air.com")
             {

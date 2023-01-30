@@ -18,9 +18,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Base;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using System.ComponentModel.DataAnnotations;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Base;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 
@@ -66,7 +66,7 @@ public class Connector : IBaseEntity
     public virtual Company? Provider { get; set; }
     public virtual Company? Host { get; set; }
     public virtual Country? Location { get; set; }
-    
+
     /// <summary>
     /// Mapping to the assigned document
     /// </summary>

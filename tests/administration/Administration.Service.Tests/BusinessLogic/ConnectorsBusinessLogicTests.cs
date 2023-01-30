@@ -60,7 +60,7 @@ public class ConnectorsBusinessLogicTests
         _fixture = new Fixture().Customize(new AutoFakeItEasyCustomization { ConfigureMembers = true });
         _fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList()
             .ForEach(b => _fixture.Behaviors.Remove(b));
-        _fixture.Behaviors.Add(new OmitOnRecursionBehavior());  
+        _fixture.Behaviors.Add(new OmitOnRecursionBehavior());
 
         _countryRepository = A.Fake<ICountryRepository>();
         _companyRepository = A.Fake<ICompanyRepository>();
@@ -74,7 +74,7 @@ public class ConnectorsBusinessLogicTests
         _settings = new ConnectorsSettings
         {
             MaxPageSize = 15,
-            ValidCertificationContentTypes = new []
+            ValidCertificationContentTypes = new[]
             {
                 "application/x-pem-file",
                 "application/x-x509-ca-cert",
@@ -89,17 +89,17 @@ public class ConnectorsBusinessLogicTests
     }
 
     #region Create Connector
-    
+
     [Fact]
     public async Task CreateConnectorAsync_WithValidInput_ReturnsCreatedConnectorData()
     {
         // Arrange
         var file = FormFileHelper.GetFormFile("Content of the super secure certificate", "test.pem", "application/x-pem-file");
         var connectorInput = new ConnectorInputModel("connectorName", "https://test.de", ConnectorStatusId.ACTIVE, "de", file);
-        
+
         // Act
         var result = await _logic.CreateConnectorAsync(connectorInput, IamUserId, CancellationToken.None).ConfigureAwait(false);
-        
+
         // Assert
         result.Should().NotBeNull();
         _connectors.Should().HaveCount(1);
@@ -111,7 +111,7 @@ public class ConnectorsBusinessLogicTests
     {
         // Arrange
         var connectorInput = new ConnectorInputModel("connectorName", "https://test.de", ConnectorStatusId.ACTIVE, "invalid", null);
-        
+
         // Act
         async Task Act() => await _logic.CreateConnectorAsync(connectorInput, IamUserId, CancellationToken.None).ConfigureAwait(false);
 
@@ -119,13 +119,13 @@ public class ConnectorsBusinessLogicTests
         var exception = await Assert.ThrowsAsync<ControllerArgumentException>(Act);
         exception.Message.Should().Be("Location invalid does not exist (Parameter 'location')");
     }
-    
+
     [Fact]
     public async Task CreateConnectorAsync_WithCompanyWithoutBon_ThrowsUnexpectedConditionException()
     {
         // Arrange
         var connectorInput = new ConnectorInputModel("connectorName", "https://test.de", ConnectorStatusId.ACTIVE, "de", null);
-        
+
         // Act
         async Task Act() => await _logic.CreateConnectorAsync(connectorInput, UserWithoutBpn, CancellationToken.None).ConfigureAwait(false);
 
@@ -145,7 +145,7 @@ public class ConnectorsBusinessLogicTests
 
         // Act
         var result = await _logic.CreateConnectorAsync(connectorInput, IamUserId, CancellationToken.None).ConfigureAwait(false);
-        
+
         // Assert
         result.Should().NotBeNull();
         _connectors.Should().HaveCount(1);
@@ -158,7 +158,7 @@ public class ConnectorsBusinessLogicTests
         // Arrange
         var file = FormFileHelper.GetFormFile("Content of the super secure certificate", "test.pdf", "application/pdf");
         var connectorInput = new ConnectorInputModel("connectorName", "https://test.de", ConnectorStatusId.ACTIVE, "de", file);
-        
+
         // Act
         async Task Act() => await _logic.CreateConnectorAsync(connectorInput, IamUserId, CancellationToken.None).ConfigureAwait(false);
 
@@ -168,9 +168,9 @@ public class ConnectorsBusinessLogicTests
     }
 
     #endregion
-    
+
     #region CreateManagedConnectorAsync
-    
+
     [Fact]
     public async Task CreateManagedConnectorAsync_WithValidInput_ReturnsCreatedConnectorData()
     {
@@ -180,23 +180,23 @@ public class ConnectorsBusinessLogicTests
 
         // Act
         var result = await _logic.CreateManagedConnectorAsync(connectorInput, IamUserId, CancellationToken.None).ConfigureAwait(false);
-        
+
         // Assert
         result.Should().NotBeNull();
         _connectors.Should().HaveCount(1);
         A.CallTo(() => _dapsService.EnableDapsAuthAsync(A<string>._, A<string>._, A<string>._, A<IFormFile>._, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
     }
-    
+
     [Fact]
     public async Task CreateManagedConnectorAsync_WithTechnicalUser_ReturnsCreatedConnectorData()
     {
         // Arrange
         var file = FormFileHelper.GetFormFile("this is just random content", "cert.pem", "application/x-pem-file");
         var connectorInput = new ManagedConnectorInputModel("connectorName", "https://test.de", ConnectorStatusId.ACTIVE, "de", ValidCompanyBpn, file);
-        
+
         // Act
         var result = await _logic.CreateManagedConnectorAsync(connectorInput, TechnicalUserId, CancellationToken.None).ConfigureAwait(false);
-        
+
         // Assert
         result.Should().NotBeNull();
         _connectors.Should().HaveCount(1);
@@ -208,7 +208,7 @@ public class ConnectorsBusinessLogicTests
     {
         // Arrange
         var connectorInput = new ManagedConnectorInputModel("connectorName", "https://test.de", ConnectorStatusId.ACTIVE, "invalid", ValidCompanyBpn, null);
-        
+
         // Act
         async Task Act() => await _logic.CreateManagedConnectorAsync(connectorInput, IamUserId, CancellationToken.None).ConfigureAwait(false);
 
@@ -221,11 +221,11 @@ public class ConnectorsBusinessLogicTests
     public async Task CreateManagedConnectorAsync_WithNotExistingBpn_ThrowsControllerArgumentException()
     {
         // Arrange
-        var connectorInput = new ManagedConnectorInputModel("connectorName", "https://test.de", ConnectorStatusId.ACTIVE, "de",  "THISISNOTEXISTING", null);
-        
+        var connectorInput = new ManagedConnectorInputModel("connectorName", "https://test.de", ConnectorStatusId.ACTIVE, "de", "THISISNOTEXISTING", null);
+
         // Act
         async Task Act() => await _logic.CreateManagedConnectorAsync(connectorInput, TechnicalUserId, CancellationToken.None).ConfigureAwait(false);
-        
+
         // Assert
         var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Act);
         ex.ParamName.Should().Be("providerBpn");
@@ -237,7 +237,7 @@ public class ConnectorsBusinessLogicTests
         // Arrange
         var file = FormFileHelper.GetFormFile("Content of the super secure certificate", "test.pdf", "application/pdf");
         var connectorInput = new ManagedConnectorInputModel("connectorName", "https://test.de", ConnectorStatusId.ACTIVE, "de", "THISISNOTEXISTING", file);
-        
+
         // Act
         async Task Act() => await _logic.CreateManagedConnectorAsync(connectorInput, IamUserId, CancellationToken.None).ConfigureAwait(false);
 
@@ -247,19 +247,19 @@ public class ConnectorsBusinessLogicTests
     }
 
     #endregion
-    
+
     #region TriggerDaps
-    
+
     [Fact]
     public async Task TriggerDaps_WithValidInput_CallsDaps()
     {
         // Arrange
         _connectors.Add(new Connector(ExistingConnectorId, "test", "de", "https://www.api.connector.com"));
         var file = FormFileHelper.GetFormFile("Content of the super secure certificate", "test.pem", "application/x-pem-file");
-        
+
         // Act
         await _logic.TriggerDapsAsync(ExistingConnectorId, file, AccessToken, IamUserId, CancellationToken.None).ConfigureAwait(false);
-        
+
         // Assert
         A.CallTo(() => _dapsService.EnableDapsAuthAsync(A<string>._, A<string>._, A<string>._, A<IFormFile>._, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
@@ -273,7 +273,7 @@ public class ConnectorsBusinessLogicTests
         var file = FormFileHelper.GetFormFile("Content of the super secure certificate", "test.pem", "application/x-pem-file");
 
         // Act
-        async Task Act() => await _logic.TriggerDapsAsync(notExistingConnectorId,  file, AccessToken, IamUserId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _logic.TriggerDapsAsync(notExistingConnectorId, file, AccessToken, IamUserId, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         var exception = await Assert.ThrowsAsync<NotFoundException>(Act);
@@ -287,7 +287,7 @@ public class ConnectorsBusinessLogicTests
         var file = FormFileHelper.GetFormFile("Content of the super secure certificate", "test.pem", "application/x-pem-file");
 
         // Act
-        async Task Act() => await _logic.TriggerDapsAsync(ExistingConnectorId,  file, AccessToken, Guid.NewGuid().ToString(), CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _logic.TriggerDapsAsync(ExistingConnectorId, file, AccessToken, Guid.NewGuid().ToString(), CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         var exception = await Assert.ThrowsAsync<ForbiddenException>(Act);
@@ -295,7 +295,7 @@ public class ConnectorsBusinessLogicTests
     }
 
     #endregion
-    
+
     #region Setup
 
     private void SetupRepositoryMethods()
@@ -313,7 +313,7 @@ public class ConnectorsBusinessLogicTests
             .ReturnsLazily(() => ValidCompanyId);
         A.CallTo(() => _companyRepository.GetCompanyIdByBpnAsync(A<string>.That.Not.Matches(x => x == ValidCompanyBpn)))
             .ReturnsLazily(() => Guid.Empty);
-        
+
         A.CallTo(() =>
                 _connectorsRepository.CreateConnector(A<string>._, A<string>._, A<string>._, A<Action<Connector>?>._))
             .Invokes(x =>
@@ -359,7 +359,7 @@ public class ConnectorsBusinessLogicTests
 
         A.CallTo(() => _sdFactoryBusinessLogic.RegisterConnectorAsync(A<string>._, A<string>._, A<CancellationToken>._))
             .ReturnsLazily(Guid.NewGuid);
-        
+
         A.CallTo(() => _portalRepositories.GetInstance<ICountryRepository>()).Returns(_countryRepository);
         A.CallTo(() => _portalRepositories.GetInstance<ICompanyRepository>()).Returns(_companyRepository);
         A.CallTo(() => _portalRepositories.GetInstance<IConnectorsRepository>()).Returns(_connectorsRepository);

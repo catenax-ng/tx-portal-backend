@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -87,7 +87,7 @@ public class ApplicationActivationService : IApplicationActivationService
         applicationRepository.AttachAndModifyCompanyApplication(applicationId, ca =>
         {
             ca.ApplicationStatusId = CompanyApplicationStatusId.CONFIRMED;
-            ca.DateLastChanged = DateTimeOffset.UtcNow;    
+            ca.DateLastChanged = DateTimeOffset.UtcNow;
         });
 
         _portalRepositories.GetInstance<ICompanyRepository>().AttachAndModifyCompany(companyId, null, c =>
@@ -103,8 +103,9 @@ public class ApplicationActivationService : IApplicationActivationService
         {
             await PostRegistrationWelcomeEmailAsync(userRolesRepository, applicationRepository, applicationId).ConfigureAwait(false);
 
-            if (assignedRoles == null) return;
-        
+            if (assignedRoles == null)
+                return;
+
             var unassignedClientRoles = _settings.ApplicationApprovalInitialRoles
                 .Select(initialClientRoles => (
                     client: initialClientRoles.Key,
@@ -133,7 +134,7 @@ public class ApplicationActivationService : IApplicationActivationService
         }
 
         var now = _dateTime.Now.TimeOfDay;
-        return startTime > endTime ? 
+        return startTime > endTime ?
             now >= startTime || now <= endTime :
             now >= startTime && now <= endTime;
     }
@@ -161,7 +162,8 @@ public class ApplicationActivationService : IApplicationActivationService
                 userRolesRepository.CreateCompanyUserAssignedRole(userData.CompanyUserId, roleData.UserRoleId);
             }
 
-            if (userData.BusinessPartnerNumbers.Contains(businessPartnerNumber)) continue;
+            if (userData.BusinessPartnerNumbers.Contains(businessPartnerNumber))
+                continue;
 
             userBusinessPartnersRepository.CreateCompanyUserAssignedBusinessPartner(userData.CompanyUserId, businessPartnerNumber);
             await _provisioningManager

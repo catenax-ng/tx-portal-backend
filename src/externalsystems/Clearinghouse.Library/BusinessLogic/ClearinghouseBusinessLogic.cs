@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 Microsoft and BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -50,7 +50,7 @@ public class ClearinghouseBusinessLogic : IClearinghouseBusinessLogic
         {
             throw new ConflictException($"Checklist Item {ApplicationChecklistEntryTypeId.CLEARING_HOUSE} is not in status {ApplicationChecklistEntryStatusId.IN_PROGRESS}");
         }
-        
+
         _portalRepositories.GetInstance<IApplicationChecklistRepository>()
             .AttachAndModifyApplicationChecklist(result.ApplicationId,
                 ApplicationChecklistEntryTypeId.CLEARING_HOUSE,

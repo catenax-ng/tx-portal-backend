@@ -17,7 +17,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
- 
+
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using System.Text.RegularExpressions;
 
@@ -25,7 +25,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Framework.Web;
 
 public static class ContentTypeMapperExtensions
 {
-    private static Regex extensionPattern = new Regex(@"\.[a-zA-Z]{3,4}$", RegexOptions.None, TimeSpan.FromSeconds(1));
+    private static readonly Regex extensionPattern = new Regex(@"\.[a-zA-Z]{3,4}$", RegexOptions.None, TimeSpan.FromSeconds(1));
 
     public static string MapToImageContentType(this string filename)
     {
@@ -34,12 +34,12 @@ public static class ContentTypeMapperExtensions
         {
             return match.Value.ToLower() switch
             {
-                ".jpg"  => "image/jpeg",
+                ".jpg" => "image/jpeg",
                 ".jpeg" => "image/jpeg",
-                ".png"  => "image/png",
-                ".gif"  => "image/gif",
-                ".svg"  => "image/svg+xml",
-                ".tif"  => "image/tiff",
+                ".png" => "image/png",
+                ".gif" => "image/gif",
+                ".svg" => "image/svg+xml",
+                ".tif" => "image/tiff",
                 ".tiff" => "image/tiff",
                 _ => throw new UnsupportedMediaTypeException($"extension {match.Value} doesn't belong to a supported image type")
             };

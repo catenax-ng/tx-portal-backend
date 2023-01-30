@@ -30,7 +30,7 @@ public class CompanyUserAssignedBusinessPartner
     }
 
     public CompanyUserAssignedBusinessPartner(Guid companyUserId, string businessPartnerNumber)
-        :base()
+        : base()
     {
         CompanyUserId = companyUserId;
         BusinessPartnerNumber = businessPartnerNumber;

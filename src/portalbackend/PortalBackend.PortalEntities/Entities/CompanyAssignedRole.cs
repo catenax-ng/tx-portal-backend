@@ -24,7 +24,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entit
 
 public class CompanyAssignedRole
 {
-    private CompanyAssignedRole() {}
+    private CompanyAssignedRole() { }
 
     public CompanyAssignedRole(Guid companyId, CompanyRoleId companyRoleId)
     {

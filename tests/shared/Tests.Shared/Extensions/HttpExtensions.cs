@@ -33,7 +33,7 @@ public static class HttpExtensions
         options.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false));
         return await JsonSerializer.DeserializeAsync<T>(responseStream, options).ConfigureAwait(false) ?? throw new InvalidOperationException();
     }
-    
+
     public static HttpContent ToFormContent(this string stringContent, string contentType)
     {
         HttpContent content = new StringContent(stringContent);

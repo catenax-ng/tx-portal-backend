@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 Microsoft and BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -35,7 +35,7 @@ public class CustodianBusinessLogic : ICustodianBusinessLogic
         _portalRepositories = portalRepositories;
         _custodianService = custodianService;
     }
-    
+
     /// <inheritdoc />
     public async Task<string> CreateWalletAsync(Guid applicationId, CancellationToken cancellationToken)
     {
@@ -50,10 +50,10 @@ public class CustodianBusinessLogic : ICustodianBusinessLogic
         {
             throw new ConflictException($"BusinessPartnerNumber (bpn) for CompanyApplications {applicationId} company {companyId} is empty");
         }
-        
+
         return await _custodianService.CreateWalletAsync(businessPartnerNumber, companyName, cancellationToken).ConfigureAwait(false);
     }
-    
+
     /// <inheritdoc />
     public async Task<WalletData?> GetWalletByBpnAsync(Guid applicationId, CancellationToken cancellationToken)
     {
@@ -66,7 +66,7 @@ public class CustodianBusinessLogic : ICustodianBusinessLogic
 
         var walletData = await _custodianService.GetWalletByBpnAsync(bpn, cancellationToken)
             .ConfigureAwait(false);
-        
+
         return walletData;
     }
 }

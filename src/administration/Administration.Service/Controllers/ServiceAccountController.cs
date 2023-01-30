@@ -37,7 +37,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Controllers
 public class ServiceAccountController : ControllerBase
 {
     private readonly IServiceAccountBusinessLogic _logic;
-    
+
     /// <summary>
     /// Creates a new instance of <see cref="ServiceAccountController"/> 
     /// </summary>
@@ -94,7 +94,7 @@ public class ServiceAccountController : ControllerBase
     /// <response code="404">Record was not found. Service account is either not existing or not connected to the respective company.</response>
     [HttpGet]
     [Authorize(Roles = "view_tech_user_management")]
-    [Route("owncompany/serviceaccounts/{serviceAccountId}", Name="GetServiceAccountDetails")]
+    [Route("owncompany/serviceaccounts/{serviceAccountId}", Name = "GetServiceAccountDetails")]
     [ProducesResponseType(typeof(ServiceAccountDetails), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public Task<ServiceAccountDetails> GetServiceAccountDetails([FromRoute] Guid serviceAccountId) =>
@@ -168,5 +168,5 @@ public class ServiceAccountController : ControllerBase
     [Route("user/roles")]
     [ProducesResponseType(typeof(List<UserRoleWithDescription>), StatusCodes.Status200OK)]
     public IAsyncEnumerable<UserRoleWithDescription> GetServiceAccountRolesAsync(string? languageShortName = null) =>
-        _logic.GetServiceAccountRolesAsync(languageShortName);        
+        _logic.GetServiceAccountRolesAsync(languageShortName);
 }

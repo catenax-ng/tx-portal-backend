@@ -49,7 +49,7 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
     }
 
     #region GetCompanyUserRoleWithAddressUntrackedAsync
-    
+
     [Fact]
     public async Task GetCompanyUserRoleWithAddressUntrackedAsync_WithExistingEntry_ReturnsExpectedResult()
     {
@@ -84,7 +84,7 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
         result.InvitedCompanyUserData.Should().ContainSingle(u => u.FirstName == "Test User 2" && u.LastName == "cx-admin-2" && u.Email == "tester.user2@test.de");
 
         result.CompanyIdentifiers.Should().HaveCount(1);
-        result.CompanyIdentifiers.First().Should().Match<(UniqueIdentifierId UniqueIdentifierId,string Value)>(identifier => identifier.UniqueIdentifierId == UniqueIdentifierId.COMMERCIAL_REG_NUMBER && identifier.Value == "REG08154711");
+        result.CompanyIdentifiers.First().Should().Match<(UniqueIdentifierId UniqueIdentifierId, string Value)>(identifier => identifier.UniqueIdentifierId == UniqueIdentifierId.COMMERCIAL_REG_NUMBER && identifier.Value == "REG08154711");
     }
 
     #endregion GetRegistrationDataUntrackedAsync
@@ -99,7 +99,7 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
         var applicationId = new Guid("4829b64c-de6a-426c-81fc-c0bcf95bcb76");
 
         // Act
-        var result = await sut.GetRegistrationDataUntrackedAsync(applicationId, "623770c5-cf38-4b9f-9a35-f8b9ae972e2d", new [] { DocumentTypeId.CX_FRAME_CONTRACT, DocumentTypeId.COMMERCIAL_REGISTER_EXTRACT }).ConfigureAwait(false);
+        var result = await sut.GetRegistrationDataUntrackedAsync(applicationId, "623770c5-cf38-4b9f-9a35-f8b9ae972e2d", new[] { DocumentTypeId.CX_FRAME_CONTRACT, DocumentTypeId.COMMERCIAL_REGISTER_EXTRACT }).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
@@ -117,7 +117,7 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
         var applicationId = Guid.NewGuid();
 
         // Act
-        var result = await sut.GetRegistrationDataUntrackedAsync(applicationId, "623770c5-cf38-4b9f-9a35-f8b9ae972e2d", new [] { DocumentTypeId.CX_FRAME_CONTRACT, DocumentTypeId.COMMERCIAL_REGISTER_EXTRACT }).ConfigureAwait(false);
+        var result = await sut.GetRegistrationDataUntrackedAsync(applicationId, "623770c5-cf38-4b9f-9a35-f8b9ae972e2d", new[] { DocumentTypeId.CX_FRAME_CONTRACT, DocumentTypeId.COMMERCIAL_REGISTER_EXTRACT }).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
@@ -133,7 +133,7 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
         var sut = await CreateSut().ConfigureAwait(false);
         var applicationId = new Guid("4829b64c-de6a-426c-81fc-c0bcf95bcb76");
         // Act
-        var result = await sut.GetRegistrationDataUntrackedAsync(applicationId, _fixture.Create<string>(), new [] { DocumentTypeId.CX_FRAME_CONTRACT, DocumentTypeId.COMMERCIAL_REGISTER_EXTRACT }).ConfigureAwait(false);
+        var result = await sut.GetRegistrationDataUntrackedAsync(applicationId, _fixture.Create<string>(), new[] { DocumentTypeId.CX_FRAME_CONTRACT, DocumentTypeId.COMMERCIAL_REGISTER_EXTRACT }).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
@@ -145,16 +145,16 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
     #endregion
 
     #region GetBpnAndChecklistCheckForApplicationIdAsync
-    
+
     [Fact]
     public async Task GetBpnAndChecklistCheckForApplicationIdAsync_WithValidApplicationId_ReturnsBpn()
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
-        
+
         // Act
         var (bpn, existingChecklistEntryTypeIds) = await sut.GetBpnAndChecklistCheckForApplicationIdAsync(ApplicationWithBpn).ConfigureAwait(false);
-        
+
         // Assert
         bpn.Should().Be("CAXSDUMMYCATENAZZ");
         existingChecklistEntryTypeIds.Should().HaveCount(5);
@@ -165,10 +165,10 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
-        
+
         // Act
         var result = await sut.GetBpnAndChecklistCheckForApplicationIdAsync(Guid.NewGuid()).ConfigureAwait(false);
-        
+
         // Assert
         result.Should().Be(default);
     }
@@ -178,28 +178,28 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
-        
+
         // Act
         var (bpn, existingChecklistEntryTypeIds) = await sut.GetBpnAndChecklistCheckForApplicationIdAsync(ApplicationWithoutBpn).ConfigureAwait(false);
-        
+
         // Assert
         bpn.Should().BeNull();
         existingChecklistEntryTypeIds.Should().HaveCount(5);
     }
 
     #endregion
-    
+
     #region GetApplicationStatusWithChecklistTypeStatusAsync
-    
+
     [Fact]
     public async Task GetApplicationStatusWithChecklistTypeStatusAsync_WithValidApplicationId_ReturnExpected()
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
-        
+
         // Act
         var (applicationStatus, checklistEntryStatus) = await sut.GetApplicationStatusWithChecklistTypeStatusAsync(ApplicationWithoutBpn, ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION).ConfigureAwait(false);
-        
+
         // Assert
         applicationStatus.Should().Be(CompanyApplicationStatusId.SUBMITTED);
         checklistEntryStatus.Should().Be(ApplicationChecklistEntryStatusId.TO_DO);
@@ -210,10 +210,10 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
-        
+
         // Act
         var (applicationStatus, checklistEntryStatus) = await sut.GetApplicationStatusWithChecklistTypeStatusAsync(ApplicationWithBpn, ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION).ConfigureAwait(false);
-        
+
         // Assert
         applicationStatus.Should().Be(CompanyApplicationStatusId.CONFIRMED);
         checklistEntryStatus.Should().Be(ApplicationChecklistEntryStatusId.TO_DO);
@@ -224,27 +224,27 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
-        
+
         // Act
         var result = await sut.GetApplicationStatusWithChecklistTypeStatusAsync(Guid.NewGuid(), ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION).ConfigureAwait(false);
-        
+
         // Assert
         result.Should().Be(default);
     }
 
     #endregion
-    
+
     #region GetBpnForApplicationIdAsync
-    
+
     [Fact]
     public async Task GetBpnForApplicationIdAsync_WithValidApplicationId_ReturnsBpn()
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
-        
+
         // Act
         var bpn = await sut.GetBpnForApplicationIdAsync(ApplicationWithBpn).ConfigureAwait(false);
-        
+
         // Assert
         bpn.Should().Be("CAXSDUMMYCATENAZZ");
     }
@@ -254,10 +254,10 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
-        
+
         // Act
         var bpn = await sut.GetBpnForApplicationIdAsync(Guid.NewGuid()).ConfigureAwait(false);
-        
+
         // Assert
         bpn.Should().BeNull();
     }
@@ -267,27 +267,27 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
-        
+
         // Act
         var bpn = await sut.GetBpnForApplicationIdAsync(ApplicationWithoutBpn).ConfigureAwait(false);
-        
+
         // Assert
         bpn.Should().BeNull();
     }
 
     #endregion
-    
+
     #region GetClearinghouseDataForApplicationId
-    
+
     [Fact]
     public async Task GetClearinghouseDataForApplicationId_WithValidApplicationId_ReturnsCorrectData()
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
-        
+
         // Act
         var data = await sut.GetClearinghouseDataForApplicationId(ApplicationWithBpn).ConfigureAwait(false);
-        
+
         // Assert
         data.Should().NotBeNull();
         data!.ParticipantDetails.Bpn.Should().Be("CAXSDUMMYCATENAZZ");
@@ -299,10 +299,10 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
-        
+
         // Act
         var result = await sut.GetClearinghouseDataForApplicationId(Guid.NewGuid()).ConfigureAwait(false);
-        
+
         // Assert
         result.Should().Be(default);
     }
@@ -310,16 +310,16 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
     #endregion
 
     #region GetSubmittedIdAndClearinghouseChecklistStatusByBpn
-    
+
     [Fact]
     public async Task GetSubmittedIdAndClearinghouseChecklistStatusByBpn_WithValidApplicationId_ReturnsCorrectData()
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
-        
+
         // Act
         var data = await sut.GetSubmittedIdAndClearinghouseChecklistStatusByBpn("CAXSTESTYCATENAZZ").ConfigureAwait(false);
-        
+
         // Assert
         data.Should().NotBeNull();
         data.ApplicationId.Should().Be(new Guid("2bb2005f-6e8d-41eb-967b-cde67546cafc"));
@@ -331,27 +331,27 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
-        
+
         // Act
         var result = await sut.GetSubmittedIdAndClearinghouseChecklistStatusByBpn("notexisting").ConfigureAwait(false);
-        
+
         // Assert
         result.Should().Be(default);
     }
-    
+
     #endregion
-    
+
     #region GetCompanyIdForSubmittedApplicationId
-    
+
     [Fact]
     public async Task GetCompanyIdForSubmittedApplicationId_WithValidApplicationId_ReturnsCorrectData()
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
-        
+
         // Act
         var data = await sut.GetCompanyIdForSubmittedApplicationId(SubmittedApplicationWithBpn).ConfigureAwait(false);
-        
+
         // Assert
         data.Should().NotBeEmpty();
         data.Should().Be(CompanyId);
@@ -362,16 +362,16 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
-        
+
         // Act
         var data = await sut.GetCompanyIdForSubmittedApplicationId(Guid.NewGuid()).ConfigureAwait(false);
-        
+
         // Assert
         data.Should().Be(Guid.Empty);
     }
 
     #endregion
-    
+
     #region GetCompanyAndApplicationDetailsForApprovalAsync
 
     [Fact]
@@ -379,10 +379,10 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
-        
+
         // Act
         var data = await sut.GetCompanyAndApplicationDetailsForApprovalAsync(SubmittedApplicationWithBpn).ConfigureAwait(false);
-        
+
         // Assert
         data.companyId.Should().Be(CompanyId);
         data.businessPartnerNumber.Should().NotBeNullOrEmpty().And.Be("CAXSTESTYCATENAZZ");
@@ -393,10 +393,10 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
-        
+
         // Act
         var data = await sut.GetCompanyAndApplicationDetailsForApprovalAsync(Guid.NewGuid()).ConfigureAwait(false);
-        
+
         // Assert
         data.Should().Be(default);
     }
@@ -410,10 +410,10 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
-        
+
         // Act
         var data = await sut.GetCompanyAndApplicationDetailsWithUniqueIdentifiersAsync(SubmittedApplicationWithBpn).ConfigureAwait(false);
-        
+
         // Assert
         data.CompanyId.Should().Be(CompanyId);
         data.BusinessPartnerNumber.Should().NotBeNullOrEmpty().And.Be("CAXSTESTYCATENAZZ");
@@ -426,16 +426,16 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
-        
+
         // Act
         var data = await sut.GetCompanyAndApplicationDetailsWithUniqueIdentifiersAsync(Guid.NewGuid()).ConfigureAwait(false);
-        
+
         // Assert
         data.Should().Be(default);
     }
 
     #endregion
-    
+
     private async Task<ApplicationRepository> CreateSut()
     {
         var context = await _dbTestDbFixture.GetPortalDbContext().ConfigureAwait(false);

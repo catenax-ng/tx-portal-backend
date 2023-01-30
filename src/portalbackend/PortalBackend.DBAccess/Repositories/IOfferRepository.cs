@@ -139,7 +139,7 @@ public interface IOfferRepository
     /// <param name="iamUserId">IAM ID of the user to retrieve own company app.</param>
     /// <returns>Return Async Enumerable of App Data</returns>
     IAsyncEnumerable<AllOfferData> GetProvidedOffersData(OfferTypeId offerTypeId, string iamUserId);
-    
+
     /// <summary>
     /// Gets the client roles for a specific app
     /// </summary>
@@ -157,8 +157,8 @@ public interface IOfferRepository
     /// <param name="userId"></param>
     /// <returns>ValueTuple, first item is true if the app is in status CREATED,
     /// second item is true if the user is eligible to edit it</returns>
-    Task<(bool IsAppCreated, bool IsProviderUser, string? ContactEmail, string? ContactNumber, string? MarketingUrl, IEnumerable<(string LanguageShortName ,string DescriptionLong,string DescriptionShort)> Descriptions)> GetOfferDetailsForUpdateAsync(Guid appId, string userId, OfferTypeId offerTypeId);
-    
+    Task<(bool IsAppCreated, bool IsProviderUser, string? ContactEmail, string? ContactNumber, string? MarketingUrl, IEnumerable<(string LanguageShortName, string DescriptionLong, string DescriptionShort)> Descriptions)> GetOfferDetailsForUpdateAsync(Guid appId, string userId, OfferTypeId offerTypeId);
+
     /// Get Offer Release data by Offer Id
     /// </summary>
     /// <param name="offerId">Id of the offer</param>
@@ -170,7 +170,7 @@ public interface IOfferRepository
     /// Gets all service detail data from the persistence storage as pagination 
     /// </summary>
     /// <returns>Returns an Pagination</returns>
-    Func<int,int,Task<Pagination.Source<ServiceOverviewData>?>> GetActiveServicesPaginationSource(ServiceOverviewSorting? sorting, ServiceTypeId? serviceTypeId);
+    Func<int, int, Task<Pagination.Source<ServiceOverviewData>?>> GetActiveServicesPaginationSource(ServiceOverviewSorting? sorting, ServiceTypeId? serviceTypeId);
 
     /// <summary>
     /// Gets the service details for the given id
@@ -198,8 +198,8 @@ public interface IOfferRepository
     /// <param name="skip"></param>
     /// <param name="take"></param>
     /// <param name="sorting"></param>
-    Func<int,int,Task<Pagination.Source<InReviewAppData>?>> GetAllInReviewStatusAppsAsync(IEnumerable<OfferStatusId> offerStatusIds, OfferSorting? sorting);
-    
+    Func<int, int, Task<Pagination.Source<InReviewAppData>?>> GetAllInReviewStatusAppsAsync(IEnumerable<OfferStatusId> offerStatusIds, OfferSorting? sorting);
+
     /// <summary>
     /// Retrieve Offer Detail with Status
     /// </summary>
@@ -227,7 +227,7 @@ public interface IOfferRepository
     /// <param name="offerTypeId"></param>
     /// <returns></returns>
     Task<(bool OfferExists, Guid CompanyUserId)> GetProviderCompanyUserIdForOfferUntrackedAsync(Guid offerId, string userId, OfferStatusId offerStatusId, OfferTypeId offerTypeId);
-    
+
     /// <summary>
     /// Verify that user is linked to the appId ,offerstatus is in created state and roleId exist
     /// </summary>
@@ -236,7 +236,7 @@ public interface IOfferRepository
     /// <param name="offerStatusId"></param>
     /// <param name="roleId"></param>
     /// <returns></returns>
-    Task<(bool OfferStatus, bool IsProviderCompanyUser,bool IsRoleIdExist)> GetAppUserRoleUntrackedAsync(Guid offerId, string userId, OfferStatusId offerStatusId, Guid roleId);
+    Task<(bool OfferStatus, bool IsProviderCompanyUser, bool IsRoleIdExist)> GetAppUserRoleUntrackedAsync(Guid offerId, string userId, OfferStatusId offerStatusId, Guid roleId);
 
     /// <summary>
     /// Gets all data needed for the app update
@@ -286,7 +286,7 @@ public interface IOfferRepository
     /// <param name="iamUserId">id of the current user</param>
     /// <returns>The found service update data</returns>
     Task<ServiceUpdateData?> GetServiceUpdateData(Guid serviceId, IEnumerable<ServiceTypeId> serviceTypeIds, string iamUserId);
-    
+
     /// <summary>
     /// Validate Company User and Retrieve CompanyUserid with App Name
     /// </summary>
@@ -312,7 +312,7 @@ public interface IOfferRepository
     /// <param name="offerType">Type of the offer</param>
     /// <returns>Returns the data needed to decline an offer</returns>
     Task<(string? OfferName, OfferStatusId OfferStatus, Guid? CompanyId, bool IsUserOfProvider)> GetOfferDeclineDataAsync(Guid offerId, string iamUserId, OfferTypeId offerType);
-    
+
     /// <summary>
     /// Retireve and Validate Offer Status for App
     /// </summary>

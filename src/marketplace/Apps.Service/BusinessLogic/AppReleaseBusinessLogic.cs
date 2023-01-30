@@ -23,9 +23,9 @@ using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
+using Org.Eclipse.TractusX.Portal.Backend.Notifications.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Service;
-using Org.Eclipse.TractusX.Portal.Backend.Notifications.Library;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
@@ -59,9 +59,9 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         _offerService = offerService;
         _notificationService = notificationService;
     }
-    
+
     /// <inheritdoc/>
-    public  Task UpdateAppAsync(Guid appId, AppEditableDetail updateModel, string userId)
+    public Task UpdateAppAsync(Guid appId, AppEditableDetail updateModel, string userId)
     {
         if (appId == Guid.Empty)
         {
@@ -157,7 +157,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         {
             throw new ControllerArgumentException($"document {document.FileName} transmitted length {document.Length} doesn't match actual length {ms.Length}.");
         }
-        
+
         var doc = _portalRepositories.GetInstance<IDocumentRepository>().CreateDocument(documentName, documentContent, hash, documentTypeId, x =>
         {
             x.CompanyUserId = companyUserId;
@@ -165,7 +165,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         _portalRepositories.GetInstance<IOfferRepository>().CreateOfferAssignedDocument(appId, doc.Id);
         return await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
-    
+
     /// <inheritdoc/>
     public Task<IEnumerable<AppRoleData>> AddAppUserRoleAsync(Guid appId, IEnumerable<AppUserRole> appAssignedDesc, string iamUserId)
     {
@@ -239,7 +239,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         }
     }
 
-    private IEnumerable<AppRoleData>CreateUserRolesWithDescriptions(Guid appId, IEnumerable<AppUserRole> appAssignedDesc)
+    private IEnumerable<AppRoleData> CreateUserRolesWithDescriptions(Guid appId, IEnumerable<AppUserRole> appAssignedDesc)
     {
         var userRolesRepository = _portalRepositories.GetInstance<IUserRolesRepository>();
         var roleData = new List<AppRoleData>();
@@ -256,7 +256,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
     }
 
     /// <inheritdoc/>
-    public IAsyncEnumerable<AgreementData> GetOfferAgreementDataAsync()=>
+    public IAsyncEnumerable<AgreementData> GetOfferAgreementDataAsync() =>
         _offerService.GetOfferTypeAgreementsAsync(OfferTypeId.APP);
 
     /// <inheritdoc/>
@@ -264,7 +264,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
     {
         return await _offerService.GetProviderOfferAgreementConsentById(appId, userId, OfferTypeId.APP).ConfigureAwait(false);
     }
-    
+
     /// <inheritdoc/>
     public Task<int> SubmitOfferConsentAsync(Guid appId, OfferAgreementConsent offerAgreementConsents, string userId)
     {
@@ -278,7 +278,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
     /// <inheritdoc/>
     private Task<int> SubmitOfferConsentInternalAsync(Guid appId, OfferAgreementConsent offerAgreementConsents, string userId) =>
         _offerService.CreateOrUpdateProviderOfferAgreementConsent(appId, offerAgreementConsents, userId, OfferTypeId.APP);
-    
+
     /// <inheritdoc/>
     public Task<OfferProviderResponse> GetAppDetailsForStatusAsync(Guid appId, string userId) =>
         _offerService.GetProviderOfferDetailsForStatusAsync(appId, userId, OfferTypeId.APP);
@@ -312,30 +312,30 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
 
     /// <inheritdoc/>
     public IAsyncEnumerable<CompanyUserNameData> GetAppProviderSalesManagersAsync(string iamUserId) =>
-       _portalRepositories.GetInstance<IUserRolesRepository>().GetUserDataByAssignedRoles(iamUserId,_settings.SalesManagerRoles);
-    
+       _portalRepositories.GetInstance<IUserRolesRepository>().GetUserDataByAssignedRoles(iamUserId, _settings.SalesManagerRoles);
+
     /// <inheritdoc/>
     public Task<Guid> AddAppAsync(AppRequestModel appRequestModel, string iamUserId)
     {
         var emptyLanguageCodes = appRequestModel.SupportedLanguageCodes.Where(item => String.IsNullOrWhiteSpace(item));
         if (emptyLanguageCodes.Any())
         {
-            throw new ControllerArgumentException("Language Codes must not be null or empty", nameof(appRequestModel.SupportedLanguageCodes)); 
+            throw new ControllerArgumentException("Language Codes must not be null or empty", nameof(appRequestModel.SupportedLanguageCodes));
         }
-        
+
         var emptyUseCaseIds = appRequestModel.UseCaseIds.Where(item => item == Guid.Empty);
         if (emptyUseCaseIds.Any())
         {
             throw new ControllerArgumentException("Use Case Ids must not be null or empty", nameof(appRequestModel.UseCaseIds));
         }
-        
+
         return this.CreateAppAsync(appRequestModel, iamUserId);
     }
 
     private async Task<Guid> CreateAppAsync(AppRequestModel appRequestModel, string iamUserId)
-    {   
+    {
         Guid companyId;
-        if(appRequestModel.SalesManagerId.HasValue)
+        if (appRequestModel.SalesManagerId.HasValue)
         {
             companyId = await _offerService.ValidateSalesManager(appRequestModel.SalesManagerId.Value, iamUserId, _settings.SalesManagerRoles).ConfigureAwait(false);
         }
@@ -375,7 +375,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
             await _portalRepositories.SaveAsync().ConfigureAwait(false);
             return appId;
         }
-        catch(Exception exception)when (exception?.InnerException?.Message.Contains("violates foreign key constraint") ?? false)
+        catch (Exception exception) when (exception?.InnerException?.Message.Contains("violates foreign key constraint") ?? false)
         {
             throw new ControllerArgumentException($"invalid language code or UseCaseId specified");
         }
@@ -428,7 +428,8 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
             app.Provider = appRequestModel.Provider;
             app.SalesManagerId = appRequestModel.SalesManagerId;
         },
-        app => {
+        app =>
+        {
             app.SalesManagerId = appData.SalesManagerId;
         });
 
@@ -438,7 +439,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         appRepository.CreateDeleteAppAssignedUseCases(appId, appData.MatchingUseCases, appRequestModel.UseCaseIds);
 
         _offerService.CreateOrUpdateOfferLicense(appId, appRequestModel.Provider, appData.OfferLicense);
-        
+
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
 
@@ -455,25 +456,25 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
                 .GetAllInReviewStatusAppsAsync(GetOfferStatusIds(offerStatusIdFilter), sorting ?? OfferSorting.DateDesc));
 
     /// <inheritdoc/>
-    public Task SubmitAppReleaseRequestAsync(Guid appId, string iamUserId) => 
+    public Task SubmitAppReleaseRequestAsync(Guid appId, string iamUserId) =>
         _offerService.SubmitOfferAsync(appId, iamUserId, OfferTypeId.APP, _settings.SubmitAppNotificationTypeIds, _settings.CompanyAdminRoles);
-    
+
     /// <inheritdoc/>
     public Task ApproveAppRequestAsync(Guid appId, string iamUserId) =>
         _offerService.ApproveOfferRequestAsync(appId, iamUserId, OfferTypeId.APP, _settings.ApproveAppNotificationTypeIds, (_settings.ApproveAppUserRoles));
-    
+
     private IEnumerable<OfferStatusId> GetOfferStatusIds(OfferStatusIdFilter? offerStatusIdFilter)
     {
-        switch(offerStatusIdFilter)
+        switch (offerStatusIdFilter)
         {
-            case OfferStatusIdFilter.InReview :
-            {
-               return new []{ OfferStatusId.IN_REVIEW };
-            }
-            default :
-            {
-                return _settings.OfferStatusIds;
-            }
-        }       
+            case OfferStatusIdFilter.InReview:
+                {
+                    return new[] { OfferStatusId.IN_REVIEW };
+                }
+            default:
+                {
+                    return _settings.OfferStatusIds;
+                }
+        }
     }
 }

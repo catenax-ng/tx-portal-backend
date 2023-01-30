@@ -34,7 +34,7 @@ public interface IRegistrationBusinessLogic
     Task<Pagination.Response<CompanyApplicationWithCompanyUserDetails>> GetAllCompanyApplicationsDetailsAsync(int page, int size, string? companyName = null);
     Task TriggerBpnDataPushAsync(string iamUserId, Guid applicationId, CancellationToken cancellationToken);
     Task UpdateCompanyBpn(Guid applicationId, string bpn);
-    
+
     /// <summary>
     /// Sets the registration verification state for the given application.
     /// </summary>
@@ -42,7 +42,7 @@ public interface IRegistrationBusinessLogic
     /// <param name="approve"><c>true</c> if the application is approved, otherwise <c>false</c></param>
     /// <param name="comment">An additional comment, only set if the application got declined</param>
     Task SetRegistrationVerification(Guid applicationId, bool approve, string? comment = null);
-    
+
     /// <summary>
     /// Processes the clearinghouse response
     /// </summary>

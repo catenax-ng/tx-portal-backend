@@ -18,13 +18,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
-using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared.TestSeeds;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Configurations;
 using DotNet.Testcontainers.Containers;
 using Microsoft.EntityFrameworkCore;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Seeder;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
+using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared.TestSeeds;
 using Xunit;
 using Xunit.Extensions.AssemblyFixture;
 
@@ -62,7 +62,7 @@ public class TestDbFixture : IAsyncLifetime
     public async Task<PortalDbContext> GetPortalDbContext(params Action<PortalDbContext>[] seedActions)
     {
         var optionsBuilder = new DbContextOptionsBuilder<PortalDbContext>();
-        
+
         optionsBuilder.UseNpgsql(
             _container.ConnectionString,
             x => x.MigrationsAssembly(typeof(BatchSeeder).Assembly.GetName().Name)
@@ -86,9 +86,9 @@ public class TestDbFixture : IAsyncLifetime
     {
         await _container.StartAsync()
             .ConfigureAwait(false);
-        
+
         var optionsBuilder = new DbContextOptionsBuilder<PortalDbContext>();
-        
+
         optionsBuilder.UseNpgsql(
             _container.ConnectionString,
             x => x.MigrationsAssembly(typeof(BatchSeeder).Assembly.GetName().Name)

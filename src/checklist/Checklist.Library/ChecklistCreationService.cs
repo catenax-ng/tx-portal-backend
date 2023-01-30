@@ -58,7 +58,7 @@ public class ChecklistCreationService : IChecklistCreationService
         if (checklistEntries.Any())
         {
             _portalRepositories.GetInstance<IApplicationChecklistRepository>()
-                .CreateChecklistForApplication(applicationId, checklistEntries);    
+                .CreateChecklistForApplication(applicationId, checklistEntries);
         }
 
         return checklistEntries;

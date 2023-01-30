@@ -39,7 +39,7 @@ public class DocumentRepository : IDocumentRepository
     {
         this._dbContext = dbContext;
     }
-    
+
     /// <inheritdoc />
     public Document CreateDocument(string documentName, byte[] documentContent, byte[] hash, DocumentTypeId documentType, Action<Document>? setupOptionalFields)
     {
@@ -62,7 +62,7 @@ public class DocumentRepository : IDocumentRepository
             .AsNoTracking()
             .Where(x => x.Id == documentId)
             .Select(document => ((Guid DocumentId, DocumentStatusId DocumentStatusId, IEnumerable<Guid> ConsentIds, bool IsSameUser))
-                new (document.Id,
+                new(document.Id,
                     document.DocumentStatusId,
                     document.Consents.Select(consent => consent.Id),
                     document.CompanyUser!.IamUser!.UserEntityId == iamUserId))
@@ -72,13 +72,14 @@ public class DocumentRepository : IDocumentRepository
         _dbContext.CompanyApplications
             .AsNoTracking()
             .Where(application => application.Id == applicationId)
-            .Select(application => new {
+            .Select(application => new
+            {
                 IsApplicationAssignedUser = application.Invitations.Any(invitation => invitation.CompanyUser!.IamUser!.UserEntityId == iamUserId),
                 Invitations = application.Invitations
             })
-            .Select(x => new ValueTuple<bool,IEnumerable<UploadDocuments>>(
+            .Select(x => new ValueTuple<bool, IEnumerable<UploadDocuments>>(
                 x.IsApplicationAssignedUser,
-                x.Invitations.SelectMany(invitation => 
+                x.Invitations.SelectMany(invitation =>
                     invitation.CompanyUser!.Documents
                         .Where(document => x.IsApplicationAssignedUser && document.DocumentTypeId == documentTypeId)
                         .Select(document =>
@@ -92,11 +93,11 @@ public class DocumentRepository : IDocumentRepository
     public Task<(Guid DocumentId, bool IsSameUser)> GetDocumentIdCompanyUserSameAsIamUserAsync(Guid documentId, string iamUserId) =>
         this._dbContext.Documents
             .Where(x => x.Id == documentId)
-            .Select(x => ((Guid DocumentId, bool IsSameUser))new (x.Id, x.CompanyUser!.IamUser!.UserEntityId == iamUserId))
+            .Select(x => ((Guid DocumentId, bool IsSameUser))new(x.Id, x.CompanyUser!.IamUser!.UserEntityId == iamUserId))
             .SingleOrDefaultAsync();
 
     /// <inheritdoc />
-    public void RemoveDocument(Guid documentId) => 
+    public void RemoveDocument(Guid documentId) =>
         _dbContext.Documents.Remove(new Document(documentId, null!, null!, null!, default, default, default));
 
     /// <inheritdoc />
@@ -108,7 +109,8 @@ public class DocumentRepository : IDocumentRepository
         _dbContext.Documents
             .AsNoTracking()
             .Where(x => x.Id == documentId)
-            .Select(document => new {
+            .Select(document => new
+            {
                 Document = document,
                 Applications = document.CompanyUser!.Company!.CompanyApplications
             })
@@ -149,11 +151,13 @@ public class DocumentRepository : IDocumentRepository
     public Task<(bool IsValidDocumentType, bool IsDocumentLinkedToOffer, bool IsValidOfferType, byte[]? Content, bool IsDocumentExisting, string FileName)> GetOfferImageDocumentContentAsync(Guid offerId, Guid documentId, IEnumerable<DocumentTypeId> documentTypeIds, OfferTypeId offerTypeId, CancellationToken cancellationToken) =>
         _dbContext.Documents
             .Where(document => document.Id == documentId)
-            .Select(document => new {
+            .Select(document => new
+            {
                 Offer = document.Offers.SingleOrDefault(offer => offer.Id == offerId),
                 Document = document
             })
-            .Select(x => new {
+            .Select(x => new
+            {
                 IsValidDocumentType = documentTypeIds.Contains(x.Document.DocumentTypeId),
                 IsDocumentLinkedToOffer = x.Offer != null,
                 IsValidOfferType = x.Offer!.OfferTypeId == offerTypeId,

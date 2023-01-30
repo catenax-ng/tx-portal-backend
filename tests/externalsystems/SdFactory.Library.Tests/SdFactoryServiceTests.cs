@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -34,12 +34,12 @@ namespace Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.Tests;
 public class SdFactoryServiceTests
 {
     #region Initialization
-    
+
     private static readonly IEnumerable<(UniqueIdentifierId Id, string Value)> UniqueIdentifiers = new List<(UniqueIdentifierId Id, string Value)>
     {
         new (UniqueIdentifierId.VAT_ID, "JUSTATEST")
     };
-    
+
     private readonly IPortalRepositories _portalRepositories;
     private readonly IDocumentRepository _documentRepository;
     private readonly ICollection<Document> _documents;
@@ -66,9 +66,9 @@ public class SdFactoryServiceTests
     }
 
     #endregion
-    
+
     #region Register Connector
-    
+
     [Fact]
     public async Task RegisterConnectorAsync_WithValidData_CreatesDocumentInDatabase()
     {
@@ -118,7 +118,7 @@ public class SdFactoryServiceTests
     }
 
     [Fact]
-    public async Task  RegisterConnectorAsync_WithInvalidData_ThrowsException()
+    public async Task RegisterConnectorAsync_WithInvalidData_ThrowsException()
     {
         // Arrange
         const string bpn = "BPNL000000000009";
@@ -135,9 +135,9 @@ public class SdFactoryServiceTests
     }
 
     #endregion
-    
+
     #region RegisterSelfDescription
-    
+
     [Fact]
     public async Task RegisterSelfDescriptionAsync_WithValidData_CreatesDocumentInDatabase()
     {
@@ -187,7 +187,7 @@ public class SdFactoryServiceTests
     }
 
     [Fact]
-    public async Task  RegisterSelfDescriptionAsync_WithInvalidData_ThrowsException()
+    public async Task RegisterSelfDescriptionAsync_WithInvalidData_ThrowsException()
     {
         // Arrange
         const string bpn = "BPNL000000000009";
@@ -204,18 +204,18 @@ public class SdFactoryServiceTests
     }
 
     #endregion
-    
+
     #region Setup
 
     private void CreateHttpClient(HttpMessageHandler httpMessageHandlerMock)
     {
-        var httpClient = new HttpClient(httpMessageHandlerMock) {BaseAddress = new Uri(_options.Value.SdFactoryUrl)};
+        var httpClient = new HttpClient(httpMessageHandlerMock) { BaseAddress = new Uri(_options.Value.SdFactoryUrl) };
         A.CallTo(() => _tokenService.GetAuthorizedClient<SdFactoryService>(_options.Value, CancellationToken.None))
             .ReturnsLazily(() => httpClient);
     }
 
     private void SetupRepositoryMethods()
-    { 
+    {
         A.CallTo(() => _documentRepository.CreateDocument(A<string>._, A<byte[]>._, A<byte[]>._, A<DocumentTypeId>._, A<Action<Document>?>._))
             .Invokes(x =>
             {
@@ -233,6 +233,6 @@ public class SdFactoryServiceTests
 
         A.CallTo(() => _portalRepositories.GetInstance<IDocumentRepository>()).Returns(_documentRepository);
     }
-    
+
     #endregion
 }

@@ -61,11 +61,13 @@ public class UserUploadBusinessLogic : IUserUploadBusinessLogic
 
         var (numCreated, numLines, errors) = await CsvParser.ProcessCsvAsync(
             stream,
-            line => {
-                var csvHeaders = new [] { CsvHeaders.FirstName, CsvHeaders.LastName, CsvHeaders.Email, CsvHeaders.ProviderUserName, CsvHeaders.ProviderUserId, CsvHeaders.Roles }.Select(h => h.ToString());
+            line =>
+            {
+                var csvHeaders = new[] { CsvHeaders.FirstName, CsvHeaders.LastName, CsvHeaders.Email, CsvHeaders.ProviderUserName, CsvHeaders.ProviderUserId, CsvHeaders.Roles }.Select(h => h.ToString());
                 CsvParser.ValidateCsvHeaders(line, csvHeaders);
             },
-            async line => {
+            async line =>
+            {
                 var parsed = ParseUploadOwnIdpUsersCSVLine(line, companyNameIdpAliasData.IsSharedIdp);
                 return new UserCreationRoleDataIdpInfo(
                     parsed.FirstName,
@@ -95,8 +97,8 @@ public class UserUploadBusinessLogic : IUserUploadBusinessLogic
         var email = CsvParser.NextStringItemIsNotNullOrWhiteSpace(items, CsvHeaders.Email);
         var providerUserName = CsvParser.NextStringItemIsNotNullOrWhiteSpace(items, CsvHeaders.ProviderUserName);
         var providerUserId = isSharedIdp
-            ? CsvParser.NextStringItemIsNotNull(items,CsvHeaders.ProviderUserId)
-            : CsvParser.NextStringItemIsNotNullOrWhiteSpace(items,CsvHeaders.ProviderUserId);
+            ? CsvParser.NextStringItemIsNotNull(items, CsvHeaders.ProviderUserId)
+            : CsvParser.NextStringItemIsNotNullOrWhiteSpace(items, CsvHeaders.ProviderUserId);
         var roles = CsvParser.TrailingStringItemsNotNullOrWhiteSpace(items, CsvHeaders.Roles).ToList();
         return (firstName, lastName, email, providerUserName, providerUserId, roles);
     }
@@ -117,11 +119,13 @@ public class UserUploadBusinessLogic : IUserUploadBusinessLogic
 
         var (numCreated, numLines, errors) = await CsvParser.ProcessCsvAsync(
             stream,
-            line => {
-                var csvHeaders = new [] { CsvHeaders.FirstName, CsvHeaders.LastName, CsvHeaders.Email, CsvHeaders.Roles }.Select(h => h.ToString());
+            line =>
+            {
+                var csvHeaders = new[] { CsvHeaders.FirstName, CsvHeaders.LastName, CsvHeaders.Email, CsvHeaders.Roles }.Select(h => h.ToString());
                 CsvParser.ValidateCsvHeaders(line, csvHeaders);
             },
-            async line => {
+            async line =>
+            {
                 var parsed = ParseUploadSharedIdpUsersCSVLine(line);
                 return new UserCreationRoleDataIdpInfo(
                     parsed.FirstName,

@@ -54,14 +54,14 @@ public interface IConnectorsRepository
     /// </summary>
     /// <param name="connectorId">ID of the connector to be deleted.</param>
     Task DeleteConnectorAsync(Guid connectorId);
-    
+
     /// <summary>
     /// Get Connector End Point Grouped By Business Partner Number
     /// </summary>
     /// <param name="bpns"></param>
     /// <returns></returns>
     IAsyncEnumerable<(string BusinessPartnerNumber, string ConnectorEndpoint)> GetConnectorEndPointDataAsync(IEnumerable<string> bpns);
-    
+
     /// <summary>
     /// Attaches the entity with the given id to the db context and modifies the given values.
     /// </summary>

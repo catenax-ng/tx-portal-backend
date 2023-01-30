@@ -24,7 +24,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Service;
-   
+
 public class OfferSetupService : IOfferSetupService
 {
     private readonly HttpClient _httpClient;
@@ -33,7 +33,7 @@ public class OfferSetupService : IOfferSetupService
     {
         _httpClient = httpClientFactory.CreateClient(nameof(OfferSetupService));
     }
-    
+
     /// <inheritdoc />
     public async Task AutoSetupOffer(OfferThirdPartyAutoSetupData autoSetupData, string iamUserId, string accessToken, string serviceDetailsAutoSetupUrl)
     {

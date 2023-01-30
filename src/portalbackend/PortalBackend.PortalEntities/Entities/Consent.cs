@@ -18,9 +18,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Base;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using System.ComponentModel.DataAnnotations;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Base;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 
@@ -36,8 +36,8 @@ public class Consent : IBaseEntity
     /// Please only use when attaching the Consent to the database
     /// </summary>
     /// <param name="id"></param>
-    public Consent(Guid id) 
-        :this()
+    public Consent(Guid id)
+        : this()
     {
         Id = id;
     }

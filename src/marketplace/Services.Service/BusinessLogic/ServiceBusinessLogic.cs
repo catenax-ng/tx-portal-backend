@@ -78,7 +78,7 @@ public class ServiceBusinessLogic : IServiceBusinessLogic
 
     /// <inheritdoc />
     public async Task<ServiceDetailData> GetServiceDetailsAsync(Guid serviceId, string lang, string iamUserId)
-    {        
+    {
         var serviceDetailData = await _portalRepositories.GetInstance<IOfferRepository>().GetServiceDetailByIdUntrackedAsync(serviceId, lang, iamUserId).ConfigureAwait(false);
         if (serviceDetailData == default)
         {
@@ -108,7 +108,7 @@ public class ServiceBusinessLogic : IServiceBusinessLogic
             offerAgreementConsentData.ConsentStatusId, iamUserId, OfferTypeId.SERVICE);
 
     /// <inheritdoc />
-    public IAsyncEnumerable<AgreementData> GetServiceAgreement(Guid serviceId) => 
+    public IAsyncEnumerable<AgreementData> GetServiceAgreement(Guid serviceId) =>
         _offerService.GetOfferAgreementsAsync(serviceId, OfferTypeId.SERVICE);
 
     /// <inheritdoc />
@@ -175,13 +175,13 @@ public class ServiceBusinessLogic : IServiceBusinessLogic
             .Where(x => !x.IsMatch)
             .Select(sti => (serviceId, sti.ServiceTypeId));
         UpdateAssignedServiceTypes(
-            newServiceTypes, 
+            newServiceTypes,
             serviceTypeIdsToRemove,
             offerRepository);
 
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
-    
+
     private static void UpdateAssignedServiceTypes(IEnumerable<(Guid serviceId, ServiceTypeId serviceTypeId)> newServiceTypes, IEnumerable<(Guid serviceId, ServiceTypeId serviceTypeId)> serviceTypeIdsToRemove, IOfferRepository appRepository)
     {
         appRepository.AddServiceAssignedServiceTypes(newServiceTypes);
@@ -194,7 +194,7 @@ public class ServiceBusinessLogic : IServiceBusinessLogic
             .GetOwnCompanyProvidedOfferSubscriptionStatusesUntrackedAsync(iamUserId, OfferTypeId.SERVICE, sorting, statusId ?? OfferSubscriptionStatusId.ACTIVE));
 
     /// <inheritdoc/>
-    public Task SubmitServiceAsync(Guid serviceId, string iamUserId) => 
+    public Task SubmitServiceAsync(Guid serviceId, string iamUserId) =>
         _offerService.SubmitOfferAsync(serviceId, iamUserId, OfferTypeId.SERVICE, _settings.SubmitServiceNotificationTypeIds, _settings.CompanyAdminRoles);
 
     /// <inheritdoc/>
@@ -202,6 +202,6 @@ public class ServiceBusinessLogic : IServiceBusinessLogic
         _offerService.ApproveOfferRequestAsync(appId, iamUserId, OfferTypeId.SERVICE, _settings.ApproveServiceNotificationTypeIds, _settings.ApproveServiceUserRoles);
 
     /// <inheritdoc />
-    public Task DeclineServiceRequestAsync(Guid serviceId, string iamUserId, OfferDeclineRequest data) => 
+    public Task DeclineServiceRequestAsync(Guid serviceId, string iamUserId, OfferDeclineRequest data) =>
         _offerService.DeclineOfferAsync(serviceId, iamUserId, data, OfferTypeId.SERVICE, NotificationTypeId.SERVICE_RELEASE_REJECTION, _settings.ServiceManagerRoles, _settings.ServiceMarketplaceAddress);
 }

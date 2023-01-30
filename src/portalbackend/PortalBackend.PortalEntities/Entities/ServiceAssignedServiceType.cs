@@ -24,7 +24,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entit
 
 public class ServiceAssignedServiceType
 {
-    private ServiceAssignedServiceType() {}
+    private ServiceAssignedServiceType() { }
 
     public ServiceAssignedServiceType(Guid serviceId, ServiceTypeId serviceTypeId)
     {

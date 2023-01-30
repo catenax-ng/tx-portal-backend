@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -37,11 +37,11 @@ public class BpdmServiceTests
 
     public BpdmServiceTests()
     {
-        _fixture = new Fixture().Customize(new AutoFakeItEasyCustomization {ConfigureMembers = true});
+        _fixture = new Fixture().Customize(new AutoFakeItEasyCustomization { ConfigureMembers = true });
         _fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList()
             .ForEach(b => _fixture.Behaviors.Remove(b));
         _fixture.Behaviors.Add(new OmitOnRecursionBehavior());
-        
+
         _options = Options.Create(new BpdmServiceSettings
         {
             Password = "passWord",
@@ -74,7 +74,7 @@ public class BpdmServiceTests
         A.CallTo(() => _tokenService.GetAuthorizedClient<BpdmService>(_options.Value, A<CancellationToken>._))
             .Returns(httpClient);
         var sut = new BpdmService(_tokenService, _options);
-        
+
         // Act
         var result = await sut.TriggerBpnDataPush(data, CancellationToken.None).ConfigureAwait(false);
 

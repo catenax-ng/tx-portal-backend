@@ -44,8 +44,8 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
     private readonly IClearinghouseBusinessLogic _clearinghouseBusinessLogic;
 
     public RegistrationBusinessLogic(
-        IPortalRepositories portalRepositories, 
-        IOptions<RegistrationSettings> configuration, 
+        IPortalRepositories portalRepositories,
+        IOptions<RegistrationSettings> configuration,
         IMailingService mailingService,
         IChecklistService checklistService,
         IClearinghouseBusinessLogic clearinghouseBusinessLogic)
@@ -238,7 +238,7 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
         {
             throw new ControllerArgumentException("businessPartnerNumbers must prefixed with BPNL", nameof(bpn));
         }
-        
+
         return UpdateCompanyBpnAsync(applicationId, bpn);
     }
 
@@ -269,7 +269,7 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
                 $"BusinessPartnerNumber of company {applicationCompanyData.CompanyId} has already been set.");
         }
 
-        _portalRepositories.GetInstance<ICompanyRepository>().AttachAndModifyCompany(applicationCompanyData.CompanyId, null, 
+        _portalRepositories.GetInstance<ICompanyRepository>().AttachAndModifyCompany(applicationCompanyData.CompanyId, null,
             c => { c.BusinessPartnerNumber = bpn; });
 
         _portalRepositories.GetInstance<IApplicationChecklistRepository>()
@@ -279,7 +279,7 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
     }
 
     /// <inheritdoc />
-    public Task ProcessClearinghouseResponseAsync(string bpn, ClearinghouseResponseData data, CancellationToken cancellationToken) => 
+    public Task ProcessClearinghouseResponseAsync(string bpn, ClearinghouseResponseData data, CancellationToken cancellationToken) =>
         _clearinghouseBusinessLogic.ProcessClearinghouseResponseAsync(bpn, data, cancellationToken);
 
     /// <inheritdoc />
@@ -297,7 +297,7 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
         {
             throw new NotFoundException($"CompanyApplication {applicationId} does not exist.");
         }
-        
+
         if (result.ApplicationStatusId != CompanyApplicationStatusId.SUBMITTED)
         {
             throw new ConflictException($"CompanyApplication {applicationId} is not in status SUBMITTED");
@@ -312,7 +312,7 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
         {
             throw new ConflictException($"ChecklistEntry {ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION} is not in state {ApplicationChecklistEntryStatusId.TO_DO}");
         }
-        
+
         _portalRepositories.GetInstance<IApplicationChecklistRepository>().AttachAndModifyApplicationChecklist(applicationId, ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION,
             entry =>
             {
@@ -332,21 +332,21 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
     }
 
     private static IEnumerable<CompanyApplicationStatusId> GetCompanyApplicationStatusIds(CompanyApplicationStatusFilter? companyApplicationStatusFilter = null)
-     {
-        switch(companyApplicationStatusFilter)
+    {
+        switch (companyApplicationStatusFilter)
         {
-            case CompanyApplicationStatusFilter.Closed :
-            {
-                return new [] { CompanyApplicationStatusId.CONFIRMED, CompanyApplicationStatusId.DECLINED };
-            }
-            case CompanyApplicationStatusFilter.InReview :
-            {
-                return new [] { CompanyApplicationStatusId.SUBMITTED };  
-            }
-            default :
-            {
-                return new [] { CompanyApplicationStatusId.SUBMITTED, CompanyApplicationStatusId.CONFIRMED, CompanyApplicationStatusId.DECLINED };                 
-            }
-        }  
+            case CompanyApplicationStatusFilter.Closed:
+                {
+                    return new[] { CompanyApplicationStatusId.CONFIRMED, CompanyApplicationStatusId.DECLINED };
+                }
+            case CompanyApplicationStatusFilter.InReview:
+                {
+                    return new[] { CompanyApplicationStatusId.SUBMITTED };
+                }
+            default:
+                {
+                    return new[] { CompanyApplicationStatusId.SUBMITTED, CompanyApplicationStatusId.CONFIRMED, CompanyApplicationStatusId.DECLINED };
+                }
+        }
     }
 }

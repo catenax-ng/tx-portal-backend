@@ -164,7 +164,6 @@ public class AppsController : ControllerBase
         await this.WithIamUserId(userId => _appsBusinessLogic.RemoveFavouriteAppForUserAsync(appId, userId)).ConfigureAwait(false);
         return NoContent();
     }
-        
 
     /// <summary>
     /// Retrieves subscription statuses of subscribed apps of the currently logged in user's company.
@@ -243,12 +242,12 @@ public class AppsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> ActivateCompanyAppSubscriptionAsync([FromRoute] Guid appId, [FromRoute] Guid companyId) 
+    public async Task<IActionResult> ActivateCompanyAppSubscriptionAsync([FromRoute] Guid appId, [FromRoute] Guid companyId)
     {
         await this.WithIamUserId(userId => _appsBusinessLogic.ActivateOwnCompanyProvidedAppSubscriptionAsync(appId, companyId, userId)).ConfigureAwait(false);
         return NoContent();
     }
-    
+
     /// <summary>
     /// Unsubscribes an app from the current user's company's subscriptions.
     /// </summary>
@@ -268,7 +267,7 @@ public class AppsController : ControllerBase
         await this.WithIamUserId(userId => _appsBusinessLogic.UnsubscribeOwnCompanyAppSubscriptionAsync(appId, userId)).ConfigureAwait(false);
         return NoContent();
     }
-    
+
     /// <summary>
     /// Get all company owned apps.
     /// </summary>
@@ -281,7 +280,7 @@ public class AppsController : ControllerBase
     [Authorize(Roles = "app_management")]
     [ProducesResponseType(typeof(IAsyncEnumerable<AllOfferData>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    public IAsyncEnumerable<AllOfferData> GetAppDataAsync()=>
+    public IAsyncEnumerable<AllOfferData> GetAppDataAsync() =>
         this.WithIamUserId(userId => _appsBusinessLogic.GetCompanyProvidedAppsDataForUserAsync(userId));
 
     /// <summary>
@@ -336,10 +335,10 @@ public class AppsController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<NoContentResult> DeactivateApp([FromRoute] Guid appId)
     {
-        await this.WithIamUserId(userId => _appsBusinessLogic.DeactivateOfferbyAppIdAsync(appId,userId)).ConfigureAwait(false);
+        await this.WithIamUserId(userId => _appsBusinessLogic.DeactivateOfferbyAppIdAsync(appId, userId)).ConfigureAwait(false);
         return NoContent();
     }
-    
+
     /// <summary>
     /// Retrieve Document Content for document type "App Lead Image" and "App Image" by ID
     /// </summary>
@@ -354,7 +353,7 @@ public class AppsController : ControllerBase
     [HttpGet]
     [Authorize(Roles = "view_documents")]
     [Route("{appId}/appImages/{documentId}")]
-    [Produces("image/jpeg", "image/png", "image/gif", "image/svg+xml", "image/tiff")]    
+    [Produces("image/jpeg", "image/png", "image/gif", "image/svg+xml", "image/tiff")]
     [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]

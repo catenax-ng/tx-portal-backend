@@ -59,7 +59,7 @@ public interface INotificationBusinessLogic
     /// <param name="iamUserId">The id of the current user</param>
     /// <param name="notificationId">The id of the notification</param>
     /// <returns>Returns a notification</returns>
-    Task<NotificationDetailData> GetNotificationDetailDataAsync(string iamUserId, Guid notificationId);        
+    Task<NotificationDetailData> GetNotificationDetailDataAsync(string iamUserId, Guid notificationId);
 
     /// <summary>
     /// Gets the notification account for the given user

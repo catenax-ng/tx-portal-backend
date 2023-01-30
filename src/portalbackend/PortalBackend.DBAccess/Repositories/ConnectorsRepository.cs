@@ -18,11 +18,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Microsoft.EntityFrameworkCore;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
-using Microsoft.EntityFrameworkCore;
-using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 
@@ -89,14 +89,14 @@ public class ConnectorsRepository : IConnectorsRepository
             throw new NotFoundException("Connector with provided ID does not exist.");
         }
     }
-    
+
     /// <inheritdoc/>
     public IAsyncEnumerable<(string BusinessPartnerNumber, string ConnectorEndpoint)> GetConnectorEndPointDataAsync(IEnumerable<string> bpns) =>
         _context.Connectors
             .AsNoTracking()
             .Where(connector => bpns.Contains(connector.Provider!.BusinessPartnerNumber))
             .OrderBy(connector => connector.ProviderId)
-            .Select(connector => new ValueTuple<string,string>
+            .Select(connector => new ValueTuple<string, string>
             (
                 connector.Provider!.BusinessPartnerNumber!,
                 connector.ConnectorUrl

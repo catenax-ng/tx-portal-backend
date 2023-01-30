@@ -48,7 +48,7 @@ public static class CustodianServiceCollectionExtension
         services
             .AddTransient<ICustodianService, CustodianService>()
             .AddTransient<ICustodianBusinessLogic, CustodianBusinessLogic>();
-        
+
         return services;
     }
 }

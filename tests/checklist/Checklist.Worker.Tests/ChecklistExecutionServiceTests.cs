@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -40,7 +40,7 @@ public class ChecklistExecutionServiceTests
 
     public ChecklistExecutionServiceTests()
     {
-        var fixture = new Fixture().Customize(new AutoFakeItEasyCustomization {ConfigureMembers = true});
+        var fixture = new Fixture().Customize(new AutoFakeItEasyCustomization { ConfigureMembers = true });
         fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList()
             .ForEach(b => fixture.Behaviors.Remove(b));
         fixture.Behaviors.Add(new OmitOnRecursionBehavior());
@@ -311,7 +311,7 @@ public class ChecklistExecutionServiceTests
             A<CancellationToken>._)).MustHaveHappened(5, Times.Exactly);
         A.CallTo(() => _applicationActivationService.HandleApplicationActivation(A<Guid>._)).MustNotHaveHappened();
     }
-    
+
     [Fact]
     public async Task ExecuteAsync_WithMissingType_CreatesTypeAndExecutes()
     {

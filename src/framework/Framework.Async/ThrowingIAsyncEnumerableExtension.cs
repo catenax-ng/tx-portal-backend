@@ -24,12 +24,12 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Framework.Async;
 
 public static class ThrowingIAsyncEnumerableExtension
 {
-    public async static IAsyncEnumerable<TItem> CatchingAsync<TItem>(this IAsyncEnumerable<TItem> asyncItems, Func<Exception,Task> handler, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public static async IAsyncEnumerable<TItem> CatchingAsync<TItem>(this IAsyncEnumerable<TItem> asyncItems, Func<Exception, Task> handler, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         await using var enumerator = asyncItems.GetAsyncEnumerator(cancellationToken);
 
         TItem? item = default;
-        bool hasResult = true;
+        var hasResult = true;
         do
         {
             try
@@ -39,7 +39,7 @@ public static class ThrowingIAsyncEnumerableExtension
                     ? enumerator.Current
                     : default;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 await handler(e).ConfigureAwait(false);
             }

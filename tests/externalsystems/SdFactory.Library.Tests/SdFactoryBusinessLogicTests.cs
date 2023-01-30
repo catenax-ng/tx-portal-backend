@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -31,7 +31,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.Tests;
 public class SdFactoryBusinessLogicTests
 {
     #region Initialization
-    
+
     private const string CountryCode = "DE";
     private const string Bpn = "BPNL000000000009";
     private static readonly Guid ApplicationId = new("ac1cf001-7fbc-1f2f-817f-bce058020001");
@@ -68,9 +68,9 @@ public class SdFactoryBusinessLogicTests
     }
 
     #endregion
-    
+
     #region Register Connector
-    
+
     [Fact]
     public async Task RegisterConnectorAsync_ExpectedServiceCallIsMade()
     {
@@ -86,9 +86,9 @@ public class SdFactoryBusinessLogicTests
     }
 
     #endregion
-    
+
     #region RegisterSelfDescription
-    
+
     [Fact]
     public async Task RegisterSelfDescriptionAsync_WithValidData_CompanyIsUpdated()
     {
@@ -102,7 +102,7 @@ public class SdFactoryBusinessLogicTests
         A.CallTo(() => _service.RegisterSelfDescriptionAsync(UniqueIdentifiers, CountryCode, Bpn, CancellationToken.None))
             .ReturnsLazily(() => documentId);
         A.CallTo(() => _companyRepository.AttachAndModifyCompany(CompanyId, null, A<Action<Company>>._))
-            .Invokes((Guid _, Action<Company>? initialize, Action<Company> modify) => 
+            .Invokes((Guid _, Action<Company>? initialize, Action<Company> modify) =>
             {
                 initialize?.Invoke(entity);
                 modify.Invoke(entity);
@@ -150,7 +150,7 @@ public class SdFactoryBusinessLogicTests
     }
 
     #endregion
-    
+
     #region GetSdUniqueIdentifierValue
 
     [Theory]
@@ -163,7 +163,7 @@ public class SdFactoryBusinessLogicTests
     {
         // Act
         var result = uiId.GetSdUniqueIdentifierValue();
-        
+
         // Assert
         result.Should().Be(expectedValue);
     }
@@ -173,10 +173,10 @@ public class SdFactoryBusinessLogicTests
     {
         // Assert
         UniqueIdentifierId id = default;
-        
+
         // Act
         Func<string> Act = () => id.GetSdUniqueIdentifierValue();
-        
+
         // Assert
         var ex = Assert.Throws<ArgumentOutOfRangeException>(Act);
         ex.ParamName.Should().Be("uniqueIdentifierId");

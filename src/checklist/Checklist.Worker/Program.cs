@@ -19,8 +19,8 @@
  ********************************************************************************/
 
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Org.Eclipse.TractusX.Portal.Backend.ApplicationActivation.Library.DependencyInjection;
 using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.DependencyInjection;
@@ -31,19 +31,19 @@ using System.Reflection;
 var host = Host.CreateDefaultBuilder(args)
    .ConfigureAppConfiguration(cfg =>
       {
-      // Read configuration for configuring logger.
-      var environmentName = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
+          // Read configuration for configuring logger.
+          var environmentName = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
 
-      // Build a config object, using env vars and JSON providers.
-      if (environmentName == "Kubernetes")
-      {
-         var provider = new PhysicalFileProvider("/app/secrets");
-         cfg.AddJsonFile(provider, "appsettings.json", optional: false, reloadOnChange: true);
-      }
+          // Build a config object, using env vars and JSON providers.
+          if (environmentName == "Kubernetes")
+          {
+              var provider = new PhysicalFileProvider("/app/secrets");
+              cfg.AddJsonFile(provider, "appsettings.json", optional: false, reloadOnChange: true);
+          }
 
-      cfg
-         .AddUserSecrets(Assembly.GetExecutingAssembly())
-         .AddEnvironmentVariables();
+          cfg
+             .AddUserSecrets(Assembly.GetExecutingAssembly())
+             .AddEnvironmentVariables();
       })
    .ConfigureServices((hostContext, services) =>
       services
@@ -53,13 +53,13 @@ var host = Host.CreateDefaultBuilder(args)
          .AddChecklistCreation()
          .AddApplicationActivation(hostContext.Configuration)).Build();
 
-   var cts = new CancellationTokenSource();
-   Console.CancelKeyPress += (s, e) =>
-   {
-      Console.WriteLine("Canceling...");
-      cts.Cancel();
-      e.Cancel = true;
-   };
+var cts = new CancellationTokenSource();
+Console.CancelKeyPress += (s, e) =>
+{
+    Console.WriteLine("Canceling...");
+    cts.Cancel();
+    e.Cancel = true;
+};
 
 var workerInstance = host.Services.GetRequiredService<ChecklistExecutionService>();
 await workerInstance.ExecuteAsync(cts.Token).ConfigureAwait(false);

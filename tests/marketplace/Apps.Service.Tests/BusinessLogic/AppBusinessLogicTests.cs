@@ -32,8 +32,8 @@ using Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Service;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared;
 using Xunit;
 
@@ -107,7 +107,6 @@ public class AppBusinessLogicTests
 
         var sut = new AppsBusinessLogic(_portalRepositories, A.Fake<IOfferSubscriptionService>(), A.Fake<IOfferService>(), Options.Create(new AppsSettings()), A.Fake<MailingService>());
 
-
         // Act
         await sut.RemoveFavouriteAppForUserAsync(appId, iamUser.UserEntityId);
 
@@ -117,7 +116,7 @@ public class AppBusinessLogicTests
     }
 
     #region GetAllActiveApps
-    
+
     [Fact]
     public async Task GetAllActiveAppsAsync_ExecutesSuccessfully()
     {
@@ -133,7 +132,7 @@ public class AppBusinessLogicTests
         // Assert
         result.Should().HaveCount(5);
     }
-    
+
     #endregion
 
     #region GetAllUserUserBusinessApps
@@ -148,14 +147,14 @@ public class AppBusinessLogicTests
 
         // Act
         var result = await sut.GetAllUserUserBusinessAppsAsync(_fixture.Create<string>()).ToListAsync().ConfigureAwait(false);
-        
+
         // Assert
         result.Should().NotBeNullOrEmpty();
         result.Should().HaveCount(5);
     }
 
     #endregion
-    
+
     #region Get App Agreement
 
     [Fact]
@@ -189,7 +188,7 @@ public class AppBusinessLogicTests
         var consentData = _fixture.CreateMany<OfferAgreementConsentData>(2);
         A.CallTo(() => offerSubscriptionService.AddOfferSubscriptionAsync(A<Guid>._, A<IEnumerable<OfferAgreementConsentData>>._, A<string>._, A<string>._, A<IDictionary<string, IEnumerable<string>>>._, A<OfferTypeId>._, A<string>._))
             .ReturnsLazily(() => offerSubscriptionId);
-        var sut = new AppsBusinessLogic(A.Fake<IPortalRepositories>(), offerSubscriptionService , A.Fake<IOfferService>(), Options.Create(new AppsSettings()), A.Fake<MailingService>());
+        var sut = new AppsBusinessLogic(A.Fake<IPortalRepositories>(), offerSubscriptionService, A.Fake<IOfferService>(), Options.Create(new AppsSettings()), A.Fake<MailingService>());
 
         // Act
         var result = await sut.AddOwnCompanyAppSubscriptionAsync(Guid.NewGuid(), consentData, "44638c72-690c-42e8-bd5e-c8ac3047ff82", "THISISAACCESSTOKEN").ConfigureAwait(false);
@@ -233,7 +232,7 @@ public class AppBusinessLogicTests
     #endregion
 
     #region GetCompanyProvidedAppSubscriptionStatusesForUser
-    
+
     [Fact]
     public async Task GetCompanyProvidedAppSubscriptionStatusesForUserAsync_ReturnsExpectedCount()
     {
@@ -257,9 +256,9 @@ public class AppBusinessLogicTests
     }
 
     #endregion
-    
+
     #region DeclineAppRequest
-    
+
     [Fact]
     public async Task DeclineAppRequestAsync_CallsExpected()
     {
@@ -271,8 +270,8 @@ public class AppBusinessLogicTests
             ServiceManagerRoles = _fixture.Create<Dictionary<string, IEnumerable<string>>>(),
             BasePortalAddress = "test"
         };
-        var sut = new AppsBusinessLogic(null!,null!, _offerService, Options.Create(settings), _mailingService);
-     
+        var sut = new AppsBusinessLogic(null!, null!, _offerService, Options.Create(settings), _mailingService);
+
         // Act
         await sut.DeclineAppRequestAsync(appId, IamUserId, data).ConfigureAwait(false);
 
@@ -281,9 +280,9 @@ public class AppBusinessLogicTests
             OfferTypeId.APP, NotificationTypeId.APP_RELEASE_REJECTION,
             A<IDictionary<string, IEnumerable<string>>>._, A<string>._)).MustHaveHappenedOnceExactly();
     }
-    
+
     #endregion
-    
+
     #region ActivateOwnCompanyProvidedAppSubscription
 
     [Fact]
@@ -293,7 +292,7 @@ public class AppBusinessLogicTests
         var notExistingAppId = _fixture.Create<Guid>();
         A.CallTo(() => _offerSubscriptionRepository.GetCompanyAssignedAppDataForProvidingCompanyUserAsync(notExistingAppId, A<Guid>._, IamUserId))
             .ReturnsLazily(() => new ValueTuple<Guid, OfferSubscriptionStatusId, Guid, string?, Guid, RequesterData>());
-        
+
         var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), A.Fake<MailingService>());
 
         // Act
@@ -316,7 +315,7 @@ public class AppBusinessLogicTests
                 "app 1",
                 Guid.Empty,
                 new RequesterData(string.Empty, string.Empty, string.Empty)));
-        
+
         var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), A.Fake<MailingService>());
 
         // Act
@@ -343,7 +342,7 @@ public class AppBusinessLogicTests
                 "app 1",
                 Guid.NewGuid(),
                 new RequesterData(string.Empty, string.Empty, string.Empty)));
-        
+
         var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), A.Fake<MailingService>());
 
         // Act
@@ -369,7 +368,7 @@ public class AppBusinessLogicTests
                 "app 1",
                 Guid.NewGuid(),
                 new RequesterData(string.Empty, string.Empty, string.Empty)));
-        
+
         var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), A.Fake<MailingService>());
 
         // Act
@@ -395,7 +394,7 @@ public class AppBusinessLogicTests
                 "app 1",
                 Guid.NewGuid(),
                 new RequesterData("test@email.com", "tony", "gilbert")));
-        
+
         var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), _mailingService);
 
         // Act
@@ -420,8 +419,8 @@ public class AppBusinessLogicTests
             ServiceManagerRoles = _fixture.Create<Dictionary<string, IEnumerable<string>>>(),
             BasePortalAddress = "test"
         };
-        var sut = new AppsBusinessLogic(null!,null!, _offerService, Options.Create(settings), _mailingService);
-        
+        var sut = new AppsBusinessLogic(null!, null!, _offerService, Options.Create(settings), _mailingService);
+
         // Act
         await sut.DeactivateOfferbyAppIdAsync(appId, IamUserId).ConfigureAwait(false);
 
@@ -440,7 +439,7 @@ public class AppBusinessLogicTests
         var appId = _fixture.Create<Guid>();
         var documentId = _fixture.Create<Guid>();
         var data = _fixture.Create<byte[]>();
-        var fileName = _fixture.Create<string>()+".jpeg";
+        var fileName = _fixture.Create<string>() + ".jpeg";
         var settings = new AppsSettings
         {
             AppImageDocumentTypeIds = _fixture.Create<IEnumerable<DocumentTypeId>>(),
@@ -492,13 +491,13 @@ public class AppBusinessLogicTests
         var appId = _fixture.Create<Guid>();
         var documentId = _fixture.Create<Guid>();
         var data = _fixture.Create<byte[]>();
-        var fileName = _fixture.Create<string>()+".jpeg";
+        var fileName = _fixture.Create<string>() + ".jpeg";
         var settings = new AppsSettings
         {
             AppImageDocumentTypeIds = _fixture.Create<IEnumerable<DocumentTypeId>>(),
         };
         A.CallTo(() => _documentRepository.GetOfferImageDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
-            .Returns((true, true, true, null, false,fileName));
+            .Returns((true, true, true, null, false, fileName));
 
         var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, Options.Create(settings), null!);
 
@@ -517,7 +516,8 @@ public class AppBusinessLogicTests
         var appId = _fixture.Create<Guid>();
         var documentId = _fixture.Create<Guid>();
         var data = _fixture.Create<byte[]>();
-        var fileName = _fixture.Create<string>()+".jpeg";;
+        var fileName = _fixture.Create<string>() + ".jpeg";
+        ;
         var settings = new AppsSettings
         {
             AppImageDocumentTypeIds = _fixture.Create<IEnumerable<DocumentTypeId>>(),
@@ -542,7 +542,8 @@ public class AppBusinessLogicTests
         var appId = _fixture.Create<Guid>();
         var documentId = _fixture.Create<Guid>();
         var data = _fixture.Create<byte[]>();
-        var fileName = _fixture.Create<string>()+".jpeg";;
+        var fileName = _fixture.Create<string>() + ".jpeg";
+        ;
         var settings = new AppsSettings
         {
             AppImageDocumentTypeIds = _fixture.Create<IEnumerable<DocumentTypeId>>(),
@@ -567,7 +568,8 @@ public class AppBusinessLogicTests
         var appId = _fixture.Create<Guid>();
         var documentId = _fixture.Create<Guid>();
         var data = _fixture.Create<byte[]>();
-        var fileName = _fixture.Create<string>()+".jpeg";;
+        var fileName = _fixture.Create<string>() + ".jpeg";
+        ;
         var settings = new AppsSettings
         {
             AppImageDocumentTypeIds = _fixture.Create<IEnumerable<DocumentTypeId>>(),
@@ -584,7 +586,7 @@ public class AppBusinessLogicTests
         var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Act);
         ex.Message.Should().Be($"Document {documentId} and app id {appId} do not match.");
     }
-    
+
     [Fact]
     public async Task GetAppImageDocumentContentAsync_WithContentNull_ThrowsArgumentException()
     {
@@ -592,7 +594,8 @@ public class AppBusinessLogicTests
         var appId = _fixture.Create<Guid>();
         var documentId = _fixture.Create<Guid>();
         var data = _fixture.Create<byte[]>();
-        var fileName = _fixture.Create<string>()+".jpeg";;
+        var fileName = _fixture.Create<string>() + ".jpeg";
+        ;
         var settings = new AppsSettings
         {
             AppImageDocumentTypeIds = _fixture.Create<IEnumerable<DocumentTypeId>>(),
@@ -633,7 +636,7 @@ public class AppBusinessLogicTests
     }
 
     #endregion
-    
+
     private (CompanyUser, IamUser) CreateTestUserPair()
     {
         var companyUser = _fixture.Build<CompanyUser>()

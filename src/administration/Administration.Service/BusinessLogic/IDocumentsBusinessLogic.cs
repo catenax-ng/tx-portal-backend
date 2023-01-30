@@ -28,7 +28,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLog
 public interface IDocumentsBusinessLogic
 {
     Task<(string fileName, byte[] content)> GetDocumentAsync(Guid documentId, string iamUserId);
-    
+
     /// <summary>
     /// Deletes the document and the corresponding consent from the persistence layer.
     /// </summary>

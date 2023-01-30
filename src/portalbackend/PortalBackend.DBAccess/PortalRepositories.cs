@@ -18,8 +18,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 
@@ -63,11 +63,11 @@ public class PortalRepositories : IPortalRepositories
     {
         Object? repository = default;
 
-        if (_types.TryGetValue(typeof(RepositoryType), out Func<PortalDbContext, Object>? createFunc))
+        if (_types.TryGetValue(typeof(RepositoryType), out var createFunc))
         {
             repository = createFunc(_dbContext);
         }
-        return (RepositoryType)(repository ?? throw new ArgumentException($"unexpected type {typeof(RepositoryType).Name}",nameof(RepositoryType)));
+        return (RepositoryType)(repository ?? throw new ArgumentException($"unexpected type {typeof(RepositoryType).Name}", nameof(RepositoryType)));
     }
 
     /// <inheritdoc />
@@ -102,9 +102,8 @@ public class PortalRepositories : IPortalRepositories
 
     public void RemoveRange<TEntity>(IEnumerable<TEntity> entities) where TEntity : class
         => _dbContext.RemoveRange(entities);
-    
 
     public Task<int> SaveAsync() => _dbContext.SaveChangesAsync();
-    
+
     public void Clear() => _dbContext.ChangeTracker.Clear();
 }

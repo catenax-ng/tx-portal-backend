@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 Microsoft and BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -49,7 +49,7 @@ public class BpdmBusinessLogic : IBpdmBusinessLogic
         {
             throw new ForbiddenException($"User is not allowed to trigger Bpn Data Push for the application {applicationId}");
         }
-        
+
         if (data.ApplicationStatusId != CompanyApplicationStatusId.SUBMITTED)
         {
             throw new ArgumentException($"CompanyApplication {applicationId} is not in status SUBMITTED", nameof(applicationId));

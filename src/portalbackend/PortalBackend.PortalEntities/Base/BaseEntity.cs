@@ -1,4 +1,4 @@
-﻿namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Base;
+namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Base;
 
 /// <summary>
 /// Marker interface

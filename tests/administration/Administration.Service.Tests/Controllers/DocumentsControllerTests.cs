@@ -1,8 +1,8 @@
-﻿using System.Text;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Controllers;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared.Extensions;
+using System.Text;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Tests.Controllers;
 
@@ -37,7 +37,7 @@ public class DocumentsControllerTests
         //Assert
         A.CallTo(() => _logic.GetDocumentAsync(id, IamUserId)).MustHaveHappenedOnceExactly();
     }
-    
+
     [Fact]
     public async Task GetDocumentSeedData_WithValidId_ReturnsData()
     {

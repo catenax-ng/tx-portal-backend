@@ -119,7 +119,7 @@ public class ServicesController : ControllerBase
     [Authorize(Roles = "view_service_offering")]
     [ProducesResponseType(typeof(SubscriptionDetailData), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    public Task<SubscriptionDetailData> GetSubscriptionDetail([FromRoute] Guid subscriptionId) => 
+    public Task<SubscriptionDetailData> GetSubscriptionDetail([FromRoute] Guid subscriptionId) =>
         this.WithIamUserId(iamUserId => _serviceBusinessLogic.GetSubscriptionDetailAsync(subscriptionId, iamUserId));
 
     /// <summary>
@@ -135,9 +135,9 @@ public class ServicesController : ControllerBase
     [Authorize(Roles = "view_service_offering")]
     [ProducesResponseType(typeof(ServiceDetailData), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    public Task<ServiceDetailData> GetServiceDetails([FromRoute] Guid serviceId, [FromQuery] string? lang = "en") => 
+    public Task<ServiceDetailData> GetServiceDetails([FromRoute] Guid serviceId, [FromQuery] string? lang = "en") =>
         this.WithIamUserId(iamUserId => _serviceBusinessLogic.GetServiceDetailsAsync(serviceId, lang!, iamUserId));
-    
+
     /// <summary>
     /// Creates new service agreement consents 
     /// </summary>
@@ -192,7 +192,7 @@ public class ServicesController : ControllerBase
     [Authorize(Roles = "view_service_offering")]
     [ProducesResponseType(typeof(ConsentDetailData), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    public Task<ConsentDetailData> GetServiceAgreementConsentDetail([FromRoute] Guid serviceConsentId) => 
+    public Task<ConsentDetailData> GetServiceAgreementConsentDetail([FromRoute] Guid serviceConsentId) =>
         _serviceBusinessLogic.GetServiceConsentDetailDataAsync(serviceConsentId);
 
     /// <summary>
@@ -244,7 +244,7 @@ public class ServicesController : ControllerBase
         await this.WithIamUserId(iamUserId => _serviceBusinessLogic.UpdateServiceAsync(serviceId, data, iamUserId));
         return NoContent();
     }
-    
+
     /// <summary>
     /// Retrieves subscription statuses of provided services of the currently logged in user's company.
     /// </summary>

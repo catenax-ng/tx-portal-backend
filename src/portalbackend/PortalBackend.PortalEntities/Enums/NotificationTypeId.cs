@@ -29,7 +29,7 @@ public enum NotificationTypeId
     /// Notification is just an information for the user
     /// </summary>
     INFO = 1,
-    
+
     /// <summary>
     /// Notification requires the user to take some kind of action
     /// </summary>
@@ -74,22 +74,22 @@ public enum NotificationTypeId
     /// Connector was registered
     /// </summary>
     CONNECTOR_REGISTERED = 10,
-    
+
     /// <summary>
     /// App Release was requested
     /// </summary>
     APP_RELEASE_REQUEST = 11,
-    
+
     /// <summary>
     /// Technical user was created
     /// </summary>
     TECHNICAL_USER_CREATION = 12,
-    
+
     /// <summary>
     /// Service request
     /// </summary>
     SERVICE_REQUEST = 13,
-    
+
     /// <summary>
     /// Activation of a service
     /// </summary>

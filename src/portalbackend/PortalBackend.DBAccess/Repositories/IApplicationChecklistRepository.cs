@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -32,7 +32,7 @@ public interface IApplicationChecklistRepository
     /// <param name="checklistEntries">Combination of type and it's status</param>
     /// <returns>Returns the created entries</returns>
     void CreateChecklistForApplication(Guid applicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries);
-    
+
     /// <summary>
     /// Attaches a checklist entry with the given id and modifies it with the action.
     /// </summary>

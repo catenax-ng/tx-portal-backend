@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -38,7 +38,7 @@ public class ApplicationChecklistRepositoryTests : IAssemblyFixture<TestDbFixtur
 
     private static readonly Guid ApplicationId = new("4829b64c-de6a-426c-81fc-c0bcf95bcb76");
     private static readonly Guid ApplicationWithExistingChecklistId = new("1b86d973-3aac-4dcd-a9e9-0c222766202b");
-    
+
     public ApplicationChecklistRepositoryTests(TestDbFixture testDbFixture)
     {
         var fixture = new Fixture().Customize(new AutoFakeItEasyCustomization { ConfigureMembers = true });
@@ -48,7 +48,7 @@ public class ApplicationChecklistRepositoryTests : IAssemblyFixture<TestDbFixtur
         fixture.Behaviors.Add(new OmitOnRecursionBehavior());
         _dbTestDbFixture = testDbFixture;
     }
-    
+
     #region Create CreateChecklistForApplication
 
     [Fact]
@@ -86,7 +86,6 @@ public class ApplicationChecklistRepositoryTests : IAssemblyFixture<TestDbFixtur
 
     #region AttachAndModifyApplicationChecklist
 
-    
     [Fact]
     public async Task AttachAndModifyApplicationChecklist_UpdatesEntry()
     {
@@ -116,7 +115,7 @@ public class ApplicationChecklistRepositoryTests : IAssemblyFixture<TestDbFixtur
     }
 
     #endregion
-    
+
     #region GetChecklistDataAsync
 
     [Fact]
@@ -161,7 +160,7 @@ public class ApplicationChecklistRepositoryTests : IAssemblyFixture<TestDbFixtur
         // Assert
         checklistData.Should().HaveCount(10);
     }
-    
+
     #endregion
 
     private async Task<(ApplicationChecklistRepository, PortalDbContext)> CreateSutWithContext()
@@ -170,7 +169,7 @@ public class ApplicationChecklistRepositoryTests : IAssemblyFixture<TestDbFixtur
         var sut = new ApplicationChecklistRepository(context);
         return (sut, context);
     }
-    
+
     private async Task<ApplicationChecklistRepository> CreateSut()
     {
         var context = await _dbTestDbFixture.GetPortalDbContext().ConfigureAwait(false);

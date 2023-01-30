@@ -219,7 +219,7 @@ public class AppsControllerTests
         A.CallTo(() => _logic.AddOwnCompanyAppSubscriptionAsync(serviceId, consentData, IamUserId, _accessToken)).MustHaveHappenedOnceExactly();
         Assert.IsType<NoContentResult>(result);
     }
-    
+
     [Fact]
     public async Task ActivateCompanyAppSubscriptionAsync_ReturnsNoContent()
     {
@@ -268,7 +268,7 @@ public class AppsControllerTests
         A.CallTo(() => _logic.GetCompanyProvidedAppsDataForUserAsync(IamUserId)).MustHaveHappenedOnceExactly();
         result.Should().HaveSameCount(data);
     }
-    
+
     [Fact]
     public async Task GetServiceAgreement_ReturnsExpected()
     {
@@ -296,7 +296,7 @@ public class AppsControllerTests
             new TechnicalUserInfoData(Guid.NewGuid(), "abcPW", "sa1"),
             new ClientInfoData(Guid.NewGuid().ToString())
         );
-        A.CallTo(() => _logic.AutoSetupAppAsync(A<OfferAutoSetupData>._, A<string>.That.Matches(x => x== IamUserId)))
+        A.CallTo(() => _logic.AutoSetupAppAsync(A<OfferAutoSetupData>._, A<string>.That.Matches(x => x == IamUserId)))
             .Returns(responseData);
 
         //Act
@@ -307,7 +307,7 @@ public class AppsControllerTests
         Assert.IsType<OfferAutoSetupResponseData>(result);
         result.Should().Be(responseData);
     }
-        
+
     [Fact]
     public async Task DeclineAppRequest_ReturnsNoContent()
     {
@@ -332,13 +332,13 @@ public class AppsControllerTests
         var appId = _fixture.Create<Guid>();
         A.CallTo(() => _logic.DeactivateOfferbyAppIdAsync(A<Guid>._, A<string>._))
             .ReturnsLazily(() => Task.CompletedTask);
-        
+
         //Act
         var result = await this._controller.DeactivateApp(appId).ConfigureAwait(false);
-        
+
         //Assert
         A.CallTo(() => _logic.DeactivateOfferbyAppIdAsync(appId, IamUserId)).MustHaveHappenedOnceExactly();
-        result.Should().BeOfType<NoContentResult>(); 
+        result.Should().BeOfType<NoContentResult>();
     }
 
     [Fact]
@@ -349,14 +349,14 @@ public class AppsControllerTests
         var documentId = _fixture.Create<Guid>();
         var content = _fixture.Create<byte[]>();
         var fileName = _fixture.Create<string>();
-        
-        A.CallTo(() => _logic.GetAppImageDocumentContentAsync(A<Guid>._ , A<Guid>._, A<CancellationToken>._))
-            .ReturnsLazily(() => (content,"image/png",fileName));
+
+        A.CallTo(() => _logic.GetAppImageDocumentContentAsync(A<Guid>._, A<Guid>._, A<CancellationToken>._))
+            .ReturnsLazily(() => (content, "image/png", fileName));
 
         //Act
-        var result = await this._controller.GetAppImageDocumentContentAsync(appId,documentId,CancellationToken.None).ConfigureAwait(false);
+        var result = await this._controller.GetAppImageDocumentContentAsync(appId, documentId, CancellationToken.None).ConfigureAwait(false);
 
         //Assert
-        A.CallTo(() => _logic.GetAppImageDocumentContentAsync(A<Guid>._ , A<Guid>._, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _logic.GetAppImageDocumentContentAsync(A<Guid>._, A<Guid>._, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
     }
 }

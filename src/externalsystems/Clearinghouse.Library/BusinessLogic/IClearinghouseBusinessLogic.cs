@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 Microsoft and BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -31,7 +31,7 @@ public interface IClearinghouseBusinessLogic
     /// <param name="data">the response data</param>
     /// <param name="cancellationToken">CancellationToken</param>
     Task ProcessClearinghouseResponseAsync(string bpn, ClearinghouseResponseData data, CancellationToken cancellationToken);
-    
+
     /// <summary>
     /// Trigger the company data post to the clearinghouse service
     /// </summary>

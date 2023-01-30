@@ -29,12 +29,12 @@ public class InvitationSettings
         RegistrationAppAddress = null!;
         InvitedUserInitialRoles = null!;
     }
-    
+
     [Required(AllowEmptyStrings = false)]
     public string RegistrationAppAddress { get; set; }
-    
+
     [Required]
-    public IDictionary<string,IEnumerable<string>> InvitedUserInitialRoles { get; set; }
+    public IDictionary<string, IEnumerable<string>> InvitedUserInitialRoles { get; set; }
 }
 
 public static class InvitationSettingsExtension

@@ -18,12 +18,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using System.Net;
 using Microsoft.Extensions.Logging;
 using Org.Eclipse.TractusX.Portal.Backend.Bpdm.Library.BusinessLogic;
-using Org.Eclipse.TractusX.Portal.Backend.Custodian.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.Custodian.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.BusinessLogic;
+using Org.Eclipse.TractusX.Portal.Backend.Custodian.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
@@ -31,17 +30,18 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.BusinessLogic;
+using System.Net;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.Tests;
 
 public class ChecklistServiceTests
 {
-    private static readonly Guid IdWithoutBpn = new ("0a9bd7b1-e692-483e-8128-dbf52759c7a5");
-    private static readonly Guid IdWithBpn = new ("c244f79a-7faf-4c59-bb85-fbfdf72ce46f");
-    private static readonly Guid IdWithApplicationCreated = new ("7a8f5cb6-6ad2-4b88-a765-ff1888fcedbe");
-    private static readonly Guid IdWithFailingCustodian = new ("bda6d1b5-042e-493a-894c-11f3a89c12b1");
-    private static readonly Guid IdWithCustodianUnavailable = new ("beaa6de5-d411-4da8-850e-06047d3170be");
-    private static readonly Guid NotExistingApplicationId = new ("9f0cfd0d-c512-438e-a07e-3198bce873bf");
+    private static readonly Guid IdWithoutBpn = new("0a9bd7b1-e692-483e-8128-dbf52759c7a5");
+    private static readonly Guid IdWithBpn = new("c244f79a-7faf-4c59-bb85-fbfdf72ce46f");
+    private static readonly Guid IdWithApplicationCreated = new("7a8f5cb6-6ad2-4b88-a765-ff1888fcedbe");
+    private static readonly Guid IdWithFailingCustodian = new("bda6d1b5-042e-493a-894c-11f3a89c12b1");
+    private static readonly Guid IdWithCustodianUnavailable = new("beaa6de5-d411-4da8-850e-06047d3170be");
+    private static readonly Guid NotExistingApplicationId = new("9f0cfd0d-c512-438e-a07e-3198bce873bf");
     private static readonly string IamUserId = new Guid("4C1A6851-D4E7-4E10-A011-3732CD045E8A").ToString();
     private static readonly Guid CompanyId = new("95c4339e-e087-4cd2-a5b8-44d385e64630");
     private const string ValidBpn = "BPNL123698762345";
@@ -49,12 +49,12 @@ public class ChecklistServiceTests
     private const string ValidCompanyName = "valid company";
 
     private readonly IFixture _fixture;
-    
+
     private readonly IApplicationRepository _applicationRepository;
     private readonly IApplicationChecklistRepository _applicationChecklistRepository;
     private readonly ICompanyRepository _companyRepository;
     private readonly IPortalRepositories _portalRepositories;
-    
+
     private readonly IBpdmBusinessLogic _bpdmBusinessLogic;
     private readonly ICustodianBusinessLogic _custodianBusinessLogic;
     private readonly IClearinghouseBusinessLogic _clearinghouseBusinessLogic;
@@ -63,7 +63,7 @@ public class ChecklistServiceTests
 
     public ChecklistServiceTests()
     {
-        _fixture = new Fixture().Customize(new AutoFakeItEasyCustomization {ConfigureMembers = true});
+        _fixture = new Fixture().Customize(new AutoFakeItEasyCustomization { ConfigureMembers = true });
         _fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList()
             .ForEach(b => _fixture.Behaviors.Remove(b));
         _fixture.Behaviors.Add(new OmitOnRecursionBehavior());
@@ -84,9 +84,9 @@ public class ChecklistServiceTests
 
         _service = new ChecklistService(_portalRepositories, _bpdmBusinessLogic, _custodianBusinessLogic, _clearinghouseBusinessLogic, _sdFactoryBusinessLogic, A.Fake<ILogger<IChecklistService>>());
     }
-    
+
     #region TriggerBpnDataPush
-    
+
     [Fact]
     public async Task TriggerBpnDataPush_WithValidData_CallsExpected()
     {
@@ -111,7 +111,7 @@ public class ChecklistServiceTests
         var entry = new ApplicationChecklistEntry(IdWithoutBpn, ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow);
         A.CallTo(() => _bpdmBusinessLogic.TriggerBpnDataPush(IdWithoutBpn, IamUserId, CancellationToken.None))
             .Throws(new ServiceException("Bpdm Service Call failed."));
-        
+
         SetupFakesForTrigger(entry);
 
         // Act
@@ -141,9 +141,9 @@ public class ChecklistServiceTests
     }
 
     #endregion
-    
+
     #region ProcessChecklist CreateWallet
-    
+
     [Fact]
     public async Task ProcessChecklistCreateWalletAsync_WithBpnNextStep_ExecutesNothing()
     {
@@ -231,7 +231,7 @@ public class ChecklistServiceTests
         entry.Comment.Should().Contain("Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling.ServiceException: Failed");
         entry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.FAILED);
     }
-    
+
     [Fact]
     public async Task ProcessChecklistCreateWalletAsync_WithCustodianUnavailable_EntryIsUpdatedCorrectly()
     {
@@ -263,7 +263,7 @@ public class ChecklistServiceTests
         entry.Comment.Should().Contain("Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling.ServiceException: Failed");
         entry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.TO_DO);
     }
-    
+
     [Fact]
     public async Task ProcessChecklistCreateWalletAsync_WithValidDataWalletData_CallsExpected()
     {
@@ -297,9 +297,9 @@ public class ChecklistServiceTests
     }
 
     #endregion
-    
+
     #region ProcessChecklist HandleClearinghouse
-    
+
     [Fact]
     public async Task ProcessChecklistHandleClearinghouse_WithClearinghouseAlreadyInProgress_ExecutesNothing()
     {
@@ -357,7 +357,7 @@ public class ChecklistServiceTests
         entry.Comment.Should().Contain($"Decentralized Identifier for application {IdWithoutBpn} is not set");
         entry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.FAILED);
     }
-    
+
     [Fact]
     public async Task ProcessChecklistHandleClearinghouse_WithValid_CallsExpected()
     {
@@ -393,9 +393,9 @@ public class ChecklistServiceTests
     }
 
     #endregion
-    
+
     #region ProcessChecklist HandleSelfDescription
-    
+
     [Fact]
     public async Task ProcessChecklistHandleSelfDescription_WithSdFactoryAlreadyInProgress_ExecutesNothing()
     {
@@ -460,7 +460,7 @@ public class ChecklistServiceTests
     }
 
     #endregion
-    
+
     #region Setup
 
     private void SetupFakesForTrigger(ApplicationChecklistEntry? applicationChecklistEntry = null)

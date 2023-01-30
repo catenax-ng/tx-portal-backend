@@ -78,9 +78,9 @@ public class NotificationRepositoryTests : IAssemblyFixture<TestDbFixture>
     }
 
     #endregion
-    
+
     #region AttachAndModifyNotification
-    
+
     [Fact]
     public async Task AttachAndModifyNotification_WithExistingNotification_UpdatesStatus()
     {
@@ -103,11 +103,11 @@ public class NotificationRepositoryTests : IAssemblyFixture<TestDbFixture>
         changedEntity.State.Should().Be(EntityState.Modified);
         changedEntity.Entity.Should().BeOfType<Notification>().Which.IsRead.Should().Be(true);
     }
-    
+
     #endregion
-    
+
     #region Delete Notification
-    
+
     [Fact]
     public async Task DeleteNotification_WithExistingNotification_RemovesNotification()
     {
@@ -128,7 +128,7 @@ public class NotificationRepositoryTests : IAssemblyFixture<TestDbFixture>
     }
 
     #endregion
-    
+
     #region GetAllAsDetailsByUserIdUntracked
 
     [Fact]
@@ -300,7 +300,7 @@ public class NotificationRepositoryTests : IAssemblyFixture<TestDbFixture>
         var result = await sut
             .GetNotificationByIdAndIamUserIdUntrackedAsync(new Guid("19AFFED7-13F0-4868-9A23-E77C23D8C889"), IamUserId)
             .ConfigureAwait(false);
-        
+
         // Assert
         result.Should().NotBeNull();
         result.IsUserReceiver.Should().BeTrue();
@@ -308,7 +308,7 @@ public class NotificationRepositoryTests : IAssemblyFixture<TestDbFixture>
     }
 
     #endregion
-    
+
     #region GetNotificationCount
 
     [Fact]
@@ -342,7 +342,7 @@ public class NotificationRepositoryTests : IAssemblyFixture<TestDbFixture>
     }
 
     #endregion
-    
+
     #region GetCountDetailsForUser
 
     [Fact]
@@ -363,7 +363,7 @@ public class NotificationRepositoryTests : IAssemblyFixture<TestDbFixture>
     #endregion
 
     #region CheckNotificationExistsByIdAndIamUserId
-    
+
     [Fact]
     public async Task CheckNotificationExistsByIdAndIamUserId_ReturnsExpectedCount()
     {
@@ -379,24 +379,24 @@ public class NotificationRepositoryTests : IAssemblyFixture<TestDbFixture>
         results.IsUserReceiver.Should().BeTrue();
         results.IsNotificationExisting.Should().BeTrue();
     }
-    
+
     #endregion
-    
+
     #region Setup
-    
+
     private async Task<NotificationRepository> CreateSut()
     {
         var context = await _dbTestDbFixture.GetPortalDbContext().ConfigureAwait(false);
         var sut = new NotificationRepository(context);
         return sut;
     }
-    
+
     private async Task<(NotificationRepository repo, PortalDbContext context)> CreateSutWithContext()
     {
         var context = await _dbTestDbFixture.GetPortalDbContext().ConfigureAwait(false);
         var sut = new NotificationRepository(context);
         return (sut, context);
     }
-    
+
     #endregion
 }

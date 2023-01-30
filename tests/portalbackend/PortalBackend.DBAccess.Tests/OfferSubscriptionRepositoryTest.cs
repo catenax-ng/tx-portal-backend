@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -89,8 +89,8 @@ public class OfferSubscriptionRepositoryTest : IAssemblyFixture<TestDbFixture>
 
         // Act
         var result = await sut.GetOfferSubscriptionStateForCompanyAsync(
-            new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4"), 
-            new Guid("2dc4249f-b5ca-4d42-bef1-7a7a950a4f87"), 
+            new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4"),
+            new Guid("2dc4249f-b5ca-4d42-bef1-7a7a950a4f87"),
             OfferTypeId.APP).ConfigureAwait(false);
 
         // Assert
@@ -108,8 +108,8 @@ public class OfferSubscriptionRepositoryTest : IAssemblyFixture<TestDbFixture>
 
         // Act
         var result = await sut.GetOfferSubscriptionStateForCompanyAsync(
-            new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4"), 
-            new Guid("2dc4249f-b5ca-4d42-bef1-7a7a950a4f87"), 
+            new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4"),
+            new Guid("2dc4249f-b5ca-4d42-bef1-7a7a950a4f87"),
             OfferTypeId.SERVICE).ConfigureAwait(false);
 
         // Assert
@@ -117,7 +117,7 @@ public class OfferSubscriptionRepositoryTest : IAssemblyFixture<TestDbFixture>
     }
 
     #endregion
-    
+
     #region GetAllBusinessAppDataForUserId
 
     [Fact]
@@ -138,7 +138,7 @@ public class OfferSubscriptionRepositoryTest : IAssemblyFixture<TestDbFixture>
     #endregion
 
     #region GetOwnCompanyProvidedOfferSubscriptionStatusesUntracked
-    
+
     [Theory]
     [InlineData(SubscriptionStatusSorting.OfferIdAsc)]
     [InlineData(SubscriptionStatusSorting.OfferIdDesc)]
@@ -158,17 +158,17 @@ public class OfferSubscriptionRepositoryTest : IAssemblyFixture<TestDbFixture>
         results.Data.Should().HaveCount(1);
         results.Data.Should().AllBeOfType<OfferCompanySubscriptionStatusData>().Which.First().CompanySubscriptionStatuses.Should().HaveCount(1);
     }
-    
+
     #endregion
-    
+
     #region Setup
-    
+
     private async Task<(OfferSubscriptionsRepository, PortalDbContext)> CreateSut()
     {
         var context = await _dbTestDbFixture.GetPortalDbContext().ConfigureAwait(false);
         var sut = new OfferSubscriptionsRepository(context);
         return (sut, context);
     }
-    
+
     #endregion
 }

@@ -44,7 +44,7 @@ public interface IAgreementRepository
     /// <param name="offerTypeId">Specific offer type</param>
     /// <returns>Returns an async enumerable of agreement data</returns>
     IAsyncEnumerable<AgreementData> GetOfferAgreementDataForOfferId(Guid offerId, OfferTypeId offerTypeId);
-    
+
     /// <summary>
     /// Gets the agreement data untracked from the database
     /// </summary>
@@ -75,7 +75,7 @@ public interface IAgreementRepository
     /// <param name="statusId"></param>
     /// <param name="categoryId"></param>
     /// <returns></returns>
-    
+
     Task<(OfferAgreementConsentUpdate OfferAgreementConsentUpdate, bool IsProviderCompany)> GetOfferAgreementConsent(Guid appId, string iamUserId, OfferStatusId statusId, OfferTypeId offerTypeId);
 
     /// <summary>
@@ -87,7 +87,6 @@ public interface IAgreementRepository
     /// <returns>Returns <c>true</c> if the agreements were found, otherwise <c>false</c>.</returns>
     Task<bool> CheckAgreementsExistsForSubscriptionAsync(IEnumerable<Guid> agreementIds, Guid subscriptionId, OfferTypeId offerTypeId);
 
-    
     /// <summary>
     /// Checks whether the given agreements exists in the database
     /// </summary>

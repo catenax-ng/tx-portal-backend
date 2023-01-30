@@ -38,13 +38,13 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Tests.Busin
 
 public class RegistrationBusinessLogicTest
 {
-    private static readonly Guid IdWithBpn = new ("c244f79a-7faf-4c59-bb85-fbfdf72ce46f");
-    private static readonly Guid NotExistingApplicationId = new ("9f0cfd0d-c512-438e-a07e-3198bce873bf");
+    private static readonly Guid IdWithBpn = new("c244f79a-7faf-4c59-bb85-fbfdf72ce46f");
+    private static readonly Guid NotExistingApplicationId = new("9f0cfd0d-c512-438e-a07e-3198bce873bf");
     private static readonly Guid ActiveApplicationCompanyId = new("045abf01-7762-468b-98fb-84a30c39b7c7");
-    private static readonly Guid IdWithStateCreated = new ("148c0a07-2e1f-4dce-bfe0-4e3d1825c266");
-    private static readonly Guid IdWithChecklistEntryInProgress = new ("9b288a8d-1d2f-4b86-be97-da40420dc8e4");
+    private static readonly Guid IdWithStateCreated = new("148c0a07-2e1f-4dce-bfe0-4e3d1825c266");
+    private static readonly Guid IdWithChecklistEntryInProgress = new("9b288a8d-1d2f-4b86-be97-da40420dc8e4");
     private static readonly Guid CompanyId = new("95c4339e-e087-4cd2-a5b8-44d385e64630");
-    
+
     private static readonly Guid IdWithoutBpn = new("d90995fe-1241-4b8d-9f5c-f3909acc6399");
     private static readonly string IamUserId = new Guid("4C1A6851-D4E7-4E10-A011-3732CD045E8A").ToString();
     private static readonly Guid ApplicationId = new("6084d6e0-0e01-413c-850d-9f944a6c494c");
@@ -67,7 +67,7 @@ public class RegistrationBusinessLogicTest
         _fixture = new Fixture().Customize(new AutoFakeItEasyCustomization { ConfigureMembers = true });
         _fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList()
             .ForEach(b => _fixture.Behaviors.Remove(b));
-        _fixture.Behaviors.Add(new OmitOnRecursionBehavior());  
+        _fixture.Behaviors.Add(new OmitOnRecursionBehavior());
 
         _portalRepositories = A.Fake<IPortalRepositories>();
         _applicationRepository = A.Fake<IApplicationRepository>();
@@ -92,7 +92,7 @@ public class RegistrationBusinessLogicTest
 
         _logic = new RegistrationBusinessLogic(_portalRepositories, options, A.Fake<IMailingService>(), _checklistService, _clearinghouseBusinessLogic);
     }
-    
+
     #region GetCompanyApplicationDetailsAsync
 
     [Fact]
@@ -122,12 +122,12 @@ public class RegistrationBusinessLogicTest
             .Returns(companyApplicationData.AsQueryable());
 
         // Act
-        var result = await _logic.GetCompanyApplicationDetailsAsync(0, 5,CompanyApplicationStatusFilter.InReview).ConfigureAwait(false);
+        var result = await _logic.GetCompanyApplicationDetailsAsync(0, 5, CompanyApplicationStatusFilter.InReview).ConfigureAwait(false);
         // Assert
         A.CallTo(() => _applicationRepository.GetCompanyApplicationsFilteredQuery(null, A<IEnumerable<CompanyApplicationStatusId>>.That.Matches(x => x.Count() == 1 && x.All(y => companyAppStatus.Contains(y))))).MustHaveHappenedOnceExactly();
         Assert.IsType<Pagination.Response<CompanyApplicationDetails>>(result);
-        result.Content.Should().HaveCount(5);       
-    }    
+        result.Content.Should().HaveCount(5);
+    }
 
     [Fact]
     public async Task GetCompanyApplicationDetailsAsync_WithClosedRequest_GetsExpectedEntries()
@@ -139,12 +139,12 @@ public class RegistrationBusinessLogicTest
             .Returns(companyApplicationData.AsQueryable());
 
         // Act
-        var result = await _logic.GetCompanyApplicationDetailsAsync(0, 5,CompanyApplicationStatusFilter.Closed).ConfigureAwait(false);
+        var result = await _logic.GetCompanyApplicationDetailsAsync(0, 5, CompanyApplicationStatusFilter.Closed).ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _applicationRepository.GetCompanyApplicationsFilteredQuery(null, A<IEnumerable<CompanyApplicationStatusId>>.That.Matches(x => x.Count() == 2 && x.All(y => companyAppStatus.Contains(y))))).MustHaveHappenedOnceExactly();
         Assert.IsType<Pagination.Response<CompanyApplicationDetails>>(result);
-        result.Content.Should().HaveCount(5);       
+        result.Content.Should().HaveCount(5);
     }
 
     #endregion
@@ -254,11 +254,11 @@ public class RegistrationBusinessLogicTest
         A.CallTo(() => _checklistService.TriggerBpnDataPush(ApplicationId, IamUserId, CancellationToken.None)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
     }
-    
+
     #endregion
-    
+
     #region UpdateCompanyBpn
-    
+
     [Fact]
     public async Task UpdateCompanyBpnAsync_WithInvalidBpn_ThrowsControllerArgumentException()
     {
@@ -273,7 +273,7 @@ public class RegistrationBusinessLogicTest
         ex.ParamName.Should().Be("bpn");
         ex.Message.Should().Be("BPN must contain exactly 16 characters long. (Parameter 'bpn')");
     }
-    
+
     [Fact]
     public async Task UpdateCompanyBpnAsync_WithInvalidBpnPrefix_ThrowsControllerArgumentException()
     {
@@ -294,7 +294,7 @@ public class RegistrationBusinessLogicTest
     {
         // Arrange
         SetupForUpdateCompanyBpn();
-        
+
         // Act
         async Task Act() => await _logic.UpdateCompanyBpn(NotExistingApplicationId, ValidBpn).ConfigureAwait(false);
 
@@ -366,7 +366,7 @@ public class RegistrationBusinessLogicTest
     #endregion
 
     #region ProcessClearinghouseResponse
-    
+
     [Fact]
     public async Task ProcessClearinghouseResponseAsync_WithValidData_CallsExpected()
     {
@@ -380,16 +380,16 @@ public class RegistrationBusinessLogicTest
     }
 
     #endregion
-    
+
     #region SetRegistrationVerification
-    
+
     [Fact]
     public async Task SetRegistrationVerification_WithNotExistingApplication_ThrowsNotFoundException()
     {
         // Arrange
         var applicationId = Guid.NewGuid();
         SetupForRegistrationVerification();
-        
+
         // Act
         async Task Act() => await _logic.SetRegistrationVerification(applicationId, true).ConfigureAwait(false);
 
@@ -470,7 +470,7 @@ public class RegistrationBusinessLogicTest
         entry.Comment.Should().BeNull();
         entry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.DONE);
     }
-    
+
     [Fact]
     public async Task SetRegistrationVerification_WithDecline_StateAndCommentSetCorrectly()
     {
@@ -490,7 +490,7 @@ public class RegistrationBusinessLogicTest
     }
 
     #endregion
-    
+
     #region Setup
 
     private void SetupForUpdateCompanyBpn(ApplicationChecklistEntry? applicationChecklistEntry = null)

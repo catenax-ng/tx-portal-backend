@@ -26,9 +26,9 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.Tests;
 
 public class ChecklistCreationServiceTests
 {
-    private static readonly Guid ApplicationWithoutBpnId = new ("0a9bd7b1-e692-483e-8128-dbf52759c7a5");
-    private static readonly Guid ApplicationWithBpnId = new ("c244f79a-7faf-4c59-bb85-fbfdf72ce46f");
-    private static readonly Guid ApplicationWithChecklist = new ("e100db0b-9ccd-4020-971c-7e05c0ef5780");
+    private static readonly Guid ApplicationWithoutBpnId = new("0a9bd7b1-e692-483e-8128-dbf52759c7a5");
+    private static readonly Guid ApplicationWithBpnId = new("c244f79a-7faf-4c59-bb85-fbfdf72ce46f");
+    private static readonly Guid ApplicationWithChecklist = new("e100db0b-9ccd-4020-971c-7e05c0ef5780");
     private readonly IPortalRepositories _portalRepositories;
     private readonly IApplicationRepository _applicationRepository;
     private readonly IApplicationChecklistRepository _applicationChecklistRepository;
@@ -36,19 +36,19 @@ public class ChecklistCreationServiceTests
 
     public ChecklistCreationServiceTests()
     {
-        var fixture = new Fixture().Customize(new AutoFakeItEasyCustomization {ConfigureMembers = true});
+        var fixture = new Fixture().Customize(new AutoFakeItEasyCustomization { ConfigureMembers = true });
         fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList()
             .ForEach(b => fixture.Behaviors.Remove(b));
         fixture.Behaviors.Add(new OmitOnRecursionBehavior());
 
         _portalRepositories = A.Fake<IPortalRepositories>();
-        
+
         _applicationRepository = A.Fake<IApplicationRepository>();
         _applicationChecklistRepository = A.Fake<IApplicationChecklistRepository>();
 
         _service = new ChecklistCreationService(_portalRepositories);
     }
-    
+
     #region CreateInitialChecklistAsync
 
     [Fact]
@@ -56,7 +56,7 @@ public class ChecklistCreationServiceTests
     {
         // Arrange
         SetupFakesForCreate();
-        
+
         // Act
         await _service.CreateInitialChecklistAsync(ApplicationWithBpnId).ConfigureAwait(false);
 
@@ -65,7 +65,7 @@ public class ChecklistCreationServiceTests
             ApplicationWithBpnId,
             A<IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)>>
                 .That
-                .Matches(x => 
+                .Matches(x =>
                     x.Count(y => y.TypeId == ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER && y.StatusId == ApplicationChecklistEntryStatusId.DONE) == 1)))
             .MustHaveHappenedOnceExactly();
     }
@@ -75,7 +75,7 @@ public class ChecklistCreationServiceTests
     {
         // Arrange
         SetupFakesForCreate();
-        
+
         // Act
         await _service.CreateInitialChecklistAsync(ApplicationWithoutBpnId).ConfigureAwait(false);
 
@@ -93,7 +93,7 @@ public class ChecklistCreationServiceTests
     {
         // Arrange
         SetupFakesForCreate();
-        
+
         // Act
         await _service.CreateInitialChecklistAsync(ApplicationWithChecklist).ConfigureAwait(false);
 
@@ -105,7 +105,7 @@ public class ChecklistCreationServiceTests
     }
 
     #endregion
-    
+
     #region CreateMissingChecklistItems
 
     [Fact]
@@ -120,7 +120,7 @@ public class ChecklistCreationServiceTests
             ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP
         };
         SetupFakesForCreate();
-        
+
         // Act
         await _service.CreateMissingChecklistItems(ApplicationWithBpnId, existingItems).ConfigureAwait(false);
 
@@ -129,7 +129,7 @@ public class ChecklistCreationServiceTests
             ApplicationWithBpnId,
             A<IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)>>
                 .That
-                .Matches(x => 
+                .Matches(x =>
                     x.Count(y => y.TypeId == ApplicationChecklistEntryTypeId.IDENTITY_WALLET && y.StatusId == ApplicationChecklistEntryStatusId.TO_DO) == 1)))
             .MustHaveHappenedOnceExactly();
     }
@@ -147,7 +147,7 @@ public class ChecklistCreationServiceTests
             ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP
         };
         SetupFakesForCreate();
-        
+
         // Act
         await _service.CreateMissingChecklistItems(ApplicationWithChecklist, existingItems).ConfigureAwait(false);
 
@@ -161,7 +161,7 @@ public class ChecklistCreationServiceTests
     }
 
     #endregion
-    
+
     #region Setup
 
     private void SetupFakesForCreate()

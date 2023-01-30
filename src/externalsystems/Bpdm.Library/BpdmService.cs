@@ -74,7 +74,7 @@ public class BpdmService : IBpdmService
                         })
                 )
             };
-        
+
             var result = await httpClient.PutAsJsonAsync("/api/catena/input/legal-entities", requestData, cancellationToken).ConfigureAwait(false);
             if (result.IsSuccessStatusCode)
                 return true;

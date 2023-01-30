@@ -46,7 +46,7 @@ public interface IUserRepository
     Task<CompanyUserBusinessPartners?> GetOwnCompanyUserWithAssignedBusinessPartnerNumbersUntrackedAsync(Guid companyUserId, string adminUserId);
     Task<Guid> GetCompanyIdForIamUserUntrackedAsync(string iamUserId);
     Task<(Guid CompanyId, string Bpn)> GetCompanyIdAndBpnForIamUserUntrackedAsync(string iamUserId);
-    
+
     /// <summary>
     /// Gets the CompanyUser Id for the given IamUser Id
     /// </summary>
@@ -97,7 +97,7 @@ public interface IUserRepository
     /// <param name="companyId">Id of the company for the users to select</param>
     /// <returns>Returns a list of the company user emails</returns>
     IAsyncEnumerable<(string Email, string? FirstName, string? LastName)> GetCompanyUserEmailForCompanyAndRoleId(IEnumerable<Guid> userRoleIds, Guid companyId);
-    
+
     /// <summary>
     /// Gets a company Id for the given service account
     /// </summary>
@@ -107,10 +107,10 @@ public interface IUserRepository
 
     Task<OfferIamUserData?> GetAppAssignedIamClientUserDataUntrackedAsync(Guid offerId, Guid companyUserId, string iamUserId);
     Task<OfferIamUserData?> GetCoreOfferAssignedIamClientUserDataUntrackedAsync(Guid offerId, Guid companyUserId, string iamUserId);
-    
+
     IAsyncEnumerable<Guid> GetServiceProviderCompanyUserWithRoleIdAsync(Guid offerId, List<Guid> userRoleIds);
 
-    Func<int,int,Task<Pagination.Source<CompanyAppUserDetails>?>> GetOwnCompanyAppUsersPaginationSourceAsync(Guid appId, string iamUserId, IEnumerable<OfferSubscriptionStatusId> subscriptionStatusIds, IEnumerable<CompanyUserStatusId> companyUserStatusIds, CompanyUserFilter filter);
+    Func<int, int, Task<Pagination.Source<CompanyAppUserDetails>?>> GetOwnCompanyAppUsersPaginationSourceAsync(Guid appId, string iamUserId, IEnumerable<OfferSubscriptionStatusId> subscriptionStatusIds, IEnumerable<CompanyUserStatusId> companyUserStatusIds, CompanyUserFilter filter);
 
     /// <summary>
     /// User account data for deletion of own userId
@@ -125,7 +125,7 @@ public interface IUserRepository
     /// <param name="iamUserId"></param>
     /// <returns>CompanyUserId, UserEntityId, BusinessPartnerNumbers, RoleIds, OfferIds, InvitationIds</returns>
     IAsyncEnumerable<CompanyUserAccountData> GetCompanyUserAccountDataUntrackedAsync(IEnumerable<Guid> companyUserIds, Guid companyUserId);
-    
+
     /// <summary>
     /// Validate CompanyUser is Member of all roleIds and belongs to same company as executing user 
     /// </summary>

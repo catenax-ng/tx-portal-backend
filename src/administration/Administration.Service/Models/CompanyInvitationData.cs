@@ -36,7 +36,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Models
         }
 
         [JsonPropertyName("userName")]
-        public string? userName { get; set; }        
+        public string? userName { get; set; }
         [RegularExpression(ValidationExpressions.Name, ErrorMessage = "Invalid firstName", MatchTimeoutInMilliseconds = 500)]
         [JsonPropertyName("firstName")]
         public string firstName { get; set; }

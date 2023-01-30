@@ -60,7 +60,7 @@ public class NotificationServiceTests
         _rolesRepository = A.Fake<IUserRolesRepository>();
         _userRepository = A.Fake<IUserRepository>();
         _notificationRepository = A.Fake<INotificationRepository>();
-            
+
         A.CallTo(() => _portalRepositories.GetInstance<IUserRepository>()).Returns(_userRepository);
         A.CallTo(() => _portalRepositories.GetInstance<IUserRolesRepository>()).Returns(_rolesRepository);
         A.CallTo(() => _portalRepositories.GetInstance<INotificationRepository>()).Returns(_notificationRepository);
@@ -217,7 +217,7 @@ public class NotificationServiceTests
                 setOptionalParameters?.Invoke(notification);
                 _notifications.Add(notification);
             });
-        
+
         A.CallTo(() => _portalRepositories.SaveAsync()).Returns(1);
     }
 

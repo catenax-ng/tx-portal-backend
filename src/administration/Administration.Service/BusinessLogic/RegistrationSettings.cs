@@ -32,9 +32,9 @@ public class RegistrationSettings
     }
 
     public int ApplicationsMaxPageSize { get; set; }
-    
+
     [Required]
-    public IDictionary<string,IEnumerable<string>> PartnerUserInitialRoles { get; set; }
+    public IDictionary<string, IEnumerable<string>> PartnerUserInitialRoles { get; set; }
 
     /// <summary>
     /// Document Type Id

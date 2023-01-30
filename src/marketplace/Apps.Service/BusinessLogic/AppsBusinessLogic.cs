@@ -24,6 +24,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Web;
+using Org.Eclipse.TractusX.Portal.Backend.Mailing.SendMail;
 using Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Service;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
@@ -32,7 +33,6 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using System.Text.Json;
-using Org.Eclipse.TractusX.Portal.Backend.Mailing.SendMail;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.BusinessLogic;
 
@@ -80,7 +80,7 @@ public class AppsBusinessLogic : IAppsBusinessLogic
     public IAsyncEnumerable<BusinessAppData> GetAllUserUserBusinessAppsAsync(string userId) =>
         _portalRepositories.GetInstance<IOfferSubscriptionsRepository>()
             .GetAllBusinessAppDataForUserIdAsync(userId)
-            .Select(x => 
+            .Select(x =>
                 new BusinessAppData(
                     x.SubscriptionId,
                     x.OfferName ?? Constants.ErrorString,
@@ -172,13 +172,13 @@ public class AppsBusinessLogic : IAppsBusinessLogic
     {
         var offerSubscriptionRepository = _portalRepositories.GetInstance<IOfferSubscriptionsRepository>();
         var assignedAppData = await offerSubscriptionRepository.GetCompanyAssignedAppDataForProvidingCompanyUserAsync(appId, subscribingCompanyId, iamUserId).ConfigureAwait(false);
-        if(assignedAppData == default)
+        if (assignedAppData == default)
         {
             throw new NotFoundException($"App {appId} does not exist.");
         }
 
         var (subscriptionId, subscriptionStatusId, requesterId, appName, companyUserId, requesterData) = assignedAppData;
-        if(companyUserId == Guid.Empty)
+        if (companyUserId == Guid.Empty)
         {
             throw new ControllerArgumentException("Missing permission: The user's company does not provide the requested app so they cannot activate it.");
         }
@@ -188,11 +188,11 @@ public class AppsBusinessLogic : IAppsBusinessLogic
             throw new ControllerArgumentException($"subscription for app {appId}, company {subscribingCompanyId} has not been created yet");
         }
 
-        if (subscriptionStatusId != OfferSubscriptionStatusId.PENDING )
+        if (subscriptionStatusId != OfferSubscriptionStatusId.PENDING)
         {
             throw new ControllerArgumentException($"subscription for app {appId}, company {subscribingCompanyId} is not in status PENDING");
         }
-        
+
         if (appName is null)
         {
             throw new ConflictException("App Name is not yet set.");
@@ -212,7 +212,7 @@ public class AppsBusinessLogic : IAppsBusinessLogic
                 });
             });
 
-        var userName = string.Join(" ", new[] { requesterData.Firstname, requesterData.Lastname }); 
+        var userName = string.Join(" ", new[] { requesterData.Firstname, requesterData.Lastname });
 
         if (!string.IsNullOrWhiteSpace(requesterData.Email))
         {
@@ -232,7 +232,7 @@ public class AppsBusinessLogic : IAppsBusinessLogic
     {
         var assignedAppData = await _portalRepositories.GetInstance<IOfferSubscriptionsRepository>().GetCompanyAssignedAppDataForCompanyUserAsync(appId, iamUserId).ConfigureAwait(false);
 
-        if(assignedAppData == default)
+        if (assignedAppData == default)
         {
             throw new NotFoundException($"App {appId} does not exist.");
         }
@@ -281,7 +281,7 @@ public class AppsBusinessLogic : IAppsBusinessLogic
     /// <inheritdoc/>
     public IAsyncEnumerable<AllOfferData> GetCompanyProvidedAppsDataForUserAsync(string userId) =>
         _portalRepositories.GetInstance<IOfferRepository>().GetProvidedOffersData(OfferTypeId.APP, userId);
-    
+
     /// <inheritdoc />
     public Task<OfferAutoSetupResponseData> AutoSetupAppAsync(OfferAutoSetupData data, string iamUserId) =>
         _offerService.AutoSetupServiceAsync(data, _settings.ServiceAccountRoles, _settings.CompanyAdminRoles, iamUserId, OfferTypeId.APP, _settings.BasePortalAddress);
@@ -291,9 +291,9 @@ public class AppsBusinessLogic : IAppsBusinessLogic
         _offerService.GetOfferAgreementsAsync(appId, OfferTypeId.APP);
 
     /// <inheritdoc />
-    public Task DeclineAppRequestAsync(Guid appId, string iamUserId, OfferDeclineRequest data) => 
+    public Task DeclineAppRequestAsync(Guid appId, string iamUserId, OfferDeclineRequest data) =>
         _offerService.DeclineOfferAsync(appId, iamUserId, data, OfferTypeId.APP, NotificationTypeId.APP_RELEASE_REJECTION, _settings.ServiceManagerRoles, _settings.AppOverviewAddress);
-    
+
     /// <inheritdoc />
     public Task DeactivateOfferbyAppIdAsync(Guid appId, string iamUserId) =>
         _offerService.DeactivateOfferIdAsync(appId, iamUserId, OfferTypeId.APP);

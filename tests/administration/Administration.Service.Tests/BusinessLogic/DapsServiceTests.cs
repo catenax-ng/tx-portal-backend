@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -20,17 +20,17 @@
 
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
-using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared;
-using System.Net;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Token;
+using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared;
+using System.Net;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Tests.BusinessLogic;
 
 public class DapsServiceTests
 {
     #region Initialization
-    
+
     private readonly ITokenService _tokenService;
     private readonly IOptions<DapsSettings> _options;
 
@@ -56,9 +56,9 @@ public class DapsServiceTests
     }
 
     #endregion
-    
+
     #region EnableDapsAuth
-    
+
     [Fact]
     public async Task EnableDapsAuthAsync_WithValidCall_ReturnsExpected()
     {
@@ -118,7 +118,7 @@ public class DapsServiceTests
         var file = FormFileHelper.GetFormFile("Content of the super secure certificate", "test.pem", "application/x-pem-file");
 
         var httpMessageHandlerMock =
-            new HttpMessageHandlerMock(HttpStatusCode.BadRequest, ex:  new HttpRequestException ("DNS Error"));
+            new HttpMessageHandlerMock(HttpStatusCode.BadRequest, ex: new HttpRequestException("DNS Error"));
         var httpClient = new HttpClient(httpMessageHandlerMock)
         {
             BaseAddress = new Uri("https://base.address.com")

@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021,2022 BMW Group AG
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
@@ -31,27 +31,27 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.Tests;
 
 public class ClearinghouseBusinessLogicTests
 {
-    private static readonly Guid IdWithoutBpn = new ("0a9bd7b1-e692-483e-8128-dbf52759c7a5");
-    private static readonly Guid IdWithApplicationCreated = new ("7a8f5cb6-6ad2-4b88-a765-ff1888fcedbe");
-    private static readonly Guid IdWithCustodianUnavailable = new ("beaa6de5-d411-4da8-850e-06047d3170be");
+    private static readonly Guid IdWithoutBpn = new("0a9bd7b1-e692-483e-8128-dbf52759c7a5");
+    private static readonly Guid IdWithApplicationCreated = new("7a8f5cb6-6ad2-4b88-a765-ff1888fcedbe");
+    private static readonly Guid IdWithCustodianUnavailable = new("beaa6de5-d411-4da8-850e-06047d3170be");
 
-    private static readonly Guid IdWithBpn = new ("c244f79a-7faf-4c59-bb85-fbfdf72ce46f");
+    private static readonly Guid IdWithBpn = new("c244f79a-7faf-4c59-bb85-fbfdf72ce46f");
     private const string ValidBpn = "BPNL123698762345";
     private const string ValidDid = "thisisavaliddid";
     private const string FailingBpn = "FAILINGBPN";
 
     private readonly IFixture _fixture;
-    
+
     private readonly IApplicationRepository _applicationRepository;
     private readonly IApplicationChecklistRepository _applicationChecklistRepository;
     private readonly IPortalRepositories _portalRepositories;
-    
+
     private readonly ClearinghouseBusinessLogic _logic;
     private readonly IClearinghouseService _clearinghouseService;
 
     public ClearinghouseBusinessLogicTests()
     {
-        _fixture = new Fixture().Customize(new AutoFakeItEasyCustomization {ConfigureMembers = true});
+        _fixture = new Fixture().Customize(new AutoFakeItEasyCustomization { ConfigureMembers = true });
         _fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList()
             .ForEach(b => _fixture.Behaviors.Remove(b));
         _fixture.Behaviors.Add(new OmitOnRecursionBehavior());
@@ -66,7 +66,7 @@ public class ClearinghouseBusinessLogicTests
 
         _logic = new ClearinghouseBusinessLogic(_portalRepositories, _clearinghouseService);
     }
-    
+
     #region ProcessClearinghouseResponse
 
     [Fact]
@@ -101,11 +101,11 @@ public class ClearinghouseBusinessLogicTests
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
         ex.Message.Should().Be($"Checklist Item {ApplicationChecklistEntryTypeId.CLEARING_HOUSE} is not in status {ApplicationChecklistEntryStatusId.IN_PROGRESS}");
     }
-    
+
     [Fact]
     public async Task ProcessClearinghouseResponseAsync_WithConfirmation_UpdatesEntry()
     {
-        
+
         // Arrange
         var entry = new ApplicationChecklistEntry(IdWithBpn, ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow);
         var data = _fixture.Build<ClearinghouseResponseData>()
@@ -146,7 +146,7 @@ public class ClearinghouseBusinessLogicTests
     }
 
     #endregion
-    
+
     #region TriggerCompanyDataPost
 
     [Fact]
@@ -207,9 +207,9 @@ public class ClearinghouseBusinessLogicTests
     }
 
     #endregion
-    
+
     #region Setup
-    
+
     private void SetupForProcessClearinghouseResponse(ApplicationChecklistEntry? applicationChecklistEntry = null)
     {
         if (applicationChecklistEntry != null)

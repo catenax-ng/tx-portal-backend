@@ -42,7 +42,7 @@ public class OfferSubscriptionServiceTests
     private const string BasePortalUrl = "http//base-url.com";
     private const string AccessToken = "THISISAACCESSTOKEN";
     private const string ClientId = "Client1";
-    
+
     private readonly string _notAssignedCompanyIdUser;
     private readonly string _noBpnSetUserId;
     private readonly string _iamUserId;
@@ -70,7 +70,7 @@ public class OfferSubscriptionServiceTests
     private readonly IUserRolesRepository _userRolesRepository;
     private readonly IOfferSetupService _offerSetupService;
     private readonly IMailingService _mailingService;
-    private readonly Dictionary<string,IEnumerable<string>> _serviceManagerRoles;
+    private readonly Dictionary<string, IEnumerable<string>> _serviceManagerRoles;
 
     public OfferSubscriptionServiceTests()
     {
@@ -133,14 +133,14 @@ public class OfferSubscriptionServiceTests
                 companyAssignedApps.Add(companyAssignedApp);
             });
         var notificationId = Guid.NewGuid();
-        var notifications = new List<Notification>(); 
+        var notifications = new List<Notification>();
         A.CallTo(() => _notificationRepository.CreateNotification(A<Guid>._, A<NotificationTypeId>._, A<bool>._, A<Action<Notification>?>._))
             .Invokes((Guid receiverUserId, NotificationTypeId notificationTypeId, bool isRead, Action<Notification>? setOptionalParameters) =>
             {
                 var notification = new Notification(notificationId, receiverUserId, DateTimeOffset.UtcNow, notificationTypeId, isRead);
                 setOptionalParameters?.Invoke(notification);
                 notifications.Add(notification);
-            });        
+            });
         var sut = new OfferSubscriptionService(_portalRepositories, _offerSetupService, _mailingService, A.Fake<ILogger<OfferSubscriptionService>>());
 
         // Act
@@ -151,7 +151,7 @@ public class OfferSubscriptionServiceTests
         notifications.Should().HaveCount(2);
         A.CallTo(() => _mailingService.SendMails(A<string>._, A<Dictionary<string, string>>._, A<List<string>>._)).MustHaveHappenedOnceExactly();
     }
-    
+
     [Theory]
     [InlineData(OfferTypeId.SERVICE)]
     [InlineData(OfferTypeId.APP)]
@@ -159,7 +159,7 @@ public class OfferSubscriptionServiceTests
     {
         // Arrange
         var notificationId = Guid.NewGuid();
-        var notifications = new List<Notification>(); 
+        var notifications = new List<Notification>();
         A.CallTo(() => _notificationRepository.CreateNotification(A<Guid>._, A<NotificationTypeId>._, A<bool>._, A<Action<Notification>?>._))
             .Invokes((Guid receiverUserId, NotificationTypeId notificationTypeId, bool isRead, Action<Notification>? setOptionalParameters) =>
             {
@@ -209,7 +209,7 @@ public class OfferSubscriptionServiceTests
         var ex = await Assert.ThrowsAsync<NotFoundException>(Action);
         ex.Message.Should().Be($"Offer {notExistingServiceId} does not exist");
     }
-    
+
     [Theory]
     [InlineData(OfferTypeId.SERVICE)]
     [InlineData(OfferTypeId.APP)]
@@ -281,7 +281,7 @@ public class OfferSubscriptionServiceTests
     #endregion
 
     #region APP - Specialcases
-    
+
     [Fact]
     public async Task AddOfferSubscription_WithExistingActiveSubscription_ThrowsConflictException()
     {
@@ -297,7 +297,7 @@ public class OfferSubscriptionServiceTests
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
         ex.Message.Should().Contain(" is already subscribed to ");
     }
-    
+
     [Fact]
     public async Task AddOfferSubscription_WithExistingInactiveSubscription_UpdatesState()
     {
@@ -313,9 +313,9 @@ public class OfferSubscriptionServiceTests
         A.CallTo(() => _mailingService.SendMails(A<string>._, A<Dictionary<string, string>>._, A<List<string>>._)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _offerSubscriptionsRepository.AttachAndModifyOfferSubscription(A<Guid>._, A<Action<OfferSubscription>>._)).MustHaveHappenedOnceExactly();
     }
-    
+
     #endregion
-    
+
     #region Setup
 
     private void SetupRepositories()
@@ -363,17 +363,19 @@ public class OfferSubscriptionServiceTests
         A.CallTo(() => _userRolesRepository.GetUserRoleIdsUntrackedAsync(A<IDictionary<string, IEnumerable<string>>>.That.Not.Matches(x => x[ClientId].First() == "Service Manager")))
             .Returns(new List<Guid>().ToAsyncEnumerable());
 
-        
         A.CallTo(() => _offerRepository.GetActiveServicesPaginationSource(A<ServiceOverviewSorting>._, A<ServiceTypeId>._))
             .Returns(paginationResult);
         A.CallTo(() => _offerRepository.GetOfferDetailByIdUntrackedAsync(_existingOfferId, A<string>.That.Matches(x => x == "en"), A<string>._, A<OfferTypeId>._))
-            .ReturnsLazily(() => offerDetail with {OfferSubscriptionDetailData = new []
+            .ReturnsLazily(() => offerDetail with
+            {
+                OfferSubscriptionDetailData = new[]
             {
                 new OfferSubscriptionStateDetailData(Guid.NewGuid(), OfferSubscriptionStatusId.ACTIVE)
-            }});
+            }
+            });
         A.CallTo(() => _offerRepository.GetOfferDetailByIdUntrackedAsync(A<Guid>.That.Not.Matches(x => x == _existingOfferId), A<string>._, A<string>._, A<OfferTypeId>._))
             .ReturnsLazily(() => (OfferDetailData?)null);
-        
+
         A.CallTo(() => _offerRepository.GetOfferProviderDetailsAsync(A<Guid>.That.Matches(x => x == _existingOfferId), A<OfferTypeId>._))
             .ReturnsLazily(() => new OfferProviderDetailsData("Test Offer", "Test Company", "provider@mail.de", new Guid("ac1cf001-7fbc-1f2f-817f-bce058020001"), "https://www.testurl.com"));
         A.CallTo(() => _offerRepository.GetOfferProviderDetailsAsync(A<Guid>.That.Matches(x => x == _existingOfferWithFailingAutoSetupId), A<OfferTypeId>._))
@@ -382,7 +384,7 @@ public class OfferSubscriptionServiceTests
             .ReturnsLazily(() => new OfferProviderDetailsData(null, "Test Company", null, new Guid("ac1cf001-7fbc-1f2f-817f-bce058020001"), "https://www.fail.com"));
         A.CallTo(() => _offerRepository.GetOfferProviderDetailsAsync(A<Guid>.That.Not.Matches(x => x == _existingOfferId || x == _existingOfferWithFailingAutoSetupId || x == _existingOfferWithoutDetailsFilled), A<OfferTypeId>._))
             .ReturnsLazily(() => (OfferProviderDetailsData?)null);
-        
+
         var offerSubscription = _fixture.Create<OfferSubscription>();
         A.CallTo(() => _offerSubscriptionsRepository.GetSubscriptionDetailDataForOwnUserAsync(
                 A<Guid>.That.Matches(x => x == _validSubscriptionId),
