@@ -388,4 +388,23 @@ public class ApplicationRepository : IApplicationRepository
                             ace.ApplicationChecklistEntryStatusId,
                             ace.Comment))))
             .SingleOrDefaultAsync();
+    
+    /// <inheritdoc />
+    public IAsyncEnumerable<UserRoleDeletionData> GetUserDataForRoleDeletionByIamClientIdsAsync(Guid applicationId, IEnumerable<string> iamClientIds) =>
+        _dbContext.Invitations
+            .AsNoTracking()
+            .Where(invitation => invitation.CompanyApplicationId == applicationId)
+            .Select(invitation => invitation.CompanyUser)
+            .Where(companyUser => companyUser!.CompanyUserStatusId == CompanyUserStatusId.ACTIVE)
+            .Select(companyUser => new UserRoleDeletionData(
+                companyUser!.Id,
+                companyUser.IamUser!.UserEntityId,
+                companyUser.CompanyUserAssignedRoles
+                    .Where(x => x.UserRole!.Offer!.AppInstances.Any(ai => iamClientIds.Contains(ai.IamClient!.ClientClientId)))
+                    .Select(companyUserAssignedRole => new UserRoleModificationData(
+                        companyUserAssignedRole.UserRole!.UserRoleText,
+                        companyUserAssignedRole.UserRoleId,
+                        companyUserAssignedRole.CompanyUserId == companyUser.Id
+                    ))))
+            .AsAsyncEnumerable();
 }

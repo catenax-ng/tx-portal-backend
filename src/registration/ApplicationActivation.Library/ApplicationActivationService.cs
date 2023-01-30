@@ -29,6 +29,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Notifications.Library;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
@@ -150,6 +151,7 @@ public class ApplicationActivationService : IApplicationActivationService
 
         var userRolesRepository = _portalRepositories.GetInstance<IUserRolesRepository>();
         var assignedRoles = await AssignRolesAndBpn(applicationId, userRolesRepository, applicationRepository, businessPartnerNumber).ConfigureAwait(false);
+        await RemoveRegistrationRoles(applicationId, userRolesRepository, applicationRepository).ConfigureAwait(false);
 
         applicationRepository.AttachAndModifyCompanyApplication(applicationId, ca =>
         {
@@ -237,6 +239,20 @@ public class ApplicationActivationService : IApplicationActivationService
         }
 
         return assignedRoles;
+    }
+
+    private async Task RemoveRegistrationRoles(Guid applicationId, IUserRolesRepository userRolesRepository, IApplicationRepository applicationRepository)
+    {
+        var iamClientIds = _settings.ClientToRemoveRolesOnActivation;
+        var invitedUsersData = applicationRepository
+            .GetUserDataForRoleDeletionByIamClientIdsAsync(applicationId, iamClientIds);
+        await foreach (var userData in invitedUsersData.ConfigureAwait(false))
+        {
+            var roleNamesToDelete = iamClientIds.ToDictionary(clientId => clientId, _ => userData.RolesToDelete.Select(x => x.CompanyUserRoleText));
+            await _provisioningManager.DeleteClientRolesFromCentralUserAsync(userData.UserEntityId, roleNamesToDelete)
+                .ConfigureAwait(false);
+            userRolesRepository.DeleteCompanyUserAssignedRoles(userData.RolesToDelete.Select(x => (userData.CompanyUserId, x.CompanyUserRoleId)));
+        }
     }
 
     private async Task PostRegistrationWelcomeEmailAsync(IUserRolesRepository userRolesRepository, IApplicationRepository applicationRepository, Guid applicationId)

@@ -153,6 +153,28 @@ public class UserRolesRepository : IUserRolesRepository
         }
     }
 
+    public async IAsyncEnumerable<UserRoleData> GetUserRoleDataForClientIdsAsync(IEnumerable<string> clientIds)
+    {
+        foreach (var clientId in clientIds)
+        {
+            await foreach (var userRoleData in _dbContext.UserRoles
+                               .AsNoTracking()
+                               .Where(userRole => userRole.Offer!.AppInstances.Any(ai => ai.IamClient!.ClientClientId == clientId))
+                               .Select(userRole => new {
+                                   userRole.Id,
+                                   userRole.UserRoleText
+                               })
+                               .AsAsyncEnumerable())
+            {
+                yield return new UserRoleData(
+                    userRoleData.Id,
+                    clientId,
+                    userRoleData.UserRoleText
+                );
+            }
+        }
+    }
+
     public IAsyncEnumerable<UserRoleData> GetOwnCompanyPortalUserRoleDataUntrackedAsync(string clientId, IEnumerable<string> roles, string iamUserId) =>
         _dbContext.UserRoles
             .AsNoTracking()

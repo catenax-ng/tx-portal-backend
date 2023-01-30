@@ -89,4 +89,6 @@ public interface IApplicationRepository
     /// <param name="applicationId">Id of the application</param>
     /// <returns>Returns the checklist data</returns>
     Task<(bool Exists, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId, string? Comment)> ChecklistData)> GetApplicationChecklistData(Guid applicationId);
+
+    IAsyncEnumerable<UserRoleDeletionData> GetUserDataForRoleDeletionByIamClientIdsAsync(Guid applicationId, IEnumerable<string> iamClientIds);
 }
