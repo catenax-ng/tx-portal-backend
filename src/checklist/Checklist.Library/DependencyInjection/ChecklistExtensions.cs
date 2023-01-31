@@ -34,7 +34,12 @@ public static class ChecklistExtensions
     {
         return services
             .AddTransient<ITokenService, TokenService>()
-            .AddScoped<IChecklistService, ChecklistService>()
+            .AddScoped<IChecklistProcessor, ChecklistProcessor>()
+            .AddTransient<IChecklistService, ChecklistService>()
+            .AddTransient<IBpdmProcessHandler, BpdmProcessHandler>()
+            .AddTransient<IClearingHouseProcessHandler, ClearingHouseProcessHandler>()
+            .AddTransient<IIdentityWalletProcessHandler, IdentityWalletProcessHandler>()
+            .AddTransient<ISelfDescriptionProcessHander, SelfDescriptionProcessHandler>()
             .AddBpdmService(section.GetSection("Bpdm"))
             .AddCustodianService(section.GetSection("Custodian"))
             .AddClearinghouseService(section.GetSection("Clearinghouse"))

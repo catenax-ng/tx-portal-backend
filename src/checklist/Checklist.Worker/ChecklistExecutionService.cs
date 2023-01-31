@@ -70,7 +70,7 @@ public class ChecklistExecutionService
         var outerLoopRepositories = outerLoopScope.ServiceProvider.GetRequiredService<IPortalRepositories>();
 
         using var checklistServiceScope = outerLoopScope.ServiceProvider.CreateScope();
-        var checklistService = checklistServiceScope.ServiceProvider.GetRequiredService<IChecklistService>();
+        var checklistProcessor = checklistServiceScope.ServiceProvider.GetRequiredService<IChecklistProcessor>();
         var applicationActivation = checklistServiceScope.ServiceProvider.GetRequiredService<IApplicationActivationService>();
         var checklistCreationService = checklistServiceScope.ServiceProvider.GetRequiredService<IChecklistCreationService>();
         var checklistRepositories = checklistServiceScope.ServiceProvider.GetRequiredService<IPortalRepositories>();
@@ -82,7 +82,7 @@ public class ChecklistExecutionService
                 var checklistEntryData = outerLoopRepositories.GetInstance<IApplicationChecklistRepository>().GetChecklistProcessStepData();
                 await foreach (var entryData in checklistEntryData.WithCancellation(stoppingToken).ConfigureAwait(false))
                 {
-                    var checklist = await HandleChecklistProcessing(entryData, checklistCreationService, checklistService, checklistRepositories, stoppingToken).ConfigureAwait(false);
+                    var checklist = await HandleChecklistProcessing(entryData, checklistCreationService, checklistProcessor, checklistRepositories, stoppingToken).ConfigureAwait(false);
                     await HandleApplicationActivation(entryData.ApplicationId, checklist, applicationActivation, checklistRepositories).ConfigureAwait(false);
                 }
                 _logger.LogInformation("Processed checklist items");
@@ -98,7 +98,7 @@ public class ChecklistExecutionService
     private static async Task<IEnumerable<(ApplicationChecklistEntryTypeId EntryTypeId, ApplicationChecklistEntryStatusId EntryStatusId)>> HandleChecklistProcessing(
         (Guid ApplicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> Checklist, IEnumerable<ProcessStep> ProcessSteps) entryData,
         IChecklistCreationService checklistCreationService,
-        IChecklistService checklistService,
+        IChecklistProcessor checklistProcessor,
         IPortalRepositories checklistRepositories,
         CancellationToken stoppingToken)
     {
@@ -120,7 +120,7 @@ public class ChecklistExecutionService
         }
         var checklist = checklistEntries.ToDictionary(entry => entry.TypeId, entry => entry.StatusId);
 
-        await foreach (var (typeId, statusId, processed) in checklistService.ProcessChecklist(applicationId, checklistEntries, processSteps, stoppingToken).WithCancellation(stoppingToken).ConfigureAwait(false))
+        await foreach (var (typeId, statusId, processed) in checklistProcessor.ProcessChecklist(applicationId, checklistEntries, processSteps, stoppingToken).WithCancellation(stoppingToken).ConfigureAwait(false))
         {
             if (processed)
             {
