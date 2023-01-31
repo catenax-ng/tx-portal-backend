@@ -160,11 +160,12 @@ public class ChecklistService : IChecklistService
     public async IAsyncEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId, bool Processed)> ProcessChecklist(Guid applicationId, IEnumerable<(ApplicationChecklistEntryTypeId EntryTypeId, ApplicationChecklistEntryStatusId EntryStatusId)> checklist, IEnumerable<ProcessStep> processSteps, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var todoChecklist = checklist.ToDictionary(entry => entry.EntryTypeId, entry => entry.EntryStatusId);
-        var todoSteps = new Queue<ProcessStep>(processSteps);
+        var workerSteps = new Queue<ProcessStep>(processSteps.ExceptBy(_manuelProcessSteps, step => step.ProcessStepTypeId));
+        var manualSteps = processSteps.IntersectBy(_manuelProcessSteps, step => step.ProcessStepTypeId).ToList();
         var checklistRepository = _portalRepositories.GetInstance<IApplicationChecklistRepository>();
         var processStepRepository = _portalRepositories.GetInstance<IProcessStepRepository>();
-        _logger.LogInformation("Found {StepsCount} possible steps for application {ApplicationId}", todoSteps.Count(), applicationId);
-        while (todoSteps.TryDequeue(out var step))
+        _logger.LogInformation("Found {StepsCount} possible steps for application {ApplicationId}", workerSteps.Count(), applicationId);
+        while (workerSteps.TryDequeue(out var step))
         {
             if (_stepExecutions.TryGetValue(step.ProcessStepTypeId, out var execution))
             {
@@ -175,12 +176,19 @@ public class ChecklistService : IChecklistService
                 var modified = false;
                 try
                 {
-                    var result = await execution.ProcessFunc(this, applicationId, todoChecklist.ToImmutableDictionary(), todoSteps, cancellationToken).ConfigureAwait(false);
+                    var result = await execution.ProcessFunc(this, applicationId, todoChecklist.ToImmutableDictionary(), workerSteps.Concat(manualSteps), cancellationToken).ConfigureAwait(false);
                     if (result.Modified)
                     {
                         foreach (var nextStep in result.NextSteps)
                         {
-                            todoSteps.Enqueue(nextStep);
+                            if (_manuelProcessSteps.Contains(nextStep.ProcessStepTypeId))
+                            {
+                                manualSteps.Append(nextStep);
+                            }
+                            else
+                            {
+                                workerSteps.Enqueue(nextStep);
+                            }
                         }
                         processStepRepository.AttachAndModifyProcessStep(step.Id, null, step => step.ProcessStepStatusId = ProcessStepStatusId.DONE);
                         returnStatusId = result.ApplicationChecklistEntryStatusId;
