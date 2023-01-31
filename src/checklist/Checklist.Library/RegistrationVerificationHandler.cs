@@ -33,7 +33,13 @@ public class RegistrationVerificationHandler : IRegistrationVerificationHandler
 
     public async Task SetRegistrationVerification(Guid applicationId, bool approve, string? comment = null)
     {
-        var (processStepId, checklistEntries, processSteps) = await _checklistService.VerifyChecklistEntryAndProcessSteps(applicationId, ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ProcessStepTypeId.VERIFY_REGISTRATION).ConfigureAwait(false);
+        var (processStepId, checklistEntries, processSteps) = await _checklistService
+            .VerifyChecklistEntryAndProcessSteps(
+                applicationId,
+                ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION,
+                ApplicationChecklistEntryStatusId.TO_DO,
+                ProcessStepTypeId.VERIFY_REGISTRATION)
+            .ConfigureAwait(false);
 
         var businessPartnerFailed = checklistEntries.Any(entry => entry.EntryTypeId == ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER && entry.EntryStatusId == ApplicationChecklistEntryStatusId.FAILED);
         var createWalletStepExists = processSteps.Any(step => step.ProcessStepTypeId == ProcessStepTypeId.CREATE_IDENTITY_WALLET && step.ProcessStepStatusId == ProcessStepStatusId.TODO);

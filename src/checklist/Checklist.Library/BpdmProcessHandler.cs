@@ -38,7 +38,14 @@ public class BpdmProcessHandler : IBpdmProcessHandler
 
     public async Task TriggerBpnDataPush(Guid applicationId, string iamUserId, CancellationToken cancellationToken)
     {
-        var result = await _checklistService.VerifyChecklistEntryAndProcessSteps(applicationId, ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH).ConfigureAwait(false);
+        var result = await _checklistService
+            .VerifyChecklistEntryAndProcessSteps(
+                applicationId,
+                ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER,
+                ApplicationChecklistEntryStatusId.TO_DO,
+                ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH)
+            .ConfigureAwait(false);
+
         await _bpdmBusinessLogic.TriggerBpnDataPush(applicationId, iamUserId, cancellationToken).ConfigureAwait(false);
         _checklistService.FinalizeChecklistEntryAndProcessSteps(
             applicationId,

@@ -19,10 +19,11 @@
  ********************************************************************************/
 
 using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.BusinessLogic;
-using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Custodian.Library.BusinessLogic;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using System.Collections.Immutable;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
@@ -40,17 +41,28 @@ public class ClearingHouseProcessHandler : IClearingHouseProcessHandler
         _checklistService = checklistService;
     }
 
-    public async Task ProcessEndClearinghouse(Guid applicationId, CancellationToken cancellationToken)
+    public async Task ProcessEndClearinghouse(Guid applicationId, ClearinghouseResponseData data, CancellationToken cancellationToken)
     {
         var follupUpStep = new [] { ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP };
-        var result = await _checklistService.VerifyChecklistEntryAndProcessSteps(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ProcessStepTypeId.END_CLEARING_HOUSE, follupUpStep).ConfigureAwait(false);
-
-        // TODO implement call to businessLogic end clearinghouse 
+        var result = await _checklistService
+            .VerifyChecklistEntryAndProcessSteps(
+                applicationId,
+                ApplicationChecklistEntryTypeId.CLEARING_HOUSE,
+                ApplicationChecklistEntryStatusId.IN_PROGRESS,
+                ProcessStepTypeId.END_CLEARING_HOUSE,
+                follupUpStep)
+            .ConfigureAwait(false);
 
         _checklistService.FinalizeChecklistEntryAndProcessSteps(
             applicationId,
             ApplicationChecklistEntryTypeId.CLEARING_HOUSE,
-            entry => entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE,
+            item =>
+            {
+                item.ApplicationChecklistEntryStatusId = data.Status == ClearinghouseResponseStatus.DECLINE
+                    ? ApplicationChecklistEntryStatusId.FAILED
+                    : ApplicationChecklistEntryStatusId.DONE;
+                item.Comment = data.Message;
+            },
             result.ProcessStepId,
             follupUpStep);
     }

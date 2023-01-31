@@ -25,7 +25,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 
 public interface IChecklistService
 {
-    Task<(Guid ProcessStepId, IEnumerable<(ApplicationChecklistEntryTypeId EntryTypeId, ApplicationChecklistEntryStatusId EntryStatusId)> ChecklistEntries, IEnumerable<ProcessStep> ProcessSteps)> VerifyChecklistEntryAndProcessSteps(Guid applicationId, ApplicationChecklistEntryTypeId entryTypeId, ProcessStepTypeId processStepTypeId, IEnumerable<ProcessStepTypeId>? nextProcessStepTypeIdsToCheck = null);
+    Task<(Guid ProcessStepId, IEnumerable<(ApplicationChecklistEntryTypeId EntryTypeId, ApplicationChecklistEntryStatusId EntryStatusId)> ChecklistEntries, IEnumerable<ProcessStep> ProcessSteps)> VerifyChecklistEntryAndProcessSteps(Guid applicationId, ApplicationChecklistEntryTypeId entryTypeId, ApplicationChecklistEntryStatusId entryStatusId, ProcessStepTypeId processStepTypeId, IEnumerable<ProcessStepTypeId>? nextProcessStepTypeIdsToCheck = null);
     void FinalizeChecklistEntryAndProcessSteps(Guid applicationId, ApplicationChecklistEntryTypeId entryTypeId, Action<ApplicationChecklistEntry> modifyApplicationChecklistEntry, Guid processStepId, IEnumerable<ProcessStepTypeId>? nextProcessStepTypeIds = null);
     IEnumerable<ProcessStep> ScheduleProcessSteps(Guid applicationId, IEnumerable<ProcessStep> processSteps, params ProcessStepTypeId[] processStepTypeIds);
 }

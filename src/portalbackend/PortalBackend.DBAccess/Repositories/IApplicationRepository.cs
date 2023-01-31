@@ -75,7 +75,7 @@ public interface IApplicationRepository
     /// </summary>
     /// <param name="bpn">Bpn of the company to get the application for</param>
     /// <returns></returns>
-    Task<(Guid ApplicationId, ApplicationChecklistEntryStatusId StatusId)> GetSubmittedIdAndClearinghouseChecklistStatusByBpn(string bpn);
+    IAsyncEnumerable<Guid> GetSubmittedApplicationIdsByBpn(string bpn);
 
     /// <summary>
     /// Gets the company id by the application id for submitted applications

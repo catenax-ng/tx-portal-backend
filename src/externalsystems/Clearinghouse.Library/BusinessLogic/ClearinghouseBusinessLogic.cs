@@ -37,31 +37,6 @@ public class ClearinghouseBusinessLogic : IClearinghouseBusinessLogic
         _clearinghouseService = clearinghouseService;
     }
 
-    /// <inheritdoc />
-    public async Task ProcessClearinghouseResponseAsync(string bpn, ClearinghouseResponseData data, CancellationToken cancellationToken)
-    {
-        var result = await _portalRepositories.GetInstance<IApplicationRepository>().GetSubmittedIdAndClearinghouseChecklistStatusByBpn(bpn).ConfigureAwait(false);
-        if (result == default)
-        {
-            throw new NotFoundException($"No companyApplication for BPN {bpn} is not in status SUBMITTED");
-        }
-
-        if (result.StatusId != ApplicationChecklistEntryStatusId.IN_PROGRESS)
-        {
-            throw new ConflictException($"Checklist Item {ApplicationChecklistEntryTypeId.CLEARING_HOUSE} is not in status {ApplicationChecklistEntryStatusId.IN_PROGRESS}");
-        }
-        
-        _portalRepositories.GetInstance<IApplicationChecklistRepository>()
-            .AttachAndModifyApplicationChecklist(result.ApplicationId,
-                ApplicationChecklistEntryTypeId.CLEARING_HOUSE,
-                item =>
-                {
-                    item.ApplicationChecklistEntryStatusId = data.Status == ClearinghouseResponseStatus.DECLINE ? ApplicationChecklistEntryStatusId.FAILED : ApplicationChecklistEntryStatusId.DONE;
-                    item.Comment = data.Message;
-                });
-        await _portalRepositories.SaveAsync().ConfigureAwait(false);
-    }
-
     public async Task TriggerCompanyDataPost(Guid applicationId, string decentralizedIdentifier, CancellationToken cancellationToken)
     {
         var data = await _portalRepositories.GetInstance<IApplicationRepository>()

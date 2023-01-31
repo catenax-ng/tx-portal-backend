@@ -36,7 +36,7 @@ public class ChecklistService : IChecklistService
         _portalRepositories = portalRepositories;
     }
 
-    public async Task<(Guid,IEnumerable<(ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId)>,IEnumerable<ProcessStep>)> VerifyChecklistEntryAndProcessSteps(Guid applicationId, ApplicationChecklistEntryTypeId entryTypeId, ProcessStepTypeId processStepTypeId, IEnumerable<ProcessStepTypeId>? nextProcessStepTypeIdsToCheck)
+    public async Task<(Guid,IEnumerable<(ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId)>,IEnumerable<ProcessStep>)> VerifyChecklistEntryAndProcessSteps(Guid applicationId, ApplicationChecklistEntryTypeId entryTypeId, ApplicationChecklistEntryStatusId entryStatusId, ProcessStepTypeId processStepTypeId, IEnumerable<ProcessStepTypeId>? nextProcessStepTypeIdsToCheck)
     {
         var allProcessStepTypeIds = nextProcessStepTypeIdsToCheck == null
             ? new [] { processStepTypeId }
@@ -57,14 +57,14 @@ public class ChecklistService : IChecklistService
         {
             throw new UnexpectedConditionException("checklist or processSteps should never be null here");
         }
-        if (!checklistData.Checklist.Any(entry => entry.TypeId == entryTypeId && entry.StatusId == ApplicationChecklistEntryStatusId.TO_DO))
+        if (!checklistData.Checklist.Any(entry => entry.TypeId == entryTypeId && entry.StatusId == entryStatusId))
         {
-            throw new ConflictException($"application {applicationId} does not have a checklist entry for {entryTypeId} in status {ApplicationChecklistEntryStatusId.TO_DO}");
+            throw new ConflictException($"application {applicationId} does not have a checklist entry for {entryTypeId} in status {entryStatusId}");
         }
         var processStep = checklistData.ProcessSteps.SingleOrDefault(step => step.ProcessStepTypeId == processStepTypeId && step.ProcessStepStatusId == ProcessStepStatusId.TODO);
         if (processStep is null)
         {
-            throw new ConflictException($"application {applicationId} checklist entry {entryTypeId}, process step {ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH} is not eligible to run");
+            throw new ConflictException($"application {applicationId} checklist entry {entryTypeId}, process step {processStepTypeId} is not eligible to run");
         }
         if (nextProcessStepTypeIdsToCheck != null)
         {

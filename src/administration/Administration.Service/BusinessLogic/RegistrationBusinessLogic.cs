@@ -42,7 +42,7 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
     private readonly IMailingService _mailingService;
     private readonly IRegistrationVerificationHandler _registrationVerificationHandler;
     private readonly IBpdmProcessHandler _bpdmProcessHandler;
-    private readonly IClearinghouseBusinessLogic _clearinghouseBusinessLogic;
+    private readonly IClearingHouseProcessHandler _clearingHouseProcessHandler;
 
     public RegistrationBusinessLogic(
         IPortalRepositories portalRepositories, 
@@ -50,14 +50,14 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
         IMailingService mailingService,
         IRegistrationVerificationHandler registrationVerificationHandler,
         IBpdmProcessHandler bpdmProcessHandler,
-        IClearinghouseBusinessLogic clearinghouseBusinessLogic)
+        IClearingHouseProcessHandler clearingHouseProcessHandler)
     {
         _portalRepositories = portalRepositories;
         _settings = configuration.Value;
         _mailingService = mailingService;
         _registrationVerificationHandler = registrationVerificationHandler;
         _bpdmProcessHandler = bpdmProcessHandler;
-        _clearinghouseBusinessLogic = clearinghouseBusinessLogic;
+        _clearingHouseProcessHandler = clearingHouseProcessHandler;
     }
 
     public Task<CompanyWithAddressData> GetCompanyWithAddressAsync(Guid applicationId)
@@ -282,8 +282,20 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
     }
 
     /// <inheritdoc />
-    public Task ProcessClearinghouseResponseAsync(string bpn, ClearinghouseResponseData data, CancellationToken cancellationToken) => 
-        _clearinghouseBusinessLogic.ProcessClearinghouseResponseAsync(bpn, data, cancellationToken);
+    public async Task ProcessClearinghouseResponseAsync(string bpn, ClearinghouseResponseData data, CancellationToken cancellationToken)
+    {
+        var result = await _portalRepositories.GetInstance<IApplicationRepository>().GetSubmittedApplicationIdsByBpn(bpn).ToListAsync().ConfigureAwait(false);
+        if (!result.Any())
+        {
+            throw new NotFoundException($"No companyApplication for BPN {bpn} is not in status SUBMITTED");
+        }
+        if (result.Count() > 1)
+        {
+            throw new ConflictException($"more than one companyApplication in status SUBMITTED found for BPN {bpn} [{string.Join(", ",result)}]");
+        }
+        await _clearingHouseProcessHandler.ProcessEndClearinghouse(result.Single(), data, cancellationToken).ConfigureAwait(false);
+        await _portalRepositories.SaveAsync().ConfigureAwait(false);
+    }
 
     /// <inheritdoc />
     public async Task SetRegistrationVerification(Guid applicationId, bool approve, string? comment = null)
