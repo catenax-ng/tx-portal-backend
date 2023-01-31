@@ -188,7 +188,6 @@ public class CompanyRepository : ICompanyRepository
         _context.CompanyApplications.AsNoTracking()
             .Where(x => x.Id == applicationId)
             .Select(x => new BpdmData(
-                    x.ApplicationStatusId,
                     x.Company!.Name,
                     x.Company!.Address!.CountryAlpha2Code,
                     x.Company!.Address!.Zipcode,

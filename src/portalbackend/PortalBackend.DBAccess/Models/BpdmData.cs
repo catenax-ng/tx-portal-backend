@@ -18,8 +18,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
-
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 
 /// <summary>
@@ -32,4 +30,4 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 /// <param name="City">City of the company's address.</param>
 /// <param name="Street">Street of the company's address.</param>
 /// <param name="IsUserInCompany"><c>true</c> if the user is part of the company, otherwise <c>false</c>.</param>
-public record BpdmData(CompanyApplicationStatusId ApplicationStatusId, string CompanyName, string AlphaCode2, string? ZipCode, string City, string Street, bool IsUserInCompany);
+public record BpdmData(string CompanyName, string AlphaCode2, string? ZipCode, string City, string Street, bool IsUserInCompany);

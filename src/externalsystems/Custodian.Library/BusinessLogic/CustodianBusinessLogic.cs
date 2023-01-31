@@ -18,10 +18,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.Custodian.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using System.Collections.Immutable;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Custodian.Library.BusinessLogic;
 
@@ -29,29 +33,13 @@ public class CustodianBusinessLogic : ICustodianBusinessLogic
 {
     private readonly IPortalRepositories _portalRepositories;
     private readonly ICustodianService _custodianService;
+    private readonly IChecklistService _checklistService;
 
-    public CustodianBusinessLogic(IPortalRepositories portalRepositories, ICustodianService custodianService)
+    public CustodianBusinessLogic(IPortalRepositories portalRepositories, ICustodianService custodianService, IChecklistService checklistService)
     {
         _portalRepositories = portalRepositories;
         _custodianService = custodianService;
-    }
-    
-    /// <inheritdoc />
-    public async Task<string> CreateWalletAsync(Guid applicationId, CancellationToken cancellationToken)
-    {
-        var result = await _portalRepositories.GetInstance<IApplicationRepository>().GetCompanyAndApplicationDetailsForCreateWalletAsync(applicationId).ConfigureAwait(false);
-        if (result == default)
-        {
-            throw new ConflictException($"CompanyApplication {applicationId} is not in status SUBMITTED");
-        }
-        var (companyId, companyName, businessPartnerNumber) = result;
-
-        if (string.IsNullOrWhiteSpace(businessPartnerNumber))
-        {
-            throw new ConflictException($"BusinessPartnerNumber (bpn) for CompanyApplications {applicationId} company {companyId} is empty");
-        }
-        
-        return await _custodianService.CreateWalletAsync(businessPartnerNumber, companyName, cancellationToken).ConfigureAwait(false);
+        _checklistService = checklistService;
     }
     
     /// <inheritdoc />
@@ -69,4 +57,43 @@ public class CustodianBusinessLogic : ICustodianBusinessLogic
         
         return walletData;
     }
+
+    public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> CreateIdentityWalletAsync(Guid applicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken)
+    {
+        if (checklist[ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER] == ApplicationChecklistEntryStatusId.FAILED || checklist[ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION] == ApplicationChecklistEntryStatusId.FAILED)
+        {
+            return (null,null,true);
+        }
+        if (checklist[ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER] == ApplicationChecklistEntryStatusId.DONE && checklist[ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION] == ApplicationChecklistEntryStatusId.DONE)
+        {
+            var message = await CreateWalletInternal(applicationId, cancellationToken).ConfigureAwait(false);
+            var nextSteps = _checklistService.ScheduleProcessSteps(applicationId, processSteps, ProcessStepTypeId.START_CLEARING_HOUSE);
+            return (checklist =>
+                    {
+                        checklist.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE;
+                        checklist.Comment = message;
+                    },
+                    nextSteps,
+                    true);
+        }
+        return (null,null,false);
+    }
+
+    private async Task<string> CreateWalletInternal(Guid applicationId, CancellationToken cancellationToken)
+    {
+        var result = await _portalRepositories.GetInstance<IApplicationRepository>().GetCompanyAndApplicationDetailsForCreateWalletAsync(applicationId).ConfigureAwait(false);
+        if (result == default)
+        {
+            throw new ConflictException($"CompanyApplication {applicationId} is not in status SUBMITTED");
+        }
+        var (companyId, companyName, businessPartnerNumber) = result;
+
+        if (string.IsNullOrWhiteSpace(businessPartnerNumber))
+        {
+            throw new ConflictException($"BusinessPartnerNumber (bpn) for CompanyApplications {applicationId} company {companyId} is empty");
+        }
+        
+        return await _custodianService.CreateWalletAsync(businessPartnerNumber, companyName, cancellationToken).ConfigureAwait(false);
+    }
+
 }

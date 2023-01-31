@@ -19,16 +19,14 @@
  ********************************************************************************/
 
 using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.Models;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
+using System.Collections.Immutable;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.BusinessLogic;
 
 public interface IClearinghouseBusinessLogic
 {
-    /// <summary>
-    /// Trigger the company data post to the clearinghouse service
-    /// </summary>
-    /// <param name="applicationId">Id of the application to get the company data for</param>
-    /// <param name="decentralizedIdentifier">The decentralized identifier</param>
-    /// <param name="cancellationToken">CancellationToken</param>
-    Task TriggerCompanyDataPost(Guid applicationId, string decentralizedIdentifier, CancellationToken cancellationToken);
+    Task ProcessEndClearinghouse(Guid applicationId, ClearinghouseResponseData data, CancellationToken cancellationToken);
+    Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> HandleEndClearingHouse(Guid applicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken);
 }

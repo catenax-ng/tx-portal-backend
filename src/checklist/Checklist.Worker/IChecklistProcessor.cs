@@ -18,14 +18,19 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.Models;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
-using System.Collections.Immutable;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
-public interface IClearingHouseProcessHandler
+namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Worker;
+
+public interface IChecklistProcessor
 {
-    Task ProcessEndClearinghouse(Guid applicationId, ClearinghouseResponseData data, CancellationToken cancellationToken);
-    Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> HandleClearingHouse(Guid applicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken);
+    /// <summary>
+    /// Processes the possible automated steps of the checklist
+    /// </summary>
+    /// <param name="applicationId">Id of the application to process the checklist</param>
+    /// <param name="checklistEntries">The checklist entries to process</param>
+    /// <param name="processSteps">The eligible processSteps</param>
+    /// <param name="cancellationToken">Cancellation Token</param>
+    IAsyncEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId, bool Processed)> ProcessChecklist(Guid applicationId, IEnumerable<(ApplicationChecklistEntryTypeId EntryTypeId, ApplicationChecklistEntryStatusId EntryStatusId)> checklistEntries, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken);
 }

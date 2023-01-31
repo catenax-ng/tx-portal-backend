@@ -21,12 +21,13 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Org.Eclipse.TractusX.Portal.Backend.Bpdm.Library;
+using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Custodian.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Token;
 using Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.DependencyInjection;
+namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Worker.DependencyInjection;
 
 public static class ChecklistExtensions
 {
@@ -36,10 +37,6 @@ public static class ChecklistExtensions
             .AddTransient<ITokenService, TokenService>()
             .AddScoped<IChecklistProcessor, ChecklistProcessor>()
             .AddTransient<IChecklistService, ChecklistService>()
-            .AddTransient<IBpdmProcessHandler, BpdmProcessHandler>()
-            .AddTransient<IClearingHouseProcessHandler, ClearingHouseProcessHandler>()
-            .AddTransient<IIdentityWalletProcessHandler, IdentityWalletProcessHandler>()
-            .AddTransient<ISelfDescriptionProcessHander, SelfDescriptionProcessHandler>()
             .AddBpdmService(section.GetSection("Bpdm"))
             .AddCustodianService(section.GetSection("Custodian"))
             .AddClearinghouseService(section.GetSection("Clearinghouse"))

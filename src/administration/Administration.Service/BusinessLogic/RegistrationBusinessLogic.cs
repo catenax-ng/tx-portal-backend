@@ -21,6 +21,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Models;
+using Org.Eclipse.TractusX.Portal.Backend.Bpdm.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.Models;
@@ -41,23 +42,23 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
     private readonly RegistrationSettings _settings;
     private readonly IMailingService _mailingService;
     private readonly IRegistrationVerificationHandler _registrationVerificationHandler;
-    private readonly IBpdmProcessHandler _bpdmProcessHandler;
-    private readonly IClearingHouseProcessHandler _clearingHouseProcessHandler;
+    private readonly IBpdmBusinessLogic _bpdmBusinessLogic;
+    private readonly IClearinghouseBusinessLogic _clearinghouseBusinessLogic;
 
     public RegistrationBusinessLogic(
         IPortalRepositories portalRepositories, 
         IOptions<RegistrationSettings> configuration, 
         IMailingService mailingService,
         IRegistrationVerificationHandler registrationVerificationHandler,
-        IBpdmProcessHandler bpdmProcessHandler,
-        IClearingHouseProcessHandler clearingHouseProcessHandler)
+        IBpdmBusinessLogic bpdmBusinessLogic,
+        IClearinghouseBusinessLogic clearinghouseBusinessLogic)
     {
         _portalRepositories = portalRepositories;
         _settings = configuration.Value;
         _mailingService = mailingService;
         _registrationVerificationHandler = registrationVerificationHandler;
-        _bpdmProcessHandler = bpdmProcessHandler;
-        _clearingHouseProcessHandler = clearingHouseProcessHandler;
+        _bpdmBusinessLogic = bpdmBusinessLogic;
+        _clearinghouseBusinessLogic = clearinghouseBusinessLogic;
     }
 
     public Task<CompanyWithAddressData> GetCompanyWithAddressAsync(Guid applicationId)
@@ -293,7 +294,7 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
         {
             throw new ConflictException($"more than one companyApplication in status SUBMITTED found for BPN {bpn} [{string.Join(", ",result)}]");
         }
-        await _clearingHouseProcessHandler.ProcessEndClearinghouse(result.Single(), data, cancellationToken).ConfigureAwait(false);
+        await _clearinghouseBusinessLogic.ProcessEndClearinghouse(result.Single(), data, cancellationToken).ConfigureAwait(false);
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
 
@@ -311,7 +312,7 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
     /// <inheritdoc />
     public async Task TriggerBpnDataPushAsync(string iamUserId, Guid applicationId, CancellationToken cancellationToken)
     {
-        await _bpdmProcessHandler.TriggerBpnDataPush(applicationId, iamUserId, cancellationToken).ConfigureAwait(false);
+        await _bpdmBusinessLogic.TriggerBpnDataPush(applicationId, iamUserId, cancellationToken).ConfigureAwait(false);
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
 

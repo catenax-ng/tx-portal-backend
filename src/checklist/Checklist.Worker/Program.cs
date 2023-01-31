@@ -23,8 +23,8 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Org.Eclipse.TractusX.Portal.Backend.ApplicationActivation.Library.DependencyInjection;
-using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.DependencyInjection;
 using Org.Eclipse.TractusX.Portal.Backend.Checklist.Worker;
+using Org.Eclipse.TractusX.Portal.Backend.Checklist.Worker.DependencyInjection;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using System.Reflection;
 

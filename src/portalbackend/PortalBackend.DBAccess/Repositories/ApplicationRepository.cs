@@ -169,8 +169,7 @@ public class ApplicationRepository : IApplicationRepository
 
     public Task<(Guid companyId, string companyName, string? businessPartnerNumber)> GetCompanyAndApplicationDetailsForCreateWalletAsync(Guid applicationId) =>
         _dbContext.CompanyApplications.Where(companyApplication =>
-                companyApplication.Id == applicationId &&
-                companyApplication.ApplicationStatusId == CompanyApplicationStatusId.SUBMITTED)
+                companyApplication.Id == applicationId)
             .Select(ca => new ValueTuple<Guid, string, string?>(
                 ca.CompanyId,
                 ca.Company!.Name,
