@@ -112,10 +112,11 @@ public class ChecklistProcessor : IChecklistProcessor
                 {
                     if (ex is not ServiceException { StatusCode: HttpStatusCode.ServiceUnavailable })
                     {
+                        processStepRepository.AttachAndModifyProcessStep(step.Id, null, step => step.ProcessStepStatusId = ProcessStepStatusId.FAILED);
                         returnStatusId = ApplicationChecklistEntryStatusId.FAILED;
                     }
 
-                    checklistRepository.AttachAndModifyApplicationChecklist(applicationId, ApplicationChecklistEntryTypeId.IDENTITY_WALLET,
+                    checklistRepository.AttachAndModifyApplicationChecklist(applicationId, execution.EntryTypeId,
                             item => { 
                                 item.ApplicationChecklistEntryStatusId = returnStatusId;
                                 item.Comment = ex.ToString(); 
