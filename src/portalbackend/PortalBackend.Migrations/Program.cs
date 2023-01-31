@@ -35,7 +35,6 @@ try
         .ConfigureAppConfiguration(cfg =>
         {
             cfg
-                .AddJsonFile("secrets/appsettings.json", true)
                 .AddEnvironmentVariables()
                 .AddUserSecrets(Assembly.GetExecutingAssembly());
         })
