@@ -31,12 +31,6 @@ Console.WriteLine("Starting process");
 try
 {
     var builder = Host.CreateDefaultBuilder(args)
-        .ConfigureAppConfiguration(cfg =>
-        {
-            cfg
-                .AddEnvironmentVariables()
-                .AddUserSecrets(Assembly.GetExecutingAssembly());
-        })
         .ConfigureServices((hostContext, services) =>
         {
             services.AddDbContext<ProvisioningDbContext>(o =>
