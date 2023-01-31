@@ -40,20 +40,23 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
     private readonly IPortalRepositories _portalRepositories;
     private readonly RegistrationSettings _settings;
     private readonly IMailingService _mailingService;
-    private readonly IChecklistService _checklistService;
+    private readonly IRegistrationVerificationHandler _registrationVerificationHandler;
+    private readonly IBpdmProcessHandler _bpdmProcessHandler;
     private readonly IClearinghouseBusinessLogic _clearinghouseBusinessLogic;
 
     public RegistrationBusinessLogic(
         IPortalRepositories portalRepositories, 
         IOptions<RegistrationSettings> configuration, 
         IMailingService mailingService,
-        IChecklistService checklistService,
+        IRegistrationVerificationHandler registrationVerificationHandler,
+        IBpdmProcessHandler bpdmProcessHandler,
         IClearinghouseBusinessLogic clearinghouseBusinessLogic)
     {
         _portalRepositories = portalRepositories;
         _settings = configuration.Value;
         _mailingService = mailingService;
-        _checklistService = checklistService;
+        _registrationVerificationHandler = registrationVerificationHandler;
+        _bpdmProcessHandler = bpdmProcessHandler;
         _clearinghouseBusinessLogic = clearinghouseBusinessLogic;
     }
 
@@ -289,45 +292,14 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
         {
             throw new ControllerArgumentException("Application is denied but no comment set.");
         }
-
-        var result = await _portalRepositories.GetInstance<IApplicationRepository>()
-            .GetApplicationStatusWithChecklistTypeStatusAsync(applicationId, ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION)
-            .ConfigureAwait(false);
-        if (result == default)
-        {
-            throw new NotFoundException($"CompanyApplication {applicationId} does not exist.");
-        }
-        
-        if (result.ApplicationStatusId != CompanyApplicationStatusId.SUBMITTED)
-        {
-            throw new ConflictException($"CompanyApplication {applicationId} is not in status SUBMITTED");
-        }
-
-        if (result.RegistrationVerificationStatusId == default)
-        {
-            throw new ConflictException($"No ChecklistEntry of type {ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION} exists for application {applicationId}");
-        }
-
-        if (result.RegistrationVerificationStatusId != ApplicationChecklistEntryStatusId.TO_DO)
-        {
-            throw new ConflictException($"ChecklistEntry {ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION} is not in state {ApplicationChecklistEntryStatusId.TO_DO}");
-        }
-        
-        _portalRepositories.GetInstance<IApplicationChecklistRepository>().AttachAndModifyApplicationChecklist(applicationId, ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION,
-            entry =>
-            {
-                entry.ApplicationChecklistEntryStatusId = approve
-                    ? ApplicationChecklistEntryStatusId.DONE
-                    : ApplicationChecklistEntryStatusId.FAILED;
-                entry.Comment = comment;
-            });
+        await _registrationVerificationHandler.SetRegistrationVerification(applicationId, approve, comment).ConfigureAwait(false);
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public async Task TriggerBpnDataPushAsync(string iamUserId, Guid applicationId, CancellationToken cancellationToken)
     {
-        await _checklistService.TriggerBpnDataPush(applicationId, iamUserId, cancellationToken).ConfigureAwait(false);
+        await _bpdmProcessHandler.TriggerBpnDataPush(applicationId, iamUserId, cancellationToken).ConfigureAwait(false);
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
 

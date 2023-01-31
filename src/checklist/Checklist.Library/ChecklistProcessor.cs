@@ -67,6 +67,7 @@ public class ChecklistProcessor : IChecklistProcessor
     private static readonly IEnumerable<ProcessStepTypeId> _manuelProcessSteps = new [] {
         ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH,
         ProcessStepTypeId.END_CLEARING_HOUSE,
+        ProcessStepTypeId.VERIFY_REGISTRATION,
     };
 
     public async IAsyncEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId, bool Processed)> ProcessChecklist(Guid applicationId, IEnumerable<(ApplicationChecklistEntryTypeId EntryTypeId, ApplicationChecklistEntryStatusId EntryStatusId)> checklistEntries, IEnumerable<ProcessStep> processSteps, [EnumeratorCancellation] CancellationToken cancellationToken)

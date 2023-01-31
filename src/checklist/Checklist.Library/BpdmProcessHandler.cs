@@ -38,10 +38,13 @@ public class BpdmProcessHandler : IBpdmProcessHandler
 
     public async Task TriggerBpnDataPush(Guid applicationId, string iamUserId, CancellationToken cancellationToken)
     {
-        var followUpStep = new [] { ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL };
-        var processStepId = await _checklistService.VerifyChecklistEntryAndProcessSteps(applicationId, ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH, followUpStep).ConfigureAwait(false);
+        var result = await _checklistService.VerifyChecklistEntryAndProcessSteps(applicationId, ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH).ConfigureAwait(false);
         await _bpdmBusinessLogic.TriggerBpnDataPush(applicationId, iamUserId, cancellationToken).ConfigureAwait(false);
-        _checklistService.FinalizeChecklistEntryAndProcessSteps(applicationId, ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.IN_PROGRESS, processStepId, followUpStep);
+        _checklistService.FinalizeChecklistEntryAndProcessSteps(
+            applicationId,
+            ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER,
+            entry => entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.IN_PROGRESS,
+            result.ProcessStepId);
     }
 
     public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> HandleBpnPull(Guid applicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken)
@@ -51,11 +54,14 @@ public class BpdmProcessHandler : IBpdmProcessHandler
         {
             return (null, null, false);
         }
+        var registrationValidationFailed = checklist[ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION] == ApplicationChecklistEntryStatusId.FAILED;
+        var createWalletStepExists = processSteps.Any(step => step.ProcessStepTypeId == ProcessStepTypeId.CREATE_IDENTITY_WALLET && step.ProcessStepStatusId == ProcessStepStatusId.TODO);
 
-        // TODO implement Handle Registration Verification - CREATE_IDENTITY_WALLET will not be triggered otherwise:
-        var nextSteps = checklist[ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION] == ApplicationChecklistEntryStatusId.DONE
-            ? _checklistService.ScheduleProcessSteps(applicationId, processSteps, ProcessStepTypeId.CREATE_IDENTITY_WALLET)
-            : null;
-        return (entry => entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE, nextSteps, true);
+        return (
+            entry => entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE,
+            !registrationValidationFailed && !createWalletStepExists
+                ? _checklistService.ScheduleProcessSteps(applicationId, processSteps, ProcessStepTypeId.CREATE_IDENTITY_WALLET)
+                : null,
+            true);
     }
 }

@@ -43,11 +43,16 @@ public class ClearingHouseProcessHandler : IClearingHouseProcessHandler
     public async Task ProcessEndClearinghouse(Guid applicationId, CancellationToken cancellationToken)
     {
         var follupUpStep = new [] { ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP };
-        var processStepId = await _checklistService.VerifyChecklistEntryAndProcessSteps(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ProcessStepTypeId.END_CLEARING_HOUSE, follupUpStep).ConfigureAwait(false);
+        var result = await _checklistService.VerifyChecklistEntryAndProcessSteps(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ProcessStepTypeId.END_CLEARING_HOUSE, follupUpStep).ConfigureAwait(false);
 
         // TODO implement call to businessLogic end clearinghouse 
 
-        _checklistService.FinalizeChecklistEntryAndProcessSteps(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.DONE, processStepId, follupUpStep);
+        _checklistService.FinalizeChecklistEntryAndProcessSteps(
+            applicationId,
+            ApplicationChecklistEntryTypeId.CLEARING_HOUSE,
+            entry => entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE,
+            result.ProcessStepId,
+            follupUpStep);
     }
 
     public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> HandleClearingHouse(Guid applicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken)

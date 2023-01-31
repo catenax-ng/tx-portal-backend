@@ -40,14 +40,22 @@ public class IdentityWalletProcessHandler : IIdentityWalletProcessHandler
 
     public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> CreateWalletAsync(Guid applicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken)
     {
-        var message = await _custodianBusinessLogic.CreateWalletAsync(applicationId, cancellationToken).ConfigureAwait(false);
-        var nextSteps = _checklistService.ScheduleProcessSteps(applicationId, processSteps, ProcessStepTypeId.START_CLEARING_HOUSE);
-        return (checklist =>
-                {
-                    checklist.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE;
-                    checklist.Comment = message;
-                },
-                nextSteps,
-                true);
+        if (checklist[ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER] == ApplicationChecklistEntryStatusId.FAILED || checklist[ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION] == ApplicationChecklistEntryStatusId.FAILED)
+        {
+            return (null,null,true);
+        }
+        if (checklist[ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER] == ApplicationChecklistEntryStatusId.DONE && checklist[ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION] == ApplicationChecklistEntryStatusId.DONE)
+        {
+            var message = await _custodianBusinessLogic.CreateWalletAsync(applicationId, cancellationToken).ConfigureAwait(false);
+            var nextSteps = _checklistService.ScheduleProcessSteps(applicationId, processSteps, ProcessStepTypeId.START_CLEARING_HOUSE);
+            return (checklist =>
+                    {
+                        checklist.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE;
+                        checklist.Comment = message;
+                    },
+                    nextSteps,
+                    true);
+        }
+        return (null,null,false);
     }
 }
