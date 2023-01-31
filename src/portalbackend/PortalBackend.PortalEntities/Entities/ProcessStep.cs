@@ -32,9 +32,9 @@ public class ProcessStep : IBaseEntity
         ProcessStepStatusId = processStepStatusId;
     }
 
-    public Guid Id { get; }
+    public Guid Id { get; private set; }
 
-    public ProcessStepTypeId ProcessStepTypeId { get; }
+    public ProcessStepTypeId ProcessStepTypeId { get; private set; }
 
     public ProcessStepStatusId ProcessStepStatusId { get; set; }
 

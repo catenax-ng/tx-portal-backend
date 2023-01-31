@@ -33,7 +33,7 @@ public class ClearingHouseProcessHandler : IClearingHouseProcessHandler
     private readonly IClearinghouseBusinessLogic _clearinghouseBusinessLogic;
     private readonly IChecklistService _checklistService;
 
-    ClearingHouseProcessHandler(ICustodianBusinessLogic custodianBusinessLogic, IClearinghouseBusinessLogic clearinghouseBusinessLogic, IChecklistService checklistService)
+    public ClearingHouseProcessHandler(ICustodianBusinessLogic custodianBusinessLogic, IClearinghouseBusinessLogic clearinghouseBusinessLogic, IChecklistService checklistService)
     {
         _custodianBusinessLogic = custodianBusinessLogic;
         _clearinghouseBusinessLogic = clearinghouseBusinessLogic;

@@ -48,7 +48,6 @@ public interface IApplicationChecklistRepository
     /// <returns>Returns the data of the checklist for the specific application</returns>
     IAsyncEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> GetChecklistDataAsync(Guid applicationId);
 
-    Task<bool> IsEligibleProcessStep(Guid applicationId, ProcessStepTypeId processStepTypeId);
     Task<(bool IsValidApplicationId, bool IsSubmitted, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)>? Checklist, IEnumerable<ProcessStep>? ProcessSteps)> GetChecklistProcessStepData(Guid applicationId, IEnumerable<ProcessStepTypeId> processStepTypeIds);
 
     /// <summary>
@@ -58,6 +57,4 @@ public interface IApplicationChecklistRepository
     IAsyncEnumerable<(Guid ApplicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> Checklist, IEnumerable<ProcessStep> ProcessSteps)> GetChecklistProcessStepData();
 
     ApplicationAssignedProcessStep CreateApplicationAssignedProcessStep(Guid companyApplicationId, Guid processStepId);
-
-    void DeleteApplicationAssignedProcessStep(Guid companyApplicationId, Guid processStepId);
 }

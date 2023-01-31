@@ -48,19 +48,4 @@ public class ProcessStepRepository : IProcessStepRepository
         _context.Attach(step);
         modify(step);
     }
-
-    public IAsyncEnumerable<(Guid ApplicationId, ApplicationChecklistEntryTypeId ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId ApplicationChecklistEntryStatusId, ProcessStep ProcessStep)> GetApplicationAssignedProcessSteps(IEnumerable<ProcessStepTypeId> processStepTypeIds, IEnumerable<ProcessStepStatusId> processStepStatusIds) =>
-        _context.ProcessSteps
-            .Join(
-                _context.ApplicationAssignedProcessSteps,
-                step => step.Id,
-                assigned => assigned.ProcessStepId,
-                (step, assigned) => new { Step = step, Assigned = assigned })
-            .Where(x =>
-                (!processStepStatusIds.Any() || processStepStatusIds.Contains(x.Step.ProcessStepStatusId)) &&
-                (!processStepTypeIds.Any() || processStepTypeIds.Contains(x.Step.ProcessStepTypeId))
-            )
-            .OrderBy(x => x.Assigned.CompanyApplicationId)
-            .Select(x => new ValueTuple<Guid,ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId,ProcessStep>(x.Assigned.CompanyApplicationId, x.Assigned.ApplicationChecklistEntryTypeId, x.Assigned.ApplicationChecklistEntry!.ApplicationChecklistEntryStatusId, x.Step))
-            .AsAsyncEnumerable();
 }

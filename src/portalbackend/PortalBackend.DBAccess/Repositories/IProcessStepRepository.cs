@@ -30,5 +30,4 @@ public interface IProcessStepRepository
 {
     ProcessStep CreateProcessStep(ProcessStepTypeId processStepTypeId, ProcessStepStatusId processStepStatusId);
     void AttachAndModifyProcessStep(Guid processStepId, Action<ProcessStep>? initialize, Action<ProcessStep> modify);
-    IAsyncEnumerable<(Guid ApplicationId, ApplicationChecklistEntryTypeId ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId ApplicationChecklistEntryStatusId, ProcessStep ProcessStep)> GetApplicationAssignedProcessSteps(IEnumerable<ProcessStepTypeId> processStepTypeIds, IEnumerable<ProcessStepStatusId> processStepStatusIds);
 }

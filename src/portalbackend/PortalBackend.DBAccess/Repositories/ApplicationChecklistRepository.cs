@@ -57,6 +57,7 @@ public class ApplicationChecklistRepository : IApplicationChecklistRepository
         _portalDbContext.ApplicationChecklist.Attach(entity);
         entity.DateLastChanged = DateTimeOffset.UtcNow;
         setFields.Invoke(entity);
+        return entity;
     }
 
     /// <inheritdoc />
@@ -65,12 +66,6 @@ public class ApplicationChecklistRepository : IApplicationChecklistRepository
             .Where(x => x.ApplicationId == applicationId)
             .Select(x => new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(x.ApplicationChecklistEntryTypeId, x.ApplicationChecklistEntryStatusId))
             .AsAsyncEnumerable();
-
-    public Task<bool> IsEligibleProcessStep(Guid applicationId, ProcessStepTypeId processStepTypeId) =>
-        _portalDbContext.ApplicationAssignedProcessSteps.AnyAsync(assigned =>
-            assigned.CompanyApplicationId == applicationId &&
-            assigned.ProcessStep!.ProcessStepTypeId == processStepTypeId &&
-            assigned.ProcessStep.ProcessStepStatusId == ProcessStepStatusId.TODO);
 
     public Task<(bool IsValidApplicationId, bool IsSubmitted, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)>? Checklist, IEnumerable<ProcessStep>? ProcessSteps)> GetChecklistProcessStepData(Guid applicationId, IEnumerable<ProcessStepTypeId> processStepTypeIds) =>
         _portalDbContext.CompanyApplications
@@ -106,7 +101,4 @@ public class ApplicationChecklistRepository : IApplicationChecklistRepository
 
     public ApplicationAssignedProcessStep CreateApplicationAssignedProcessStep(Guid companyApplicationId, Guid processStepId) =>
         _portalDbContext.Add(new ApplicationAssignedProcessStep(companyApplicationId, processStepId)).Entity;
-
-    public void DeleteApplicationAssignedProcessStep(Guid companyApplicationId, Guid processStepId) =>
-        _portalDbContext.Remove(new ApplicationAssignedProcessStep(companyApplicationId, processStepId));
 }

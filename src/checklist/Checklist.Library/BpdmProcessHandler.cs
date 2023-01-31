@@ -30,7 +30,7 @@ public class BpdmProcessHandler : IBpdmProcessHandler
     private readonly IBpdmBusinessLogic _bpdmBusinessLogic;
     private readonly IChecklistService _checklistService;
 
-    BpdmProcessHandler(IBpdmBusinessLogic bpdmBusinessLogic, IChecklistService checklistService)
+    public BpdmProcessHandler(IBpdmBusinessLogic bpdmBusinessLogic, IChecklistService checklistService)
     {
         _bpdmBusinessLogic = bpdmBusinessLogic;
         _checklistService = checklistService;
