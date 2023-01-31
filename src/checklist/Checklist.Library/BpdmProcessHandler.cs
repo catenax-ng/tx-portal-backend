@@ -19,8 +19,6 @@
  ********************************************************************************/
 
 using Org.Eclipse.TractusX.Portal.Backend.Bpdm.Library.BusinessLogic;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using System.Collections.Immutable;
@@ -30,13 +28,11 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 public class BpdmProcessHandler : IBpdmProcessHandler
 {
     private readonly IBpdmBusinessLogic _bpdmBusinessLogic;
-    private readonly IPortalRepositories _portalRepositories;
     private readonly IChecklistService _checklistService;
 
-    BpdmProcessHandler(IBpdmBusinessLogic bpdmBusinessLogic, IPortalRepositories portalRepositories, IChecklistService checklistService)
+    BpdmProcessHandler(IBpdmBusinessLogic bpdmBusinessLogic, IChecklistService checklistService)
     {
         _bpdmBusinessLogic = bpdmBusinessLogic;
-        _portalRepositories = portalRepositories;
         _checklistService = checklistService;
     }
 
@@ -48,26 +44,18 @@ public class BpdmProcessHandler : IBpdmProcessHandler
         _checklistService.FinalizeChecklistEntryAndProcessSteps(applicationId, ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.IN_PROGRESS, processStepId, followUpStep);
     }
 
-    public async Task<(ApplicationChecklistEntryStatusId,IEnumerable<ProcessStep>,bool)> HandleBpnPull(Guid applicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken)
+    public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> HandleBpnPull(Guid applicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken)
     {
         var businessPartnerNumber = string.Empty; // TODO add bpdm get legal entity call returning businessPartnerNumber
         if (string.IsNullOrWhiteSpace(businessPartnerNumber))
         {
-            return (checklist[ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER], Enumerable.Empty<ProcessStep>(), false);
+            return (null, null, false);
         }
-        _portalRepositories.GetInstance<IApplicationChecklistRepository>()
-            .AttachAndModifyApplicationChecklist(applicationId, ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER,
-                checklist =>
-                {
-                    checklist.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE;
-                });
-        _portalRepositories.GetInstance<IProcessStepRepository>()
-            .AttachAndModifyProcessStep(processSteps.Single(step => step.ProcessStepTypeId == ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL).Id, null, processStep => processStep.ProcessStepStatusId = ProcessStepStatusId.DONE);
 
         // TODO implement Handle Registration Verification - CREATE_IDENTITY_WALLET will not be triggered otherwise:
         var nextSteps = checklist[ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION] == ApplicationChecklistEntryStatusId.DONE
             ? _checklistService.ScheduleProcessSteps(applicationId, processSteps, ProcessStepTypeId.CREATE_IDENTITY_WALLET)
-            : Enumerable.Empty<ProcessStep>();
-        return (ApplicationChecklistEntryStatusId.DONE, nextSteps, true);
+            : null;
+        return (entry => entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE, nextSteps, true);
     }
 }

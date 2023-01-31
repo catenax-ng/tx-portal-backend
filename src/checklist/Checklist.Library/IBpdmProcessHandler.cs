@@ -33,5 +33,5 @@ public interface IBpdmProcessHandler
     /// <param name="cancellationToken">Cancellation Token</param>
     Task TriggerBpnDataPush(Guid applicationId, string iamUserId, CancellationToken cancellationToken);
 
-    Task<(ApplicationChecklistEntryStatusId,IEnumerable<ProcessStep>,bool)> HandleBpnPull(Guid applicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken);
+    Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> HandleBpnPull(Guid applicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken);
 }

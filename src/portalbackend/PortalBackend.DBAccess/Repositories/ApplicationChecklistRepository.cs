@@ -51,7 +51,7 @@ public class ApplicationChecklistRepository : IApplicationChecklistRepository
     }
 
     /// <inheritdoc />
-    public void AttachAndModifyApplicationChecklist(Guid applicationId, ApplicationChecklistEntryTypeId applicationChecklistTypeId, Action<ApplicationChecklistEntry> setFields)
+    public ApplicationChecklistEntry AttachAndModifyApplicationChecklist(Guid applicationId, ApplicationChecklistEntryTypeId applicationChecklistTypeId, Action<ApplicationChecklistEntry> setFields)
     {
         var entity = new ApplicationChecklistEntry(applicationId, applicationChecklistTypeId, default, default);
         _portalDbContext.ApplicationChecklist.Attach(entity);

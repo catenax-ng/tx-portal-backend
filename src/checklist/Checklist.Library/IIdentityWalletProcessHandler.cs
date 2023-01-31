@@ -26,5 +26,5 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 
 public interface IIdentityWalletProcessHandler
 {
-    Task<(ApplicationChecklistEntryStatusId,IEnumerable<ProcessStep>,bool)> CreateWalletAsync(Guid applicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken);
+    Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> CreateWalletAsync(Guid applicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken);
 }

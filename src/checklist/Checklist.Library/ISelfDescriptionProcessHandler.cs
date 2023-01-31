@@ -26,5 +26,5 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 
 public interface ISelfDescriptionProcessHander
 {
-    Task<(ApplicationChecklistEntryStatusId,IEnumerable<ProcessStep>,bool)> HandleSelfDescription(Guid applicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken);
+    Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> HandleSelfDescription(Guid applicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken);
 }

@@ -38,7 +38,7 @@ public class ChecklistProcessor : IChecklistProcessor
     private readonly IClearingHouseProcessHandler _clearingHouseProcessHandler;
     private readonly ISelfDescriptionProcessHander _selfDescriptionProcessHandler;
     private readonly ILogger<IChecklistService> _logger;
-    private readonly ImmutableDictionary<ProcessStepTypeId, (ApplicationChecklistEntryTypeId EntryTypeId, Func<Guid,ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId>,IEnumerable<ProcessStep>,CancellationToken,Task<(ApplicationChecklistEntryStatusId ApplicationChecklistEntryStatusId, IEnumerable<ProcessStep> NextSteps, bool Modified)>> ProcessFunc)> _stepExecutions;
+    private readonly ImmutableDictionary<ProcessStepTypeId, (ApplicationChecklistEntryTypeId EntryTypeId, Func<Guid,ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId>,IEnumerable<ProcessStep>,CancellationToken,Task<(Action<ApplicationChecklistEntry>? modifyApplicationChecklistEntry, IEnumerable<ProcessStep>? NextSteps, bool Modified)>> ProcessFunc)> _stepExecutions;
 
     public ChecklistProcessor(
         IPortalRepositories portalRepositories,
@@ -55,7 +55,7 @@ public class ChecklistProcessor : IChecklistProcessor
         _selfDescriptionProcessHandler = selfDescriptionProcessHander;
         _logger = logger;
 
-        _stepExecutions = new (ApplicationChecklistEntryTypeId ApplicationChecklistEntryTypeId, ProcessStepTypeId ProcessStepTypeId, Func<Guid,ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId>,IEnumerable<ProcessStep>,CancellationToken,Task<(ApplicationChecklistEntryStatusId,IEnumerable<ProcessStep>,bool)>> ProcessFunc) []
+        _stepExecutions = new (ApplicationChecklistEntryTypeId ApplicationChecklistEntryTypeId, ProcessStepTypeId ProcessStepTypeId, Func<Guid,ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId>,IEnumerable<ProcessStep>,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)>> ProcessFunc) []
         {
             new (ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL, (Guid applicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken) => _bpdmProcessHandler.HandleBpnPull(applicationId, checklist, processSteps, cancellationToken)),
             new (ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ProcessStepTypeId.CREATE_IDENTITY_WALLET, (Guid applicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken) => _identityWalletProcessHandler.CreateWalletAsync(applicationId, checklist, processSteps, cancellationToken)),
@@ -91,20 +91,29 @@ public class ChecklistProcessor : IChecklistProcessor
                     var result = await execution.ProcessFunc(applicationId, checklist.ToImmutableDictionary(), workerSteps.Concat(manualSteps), cancellationToken).ConfigureAwait(false);
                     if (result.Modified)
                     {
-                        foreach (var nextStep in result.NextSteps)
+                        if (result.NextSteps != null)
                         {
-                            if (_manuelProcessSteps.Contains(nextStep.ProcessStepTypeId))
+                            foreach (var nextStep in result.NextSteps)
                             {
-                                manualSteps.Append(nextStep);
-                            }
-                            else
-                            {
-                                workerSteps.Enqueue(nextStep);
+                                if (_manuelProcessSteps.Contains(nextStep.ProcessStepTypeId))
+                                {
+                                    manualSteps.Append(nextStep);
+                                }
+                                else
+                                {
+                                    workerSteps.Enqueue(nextStep);
+                                }
                             }
                         }
                         processStepRepository.AttachAndModifyProcessStep(step.Id, null, step => step.ProcessStepStatusId = ProcessStepStatusId.DONE);
-                        returnStatusId = result.ApplicationChecklistEntryStatusId;
-                        checklist[execution.EntryTypeId] = returnStatusId;
+                        if (result.modifyApplicationChecklistEntry != null)
+                        {
+                            var entry = checklistRepository
+                                .AttachAndModifyApplicationChecklist(applicationId, ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER,
+                                    result.modifyApplicationChecklistEntry);
+                            returnStatusId = entry.ApplicationChecklistEntryStatusId;                            
+                            checklist[execution.EntryTypeId] = returnStatusId;
+                        }                        
                         modified = true;
                     }
                 }

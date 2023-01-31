@@ -26,5 +26,5 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 public interface IClearingHouseProcessHandler
 {
     Task ProcessEndClearinghouse(Guid applicationId, CancellationToken cancellationToken);
-    Task<(ApplicationChecklistEntryStatusId,IEnumerable<ProcessStep>,bool)> HandleClearingHouse(Guid applicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken);
+    Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> HandleClearingHouse(Guid applicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken);
 }

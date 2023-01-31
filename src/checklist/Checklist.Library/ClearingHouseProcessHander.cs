@@ -20,8 +20,6 @@
 
 using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Custodian.Library.BusinessLogic;
@@ -31,14 +29,12 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 
 public class ClearingHouseProcessHandler : IClearingHouseProcessHandler
 {
-    private readonly IPortalRepositories _portalRepositories;
     private readonly ICustodianBusinessLogic _custodianBusinessLogic;
     private readonly IClearinghouseBusinessLogic _clearinghouseBusinessLogic;
     private readonly IChecklistService _checklistService;
 
-    ClearingHouseProcessHandler(IPortalRepositories portalRepositories, ICustodianBusinessLogic custodianBusinessLogic, IClearinghouseBusinessLogic clearinghouseBusinessLogic, IChecklistService checklistService)
+    ClearingHouseProcessHandler(ICustodianBusinessLogic custodianBusinessLogic, IClearinghouseBusinessLogic clearinghouseBusinessLogic, IChecklistService checklistService)
     {
-        _portalRepositories = portalRepositories;
         _custodianBusinessLogic = custodianBusinessLogic;
         _clearinghouseBusinessLogic = clearinghouseBusinessLogic;
         _checklistService = checklistService;
@@ -54,7 +50,7 @@ public class ClearingHouseProcessHandler : IClearingHouseProcessHandler
         _checklistService.FinalizeChecklistEntryAndProcessSteps(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.DONE, processStepId, follupUpStep);
     }
 
-    public async Task<(ApplicationChecklistEntryStatusId,IEnumerable<ProcessStep>,bool)> HandleClearingHouse(Guid applicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken)
+    public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> HandleClearingHouse(Guid applicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken)
     {
         var walletData = await _custodianBusinessLogic.GetWalletByBpnAsync(applicationId, cancellationToken);
         if (walletData == null || string.IsNullOrEmpty(walletData.Did))
@@ -63,16 +59,8 @@ public class ClearingHouseProcessHandler : IClearingHouseProcessHandler
         }
 
         await _clearinghouseBusinessLogic.TriggerCompanyDataPost(applicationId, walletData.Did, cancellationToken).ConfigureAwait(false);
-        _portalRepositories.GetInstance<IApplicationChecklistRepository>()
-            .AttachAndModifyApplicationChecklist(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE,
-                checklist =>
-                {
-                    checklist.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.IN_PROGRESS;
-                });
-        _portalRepositories.GetInstance<IProcessStepRepository>()
-            .AttachAndModifyProcessStep(processSteps.Single(step => step.ProcessStepTypeId == ProcessStepTypeId.START_CLEARING_HOUSE).Id, null, processStep => processStep.ProcessStepStatusId = ProcessStepStatusId.DONE);
 
         _checklistService.ScheduleProcessSteps(applicationId, processSteps, ProcessStepTypeId.END_CLEARING_HOUSE);
-        return (ApplicationChecklistEntryStatusId.IN_PROGRESS, Enumerable.Empty<ProcessStep>(), true);
+        return (entry => entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.IN_PROGRESS, null, true);
     }
 }

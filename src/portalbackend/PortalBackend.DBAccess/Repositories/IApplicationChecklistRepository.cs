@@ -39,7 +39,7 @@ public interface IApplicationChecklistRepository
     /// <param name="applicationId">Id of the application to modify</param>
     /// <param name="applicationChecklistTypeId">Id of the checklistType to modify</param>
     /// <param name="setFields">Action to sets the fields</param>
-    void AttachAndModifyApplicationChecklist(Guid applicationId, ApplicationChecklistEntryTypeId applicationChecklistTypeId, Action<ApplicationChecklistEntry> setFields);
+    ApplicationChecklistEntry AttachAndModifyApplicationChecklist(Guid applicationId, ApplicationChecklistEntryTypeId applicationChecklistTypeId, Action<ApplicationChecklistEntry> setFields);
 
     /// <summary>
     /// Gets the combination of the checklist type and status
