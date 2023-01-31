@@ -7,7 +7,7 @@ New features, fixed bugs, known defects and other noteworthy changes to each rel
 ## 1.0.0-RC5
 
 ### Change
-* Identity Provider mappers "tenant" auto created for new identity provider created via adminsitration service and registration service removed
+* Identity Provider mappers "tenant" auto created for new identity provider created via administration service and registration service removed
 * Identity provider mappers "username" and "organisation" added company idp registration endpoints
 * Services Service - added document types and ids inside response of GET services/{serviceID}
 
