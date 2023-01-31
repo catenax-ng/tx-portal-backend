@@ -48,9 +48,16 @@ public interface IApplicationChecklistRepository
     /// <returns>Returns the data of the checklist for the specific application</returns>
     IAsyncEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> GetChecklistDataAsync(Guid applicationId);
 
+    Task<bool> IsEligibleProcessStep(Guid applicationId, ProcessStepTypeId processStepTypeId);
+    Task<(bool IsValidApplicationId, bool IsSubmitted, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)>? Checklist, IEnumerable<ProcessStep>? ProcessSteps)> GetChecklistProcessStepData(Guid applicationId, IEnumerable<ProcessStepTypeId> processStepTypeIds);
+
     /// <summary>
     /// Gets all checklist entries where at least one item is in TO_DO state ordered by the application id
     /// </summary>
     /// <returns>Returns an async enumerable with the checklist data</returns>
-    IAsyncEnumerable<(Guid ApplicationId, ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> GetChecklistDataOrderedByApplicationId();
+    IAsyncEnumerable<(Guid ApplicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> Checklist, IEnumerable<ProcessStep> ProcessSteps)> GetChecklistProcessStepData();
+
+    ApplicationAssignedProcessStep CreateApplicationAssignedProcessStep(Guid companyApplicationId, Guid processStepId);
+
+    void DeleteApplicationAssignedProcessStep(Guid companyApplicationId, Guid processStepId);
 }

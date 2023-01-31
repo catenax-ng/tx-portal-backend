@@ -25,8 +25,10 @@ using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Async;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using System.Runtime.CompilerServices;
+using System.Collections.Immutable;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Worker;
 
@@ -51,6 +53,13 @@ public class ChecklistExecutionService
         _logger = logger;
     }
 
+    private static readonly IEnumerable<ProcessStepTypeId> _automaticProcessStepTypeIds = new [] {
+        ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL,
+        ProcessStepTypeId.CREATE_IDENTITY_WALLET,
+        ProcessStepTypeId.START_CLEARING_HOUSE,
+        ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP
+    }.ToImmutableArray();
+
     /// <summary>
     /// Handles the checklist processing
     /// </summary>
@@ -70,12 +79,11 @@ public class ChecklistExecutionService
         {
             try
             {
-                var checklistEntryData = outerLoopRepositories.GetInstance<IApplicationChecklistRepository>().GetChecklistDataOrderedByApplicationId().PreSortedGroupBy(x => x.ApplicationId).ConfigureAwait(false);
+                var checklistEntryData = outerLoopRepositories.GetInstance<IApplicationChecklistRepository>().GetChecklistProcessStepData();
                 await foreach (var entryData in checklistEntryData.WithCancellation(stoppingToken).ConfigureAwait(false))
                 {
-                    var applicationId = entryData.Key;
-                    var checklistEntries = await HandleChecklistProcessing(entryData, checklistCreationService, applicationId, checklistService, checklistRepositories, stoppingToken).ToListAsync(stoppingToken).ConfigureAwait(false);
-                    await HandleApplicationActivation(checklistEntries, applicationActivation, applicationId, checklistRepositories).ConfigureAwait(false);
+                    var checklistEntries = await HandleChecklistProcessing(entryData, checklistCreationService, checklistService, checklistRepositories, stoppingToken).ToListAsync(stoppingToken).ConfigureAwait(false);
+                    await HandleApplicationActivation(entryData.ApplicationId, checklistEntries, applicationActivation, checklistRepositories).ConfigureAwait(false);
                 }
                 _logger.LogInformation("Processed checklist items");
             }
@@ -88,26 +96,30 @@ public class ChecklistExecutionService
     }
 
     private static async IAsyncEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)> HandleChecklistProcessing(
-        IEnumerable<(Guid ApplicationId, ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> entryData,
+        (Guid ApplicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> Checklist, IEnumerable<ProcessStep> ProcessSteps) entryData,
         IChecklistCreationService checklistCreationService,
-        Guid applicationId,
         IChecklistService checklistService,
         IPortalRepositories checklistRepositories,
         [EnumeratorCancellation] CancellationToken stoppingToken)
     {
-        var existingChecklistTypes = entryData.Select(e => e.TypeId);
-        var checklistEntries = entryData.Select(e => (e.TypeId, e.StatusId))
-            .ToList();
-        if (Enum.GetValues<ApplicationChecklistEntryTypeId>().Length != existingChecklistTypes.Count())
+        var (applicationId, checklist, processSteps) = entryData;
+        if (Enum.GetValues<ApplicationChecklistEntryTypeId>().Length != checklist.Count())
         {
-            var newlyCreatedEntries = await checklistCreationService
-                .CreateMissingChecklistItems(applicationId, existingChecklistTypes).ConfigureAwait(false);
-            checklistEntries.AddRange(newlyCreatedEntries);
+            var missingChecklistEntryTypes = Enum.GetValues<ApplicationChecklistEntryTypeId>().Except(checklist.Select(entry => entry.TypeId));
+
+            var createdEntries = (await checklistCreationService
+                .CreateMissingChecklistItems(applicationId, missingChecklistEntryTypes).ConfigureAwait(false)).ToList();
+            checklist = checklist.Concat(createdEntries);
+
+            var newSteps = checklistCreationService
+                .CreateInitialProcessSteps(applicationId, createdEntries).ToList();
+            processSteps = processSteps.Concat(newSteps.IntersectBy(_automaticProcessStepTypeIds, processStep => processStep.ProcessStepTypeId));
+
             await checklistRepositories.SaveAsync().ConfigureAwait(false);
             checklistRepositories.Clear();
         }
 
-        await foreach (var (typeId, statusId, processed) in checklistService.ProcessChecklist(applicationId, checklistEntries, stoppingToken).ConfigureAwait(false))
+        await foreach (var (typeId, statusId, processed) in checklistService.ProcessChecklist(applicationId, checklist, processSteps, stoppingToken).ConfigureAwait(false))
         {
             if (processed)
             {
@@ -118,8 +130,8 @@ public class ChecklistExecutionService
         }
     }
 
-    private async Task HandleApplicationActivation(IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries,
-        IApplicationActivationService applicationActivation, Guid applicationId, IPortalRepositories checklistRepositories)
+    private async Task HandleApplicationActivation(Guid applicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> checklistEntries,
+        IApplicationActivationService applicationActivation, IPortalRepositories checklistRepositories)
     {
         if (checklistEntries.All(x => x.StatusId == ApplicationChecklistEntryStatusId.DONE))
         {

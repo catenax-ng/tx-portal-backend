@@ -72,7 +72,7 @@ public class ChecklistExecutionServiceTests
     public async Task ExecuteAsync_WithNoPendingItems_NoServiceCall()
     {
         // Arrange
-        A.CallTo(() => _applicationChecklistRepository.GetChecklistDataOrderedByApplicationId())
+        A.CallTo((object)(() => _applicationChecklistRepository.GetChecklistDataOrderedByApplicationId()))
             .Returns(new List<ValueTuple<Guid, ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>>().ToAsyncEnumerable());
 
         // Act
@@ -98,7 +98,7 @@ public class ChecklistExecutionServiceTests
             new(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.DONE),
             new(applicationId, ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.DONE),
         };
-        A.CallTo(() => _applicationChecklistRepository.GetChecklistDataOrderedByApplicationId())
+        A.CallTo((object)(() => _applicationChecklistRepository.GetChecklistDataOrderedByApplicationId()))
             .Returns(list.ToAsyncEnumerable());
         A.CallTo(() => _checklistService.ProcessChecklist(A<Guid>._,
             A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,
@@ -134,7 +134,7 @@ public class ChecklistExecutionServiceTests
             new(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO),
             new(applicationId, ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.DONE),
         };
-        A.CallTo(() => _applicationChecklistRepository.GetChecklistDataOrderedByApplicationId())
+        A.CallTo((object)(() => _applicationChecklistRepository.GetChecklistDataOrderedByApplicationId()))
             .Returns(list.ToAsyncEnumerable());
         A.CallTo(() => _checklistService.ProcessChecklist(A<Guid>._,
             A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,
@@ -170,7 +170,7 @@ public class ChecklistExecutionServiceTests
             new(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO),
             new(applicationId, ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.DONE),
         };
-        A.CallTo(() => _applicationChecklistRepository.GetChecklistDataOrderedByApplicationId())
+        A.CallTo((object)(() => _applicationChecklistRepository.GetChecklistDataOrderedByApplicationId()))
             .Returns(list.ToAsyncEnumerable());
         A.CallTo(() => _checklistService.ProcessChecklist(A<Guid>._,
             A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,
@@ -206,7 +206,7 @@ public class ChecklistExecutionServiceTests
             new(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.DONE),
             new(applicationId, ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.DONE),
         };
-        A.CallTo(() => _applicationChecklistRepository.GetChecklistDataOrderedByApplicationId())
+        A.CallTo((object)(() => _applicationChecklistRepository.GetChecklistDataOrderedByApplicationId()))
             .Returns(list.ToAsyncEnumerable());
         A.CallTo(() => _checklistService.ProcessChecklist(A<Guid>._,
             A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,
@@ -243,7 +243,7 @@ public class ChecklistExecutionServiceTests
             new(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO),
             new(applicationId, ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO),
         };
-        A.CallTo(() => _applicationChecklistRepository.GetChecklistDataOrderedByApplicationId())
+        A.CallTo((object)(() => _applicationChecklistRepository.GetChecklistDataOrderedByApplicationId()))
             .Returns(list.ToAsyncEnumerable());
         A.CallTo(() => _checklistService.ProcessChecklist(A<Guid>._, A<IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)>>._, A<CancellationToken>._))
             .Throws(() => new Exception("Only a test"));
@@ -293,7 +293,7 @@ public class ChecklistExecutionServiceTests
                 new(application5, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO),
                 new(application5, ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO),
             };
-        A.CallTo(() => _applicationChecklistRepository.GetChecklistDataOrderedByApplicationId())
+        A.CallTo((object)(() => _applicationChecklistRepository.GetChecklistDataOrderedByApplicationId()))
             .Returns(list.ToAsyncEnumerable());
 
         A.CallTo(() => _checklistService.ProcessChecklist(A<Guid>._,
@@ -324,7 +324,7 @@ public class ChecklistExecutionServiceTests
             new(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO),
             new(applicationId, ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO),
         };
-        A.CallTo(() => _applicationChecklistRepository.GetChecklistDataOrderedByApplicationId())
+        A.CallTo((object)(() => _applicationChecklistRepository.GetChecklistDataOrderedByApplicationId()))
             .Returns(list.ToAsyncEnumerable());
 
         A.CallTo(() => _checklistService.ProcessChecklist(A<Guid>._,
