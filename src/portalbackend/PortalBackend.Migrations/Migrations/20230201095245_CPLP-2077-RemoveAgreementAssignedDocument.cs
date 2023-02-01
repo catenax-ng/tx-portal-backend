@@ -87,7 +87,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         principalColumn: "id");
                 });
 
-            migrationBuilder.Sql("INSERT into portal.agreement_assigned_documents(agreement_id,document_id)   SELECT id, document_id FROM portal.agreements WHERE agreement.document_id is not null ;");
+            migrationBuilder.Sql("INSERT into portal.agreement_assigned_documents(agreement_id,document_id) SELECT id, document_id FROM portal.agreements WHERE document_id is not null ;");
 
                 migrationBuilder.DropForeignKey(
                 name: "fk_agreements_documents_document_id",
