@@ -58,22 +58,22 @@ public class CustodianBusinessLogic : ICustodianBusinessLogic
         return walletData;
     }
 
-    public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> CreateIdentityWalletAsync(Guid applicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken)
+    public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> CreateIdentityWalletAsync(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
     {
-        if (checklist[ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER] == ApplicationChecklistEntryStatusId.FAILED || checklist[ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION] == ApplicationChecklistEntryStatusId.FAILED)
+        if (context.Checklist[ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER] == ApplicationChecklistEntryStatusId.FAILED || context.Checklist[ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION] == ApplicationChecklistEntryStatusId.FAILED)
         {
             return (null,null,true);
         }
-        if (checklist[ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER] == ApplicationChecklistEntryStatusId.DONE && checklist[ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION] == ApplicationChecklistEntryStatusId.DONE)
+        if (context.Checklist[ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER] == ApplicationChecklistEntryStatusId.DONE && context.Checklist[ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION] == ApplicationChecklistEntryStatusId.DONE)
         {
-            var message = await CreateWalletInternal(applicationId, cancellationToken).ConfigureAwait(false);
-            var nextSteps = _checklistService.ScheduleProcessSteps(applicationId, processSteps, ProcessStepTypeId.START_CLEARING_HOUSE);
+            var message = await CreateWalletInternal(context.ApplicationId, cancellationToken).ConfigureAwait(false);
+
             return (checklist =>
                     {
                         checklist.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE;
                         checklist.Comment = message;
                     },
-                    nextSteps,
+                    _checklistService.ScheduleProcessSteps(context, new [] { ProcessStepTypeId.START_CLEARING_HOUSE }),
                     true);
         }
         return (null,null,false);

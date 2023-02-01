@@ -1,6 +1,6 @@
 /********************************************************************************
- * Copyright (c) 2021,2022 BMW Group AG
- * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
+ * Copyright (c) 2021,2023 BMW Group AG
+ * Copyright (c) 2021,2023 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -25,8 +25,10 @@ public enum ProcessStepTypeId : int
     VERIFY_REGISTRATION = 1,
     CREATE_BUSINESS_PARTNER_NUMBER_PUSH = 2,
     CREATE_BUSINESS_PARTNER_NUMBER_PULL = 3,
-    CREATE_IDENTITY_WALLET = 4,
-    START_CLEARING_HOUSE = 5,
-    END_CLEARING_HOUSE = 6,
-    CREATE_SELF_DESCRIPTION_LP = 7,
+    CREATE_BUSINESS_PARTNER_NUMBER_MANUAL = 4,
+    CREATE_IDENTITY_WALLET = 5,
+    START_CLEARING_HOUSE = 6,
+    END_CLEARING_HOUSE = 7,
+    CREATE_SELF_DESCRIPTION_LP = 8,
+    ACTIVATE_APPLICATION = 9,
 }

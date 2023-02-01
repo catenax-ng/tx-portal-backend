@@ -94,6 +94,7 @@ public class ChecklistCreationService : IChecklistCreationService
                     break;
                 case ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER when (statusId == ApplicationChecklistEntryStatusId.TO_DO):
                     yield return processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH, ProcessStepStatusId.TODO);
+                    yield return processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_MANUAL, ProcessStepStatusId.TODO);
                     break;
                 default: // IDENTITY_WALLET, CLEARING_HOUSE and SELF_DESCRIPTION_LP start defered.
                     break;

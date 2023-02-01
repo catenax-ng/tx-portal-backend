@@ -41,7 +41,7 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
     private readonly IPortalRepositories _portalRepositories;
     private readonly RegistrationSettings _settings;
     private readonly IMailingService _mailingService;
-    private readonly IRegistrationVerificationHandler _registrationVerificationHandler;
+    private readonly IChecklistService _checklistService;
     private readonly IBpdmBusinessLogic _bpdmBusinessLogic;
     private readonly IClearinghouseBusinessLogic _clearinghouseBusinessLogic;
 
@@ -49,14 +49,14 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
         IPortalRepositories portalRepositories, 
         IOptions<RegistrationSettings> configuration, 
         IMailingService mailingService,
-        IRegistrationVerificationHandler registrationVerificationHandler,
+        IChecklistService checklistService,
         IBpdmBusinessLogic bpdmBusinessLogic,
         IClearinghouseBusinessLogic clearinghouseBusinessLogic)
     {
         _portalRepositories = portalRepositories;
         _settings = configuration.Value;
         _mailingService = mailingService;
-        _registrationVerificationHandler = registrationVerificationHandler;
+        _checklistService = checklistService;
         _bpdmBusinessLogic = bpdmBusinessLogic;
         _clearinghouseBusinessLogic = clearinghouseBusinessLogic;
     }
@@ -243,10 +243,10 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
             throw new ControllerArgumentException("businessPartnerNumbers must prefixed with BPNL", nameof(bpn));
         }
         
-        return UpdateCompanyBpnAsync(applicationId, bpn);
+        return UpdateCompanyBpnInternal(applicationId, bpn);
     }
 
-    private async Task UpdateCompanyBpnAsync(Guid applicationId, string bpn)
+    private async Task UpdateCompanyBpnInternal(Guid applicationId, string bpn)
     {
         var result = await _portalRepositories.GetInstance<IUserRepository>()
             .GetBpnForIamUserUntrackedAsync(applicationId, bpn).ToListAsync().ConfigureAwait(false);
@@ -273,12 +273,30 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
                 $"BusinessPartnerNumber of company {applicationCompanyData.CompanyId} has already been set.");
         }
 
+        var context = await _checklistService
+            .VerifyChecklistEntryAndProcessSteps(
+                applicationId,
+                ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER,
+                new [] { ApplicationChecklistEntryStatusId.TO_DO, ApplicationChecklistEntryStatusId.IN_PROGRESS },
+                ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_MANUAL,
+                entryTypeIds: new [] { ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION },
+                processStepTypeIds: new [] { ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL, ProcessStepTypeId.CREATE_IDENTITY_WALLET })
+            .ConfigureAwait(false);
+
         _portalRepositories.GetInstance<ICompanyRepository>().AttachAndModifyCompany(applicationCompanyData.CompanyId, null, 
             c => { c.BusinessPartnerNumber = bpn; });
 
-        _portalRepositories.GetInstance<IApplicationChecklistRepository>()
-            .AttachAndModifyApplicationChecklist(applicationId, ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER,
-                checklist => { checklist.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE; });
+        var registrationValidationFailed = context.Checklist[ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION] == ApplicationChecklistEntryStatusId.FAILED;
+
+        _checklistService.SkipProcessSteps(context, new [] { ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL });
+
+        _checklistService.FinalizeChecklistEntryAndProcessSteps(
+            context,
+            entry => entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE,
+            registrationValidationFailed
+                ? null
+                : new [] { ProcessStepTypeId.CREATE_IDENTITY_WALLET });
+
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
 
@@ -299,13 +317,41 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
     }
 
     /// <inheritdoc />
-    public async Task SetRegistrationVerification(Guid applicationId, bool approve, string? comment = null)
+    public Task SetRegistrationVerification(Guid applicationId, bool approve, string? comment)
     {
         if (!approve && string.IsNullOrWhiteSpace(comment))
         {
             throw new ControllerArgumentException("Application is denied but no comment set.");
         }
-        await _registrationVerificationHandler.SetRegistrationVerification(applicationId, approve, comment).ConfigureAwait(false);
+        return SetRegistrationVerificationInternal(applicationId, approve, comment); 
+    }
+
+    public async Task SetRegistrationVerificationInternal(Guid applicationId, bool approve, string? comment)
+    {
+        var context = await _checklistService
+            .VerifyChecklistEntryAndProcessSteps(
+                applicationId,
+                ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION,
+                new [] { ApplicationChecklistEntryStatusId.TO_DO },
+                ProcessStepTypeId.VERIFY_REGISTRATION,
+                new [] { ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER },
+                new [] { ProcessStepTypeId.CREATE_IDENTITY_WALLET })
+            .ConfigureAwait(false);
+
+        var businessPartnerSuccess = context.Checklist[ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER] == ApplicationChecklistEntryStatusId.DONE;
+
+        _checklistService.FinalizeChecklistEntryAndProcessSteps(
+            context,
+            entry =>
+            {
+                entry.ApplicationChecklistEntryStatusId = approve
+                    ? ApplicationChecklistEntryStatusId.DONE
+                    : ApplicationChecklistEntryStatusId.FAILED;
+                entry.Comment = comment;
+            },
+            approve && businessPartnerSuccess
+                ? new [] { ProcessStepTypeId.CREATE_IDENTITY_WALLET }
+                : null);
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
 

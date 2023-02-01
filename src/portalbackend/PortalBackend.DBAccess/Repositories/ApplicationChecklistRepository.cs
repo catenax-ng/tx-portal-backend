@@ -67,7 +67,7 @@ public class ApplicationChecklistRepository : IApplicationChecklistRepository
             .Select(x => new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(x.ApplicationChecklistEntryTypeId, x.ApplicationChecklistEntryStatusId))
             .AsAsyncEnumerable();
 
-    public Task<(bool IsValidApplicationId, bool IsSubmitted, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)>? Checklist, IEnumerable<ProcessStep>? ProcessSteps)> GetChecklistProcessStepData(Guid applicationId, IEnumerable<ProcessStepTypeId> processStepTypeIds) =>
+    public Task<(bool IsValidApplicationId, bool IsSubmitted, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)>? Checklist, IEnumerable<ProcessStep>? ProcessSteps)> GetChecklistProcessStepData(Guid applicationId, IEnumerable<ApplicationChecklistEntryTypeId> entryTypeIds, IEnumerable<ProcessStepTypeId> processStepTypeIds) =>
         _portalDbContext.CompanyApplications
             .AsNoTracking()
             .AsSplitQuery()
@@ -80,10 +80,16 @@ public class ApplicationChecklistRepository : IApplicationChecklistRepository
                 true,
                 x.IsSubmitted,
                 x.IsSubmitted
-                    ? x.Application.ApplicationChecklistEntries.Select(entry => new ValueTuple<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId>(entry.ApplicationChecklistEntryTypeId, entry.ApplicationChecklistEntryStatusId))
+                    ? x.Application.ApplicationChecklistEntries
+                        .Where(entry => entryTypeIds.Contains(entry.ApplicationChecklistEntryTypeId))
+                        .Select(entry => new ValueTuple<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId>(entry.ApplicationChecklistEntryTypeId, entry.ApplicationChecklistEntryStatusId))
                     : null,
                 x.IsSubmitted
-                    ? x.Application.ApplicationAssignedProcessSteps.Where(assigned => processStepTypeIds.Contains(assigned.ProcessStep!.ProcessStepTypeId) && assigned.ProcessStep.ProcessStepStatusId == ProcessStepStatusId.TODO).Select(assignedStep => assignedStep.ProcessStep!)
+                    ? x.Application.ApplicationAssignedProcessSteps
+                        .Where(assigned =>
+                            processStepTypeIds.Contains(assigned.ProcessStep!.ProcessStepTypeId) && 
+                            assigned.ProcessStep!.ProcessStepStatusId == ProcessStepStatusId.TODO)
+                        .Select(assignedStep => assignedStep.ProcessStep!)
                     : null))
             .SingleOrDefaultAsync();
 
@@ -95,8 +101,11 @@ public class ApplicationChecklistRepository : IApplicationChecklistRepository
             .Where(application => application.ApplicationStatusId == CompanyApplicationStatusId.SUBMITTED)
             .Select(application => new ValueTuple<Guid, IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>, IEnumerable<ProcessStep>>(
                 application.Id,
-                application.ApplicationChecklistEntries.Select(entry => new ValueTuple<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId>(entry.ApplicationChecklistEntryTypeId, entry.ApplicationChecklistEntryStatusId)),
-                application.ApplicationAssignedProcessSteps.Where(assigned => assigned.ProcessStep!.ProcessStepStatusId == ProcessStepStatusId.TODO).Select(assignedStep => assignedStep.ProcessStep)!))
+                application.ApplicationChecklistEntries
+                    .Select(entry => new ValueTuple<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId>(entry.ApplicationChecklistEntryTypeId, entry.ApplicationChecklistEntryStatusId)),
+                application.ApplicationAssignedProcessSteps
+                    .Where(assigned => assigned.ProcessStep!.ProcessStepStatusId == ProcessStepStatusId.TODO)
+                    .Select(assignedStep => assignedStep.ProcessStep)!))
             .ToAsyncEnumerable();
 
     public ApplicationAssignedProcessStep CreateApplicationAssignedProcessStep(Guid companyApplicationId, Guid processStepId) =>

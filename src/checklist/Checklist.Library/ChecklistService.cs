@@ -23,6 +23,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using System.Collections.Immutable;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 
@@ -36,14 +37,18 @@ public class ChecklistService : IChecklistService
         _portalRepositories = portalRepositories;
     }
 
-    public async Task<(Guid,IEnumerable<(ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId)>,IEnumerable<ProcessStep>)> VerifyChecklistEntryAndProcessSteps(Guid applicationId, ApplicationChecklistEntryTypeId entryTypeId, ApplicationChecklistEntryStatusId entryStatusId, ProcessStepTypeId processStepTypeId, IEnumerable<ProcessStepTypeId>? nextProcessStepTypeIdsToCheck)
+    public async Task<IChecklistService.ManualChecklistProcessStepData> VerifyChecklistEntryAndProcessSteps(Guid applicationId, ApplicationChecklistEntryTypeId entryTypeId, IEnumerable<ApplicationChecklistEntryStatusId> entryStatusIds, ProcessStepTypeId processStepTypeId, IEnumerable<ApplicationChecklistEntryTypeId>? entryTypeIds, IEnumerable<ProcessStepTypeId>? processStepTypeIds)
     {
-        var allProcessStepTypeIds = nextProcessStepTypeIdsToCheck == null
+        var allProcessStepTypeIds = processStepTypeIds == null
             ? new [] { processStepTypeId }
-            : nextProcessStepTypeIdsToCheck.Append(processStepTypeId);
+            : processStepTypeIds.Append(processStepTypeId);
+
+        var allEntryTypeIds = entryTypeIds == null
+            ? new [] { entryTypeId }
+            : entryTypeIds.Append(entryTypeId);
 
         var checklistData = await _portalRepositories.GetInstance<IApplicationChecklistRepository>()
-            .GetChecklistProcessStepData(applicationId, allProcessStepTypeIds).ConfigureAwait(false);
+            .GetChecklistProcessStepData(applicationId, allEntryTypeIds, allProcessStepTypeIds).ConfigureAwait(false);
 
         if (!checklistData.IsValidApplicationId)
         {
@@ -57,53 +62,64 @@ public class ChecklistService : IChecklistService
         {
             throw new UnexpectedConditionException("checklist or processSteps should never be null here");
         }
-        if (!checklistData.Checklist.Any(entry => entry.TypeId == entryTypeId && entry.StatusId == entryStatusId))
+        if (!checklistData.Checklist.Any(entry => entry.TypeId == entryTypeId && entryStatusIds.Contains(entry.StatusId)))
         {
-            throw new ConflictException($"application {applicationId} does not have a checklist entry for {entryTypeId} in status {entryStatusId}");
+            throw new ConflictException($"application {applicationId} does not have a checklist entry for {entryTypeId} in status {string.Join(", ",entryStatusIds)}");
         }
-        var processStep = checklistData.ProcessSteps.SingleOrDefault(step => step.ProcessStepTypeId == processStepTypeId && step.ProcessStepStatusId == ProcessStepStatusId.TODO);
+        var processStep = checklistData.ProcessSteps.SingleOrDefault(step => step.ProcessStepTypeId == processStepTypeId);
         if (processStep is null)
         {
             throw new ConflictException($"application {applicationId} checklist entry {entryTypeId}, process step {processStepTypeId} is not eligible to run");
         }
-        if (nextProcessStepTypeIdsToCheck != null)
-        {
-            var forbiddenSteps = checklistData.ProcessSteps.IntersectBy(nextProcessStepTypeIdsToCheck, step => step.ProcessStepTypeId).Where(step => step.ProcessStepStatusId == ProcessStepStatusId.TODO);
-            if (forbiddenSteps.Any())
-            {
-                throw new ConflictException($"application {applicationId} checklist entry {entryTypeId}, process steps [{string.Join(", ", forbiddenSteps.Select(step => step.ProcessStepTypeId))}] are already scheduled to run");
-            }
-        }
-        return (processStep.Id, checklistData.Checklist, checklistData.ProcessSteps);
+        return new IChecklistService.ManualChecklistProcessStepData(applicationId, processStep.Id, entryTypeId, checklistData.Checklist.ToImmutableDictionary(entry => entry.TypeId, entry => entry.StatusId), checklistData.ProcessSteps);
     }
 
-    public void FinalizeChecklistEntryAndProcessSteps(Guid applicationId, ApplicationChecklistEntryTypeId entryTypeId, Action<ApplicationChecklistEntry> modifyApplicationChecklistEntry, Guid processStepId, IEnumerable<ProcessStepTypeId>? nextProcessStepTypeIds)
+    public void SkipProcessSteps(IChecklistService.WorkerChecklistProcessStepData context, IEnumerable<ProcessStepTypeId> processStepTypeIds)
+    {
+        SkipProcessStepsInternal(context.ProcessSteps, processStepTypeIds);
+    }
+
+    public void SkipProcessSteps(IChecklistService.ManualChecklistProcessStepData context, IEnumerable<ProcessStepTypeId> processStepTypeIds)
+    {
+        SkipProcessStepsInternal(context.ProcessSteps, processStepTypeIds);
+    }
+
+    private void SkipProcessStepsInternal(IEnumerable<ProcessStep> processSteps, IEnumerable<ProcessStepTypeId> processStepTypeIds)
+    {
+        var processStepRepository = _portalRepositories.GetInstance<IProcessStepRepository>();
+        foreach (var processStepId in processSteps.IntersectBy(processStepTypeIds, step => step.ProcessStepTypeId).Select(step => step.Id))
+        {
+            processStepRepository.AttachAndModifyProcessStep(processStepId, null, step => step.ProcessStepStatusId = ProcessStepStatusId.DONE);
+        }
+    }
+
+    public void FinalizeChecklistEntryAndProcessSteps(IChecklistService.ManualChecklistProcessStepData context, Action<ApplicationChecklistEntry> modifyApplicationChecklistEntry, IEnumerable<ProcessStepTypeId>? nextProcessStepTypeIds)
     {
         var applicationChecklistRepository = _portalRepositories.GetInstance<IApplicationChecklistRepository>();
         var processStepRepository = _portalRepositories.GetInstance<IProcessStepRepository>();
 
         applicationChecklistRepository
-            .AttachAndModifyApplicationChecklist(applicationId, entryTypeId, modifyApplicationChecklistEntry);
+            .AttachAndModifyApplicationChecklist(context.ApplicationId, context.EntryTypeId, modifyApplicationChecklistEntry);
         processStepRepository
-            .AttachAndModifyProcessStep(processStepId, null, step => step.ProcessStepStatusId = ProcessStepStatusId.DONE);
+            .AttachAndModifyProcessStep(context.ProcessStepId, null, step => step.ProcessStepStatusId = ProcessStepStatusId.DONE);
         if (nextProcessStepTypeIds != null)
         {
-            foreach (var processStepTypeId in nextProcessStepTypeIds)
+            foreach (var processStepTypeId in nextProcessStepTypeIds.Except(context.ProcessSteps.Select(step => step.ProcessStepTypeId)))
             {
                 var step = processStepRepository.CreateProcessStep(processStepTypeId, ProcessStepStatusId.TODO);
-                applicationChecklistRepository.CreateApplicationAssignedProcessStep(applicationId, step.Id);
+                applicationChecklistRepository.CreateApplicationAssignedProcessStep(context.ApplicationId, step.Id);
             }
         }
     }
 
-    public IEnumerable<ProcessStep> ScheduleProcessSteps(Guid applicationId, IEnumerable<ProcessStep> processSteps, params ProcessStepTypeId[] processStepTypeIds)
+    public IEnumerable<ProcessStep> ScheduleProcessSteps(IChecklistService.WorkerChecklistProcessStepData context, IEnumerable<ProcessStepTypeId> processStepTypeIds)
     {
         foreach (var processStepTypeId in processStepTypeIds)
         {
-            if (!processSteps.Any(step => step.ProcessStepTypeId == processStepTypeId))
+            if (!context.ProcessSteps.Any(step => step.ProcessStepTypeId == processStepTypeId))
             {
                 var step = _portalRepositories.GetInstance<IProcessStepRepository>().CreateProcessStep(processStepTypeId, ProcessStepStatusId.TODO);
-                _portalRepositories.GetInstance<IApplicationChecklistRepository>().CreateApplicationAssignedProcessStep(applicationId, step.Id);
+                _portalRepositories.GetInstance<IApplicationChecklistRepository>().CreateApplicationAssignedProcessStep(context.ApplicationId, step.Id);
                 yield return step;
             }
         }

@@ -1,6 +1,6 @@
 /********************************************************************************
- * Copyright (c) 2021,2022 Microsoft and BMW Group AG
- * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
+ * Copyright (c) 2021,2023 Microsoft and BMW Group AG
+ * Copyright (c) 2021,2023 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -17,8 +17,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
-
 using Microsoft.Extensions.Logging;
+using Org.Eclipse.TractusX.Portal.Backend.ApplicationActivation.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Bpdm.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.BusinessLogic;
@@ -42,8 +42,9 @@ public class ChecklistProcessor : IChecklistProcessor
     private readonly ICustodianBusinessLogic _custodianBusinessLogic;
     private readonly IClearinghouseBusinessLogic _clearinghouseBusinessLogic;
     private readonly ISdFactoryBusinessLogic _sdFactoryBusinessLogic;
+    private readonly IApplicationActivationService _applicationActivationService;
     private readonly ILogger<IChecklistService> _logger;
-    private readonly ImmutableDictionary<ProcessStepTypeId, (ApplicationChecklistEntryTypeId EntryTypeId, Func<Guid,ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId>,IEnumerable<ProcessStep>,CancellationToken,Task<(Action<ApplicationChecklistEntry>? modifyApplicationChecklistEntry, IEnumerable<ProcessStep>? NextSteps, bool Modified)>> ProcessFunc)> _stepExecutions;
+    private readonly ImmutableDictionary<ProcessStepTypeId, (ApplicationChecklistEntryTypeId EntryTypeId, Func<IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>? modifyApplicationChecklistEntry, IEnumerable<ProcessStep>? NextSteps, bool Modified)>> ProcessFunc)> _stepExecutions;
 
     public ChecklistProcessor(
         IPortalRepositories portalRepositories,
@@ -51,6 +52,7 @@ public class ChecklistProcessor : IChecklistProcessor
         ICustodianBusinessLogic custodianBusinessLogic,
         IClearinghouseBusinessLogic clearinghouseBusinessLogic,
         ISdFactoryBusinessLogic sdFactoryBusinessLogic,
+        IApplicationActivationService applicationActivationService,
         ILogger<IChecklistService> logger)
     {
         _portalRepositories = portalRepositories;
@@ -58,14 +60,16 @@ public class ChecklistProcessor : IChecklistProcessor
         _custodianBusinessLogic = custodianBusinessLogic;
         _clearinghouseBusinessLogic = clearinghouseBusinessLogic;
         _sdFactoryBusinessLogic = sdFactoryBusinessLogic;
+        _applicationActivationService = applicationActivationService;
         _logger = logger;
 
-        _stepExecutions = new (ApplicationChecklistEntryTypeId ApplicationChecklistEntryTypeId, ProcessStepTypeId ProcessStepTypeId, Func<Guid,ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId>,IEnumerable<ProcessStep>,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)>> ProcessFunc) []
+        _stepExecutions = new (ApplicationChecklistEntryTypeId ApplicationChecklistEntryTypeId, ProcessStepTypeId ProcessStepTypeId, Func<IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)>> ProcessFunc) []
         {
-            new (ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL, (Guid applicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken) => _bpdmBusinessLogic.HandleBpnPull(applicationId, checklist, processSteps, cancellationToken)),
-            new (ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ProcessStepTypeId.CREATE_IDENTITY_WALLET, (Guid applicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken) => _custodianBusinessLogic.CreateIdentityWalletAsync(applicationId, checklist, processSteps, cancellationToken)),
-            new (ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ProcessStepTypeId.START_CLEARING_HOUSE, (Guid applicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken) => _clearinghouseBusinessLogic.HandleEndClearingHouse(applicationId, checklist, processSteps, cancellationToken)),
-            new (ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP, (Guid applicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken) => _sdFactoryBusinessLogic.RegisterSelfDescription(applicationId, checklist, processSteps, cancellationToken)),
+            new (ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL, (IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken) => _bpdmBusinessLogic.HandleBpnPull(context, cancellationToken)),
+            new (ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ProcessStepTypeId.CREATE_IDENTITY_WALLET, (IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken) => _custodianBusinessLogic.CreateIdentityWalletAsync(context, cancellationToken)),
+            new (ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ProcessStepTypeId.START_CLEARING_HOUSE, (IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken) => _clearinghouseBusinessLogic.HandleStartClearingHouse(context, cancellationToken)),
+            new (ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP, (IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken) => _sdFactoryBusinessLogic.RegisterSelfDescription(context, cancellationToken)),
+            new (ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, ProcessStepTypeId.ACTIVATE_APPLICATION, (IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken) => _applicationActivationService.HandleApplicationActivation(context, cancellationToken)),
         }.ToImmutableDictionary(x => x.ProcessStepTypeId, x => (x.ApplicationChecklistEntryTypeId, x.ProcessFunc));
     }
 
@@ -94,7 +98,7 @@ public class ChecklistProcessor : IChecklistProcessor
                 var modified = false;
                 try
                 {
-                    var result = await execution.ProcessFunc(applicationId, checklist.ToImmutableDictionary(), workerSteps.Concat(manualSteps), cancellationToken).ConfigureAwait(false);
+                    var result = await execution.ProcessFunc(new IChecklistService.WorkerChecklistProcessStepData(applicationId, checklist.ToImmutableDictionary(), workerSteps.Concat(manualSteps)), cancellationToken).ConfigureAwait(false);
                     if (result.Modified)
                     {
                         if (result.NextSteps != null)
@@ -115,7 +119,7 @@ public class ChecklistProcessor : IChecklistProcessor
                         if (result.modifyApplicationChecklistEntry != null)
                         {
                             var entry = checklistRepository
-                                .AttachAndModifyApplicationChecklist(applicationId, ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER,
+                                .AttachAndModifyApplicationChecklist(applicationId, execution.EntryTypeId,
                                     result.modifyApplicationChecklistEntry);
                             returnStatusId = entry.ApplicationChecklistEntryStatusId;                            
                             checklist[execution.EntryTypeId] = returnStatusId;

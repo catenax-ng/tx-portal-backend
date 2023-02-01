@@ -44,12 +44,13 @@ public class BpdmBusinessLogic : IBpdmBusinessLogic
 
     public async Task<bool> TriggerBpnDataPush(Guid applicationId, string iamUserId, CancellationToken cancellationToken)
     {
-        var checklistData = await _checklistService
+        var context = await _checklistService
             .VerifyChecklistEntryAndProcessSteps(
                 applicationId,
                 ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER,
-                ApplicationChecklistEntryStatusId.TO_DO,
-                ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH)
+                new [] { ApplicationChecklistEntryStatusId.TO_DO },
+                ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH,
+                processStepTypeIds: new [] { ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL })
             .ConfigureAwait(false);
 
         var data = await _portalRepositories.GetInstance<ICompanyRepository>().GetBpdmDataForApplicationAsync(iamUserId, applicationId).ConfigureAwait(false);
@@ -71,29 +72,27 @@ public class BpdmBusinessLogic : IBpdmBusinessLogic
         await _bpdmService.TriggerBpnDataPush(bpdmTransferData, cancellationToken).ConfigureAwait(false);
 
         _checklistService.FinalizeChecklistEntryAndProcessSteps(
-            applicationId,
-            ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER,
+            context,
             entry => entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.IN_PROGRESS,
-            checklistData.ProcessStepId);
+            new [] { ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL });
         
         return true;
     }
 
-    public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> HandleBpnPull(Guid applicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken)
+    public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> HandleBpnPull(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
     {
         var businessPartnerNumber = string.Empty; // TODO add bpdm get legal entity call returning businessPartnerNumber
         if (string.IsNullOrWhiteSpace(businessPartnerNumber))
         {
             return (null, null, false);
         }
-        var registrationValidationFailed = checklist[ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION] == ApplicationChecklistEntryStatusId.FAILED;
-        var createWalletStepExists = processSteps.Any(step => step.ProcessStepTypeId == ProcessStepTypeId.CREATE_IDENTITY_WALLET && step.ProcessStepStatusId == ProcessStepStatusId.TODO);
+        var registrationValidationFailed = context.Checklist[ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION] == ApplicationChecklistEntryStatusId.FAILED;
 
         return (
             entry => entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE,
-            !registrationValidationFailed && !createWalletStepExists
-                ? _checklistService.ScheduleProcessSteps(applicationId, processSteps, ProcessStepTypeId.CREATE_IDENTITY_WALLET)
-                : null,
+            registrationValidationFailed
+                ? null
+                : _checklistService.ScheduleProcessSteps(context, new [] { ProcessStepTypeId.CREATE_IDENTITY_WALLET }),
             true);
     }
 }

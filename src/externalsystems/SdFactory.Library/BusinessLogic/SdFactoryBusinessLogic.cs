@@ -50,11 +50,16 @@ public class SdFactoryBusinessLogic : ISdFactoryBusinessLogic
         _sdFactoryService.RegisterConnectorAsync(connectorUrl, businessPartnerNumber, cancellationToken);
 
     /// <inheritdoc />
-    public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> RegisterSelfDescription(Guid applicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken)
+    public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> RegisterSelfDescription(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
     {
-        await RegisterSelfDescriptionInternalAsync(applicationId, cancellationToken)
+        await RegisterSelfDescriptionInternalAsync(context.ApplicationId, cancellationToken)
             .ConfigureAwait(false);
 
+        var prerequisiteEntries = context.Checklist.ExceptBy(new [] { ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP }, entry => entry.Key);
+        if (prerequisiteEntries.All(entry => entry.Value == ApplicationChecklistEntryStatusId.DONE))
+        {
+            _checklistService.ScheduleProcessSteps(context, new [] { ProcessStepTypeId.ACTIVATE_APPLICATION });
+        }
         return (entry => entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE, null, true);
     }
 

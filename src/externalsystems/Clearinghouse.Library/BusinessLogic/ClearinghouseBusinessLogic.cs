@@ -45,17 +45,17 @@ public class ClearinghouseBusinessLogic : IClearinghouseBusinessLogic
         _checklistService = checklistService;
     }
 
-    public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> HandleEndClearingHouse(Guid applicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken)
+    public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> HandleStartClearingHouse(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
     {
-        var walletData = await _custodianBusinessLogic.GetWalletByBpnAsync(applicationId, cancellationToken);
+        var walletData = await _custodianBusinessLogic.GetWalletByBpnAsync(context.ApplicationId, cancellationToken);
         if (walletData == null || string.IsNullOrEmpty(walletData.Did))
         {
-            throw new ConflictException($"Decentralized Identifier for application {applicationId} is not set");
+            throw new ConflictException($"Decentralized Identifier for application {context.ApplicationId} is not set");
         }
 
-        await TriggerCompanyDataPost(applicationId, walletData.Did, cancellationToken).ConfigureAwait(false);
+        await TriggerCompanyDataPost(context.ApplicationId, walletData.Did, cancellationToken).ConfigureAwait(false);
 
-        _checklistService.ScheduleProcessSteps(applicationId, processSteps, ProcessStepTypeId.END_CLEARING_HOUSE);
+        _checklistService.ScheduleProcessSteps(context, new [] { ProcessStepTypeId.END_CLEARING_HOUSE });
         return (entry => entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.IN_PROGRESS, null, true);
     }
 
@@ -87,27 +87,29 @@ public class ClearinghouseBusinessLogic : IClearinghouseBusinessLogic
 
     public async Task ProcessEndClearinghouse(Guid applicationId, ClearinghouseResponseData data, CancellationToken cancellationToken)
     {
-        var follupUpStep = new [] { ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP };
-        var result = await _checklistService
+        var context = await _checklistService
             .VerifyChecklistEntryAndProcessSteps(
                 applicationId,
                 ApplicationChecklistEntryTypeId.CLEARING_HOUSE,
-                ApplicationChecklistEntryStatusId.IN_PROGRESS,
+                new [] { ApplicationChecklistEntryStatusId.IN_PROGRESS },
                 ProcessStepTypeId.END_CLEARING_HOUSE,
-                follupUpStep)
+                processStepTypeIds: new [] { ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP })
             .ConfigureAwait(false);
 
+        var declined = data.Status == ClearinghouseResponseStatus.DECLINE;
+
         _checklistService.FinalizeChecklistEntryAndProcessSteps(
-            applicationId,
-            ApplicationChecklistEntryTypeId.CLEARING_HOUSE,
+            context,
             item =>
             {
-                item.ApplicationChecklistEntryStatusId = data.Status == ClearinghouseResponseStatus.DECLINE
-                    ? ApplicationChecklistEntryStatusId.FAILED
-                    : ApplicationChecklistEntryStatusId.DONE;
+                item.ApplicationChecklistEntryStatusId = 
+                    declined
+                        ? ApplicationChecklistEntryStatusId.FAILED
+                        : ApplicationChecklistEntryStatusId.DONE;
                 item.Comment = data.Message;
             },
-            result.ProcessStepId,
-            follupUpStep);
+            declined
+                ? null
+                : new [] { ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP });
     }
 }

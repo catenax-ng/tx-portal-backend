@@ -21,6 +21,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.ApplicationActivation.Library.DependencyInjection;
+using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.DateTimeProvider;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Mailing.SendMail;
@@ -29,6 +30,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.ApplicationActivation.Library;
@@ -59,6 +61,71 @@ public class ApplicationActivationService : IApplicationActivationService
         _dateTime = dateTime;
         _logger = logger;
         _settings = options.Value;
+    }
+
+    public Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> HandleApplicationActivation(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
+    {
+        if (!InProcessingTime())
+        {
+            return Task.FromResult<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)>((null,null,false));
+        }
+        var prerequisiteEntries = context.Checklist.Where(entry => entry.Key != ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION);
+        if (prerequisiteEntries.Any(entry => entry.Value != ApplicationChecklistEntryStatusId.DONE))
+        {
+            throw new ConflictException($"cannot activate application {context.ApplicationId}. Checklist entries that are not in status DONE: {string.Join(",",prerequisiteEntries)}");
+        }
+        return HandleApplicationActivationInternal(context, cancellationToken);
+    }
+
+    private async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> HandleApplicationActivationInternal(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken _) //TODO: CancellationToken - could be used e.g. in sending mail (keycloak-library does not support it yet). Would require to refactor the applicationActivation into sub-process-steps where the ones that are cancellable and (in best case all) reentrant                                                                                 
+    {
+        var applicationRepository = _portalRepositories.GetInstance<IApplicationRepository>();
+        var result = await applicationRepository.GetCompanyAndApplicationDetailsForApprovalAsync(context.ApplicationId).ConfigureAwait(false);
+        if (result == default)
+        {
+            throw new ConflictException($"CompanyApplication {context.ApplicationId} is not in status SUBMITTED");
+        }
+        var (companyId, businessPartnerNumber) = result;
+
+        if (string.IsNullOrWhiteSpace(businessPartnerNumber))
+        {
+            throw new ConflictException($"BusinessPartnerNumber (bpn) for CompanyApplications {context.ApplicationId} company {companyId} is empty");
+        }
+
+        var userRolesRepository = _portalRepositories.GetInstance<IUserRolesRepository>();
+        var assignedRoles = await AssignRolesAndBpn(context.ApplicationId, userRolesRepository, applicationRepository, businessPartnerNumber).ConfigureAwait(false);
+
+        applicationRepository.AttachAndModifyCompanyApplication(context.ApplicationId, ca =>
+        {
+            ca.ApplicationStatusId = CompanyApplicationStatusId.CONFIRMED;
+            ca.DateLastChanged = DateTimeOffset.UtcNow;    
+        });
+
+        _portalRepositories.GetInstance<ICompanyRepository>().AttachAndModifyCompany(companyId, null, c =>
+        {
+            c.CompanyStatusId = CompanyStatusId.ACTIVE;
+        });
+
+        var notifications = _settings.WelcomeNotificationTypeIds.Select(x => (default(string), x));
+        await _notificationService.CreateNotifications(_settings.CompanyAdminRoles, null, notifications, companyId).ConfigureAwait(false);
+
+        await PostRegistrationWelcomeEmailAsync(userRolesRepository, applicationRepository, context.ApplicationId).ConfigureAwait(false);
+
+        if (assignedRoles != null)
+        {
+            var unassignedClientRoles = _settings.ApplicationApprovalInitialRoles
+                .Select(initialClientRoles => (
+                    client: initialClientRoles.Key,
+                    roles: initialClientRoles.Value.Except(assignedRoles[initialClientRoles.Key])))
+                .Where(clientRoles => clientRoles.roles.Any())
+                .ToList();
+
+            if (unassignedClientRoles.Any())
+            {
+                throw new UnexpectedConditionException($"inconsistent data, roles not assigned in keycloak: {string.Join(", ", unassignedClientRoles.Select(clientRoles => $"client: {clientRoles.client}, roles: [{string.Join(", ", clientRoles.roles)}]"))}");
+            }
+        }
+        return (entry => entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE, null, true);
     }
 
     public Task HandleApplicationActivation(Guid applicationId)
