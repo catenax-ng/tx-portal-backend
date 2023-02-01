@@ -27,7 +27,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Token;
 using Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Worker.DependencyInjection;
+namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Config.DependencyInjection;
 
 public static class ChecklistExtensions
 {
@@ -35,7 +35,6 @@ public static class ChecklistExtensions
     {
         return services
             .AddTransient<ITokenService, TokenService>()
-            .AddScoped<IChecklistProcessor, ChecklistProcessor>()
             .AddTransient<IChecklistService, ChecklistService>()
             .AddBpdmService(section.GetSection("Bpdm"))
             .AddCustodianService(section.GetSection("Custodian"))
