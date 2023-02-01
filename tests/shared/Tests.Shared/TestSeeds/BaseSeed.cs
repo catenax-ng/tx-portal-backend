@@ -407,11 +407,6 @@ public static class BaseSeed
             new (new Guid("979a29b1-40c2-4169-979c-43c3156dbf64"), new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA5"))
         });
 
-        dbContext.AgreementAssignedDocuments.AddRange(new List<AgreementAssignedDocument>
-        {
-            new (new Guid("f6d3148b-2e2b-4688-a382-326d4232ee6e"), new Guid("7fc2fb78-8dc2-4f5f-b1d1-91c9c2f4506f")),
-        });
-
         dbContext.NotificationTypeAssignedTopics.AddRange(new List<NotificationTypeAssignedTopic>()
         {
             new(NotificationTypeId.INFO, NotificationTopicId.INFO),

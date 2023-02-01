@@ -1,6 +1,6 @@
 ﻿/********************************************************************************
- * Copyright (c) 2021, 2023 BMW Group AG
- * Copyright (c) 2021, 2023 Contributors to the Eclipse Foundation
+ * Copyright (c) 2021,2022 BMW Group AG
+ * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -22,6 +22,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
@@ -31,9 +32,10 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migrations
 {
     [DbContext(typeof(PortalDbContext))]
-    partial class PortalDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230201095245_CPLP-2077-RemoveAgreementAssignedDocument")]
+    partial class CPLP2077RemoveAgreementAssignedDocument
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -707,26 +709,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                     b.ToTable("app_languages", "portal");
                 });
 
-            modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.ApplicationAssignedProcessStep", b =>
-                {
-                    b.Property<Guid>("CompanyApplicationId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("company_application_id");
-
-                    b.Property<Guid>("ProcessStepId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("process_step_id");
-
-                    b.HasKey("CompanyApplicationId", "ProcessStepId")
-                        .HasName("pk_application_assigned_process_steps");
-
-                    b.HasIndex("ProcessStepId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_application_assigned_process_steps_process_step_id");
-
-                    b.ToTable("application_assigned_process_steps", "portal");
-                });
-
             modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.ApplicationChecklistEntry", b =>
                 {
                     b.Property<Guid>("ApplicationId")
@@ -847,11 +829,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         {
                             Id = 5,
                             Label = "SELF_DESCRIPTION_LP"
-                        },
-                        new
-                        {
-                            Id = 6,
-                            Label = "APPLICATION_ACTIVATION"
                         });
                 });
 
@@ -3080,158 +3057,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         });
                 });
 
-            modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.ProcessStep", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<int>("ProcessStepStatusId")
-                        .HasColumnType("integer")
-                        .HasColumnName("process_step_status_id");
-
-                    b.Property<int>("ProcessStepTypeId")
-                        .HasColumnType("integer")
-                        .HasColumnName("process_step_type_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_process_steps");
-
-                    b.HasIndex("ProcessStepStatusId")
-                        .HasDatabaseName("ix_process_steps_process_step_status_id");
-
-                    b.HasIndex("ProcessStepTypeId")
-                        .HasDatabaseName("ix_process_steps_process_step_type_id");
-
-                    b.ToTable("process_steps", "portal");
-                });
-
-            modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.ProcessStepStatus", b =>
-                {
-                    b.Property<int>("Id")
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    b.Property<string>("Label")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("label");
-
-                    b.HasKey("Id")
-                        .HasName("pk_process_step_statuses");
-
-                    b.ToTable("process_step_statuses", "portal");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Label = "TODO"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Label = "DONE"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Label = "SKIPPED"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Label = "FAILED"
-                        },
-                        new
-                        {
-                            Id = 5,
-                            Label = "DUPLICATE"
-                        });
-                });
-
-            modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.ProcessStepType", b =>
-                {
-                    b.Property<int>("Id")
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    b.Property<string>("Label")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("label");
-
-                    b.HasKey("Id")
-                        .HasName("pk_process_step_types");
-
-                    b.ToTable("process_step_types", "portal");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Label = "VERIFY_REGISTRATION"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Label = "CREATE_BUSINESS_PARTNER_NUMBER_PUSH"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Label = "CREATE_BUSINESS_PARTNER_NUMBER_PULL"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Label = "CREATE_BUSINESS_PARTNER_NUMBER_MANUAL"
-                        },
-                        new
-                        {
-                            Id = 5,
-                            Label = "CREATE_IDENTITY_WALLET"
-                        },
-                        new
-                        {
-                            Id = 6,
-                            Label = "RETRIGGER_IDENTITY_WALLET"
-                        },
-                        new
-                        {
-                            Id = 7,
-                            Label = "START_CLEARING_HOUSE"
-                        },
-                        new
-                        {
-                            Id = 8,
-                            Label = "RETRIGGER_CLEARING_HOUSE"
-                        },
-                        new
-                        {
-                            Id = 9,
-                            Label = "END_CLEARING_HOUSE"
-                        },
-                        new
-                        {
-                            Id = 10,
-                            Label = "CREATE_SELF_DESCRIPTION_LP"
-                        },
-                        new
-                        {
-                            Id = 11,
-                            Label = "RETRIGGER_SELF_DESCRIPTION_LP"
-                        },
-                        new
-                        {
-                            Id = 12,
-                            Label = "ACTIVATE_APPLICATION"
-                        });
-                });
-
             modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.ProviderCompanyDetail", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3664,25 +3489,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                     b.Navigation("App");
 
                     b.Navigation("Language");
-                });
-
-            modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.ApplicationAssignedProcessStep", b =>
-                {
-                    b.HasOne("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.CompanyApplication", "CompanyApplication")
-                        .WithMany("ApplicationAssignedProcessSteps")
-                        .HasForeignKey("CompanyApplicationId")
-                        .IsRequired()
-                        .HasConstraintName("fk_application_assigned_process_steps_company_applications_com");
-
-                    b.HasOne("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.ProcessStep", "ProcessStep")
-                        .WithOne("ApplicationAssignedProcessStep")
-                        .HasForeignKey("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.ApplicationAssignedProcessStep", "ProcessStepId")
-                        .IsRequired()
-                        .HasConstraintName("fk_application_assigned_process_steps_process_steps_process_st");
-
-                    b.Navigation("CompanyApplication");
-
-                    b.Navigation("ProcessStep");
                 });
 
             modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.ApplicationChecklistEntry", b =>
@@ -4473,27 +4279,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                     b.Navigation("Offer");
                 });
 
-            modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.ProcessStep", b =>
-                {
-                    b.HasOne("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.ProcessStepStatus", "ProcessStepStatus")
-                        .WithMany("ProcessSteps")
-                        .HasForeignKey("ProcessStepStatusId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_process_steps_process_step_statuses_process_step_status_id");
-
-                    b.HasOne("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.ProcessStepType", "ProcessStepType")
-                        .WithMany("ProcessSteps")
-                        .HasForeignKey("ProcessStepTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_process_steps_process_step_types_process_step_type_id");
-
-                    b.Navigation("ProcessStepStatus");
-
-                    b.Navigation("ProcessStepType");
-                });
-
             modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.ProviderCompanyDetail", b =>
                 {
                     b.HasOne("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.Company", "Company")
@@ -4667,8 +4452,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
 
             modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.CompanyApplication", b =>
                 {
-                    b.Navigation("ApplicationAssignedProcessSteps");
-
                     b.Navigation("ApplicationChecklistEntries");
 
                     b.Navigation("Invitations");
@@ -4876,21 +4659,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                     b.Navigation("AgreementAssignedOfferTypes");
 
                     b.Navigation("Offers");
-                });
-
-            modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.ProcessStep", b =>
-                {
-                    b.Navigation("ApplicationAssignedProcessStep");
-                });
-
-            modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.ProcessStepStatus", b =>
-                {
-                    b.Navigation("ProcessSteps");
-                });
-
-            modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.ProcessStepType", b =>
-                {
-                    b.Navigation("ProcessSteps");
                 });
 
             modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.UniqueIdentifier", b =>
