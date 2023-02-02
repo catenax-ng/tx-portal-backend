@@ -353,23 +353,26 @@ public class ApplicationRepository : IApplicationRepository
             .Select(ca => ca.Id)
             .AsAsyncEnumerable();
 
-     /// <inheritdoc />
-     public Task<Guid> GetCompanyIdForSubmittedApplicationId(Guid applicationId) =>
-         _dbContext.CompanyApplications
-             .Where(ca =>
-                 ca.Id == applicationId &&
-                 ca.ApplicationStatusId == CompanyApplicationStatusId.SUBMITTED)
-             .Select(ca => ca.CompanyId)
-             .SingleOrDefaultAsync();
+    /// <inheritdoc />
+    public Task<Guid> GetCompanyIdForSubmittedApplicationId(Guid applicationId) =>
+        _dbContext.CompanyApplications
+            .Where(ca =>
+                ca.Id == applicationId &&
+                ca.ApplicationStatusId == CompanyApplicationStatusId.SUBMITTED)
+            .Select(ca => ca.CompanyId)
+            .SingleOrDefaultAsync();
 
-     /// <inheritdoc />
-     public Task<(bool Exists, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId, string? Comment)> ChecklistData)> GetApplicationChecklistData(Guid applicationId) =>
-         _dbContext.CompanyApplications
-             .Where(x => x.Id == applicationId)
-             .Select(x => new ValueTuple<bool, IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId, string?)>>(
-                     true,
-                     x.ApplicationChecklistEntries
-                         .Where(ace => ace.ApplicationChecklistEntryTypeId != ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION)
-                         .Select(ace => new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId, string?>(ace.ApplicationChecklistEntryTypeId, ace.ApplicationChecklistEntryStatusId, ace.Comment))))
-             .SingleOrDefaultAsync();
+    /// <inheritdoc />
+    public Task<(bool Exists, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId, string? Comment)> ChecklistData)> GetApplicationChecklistData(Guid applicationId) =>
+        _dbContext.CompanyApplications
+            .Where(x => x.Id == applicationId)
+            .Select(x => new ValueTuple<bool, IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId, string?)>>(
+                    true,
+                    x.ApplicationChecklistEntries
+                        .Where(ace => ace.ApplicationChecklistEntryTypeId != ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION)
+                        .Select(ace => new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId, string?>(
+                            ace.ApplicationChecklistEntryTypeId,
+                            ace.ApplicationChecklistEntryStatusId,
+                            ace.Comment))))
+            .SingleOrDefaultAsync();
 }
