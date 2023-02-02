@@ -327,7 +327,7 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
     }
 
     /// <inheritdoc />
-    public Task SetRegistrationVerification(Guid applicationId, bool approve, string? comment)
+    public Task SetRegistrationVerification(Guid applicationId, bool approve, string? comment = null)
     {
         if (!approve && string.IsNullOrWhiteSpace(comment))
         {

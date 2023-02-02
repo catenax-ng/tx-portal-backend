@@ -99,6 +99,7 @@ public class ApplicationActivationService : IApplicationActivationService
 
         var userRolesRepository = _portalRepositories.GetInstance<IUserRolesRepository>();
         var assignedRoles = await AssignRolesAndBpn(context.ApplicationId, userRolesRepository, applicationRepository, businessPartnerNumber).ConfigureAwait(false);
+        await RemoveRegistrationRoles(context.ApplicationId, userRolesRepository, applicationRepository).ConfigureAwait(false);
 
         applicationRepository.AttachAndModifyCompanyApplication(context.ApplicationId, ca =>
         {
