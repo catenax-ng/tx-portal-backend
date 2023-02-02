@@ -20,7 +20,7 @@
 
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
+namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 
 public static class ApplicationChecklistEntryTypeIdExtensions
 {
