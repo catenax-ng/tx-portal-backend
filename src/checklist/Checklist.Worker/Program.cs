@@ -42,11 +42,14 @@ try
              .AddChecklistCreation()
              .AddApplicationActivation(hostContext.Configuration);
 
-         var urlsToTrust = hostContext.Configuration.GetSection("Keycloak").Get<KeycloakSettingsMap>().Values
-             .Where(config => config.ConnectionString.StartsWith("https://"))
-             .Select(config => config.ConnectionString)
-             .Distinct();
-         FlurlUntrustedCertExceptionHandler.ConfigureExceptions(urlsToTrust);
+         if (hostContext.HostingEnvironment.IsDevelopment())
+         {
+             var urlsToTrust = hostContext.Configuration.GetSection("Keycloak").Get<KeycloakSettingsMap>().Values
+                 .Where(config => config.ConnectionString.StartsWith("https://"))
+                 .Select(config => config.ConnectionString)
+                 .Distinct();
+             FlurlUntrustedCertExceptionHandler.ConfigureExceptions(urlsToTrust);    
+         }
      }).Build();
     Console.WriteLine("Building worker completed");
 
