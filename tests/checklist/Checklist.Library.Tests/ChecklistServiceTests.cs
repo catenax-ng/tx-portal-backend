@@ -98,7 +98,7 @@ public class ChecklistServiceTests
         await _service.TriggerBpnDataPush(IdWithoutBpn, IamUserId, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() => _bpdmBusinessLogic.TriggerBpnDataPush(IdWithoutBpn, IamUserId, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _bpdmBusinessLogic.PushLegalEntity(IdWithoutBpn, IamUserId, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _applicationChecklistRepository.AttachAndModifyApplicationChecklist(IdWithoutBpn, ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, A<Action<ApplicationChecklistEntry>>._)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _portalRepositories.SaveAsync()).MustNotHaveHappened();
         entry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.IN_PROGRESS);
@@ -109,7 +109,7 @@ public class ChecklistServiceTests
     {
         // Arrange
         var entry = new ApplicationChecklistEntry(IdWithoutBpn, ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow);
-        A.CallTo(() => _bpdmBusinessLogic.TriggerBpnDataPush(IdWithoutBpn, IamUserId, CancellationToken.None))
+        A.CallTo(() => _bpdmBusinessLogic.PushLegalEntity(IdWithoutBpn, IamUserId, CancellationToken.None))
             .Throws(new ServiceException("Bpdm Service Call failed."));
         
         SetupFakesForTrigger(entry);
@@ -119,7 +119,7 @@ public class ChecklistServiceTests
 
         // Assert
         await Assert.ThrowsAsync<ServiceException>(Act);
-        A.CallTo(() => _bpdmBusinessLogic.TriggerBpnDataPush(IdWithoutBpn, IamUserId, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _bpdmBusinessLogic.PushLegalEntity(IdWithoutBpn, IamUserId, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _applicationChecklistRepository.AttachAndModifyApplicationChecklist(IdWithoutBpn, ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, A<Action<ApplicationChecklistEntry>>._)).MustNotHaveHappened();
         A.CallTo(() => _portalRepositories.SaveAsync()).MustNotHaveHappened();
         entry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.TO_DO);
@@ -137,7 +137,7 @@ public class ChecklistServiceTests
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
         ex.Message.Should().Be($"{ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER} is not available as next step");
-        A.CallTo(() => _bpdmBusinessLogic.TriggerBpnDataPush(IdWithBpn, IamUserId, A<CancellationToken>._)).MustNotHaveHappened();
+        A.CallTo(() => _bpdmBusinessLogic.PushLegalEntity(IdWithBpn, IamUserId, A<CancellationToken>._)).MustNotHaveHappened();
     }
 
     #endregion
@@ -444,7 +444,7 @@ public class ChecklistServiceTests
         };
         SetupForUpdate(entry);
         A.CallTo(() => _sdFactoryBusinessLogic.RegisterSelfDescriptionAsync(IdWithBpn, A<CancellationToken>._))
-            .ReturnsLazily(() => Task.CompletedTask);
+            .Returns(Task.CompletedTask);
 
         // Act
         await _service.ProcessChecklist(IdWithBpn, checklist, CancellationToken.None).ToListAsync().ConfigureAwait(false);
@@ -472,16 +472,16 @@ public class ChecklistServiceTests
 
         var validData = _fixture.Build<BpdmData>()
             .With(x => x.ApplicationStatusId, CompanyApplicationStatusId.SUBMITTED)
-            .With(x => x.IsUserInCompany, true)
+            .With(x => x.BusinessPartnerNumber, (string?)null)
             .With(x => x.ZipCode, "50668")
             .Create();
-        A.CallTo(() => _companyRepository.GetBpdmDataForApplicationAsync(IamUserId, NotExistingApplicationId))
-            .ReturnsLazily(() => (BpdmData?)null);
+        A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(IamUserId, NotExistingApplicationId))
+            .Returns((false,(BpdmData?)null,false));
 
-        A.CallTo(() => _companyRepository.GetBpdmDataForApplicationAsync(A<string>.That.Not.Matches(x => x == IamUserId), IdWithoutBpn))
-            .ReturnsLazily(() => new BpdmData(CompanyApplicationStatusId.SUBMITTED, null!, null!, null!, null!, null!, false));
-        A.CallTo(() => _companyRepository.GetBpdmDataForApplicationAsync(IamUserId, A<Guid>.That.Matches(x => x == IdWithoutBpn || x == IdWithBpn)))
-            .ReturnsLazily(() => validData);
+        A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(A<string>.That.Not.Matches(x => x == IamUserId), IdWithoutBpn))
+            .Returns((true, new BpdmData(CompanyApplicationStatusId.SUBMITTED, Guid.Empty, null!, null, null, null, null, null, null, null, null, null!), false));
+        A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(IamUserId, A<Guid>.That.Matches(x => x == IdWithoutBpn || x == IdWithBpn)))
+            .Returns((true, validData, true));
 
         A.CallTo(() => _applicationChecklistRepository.GetChecklistDataAsync(IdWithoutBpn))
             .ReturnsLazily(() => new List<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>
