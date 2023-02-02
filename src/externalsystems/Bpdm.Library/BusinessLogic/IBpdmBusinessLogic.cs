@@ -32,7 +32,7 @@ public interface IBpdmBusinessLogic
     /// <param name="iamUserId">Id of the current user</param>
     /// <param name="cancellationToken">Cancellation Token</param>
     /// <returns>Returns <c>true</c> if the service call was successful, otherwise <c>false</c></returns>
-    Task<bool> TriggerBpnDataPush(Guid applicationId, string iamUserId, CancellationToken cancellationToken);
+    Task<bool> PushLegalEntity(Guid applicationId, string iamUserId, CancellationToken cancellationToken);
 
-    Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> HandleBpnPull(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken);    
+    Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> HandlePullLegalEntity(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken);    
 }

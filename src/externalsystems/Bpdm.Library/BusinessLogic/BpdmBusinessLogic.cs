@@ -42,8 +42,50 @@ public class BpdmBusinessLogic : IBpdmBusinessLogic
         _checklistService = checklistService;
     }
 
-    public async Task<bool> TriggerBpnDataPush(Guid applicationId, string iamUserId, CancellationToken cancellationToken)
+    public async Task<bool> PushLegalEntity(Guid applicationId, string iamUserId, CancellationToken cancellationToken)
     {
+        var (isValidApplicationId, applicationStatusId, data, isUserInCompany) = await _portalRepositories.GetInstance<IApplicationRepository>().GetBpdmDataForApplicationAsync(iamUserId, applicationId).ConfigureAwait(false);
+
+        if (!isValidApplicationId)
+        {
+            throw new NotFoundException($"Application {applicationId} does not exists.");
+        }
+
+        if (!isUserInCompany)
+        {
+            throw new ForbiddenException($"User is not allowed to trigger Bpn Data Push for the application {applicationId}");
+        }
+
+        if (data == null)
+        {
+            throw new UnexpectedConditionException($"BpdmData should never be null here");
+        }
+
+        if (applicationStatusId != CompanyApplicationStatusId.SUBMITTED)
+        {
+            throw new ConflictException($"CompanyApplication {applicationId} is not in status SUBMITTED");
+        }
+
+        if (!string.IsNullOrWhiteSpace(data.BusinessPartnerNumber))
+        {
+            throw new ConflictException($"BusinessPartnerNumber is already set");
+        }
+
+        if (string.IsNullOrWhiteSpace(data.Alpha2Code))
+        {
+            throw new ConflictException("Alpha2Code must not be empty");
+        }
+
+        if (string.IsNullOrWhiteSpace(data.City))
+        {
+            throw new ConflictException("City must not be empty");
+        }
+
+        if (string.IsNullOrWhiteSpace(data.StreetName))
+        {
+            throw new ConflictException("StreetName must not be empty");
+        }
+
         var context = await _checklistService
             .VerifyChecklistEntryAndProcessSteps(
                 applicationId,
@@ -53,23 +95,19 @@ public class BpdmBusinessLogic : IBpdmBusinessLogic
                 processStepTypeIds: new [] { ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL })
             .ConfigureAwait(false);
 
-        var data = await _portalRepositories.GetInstance<ICompanyRepository>().GetBpdmDataForApplicationAsync(iamUserId, applicationId).ConfigureAwait(false);
-        if (data is null)
-        {
-            throw new NotFoundException($"Application {applicationId} does not exists.");
-        }
-        if (!data.IsUserInCompany)
-        {
-            throw new ForbiddenException($"User is not allowed to trigger Bpn Data Push for the application {applicationId}");
-        }
-        if (string.IsNullOrWhiteSpace(data.ZipCode))
-        {
-            throw new ConflictException("ZipCode must not be empty");
-        }
+        var bpdmTransferData = new BpdmTransferData(
+            applicationId.ToString(),
+            data.CompanyName,
+            data.ShortName,
+            data.Alpha2Code,
+            data.ZipCode,
+            data.City,
+            data.StreetName,
+            data.StreetNumber,
+            data.Region,
+            data.Identifiers);
 
-        var bpdmTransferData = new BpdmTransferData(data.CompanyName, data.AlphaCode2, data.ZipCode, data.City, data.Street);
-
-        await _bpdmService.TriggerBpnDataPush(bpdmTransferData, cancellationToken).ConfigureAwait(false);
+        await _bpdmService.PutInputLegalEntity(bpdmTransferData, cancellationToken).ConfigureAwait(false);
 
         _checklistService.FinalizeChecklistEntryAndProcessSteps(
             context,
@@ -79,13 +117,43 @@ public class BpdmBusinessLogic : IBpdmBusinessLogic
         return true;
     }
 
-    public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> HandleBpnPull(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
+    public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> HandlePullLegalEntity(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
     {
-        var businessPartnerNumber = string.Empty; // TODO add bpdm get legal entity call returning businessPartnerNumber
-        if (string.IsNullOrWhiteSpace(businessPartnerNumber))
+        var result = await _portalRepositories.GetInstance<IApplicationRepository>().GetBpdmDataForApplicationAsync(context.ApplicationId).ConfigureAwait(false);
+        
+        if (result == default)
         {
-            return (null, null, false);
+            throw new UnexpectedConditionException($"CompanyApplication {context.ApplicationId} does not exist");
         }
+
+        var (companyId, data) = result;
+
+        var legalEntity = await _bpdmService.FetchInputLegalEntity(context.ApplicationId.ToString(), cancellationToken).ConfigureAwait(false);
+
+        if (legalEntity == null)
+        {
+            throw new ConflictException($"legal-entity not found in bpdm for application {context.ApplicationId}");
+        }
+
+        if (string.IsNullOrEmpty(legalEntity.Bpn))
+        {
+            return (null,null,false);
+        }
+
+        // TODO: clarify whether it should be an error if businessPartnerNumber has been set locally while bpdm-answer was outstanding
+        // TODO: clarify whether it should be an error if address- or identifier-data returned by bpdm does not match what is stored in portal-db or modify in portal-db based on bpdm-response
+
+        _portalRepositories.GetInstance<ICompanyRepository>().AttachAndModifyCompany(
+            companyId,
+            company => 
+            {
+                company.BusinessPartnerNumber = data.BusinessPartnerNumber;
+            },
+            company =>
+            {
+                company.BusinessPartnerNumber = legalEntity.Bpn;
+            });
+
         var registrationValidationFailed = context.Checklist[ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION] == ApplicationChecklistEntryStatusId.FAILED;
 
         return (

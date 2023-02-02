@@ -159,14 +159,14 @@ public class RegistrationBusinessLogicTest
         var data = _fixture.Build<CompanyUserRoleWithAddress>()
             .With(x => x.AgreementsData, _fixture.CreateMany<AgreementsData>(20))
             .Create();
-        A.CallTo(() => _applicationRepository.GetCompanyUserRoleWithAddressUntrackedAsync(applicationId))
+        A.CallTo(() => _applicationRepository.GetCompanyUserRoleWithAdressUntrackedAsync(applicationId))
             .Returns(data);
 
         // Act
         var result = await _logic.GetCompanyWithAddressAsync(applicationId).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() => _applicationRepository.GetCompanyUserRoleWithAddressUntrackedAsync(applicationId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _applicationRepository.GetCompanyUserRoleWithAdressUntrackedAsync(applicationId)).MustHaveHappenedOnceExactly();
         result.Should().BeOfType<CompanyWithAddressData>();
         result.Should().Match<CompanyWithAddressData>(r =>
             r.CompanyId == data.CompanyId &&
@@ -205,14 +205,14 @@ public class RegistrationBusinessLogicTest
             .With(x => x.CountryDe, (string?)null)
             .With(x => x.InvitedCompanyUserData, _fixture.CreateMany<Guid>().Select(id => new InvitedCompanyUserData(id, null, null, null)))
             .Create();
-        A.CallTo(() => _applicationRepository.GetCompanyUserRoleWithAddressUntrackedAsync(applicationId))
+        A.CallTo(() => _applicationRepository.GetCompanyUserRoleWithAdressUntrackedAsync(applicationId))
             .Returns(data);
 
         // Act
         var result = await _logic.GetCompanyWithAddressAsync(applicationId).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() => _applicationRepository.GetCompanyUserRoleWithAddressUntrackedAsync(applicationId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _applicationRepository.GetCompanyUserRoleWithAdressUntrackedAsync(applicationId)).MustHaveHappenedOnceExactly();
         result.Should().BeOfType<CompanyWithAddressData>();
         result.Should().Match<CompanyWithAddressData>(r =>
             r.CompanyId == data.CompanyId &&
@@ -243,10 +243,10 @@ public class RegistrationBusinessLogicTest
         var data = _fixture
             .Build<BpdmData>()
             .With(x => x.ApplicationStatusId, CompanyApplicationStatusId.SUBMITTED)
-            .With(x => x.IsUserInCompany, true)
+            .With(x => x.BusinessPartnerNumber, (string?)null)
             .Create();
-        A.CallTo(() => _companyRepository.GetBpdmDataForApplicationAsync(IamUserId, ApplicationId))
-            .ReturnsLazily(() => data);
+        A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(IamUserId, ApplicationId))
+            .Returns((true, data, true));
 
         await _logic.TriggerBpnDataPushAsync(IamUserId, ApplicationId, CancellationToken.None).ConfigureAwait(false);
 
