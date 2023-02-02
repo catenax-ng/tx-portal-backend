@@ -24,6 +24,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Controllers;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared.Extensions;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Tests.Controllers;
@@ -139,5 +140,31 @@ public class RegistrationControllerTest
         //Assert
         A.CallTo(() => _logic.ProcessClearinghouseResponseAsync(bpn, data, CancellationToken.None)).MustHaveHappenedOnceExactly();
         Assert.IsType<NoContentResult>(result);
+    }
+
+    [Fact]
+    public async Task TriggerBpnDataPush_ReturnsExpectedResult()
+    {
+        //Arrange
+        var applicationId = _fixture.Create<Guid>();
+        var list = new List<ChecklistDetails>
+        {
+            new(ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE, null, false),
+            new(ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.DONE, null, false),
+            new(ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.FAILED, "error occured", true),
+            new(ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.IN_PROGRESS, null, true),
+            new(ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.IN_PROGRESS, null, true),
+        };
+        A.CallTo(() => _logic.GetChecklistForApplicationAsync(applicationId))
+            .ReturnsLazily(() => list);
+
+        //Act
+        var result = await this._controller.GetChecklistForApplication(applicationId).ConfigureAwait(false);
+
+        //Assert
+        A.CallTo(() => _logic.GetChecklistForApplicationAsync(applicationId)).MustHaveHappenedOnceExactly();
+        result.Should().NotBeNull().And.NotBeEmpty().And.HaveCount(5);
+        result.Where(x => x.Retriggerable).Should().HaveCount(3);
+        result.Where(x => x.Status == ApplicationChecklistEntryStatusId.FAILED).Should().ContainSingle();
     }
 }

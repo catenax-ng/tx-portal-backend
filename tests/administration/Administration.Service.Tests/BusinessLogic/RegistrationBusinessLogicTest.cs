@@ -370,13 +370,49 @@ public class RegistrationBusinessLogicTest
     [Fact]
     public async Task ProcessClearinghouseResponseAsync_WithValidData_CallsExpected()
     {
+        // Arrange
+        A.CallTo(() => _applicationRepository.GetSubmittedApplicationIdsByBpn(BusinessPartnerNumber))
+            .Returns(Enumerable.Repeat(CompanyId, 1).ToAsyncEnumerable());
+        
         // Act
         var data = _fixture.Create<ClearinghouseResponseData>();
         await _logic.ProcessClearinghouseResponseAsync(BusinessPartnerNumber, data, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() => _clearinghouseBusinessLogic.ProcessClearinghouseResponseAsync(BusinessPartnerNumber, data, CancellationToken.None))
+        A.CallTo(() => _clearinghouseBusinessLogic.ProcessEndClearinghouse(ApplicationId, data, CancellationToken.None))
             .MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task ProcessClearinghouseResponseAsync_WithMultipleApplications_ThrowsConflictException()
+    {
+        // Arrange
+        A.CallTo(() => _applicationRepository.GetSubmittedApplicationIdsByBpn(BusinessPartnerNumber))
+            .Returns(new []{ CompanyId, Guid.NewGuid() }.ToAsyncEnumerable());
+        
+        // Act
+        var data = _fixture.Create<ClearinghouseResponseData>();
+        async Task Act() => await _logic.ProcessClearinghouseResponseAsync(BusinessPartnerNumber, data, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Contain($"more than one companyApplication in status SUBMITTED found for BPN {BusinessPartnerNumber}");
+    }
+
+    [Fact]
+    public async Task ProcessClearinghouseResponseAsync_WithNoApplication_ThrowsNotFoundException()
+    {
+        // Arrange
+        A.CallTo(() => _applicationRepository.GetSubmittedApplicationIdsByBpn(BusinessPartnerNumber))
+            .Returns(Enumerable.Empty<Guid>().ToAsyncEnumerable());
+        
+        // Act
+        var data = _fixture.Create<ClearinghouseResponseData>();
+        async Task Act() => await _logic.ProcessClearinghouseResponseAsync(BusinessPartnerNumber, data, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
+        ex.Message.Should().Contain($"No companyApplication for BPN {BusinessPartnerNumber} is not in status SUBMITTED");
     }
 
     #endregion
@@ -487,6 +523,51 @@ public class RegistrationBusinessLogicTest
         A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
         entry.Comment.Should().Be(comment);
         entry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.FAILED);
+    }
+
+    #endregion
+    
+    #region GetChecklistForApplicationAsync
+
+    [Fact]
+    public async Task GetChecklistForApplicationAsync_WithNotExistingApplication_ThrowsNotFoundException()
+    {
+        // Arrange
+        var applicationId = _fixture.Create<Guid>();
+        A.CallTo(() => _applicationRepository.GetApplicationChecklistData(applicationId))
+            .ReturnsLazily(() => new ValueTuple<bool, IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId, string?)>>());
+        
+        //Act
+        async Task Act() => await _logic.GetChecklistForApplicationAsync(applicationId).ConfigureAwait(false);
+        
+        // Assert
+        var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
+        ex.Message.Should().Be($"Application {applicationId} does not exists");
+    }
+
+    [Fact]
+    public async Task GetChecklistForApplicationAsync_WithValidApplication_ReturnsExpected()
+    {
+        // Arrange
+        var applicationId = _fixture.Create<Guid>();
+        var list = new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId, string?>[]
+        {
+            new(ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE, null),
+            new(ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.DONE, null),
+            new(ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.FAILED, "error occured"),
+            new(ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.IN_PROGRESS, null),
+            new(ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.IN_PROGRESS, null),
+        };
+        A.CallTo(() => _applicationRepository.GetApplicationChecklistData(applicationId))
+            .ReturnsLazily(() => new ValueTuple<bool, IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId, string?)>>(true, list));
+        
+        //Act
+        var result = await _logic.GetChecklistForApplicationAsync(applicationId).ConfigureAwait(false);
+        
+        // Assert
+        result.Should().NotBeNull().And.NotBeEmpty().And.HaveCount(5);
+        result.Where(x => x.Retriggerable).Should().HaveCount(3);
+        result.Where(x => x.Status == ApplicationChecklistEntryStatusId.FAILED).Should().ContainSingle();
     }
 
     #endregion

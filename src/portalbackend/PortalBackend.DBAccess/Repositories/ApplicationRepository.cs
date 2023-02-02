@@ -415,4 +415,18 @@ public class ApplicationRepository : IApplicationRepository
                         countryAssignedIdentifier => countryAssignedIdentifier.UniqueIdentifierId,
                         (companyIdentifier,countryAssignedIdentifier) => new ValueTuple<BpdmIdentifierId,string>(countryAssignedIdentifier.BpdmIdentifierId!.Value, companyIdentifier.Value)))))
             .SingleOrDefaultAsync();
+
+    /// <inheritdoc />
+    public Task<(bool Exists, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId, string? Comment)> ChecklistData)> GetApplicationChecklistData(Guid applicationId) =>
+        _dbContext.CompanyApplications
+            .Where(x => x.Id == applicationId)
+            .Select(x => new ValueTuple<bool, IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId, string?)>>(
+                    true,
+                    x.ApplicationChecklistEntries
+                        .Where(ace => ace.ApplicationChecklistEntryTypeId != ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION)
+                        .Select(ace => new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId, string?>(
+                            ace.ApplicationChecklistEntryTypeId,
+                            ace.ApplicationChecklistEntryStatusId,
+                            ace.Comment))))
+            .SingleOrDefaultAsync();
 }

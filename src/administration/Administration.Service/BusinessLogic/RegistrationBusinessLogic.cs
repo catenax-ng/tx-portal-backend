@@ -303,17 +303,31 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
     /// <inheritdoc />
     public async Task ProcessClearinghouseResponseAsync(string bpn, ClearinghouseResponseData data, CancellationToken cancellationToken)
     {
-        var result = await _portalRepositories.GetInstance<IApplicationRepository>().GetSubmittedApplicationIdsByBpn(bpn).ToListAsync().ConfigureAwait(false);
+        var result = await _portalRepositories.GetInstance<IApplicationRepository>().GetSubmittedApplicationIdsByBpn(bpn).ToListAsync(cancellationToken).ConfigureAwait(false);
         if (!result.Any())
         {
             throw new NotFoundException($"No companyApplication for BPN {bpn} is not in status SUBMITTED");
         }
-        if (result.Count() > 1)
+        if (result.Count > 1)
         {
             throw new ConflictException($"more than one companyApplication in status SUBMITTED found for BPN {bpn} [{string.Join(", ",result)}]");
         }
         await _clearinghouseBusinessLogic.ProcessEndClearinghouse(result.Single(), data, cancellationToken).ConfigureAwait(false);
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<ChecklistDetails>> GetChecklistForApplicationAsync(Guid applicationId)
+    {
+        var data = await _portalRepositories.GetInstance<IApplicationRepository>()
+            .GetApplicationChecklistData(applicationId)
+            .ConfigureAwait(false);
+        if (data == default)
+        {
+            throw new NotFoundException($"Application {applicationId} does not exists");
+        }
+
+        return data.ChecklistData.Select(x => new ChecklistDetails(x.TypeId, x.StatusId, x.Comment, x.TypeId.IsAutomated()));
     }
 
     /// <inheritdoc />
