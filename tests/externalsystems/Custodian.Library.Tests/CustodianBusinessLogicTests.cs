@@ -18,6 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Custodian.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
@@ -39,8 +40,8 @@ public class CustodianBusinessLogicTests
     private readonly IApplicationRepository _applicationRepository;
     
     private readonly ICustodianService _custodianService;
-    
     private readonly CustodianBusinessLogic _logic;
+    private readonly IChecklistService _checklistService;
 
     public CustodianBusinessLogicTests()
     {
@@ -52,57 +53,11 @@ public class CustodianBusinessLogicTests
         var portalRepository = A.Fake<IPortalRepositories>();
         _applicationRepository = A.Fake<IApplicationRepository>();
         _custodianService = A.Fake<ICustodianService>();
+        _checklistService = A.Fake<IChecklistService>();
 
         A.CallTo(() => portalRepository.GetInstance<IApplicationRepository>()).Returns(_applicationRepository);
 
-        _logic = new CustodianBusinessLogic(portalRepository, _custodianService);
-    }
-
-    #endregion
-
-    #region Create Wallet
-
-    [Fact]
-    public async Task CreateWallet_WithNotExistingApplication_ThrowsConflictException()
-    {
-        // Arrange
-        var applicationId = Guid.NewGuid();
-        SetupForCreateWallet();
-        
-        // Act
-        async Task Act() => await _logic.CreateWalletAsync(applicationId, CancellationToken.None).ConfigureAwait(false);
-
-        // Assert
-        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
-        ex.Message.Should().Be($"CompanyApplication {applicationId} is not in status SUBMITTED");
-    }
-
-    [Fact]
-    public async Task CreateWallet_WithApplicationWithoutBpn_ThrowsConflictException()
-    {
-        // Arrange
-        SetupForCreateWallet();
-
-        // Act
-        async Task Act() => await _logic.CreateWalletAsync(IdWithoutBpn, CancellationToken.None).ConfigureAwait(false);
-
-        // Assert
-        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
-    }
-
-    [Fact]
-    public async Task CreateWallet_WithValidData_CallsService()
-    {
-        // Arrange
-        SetupForCreateWallet();
-
-        // Act
-        var result = await _logic.CreateWalletAsync(IdWithBpn, CancellationToken.None).ConfigureAwait(false);
-
-        // Assert
-        result.Should().Be("It worked.");
-        A.CallTo(() => _custodianService.CreateWalletAsync(ValidBpn, ValidCompanyName, A<CancellationToken>._))
-            .MustHaveHappenedOnceExactly();
+        _logic = new CustodianBusinessLogic(portalRepository, _custodianService, _checklistService);
     }
 
     #endregion
@@ -140,7 +95,54 @@ public class CustodianBusinessLogicTests
     }
 
     #endregion
-    
+
+    #region Create Wallet
+
+    [Fact]
+    public async Task CreateWallet_WithNotExistingApplication_ThrowsConflictException()
+    {
+        // Arrange
+        var applicationId = Guid.NewGuid();
+        SetupForCreateWallet();
+        
+        // Act
+        async Task Act() => await _logic.CreateIdentityWalletAsync(applicationId, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be($"CompanyApplication {applicationId} is not in status SUBMITTED");
+    }
+
+    [Fact]
+    public async Task CreateWallet_WithApplicationWithoutBpn_ThrowsConflictException()
+    {
+        // Arrange
+        SetupForCreateWallet();
+
+        // Act
+        async Task Act() => await _logic.CreateIdentityWalletAsync(IdWithoutBpn, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+    }
+
+    [Fact]
+    public async Task CreateWallet_WithValidData_CallsService()
+    {
+        // Arrange
+        SetupForCreateWallet();
+
+        // Act
+        var result = await _logic.CreateIdentityWalletAsync(IdWithBpn, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        result.Should().Be("It worked.");
+        A.CallTo(() => _custodianService.CreateWalletAsync(ValidBpn, ValidCompanyName, A<CancellationToken>._))
+            .MustHaveHappenedOnceExactly();
+    }
+
+    #endregion
+
     #region Setup
     
     private void SetupForCreateWallet()
