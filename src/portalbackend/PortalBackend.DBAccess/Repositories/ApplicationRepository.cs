@@ -401,9 +401,10 @@ public class ApplicationRepository : IApplicationRepository
                 companyUser.IamUser!.UserEntityId,
                 companyUser.CompanyUserAssignedRoles
                     .Where(x => x.UserRole!.Offer!.AppInstances.Any(ai => iamClientIds.Contains(ai.IamClient!.ClientClientId)))
-                    .Select(companyUserAssignedRole => new ValueTuple<string, Guid>(
+                    .Select(companyUserAssignedRole => new ValueTuple<string, Guid, IEnumerable<string>>(
                         companyUserAssignedRole.UserRole!.UserRoleText,
-                        companyUserAssignedRole.UserRoleId
+                        companyUserAssignedRole.UserRoleId,
+                        companyUserAssignedRole.UserRole!.Offer!.AppInstances.Select(x => x.IamClient!.ClientClientId)
                     ))))
             .AsAsyncEnumerable();
 }

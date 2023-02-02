@@ -23,4 +23,4 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 public record UserRoleDeletionData(
     Guid CompanyUserId,
     string UserEntityId,
-    IEnumerable<(string UserRoleText, Guid UserRoleId)> RolesToDelete);
+    IEnumerable<(string UserRoleText, Guid UserRoleId, IEnumerable<string> ClientClientIds)> RolesToDelete);

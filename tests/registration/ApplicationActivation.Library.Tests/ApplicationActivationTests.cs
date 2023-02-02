@@ -584,19 +584,20 @@ public class ApplicationActivationTests
                 "1",
                 new[]
                 {
-                    new ValueTuple<string, Guid>("Company Admin", CompanyUserRoleId)
+                    new ValueTuple<string, Guid, IEnumerable<string>>("Company Admin", CompanyUserRoleId, new[] {"remove-id"})
                 }),
             new(
                 CompanyUserId2,
                 "2",
                 new[]
                 {
-                    new ValueTuple<string, Guid>("Company Admin", CompanyUserRoleId)
+                    new ValueTuple<string, Guid, IEnumerable<string>>("Company Admin", CompanyUserRoleId, new[] {"remove-id"})
                 }),
             new(
                 CompanyUserId3,
                 "3",
-                new List<(string UserRoleText, Guid UserRoleId)>())
+                new List<(string UserRoleText, Guid UserRoleId, IEnumerable<string> ClientClientIds)>()
+                )
         };
         A.CallTo(() => _applicationRepository.GetUserDataForRoleDeletionByIamClientIds(Id, A<IEnumerable<string>>.That.Matches(x => x.Contains("remove-id") && x.Count() == 1)))
             .Returns(result.ToAsyncEnumerable());
