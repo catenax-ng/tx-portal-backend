@@ -58,7 +58,6 @@ public class ChecklistServiceTests
     private readonly IBpdmBusinessLogic _bpdmBusinessLogic;
     private readonly ICustodianBusinessLogic _custodianBusinessLogic;
     private readonly IClearinghouseBusinessLogic _clearinghouseBusinessLogic;
-    private readonly ISdFactoryBusinessLogic _sdFactoryBusinessLogic;
     private readonly ChecklistService _service;
 
     public ChecklistServiceTests()
@@ -76,13 +75,12 @@ public class ChecklistServiceTests
         _bpdmBusinessLogic = A.Fake<IBpdmBusinessLogic>();
         _custodianBusinessLogic = A.Fake<ICustodianBusinessLogic>();
         _clearinghouseBusinessLogic = A.Fake<IClearinghouseBusinessLogic>();
-        _sdFactoryBusinessLogic = A.Fake<ISdFactoryBusinessLogic>();
 
         A.CallTo(() => _portalRepositories.GetInstance<IApplicationRepository>()).Returns(_applicationRepository);
         A.CallTo(() => _portalRepositories.GetInstance<IApplicationChecklistRepository>()).Returns(_applicationChecklistRepository);
         A.CallTo(() => _portalRepositories.GetInstance<ICompanyRepository>()).Returns(_companyRepository);
 
-        _service = new ChecklistService(_portalRepositories, _bpdmBusinessLogic, _custodianBusinessLogic, _clearinghouseBusinessLogic, _sdFactoryBusinessLogic, A.Fake<ILogger<IChecklistService>>());
+        _service = new ChecklistService(_portalRepositories, _bpdmBusinessLogic, _custodianBusinessLogic, _clearinghouseBusinessLogic, A.Fake<ILogger<IChecklistService>>());
     }
     
     #region TriggerBpnDataPush

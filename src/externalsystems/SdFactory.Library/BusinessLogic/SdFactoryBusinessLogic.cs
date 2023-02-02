@@ -26,7 +26,6 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using System.Collections.Immutable;
 
-
 namespace Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.BusinessLogic;
 
 public class SdFactoryBusinessLogic : ISdFactoryBusinessLogic

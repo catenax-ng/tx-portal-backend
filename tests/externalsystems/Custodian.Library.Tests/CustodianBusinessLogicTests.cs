@@ -18,10 +18,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using System.Collections.Immutable;
+using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Custodian.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Custodian.Library.Tests;
 
@@ -39,8 +43,8 @@ public class CustodianBusinessLogicTests
     private readonly IApplicationRepository _applicationRepository;
     
     private readonly ICustodianService _custodianService;
-    
     private readonly CustodianBusinessLogic _logic;
+    private readonly IChecklistService _checklistService;
 
     public CustodianBusinessLogicTests()
     {
@@ -52,57 +56,11 @@ public class CustodianBusinessLogicTests
         var portalRepository = A.Fake<IPortalRepositories>();
         _applicationRepository = A.Fake<IApplicationRepository>();
         _custodianService = A.Fake<ICustodianService>();
+        _checklistService = A.Fake<IChecklistService>();
 
         A.CallTo(() => portalRepository.GetInstance<IApplicationRepository>()).Returns(_applicationRepository);
 
-        _logic = new CustodianBusinessLogic(portalRepository, _custodianService);
-    }
-
-    #endregion
-
-    #region Create Wallet
-
-    [Fact]
-    public async Task CreateWallet_WithNotExistingApplication_ThrowsConflictException()
-    {
-        // Arrange
-        var applicationId = Guid.NewGuid();
-        SetupForCreateWallet();
-        
-        // Act
-        async Task Act() => await _logic.CreateWalletAsync(applicationId, CancellationToken.None).ConfigureAwait(false);
-
-        // Assert
-        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
-        ex.Message.Should().Be($"CompanyApplication {applicationId} is not in status SUBMITTED");
-    }
-
-    [Fact]
-    public async Task CreateWallet_WithApplicationWithoutBpn_ThrowsConflictException()
-    {
-        // Arrange
-        SetupForCreateWallet();
-
-        // Act
-        async Task Act() => await _logic.CreateWalletAsync(IdWithoutBpn, CancellationToken.None).ConfigureAwait(false);
-
-        // Assert
-        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
-    }
-
-    [Fact]
-    public async Task CreateWallet_WithValidData_CallsService()
-    {
-        // Arrange
-        SetupForCreateWallet();
-
-        // Act
-        var result = await _logic.CreateWalletAsync(IdWithBpn, CancellationToken.None).ConfigureAwait(false);
-
-        // Assert
-        result.Should().Be("It worked.");
-        A.CallTo(() => _custodianService.CreateWalletAsync(ValidBpn, ValidCompanyName, A<CancellationToken>._))
-            .MustHaveHappenedOnceExactly();
+        _logic = new CustodianBusinessLogic(portalRepository, _custodianService, _checklistService);
     }
 
     #endregion
@@ -140,13 +98,132 @@ public class CustodianBusinessLogicTests
     }
 
     #endregion
-    
+
+    #region Create Wallet
+
+    [Fact]
+    public async Task CreateWallet_WithBpnChecklistFailed_Returns()
+    {
+        // Arrange
+        var applicationId = Guid.NewGuid();
+        var checklist = new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
+            {
+                { ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.FAILED }
+            }
+            .ToImmutableDictionary();
+        var context = new IChecklistService.WorkerChecklistProcessStepData(applicationId, checklist, Enumerable.Empty<ProcessStep>());
+        SetupForCreateWallet();
+        
+        // Act
+        var result = await _logic.CreateIdentityWalletAsync(context, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        result.Item3.Should().BeTrue();
+        A.CallTo(() =>  _custodianService.CreateWalletAsync(A<string>._, A<string>._, A<CancellationToken>._)).MustNotHaveHappened();
+        A.CallTo(() => _checklistService.ScheduleProcessSteps(context, A<IEnumerable<ProcessStepTypeId>>._)).MustNotHaveHappened();
+    }
+
+    [Fact]
+    public async Task CreateWallet_WithRegistrationVerificationFailed_Returns()
+    {
+        // Arrange
+        var applicationId = Guid.NewGuid();
+        var checklist = new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
+            {
+                { ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.DONE },
+                { ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.FAILED }
+            }
+            .ToImmutableDictionary();
+        var context = new IChecklistService.WorkerChecklistProcessStepData(applicationId, checklist, Enumerable.Empty<ProcessStep>());
+        SetupForCreateWallet();
+        
+        // Act
+        var result = await _logic.CreateIdentityWalletAsync(context, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        result.Item3.Should().BeTrue();
+        A.CallTo(() =>  _custodianService.CreateWalletAsync(A<string>._, A<string>._, A<CancellationToken>._)).MustNotHaveHappened();
+        A.CallTo(() => _checklistService.ScheduleProcessSteps(context, A<IEnumerable<ProcessStepTypeId>>._)).MustNotHaveHappened();
+    }
+
+    [Fact]
+    public async Task CreateWallet_WithNotExistingApplication_ThrowsConflictException()
+    {
+        // Arrange
+        var applicationId = Guid.NewGuid();
+        var checklist = new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
+            {
+                { ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.DONE },
+                { ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE },
+                { ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.TO_DO },
+            }
+            .ToImmutableDictionary();
+        var context = new IChecklistService.WorkerChecklistProcessStepData(applicationId, checklist, Enumerable.Empty<ProcessStep>());
+        SetupForCreateWallet();
+        
+        // Act
+        async Task Act() => await _logic.CreateIdentityWalletAsync(context, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be($"CompanyApplication {applicationId} is not in status SUBMITTED");
+    }
+
+    [Fact]
+    public async Task CreateWallet_WithApplicationWithoutBpn_ThrowsConflictException()
+    {
+        // Arrange
+        var checklist = new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
+            {
+                { ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.DONE },
+                { ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE },
+                { ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.TO_DO },
+            }
+            .ToImmutableDictionary();
+        var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithoutBpn, checklist, Enumerable.Empty<ProcessStep>());
+        SetupForCreateWallet();
+
+        // Act
+        async Task Act() => await _logic.CreateIdentityWalletAsync(context, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be($"BusinessPartnerNumber (bpn) for CompanyApplications {IdWithoutBpn} company {CompanyId} is empty");
+    }
+
+    [Fact]
+    public async Task CreateWallet_WithValidData_CallsService()
+    {
+        // Arrange
+        var checklist = new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
+            {
+                { ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.DONE },
+                { ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE },
+                { ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.TO_DO },
+            }
+            .ToImmutableDictionary();
+        var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithBpn, checklist, Enumerable.Empty<ProcessStep>());
+        SetupForCreateWallet();
+
+        // Act
+        var result = await _logic.CreateIdentityWalletAsync(context, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        result.Item3.Should().BeTrue();
+        A.CallTo(() => _custodianService.CreateWalletAsync(ValidBpn, ValidCompanyName, A<CancellationToken>._))
+            .MustHaveHappenedOnceExactly();
+        A.CallTo(() => _checklistService.ScheduleProcessSteps(context, A<IEnumerable<ProcessStepTypeId>>.That.Matches(x => x.Single() == ProcessStepTypeId.START_CLEARING_HOUSE)))
+            .MustHaveHappenedOnceExactly();
+    }
+
+    #endregion
+
     #region Setup
     
     private void SetupForCreateWallet()
     {
         A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsForCreateWalletAsync(IdWithoutBpn))
-            .Returns(new ValueTuple<Guid, string, string?>(Guid.NewGuid(), ValidCompanyName, null));
+            .Returns(new ValueTuple<Guid, string, string?>(CompanyId, ValidCompanyName, null));
         A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsForCreateWalletAsync(IdWithBpn))
             .ReturnsLazily(() => new ValueTuple<Guid, string, string?>(CompanyId, ValidCompanyName, ValidBpn));
         A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsForCreateWalletAsync(A<Guid>.That.Not.Matches(x => x == IdWithBpn || x == IdWithoutBpn)))

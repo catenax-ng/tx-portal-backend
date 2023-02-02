@@ -65,11 +65,11 @@ public class ChecklistProcessor : IChecklistProcessor
 
         _stepExecutions = new (ApplicationChecklistEntryTypeId ApplicationChecklistEntryTypeId, ProcessStepTypeId ProcessStepTypeId, Func<IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)>> ProcessFunc) []
         {
-            new (ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL, (IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken) => _bpdmBusinessLogic.HandlePullLegalEntity(context, cancellationToken)),
-            new (ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ProcessStepTypeId.CREATE_IDENTITY_WALLET, (IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken) => _custodianBusinessLogic.CreateIdentityWalletAsync(context, cancellationToken)),
-            new (ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ProcessStepTypeId.START_CLEARING_HOUSE, (IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken) => _clearinghouseBusinessLogic.HandleStartClearingHouse(context, cancellationToken)),
-            new (ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP, (IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken) => _sdFactoryBusinessLogic.RegisterSelfDescription(context, cancellationToken)),
-            new (ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, ProcessStepTypeId.ACTIVATE_APPLICATION, (IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken) => _applicationActivationService.HandleApplicationActivation(context, cancellationToken)),
+            new (ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL, (context, cancellationToken) => _bpdmBusinessLogic.HandlePullLegalEntity(context, cancellationToken)),
+            new (ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ProcessStepTypeId.CREATE_IDENTITY_WALLET, (context, cancellationToken) => _custodianBusinessLogic.CreateIdentityWalletAsync(context, cancellationToken)),
+            new (ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ProcessStepTypeId.START_CLEARING_HOUSE, (context, cancellationToken) => _clearinghouseBusinessLogic.HandleStartClearingHouse(context, cancellationToken)),
+            new (ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP, (context, cancellationToken) => _sdFactoryBusinessLogic.RegisterSelfDescription(context, cancellationToken)),
+            new (ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, ProcessStepTypeId.ACTIVATE_APPLICATION, (context, cancellationToken) => _applicationActivationService.HandleApplicationActivation(context, cancellationToken)),
         }.ToImmutableDictionary(x => x.ProcessStepTypeId, x => (x.ApplicationChecklistEntryTypeId, x.ProcessFunc));
     }
 
