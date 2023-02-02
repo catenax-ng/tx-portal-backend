@@ -75,7 +75,7 @@ public class BatchDeleteService : BackgroundService
                         ))
                     .ToListAsync(stoppingToken)
                     .ConfigureAwait(false);
-                _logger.LogInformation("Cleaning up {DocumentCount} Documents, {AgreementIdsCount} AgreementAssignedDocuments and {OfferIdCount} OfferAssignedDocuments", documentData.Count, documentData.SelectMany(x => x.AgreementIds).Count(), documentData.SelectMany(x => x.OfferIds).Count());
+                _logger.LogInformation("Cleaning up {DocumentCount} Documents, {AgreementIdsCount} AgreementAssignedDocuments and {OfferIdCount} OfferAssignedDocuments", documentData.Count, null, documentData.SelectMany(x => x.OfferIds).Count());
 
                 
                 dbContext.OfferAssignedDocuments.RemoveRange(documentData.SelectMany(data => data.OfferIds.Select(offerId => new OfferAssignedDocument(offerId, data.DocumentId))));

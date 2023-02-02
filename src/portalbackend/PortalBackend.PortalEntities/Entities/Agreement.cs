@@ -71,5 +71,5 @@ public class Agreement : IBaseEntity
     public virtual ICollection<AgreementAssignedCompanyRole> AgreementAssignedCompanyRoles { get; private set; }
     public virtual ICollection<AgreementAssignedOffer> AgreementAssignedOffers { get; private set; }
     public virtual ICollection<AgreementAssignedOfferType> AgreementAssignedOfferTypes { get; private set; }
-    public virtual Document? Document { get; private set; }
+    public virtual Document? Document { get; set; }
 }
