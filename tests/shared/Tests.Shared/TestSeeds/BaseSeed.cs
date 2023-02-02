@@ -368,18 +368,22 @@ public static class BaseSeed
             new(new Guid("f6d3148b-2e2b-4688-a382-326d4232ee6e"), AgreementCategoryId.CX_FRAME_CONTRACT, "CatenaX Base Frame Agreement", DateTimeOffset.UtcNow)
             {
                 IssuerCompanyId = new Guid("2dc4249f-b5ca-4d42-bef1-7a7a950a4f87"),
+                DocumentId = new Guid("fda6c9cb-62be-4a98-99c1-d9c5a2df4aad")
             },
             new(new Guid("ac1cf001-7fbc-1f2f-817f-bce058019951"), AgreementCategoryId.DATA_CONTRACT, "Test Agreement", DateTimeOffset.UtcNow)
             {
                 IssuerCompanyId = new Guid("2dc4249f-b5ca-4d42-bef1-7a7a950a4f87"),
+                DocumentId = new Guid("fda6c9cb-62be-4a98-99c1-d9c5a2df4aad")
             },
             new(new Guid("ac1cf001-7fbc-1f2f-817f-bce058019952"), AgreementCategoryId.APP_CONTRACT, "App Agreement", DateTimeOffset.UtcNow)
             {
                 IssuerCompanyId = new Guid("2dc4249f-b5ca-4d42-bef1-7a7a950a4f87"),
+                DocumentId = new Guid("90a24c6d-1092-4590-ae89-a9d2bff1ea40")
             },
             new(new Guid("979a29b1-40c2-4169-979c-43c3156dbf64"), AgreementCategoryId.SERVICE_CONTRACT, "Service Agreement", DateTimeOffset.UtcNow)
             {
                 IssuerCompanyId = new Guid("2dc4249f-b5ca-4d42-bef1-7a7a950a4f87"),
+                DocumentId = new Guid("90a24c6d-1092-4590-ae89-a9d2bff1ea40")
             }
         });
         dbContext.Consents.AddRange(new List<Consent>
