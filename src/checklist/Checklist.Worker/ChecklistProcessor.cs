@@ -79,7 +79,7 @@ public class ChecklistProcessor : IChecklistProcessor
         ProcessStepTypeId.VERIFY_REGISTRATION,
     };
 
-    public async IAsyncEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId, bool Processed)> ProcessChecklist(Guid applicationId, IEnumerable<(ApplicationChecklistEntryTypeId EntryTypeId, ApplicationChecklistEntryStatusId EntryStatusId)> checklistEntries, IEnumerable<ProcessStep> processSteps, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> ProcessChecklist(Guid applicationId, IEnumerable<(ApplicationChecklistEntryTypeId EntryTypeId, ApplicationChecklistEntryStatusId EntryStatusId)> checklistEntries, IEnumerable<ProcessStep> processSteps, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var checklist = checklistEntries.ToDictionary(entry => entry.EntryTypeId, entry => entry.EntryStatusId);
         var workerSteps = new Queue<ProcessStep>(processSteps.ExceptBy(_manuelProcessSteps, step => step.ProcessStepTypeId));
@@ -142,7 +142,10 @@ public class ChecklistProcessor : IChecklistProcessor
                             });
                     modified = true;
                 }
-                yield return (execution.EntryTypeId, returnStatusId, modified);
+                if (modified)
+                {
+                    yield return (execution.EntryTypeId, returnStatusId);
+                }
             }
             else
             {

@@ -32,5 +32,5 @@ public interface IChecklistProcessor
     /// <param name="checklistEntries">The checklist entries to process</param>
     /// <param name="processSteps">The eligible processSteps</param>
     /// <param name="cancellationToken">Cancellation Token</param>
-    IAsyncEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId, bool Processed)> ProcessChecklist(Guid applicationId, IEnumerable<(ApplicationChecklistEntryTypeId EntryTypeId, ApplicationChecklistEntryStatusId EntryStatusId)> checklistEntries, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken);
+    IAsyncEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> ProcessChecklist(Guid applicationId, IEnumerable<(ApplicationChecklistEntryTypeId EntryTypeId, ApplicationChecklistEntryStatusId EntryStatusId)> checklistEntries, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken);
 }

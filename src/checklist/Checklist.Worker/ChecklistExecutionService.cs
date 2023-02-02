@@ -20,7 +20,6 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Org.Eclipse.TractusX.Portal.Backend.ApplicationActivation.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
@@ -70,7 +69,6 @@ public class ChecklistExecutionService
 
         using var checklistServiceScope = outerLoopScope.ServiceProvider.CreateScope();
         var checklistProcessor = checklistServiceScope.ServiceProvider.GetRequiredService<IChecklistProcessor>();
-        var applicationActivation = checklistServiceScope.ServiceProvider.GetRequiredService<IApplicationActivationService>();
         var checklistCreationService = checklistServiceScope.ServiceProvider.GetRequiredService<IChecklistCreationService>();
         var checklistRepositories = checklistServiceScope.ServiceProvider.GetRequiredService<IPortalRepositories>();
 
@@ -117,13 +115,10 @@ public class ChecklistExecutionService
         }
         var checklist = checklistEntries.ToDictionary(entry => entry.TypeId, entry => entry.StatusId);
 
-        await foreach (var (typeId, statusId, processed) in checklistProcessor.ProcessChecklist(applicationId, checklistEntries, processSteps, stoppingToken).WithCancellation(stoppingToken).ConfigureAwait(false))
+        await foreach (var (typeId, statusId) in checklistProcessor.ProcessChecklist(applicationId, checklistEntries, processSteps, stoppingToken).WithCancellation(stoppingToken).ConfigureAwait(false))
         {
-            if (processed)
-            {
-                await checklistRepositories.SaveAsync().ConfigureAwait(false);
-                checklistRepositories.Clear();
-            }
+            await checklistRepositories.SaveAsync().ConfigureAwait(false);
+            checklistRepositories.Clear();
             checklist[typeId] = statusId;
         }
         return checklist.Select(entry => (entry.Key, entry.Value));
