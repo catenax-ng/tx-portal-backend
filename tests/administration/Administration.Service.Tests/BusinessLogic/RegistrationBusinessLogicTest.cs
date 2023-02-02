@@ -370,13 +370,49 @@ public class RegistrationBusinessLogicTest
     [Fact]
     public async Task ProcessClearinghouseResponseAsync_WithValidData_CallsExpected()
     {
+        // Arrange
+        A.CallTo(() => _applicationRepository.GetSubmittedApplicationIdsByBpn(BusinessPartnerNumber))
+            .Returns(Enumerable.Repeat(CompanyId, 1).ToAsyncEnumerable());
+        
         // Act
         var data = _fixture.Create<ClearinghouseResponseData>();
         await _logic.ProcessClearinghouseResponseAsync(BusinessPartnerNumber, data, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() => _clearinghouseBusinessLogic.ProcessClearinghouseResponseAsync(BusinessPartnerNumber, data, CancellationToken.None))
+        A.CallTo(() => _clearinghouseBusinessLogic.ProcessEndClearinghouse(ApplicationId, data, CancellationToken.None))
             .MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task ProcessClearinghouseResponseAsync_WithMultipleApplications_ThrowsConflictException()
+    {
+        // Arrange
+        A.CallTo(() => _applicationRepository.GetSubmittedApplicationIdsByBpn(BusinessPartnerNumber))
+            .Returns(new []{ CompanyId, Guid.NewGuid() }.ToAsyncEnumerable());
+        
+        // Act
+        var data = _fixture.Create<ClearinghouseResponseData>();
+        async Task Act() => await _logic.ProcessClearinghouseResponseAsync(BusinessPartnerNumber, data, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Contain($"more than one companyApplication in status SUBMITTED found for BPN {BusinessPartnerNumber}");
+    }
+
+    [Fact]
+    public async Task ProcessClearinghouseResponseAsync_WithNoApplication_ThrowsNotFoundException()
+    {
+        // Arrange
+        A.CallTo(() => _applicationRepository.GetSubmittedApplicationIdsByBpn(BusinessPartnerNumber))
+            .Returns(Enumerable.Empty<Guid>().ToAsyncEnumerable());
+        
+        // Act
+        var data = _fixture.Create<ClearinghouseResponseData>();
+        async Task Act() => await _logic.ProcessClearinghouseResponseAsync(BusinessPartnerNumber, data, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
+        ex.Message.Should().Contain($"No companyApplication for BPN {BusinessPartnerNumber} is not in status SUBMITTED");
     }
 
     #endregion

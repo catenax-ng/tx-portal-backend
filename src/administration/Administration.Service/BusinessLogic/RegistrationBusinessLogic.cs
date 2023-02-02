@@ -303,12 +303,12 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
     /// <inheritdoc />
     public async Task ProcessClearinghouseResponseAsync(string bpn, ClearinghouseResponseData data, CancellationToken cancellationToken)
     {
-        var result = await _portalRepositories.GetInstance<IApplicationRepository>().GetSubmittedApplicationIdsByBpn(bpn).ToListAsync().ConfigureAwait(false);
+        var result = await _portalRepositories.GetInstance<IApplicationRepository>().GetSubmittedApplicationIdsByBpn(bpn).ToListAsync(cancellationToken).ConfigureAwait(false);
         if (!result.Any())
         {
             throw new NotFoundException($"No companyApplication for BPN {bpn} is not in status SUBMITTED");
         }
-        if (result.Count() > 1)
+        if (result.Count > 1)
         {
             throw new ConflictException($"more than one companyApplication in status SUBMITTED found for BPN {bpn} [{string.Join(", ",result)}]");
         }
@@ -327,12 +327,11 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
             throw new NotFoundException($"Application {applicationId} does not exists");
         }
 
-        return data.ChecklistData
-            .Select(x => new ChecklistDetails(x.TypeId, x.StatusId, x.Comment, x.TypeId.IsAutomated()));
+        return data.ChecklistData.Select(x => new ChecklistDetails(x.TypeId, x.StatusId, x.Comment, x.TypeId.IsAutomated()));
     }
 
     /// <inheritdoc />
-    public Task SetRegistrationVerification(Guid applicationId, bool approve, string? comment)
+    public Task SetRegistrationVerification(Guid applicationId, bool approve, string? comment = null)
     {
         if (!approve && string.IsNullOrWhiteSpace(comment))
         {

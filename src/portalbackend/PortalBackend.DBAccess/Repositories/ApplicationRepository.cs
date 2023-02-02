@@ -422,7 +422,8 @@ public class ApplicationRepository : IApplicationRepository
              .Where(x => x.Id == applicationId)
              .Select(x => new ValueTuple<bool, IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId, string?)>>(
                      true,
-                     x.ApplicationChecklistEntries.Select(ace => 
-                         new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId, string?>(ace.ApplicationChecklistEntryTypeId, ace.ApplicationChecklistEntryStatusId, ace.Comment))))
+                     x.ApplicationChecklistEntries
+                         .Where(ace => ace.ApplicationChecklistEntryTypeId != ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION)
+                         .Select(ace => new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId, string?>(ace.ApplicationChecklistEntryTypeId, ace.ApplicationChecklistEntryStatusId, ace.Comment))))
              .SingleOrDefaultAsync();
 }
