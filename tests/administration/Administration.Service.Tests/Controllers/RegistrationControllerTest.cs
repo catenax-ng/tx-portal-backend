@@ -65,22 +65,6 @@ public class RegistrationControllerTest
     }
 
     [Fact]
-    public async Task TriggerBpnDataPush_ReturnsNoContent()
-    {
-        //Arrange
-        var applicationId = _fixture.Create<Guid>();
-        A.CallTo(() => _logic.TriggerBpnDataPushAsync(IamUserId, applicationId, CancellationToken.None))
-            .ReturnsLazily(() => Task.CompletedTask);
-
-        //Act
-        var result = await this._controller.TriggerBpnDataPush(applicationId, CancellationToken.None).ConfigureAwait(false);
-
-        //Assert
-        A.CallTo(() => _logic.TriggerBpnDataPushAsync(IamUserId, applicationId, CancellationToken.None)).MustHaveHappenedOnceExactly();
-        Assert.IsType<NoContentResult>(result);
-    }
-
-    [Fact]
     public async Task GetCompanyWithAddressAsync_ReturnsExpectedResult()
     {
         //Arrange

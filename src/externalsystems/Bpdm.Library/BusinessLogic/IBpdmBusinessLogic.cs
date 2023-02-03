@@ -29,11 +29,10 @@ public interface IBpdmBusinessLogic
     /// <summary>
     /// Triggers the bpn data push
     /// </summary>
-    /// <param name="applicationId">Id of the application</param>
-    /// <param name="iamUserId">Id of the current user</param>
+    /// <param name="context">The context</param>
     /// <param name="cancellationToken">Cancellation Token</param>
     /// <returns>Returns <c>true</c> if the service call was successful, otherwise <c>false</c></returns>
-    Task<bool> PushLegalEntity(Guid applicationId, string iamUserId, CancellationToken cancellationToken);
+    Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)> PushLegalEntity(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken);
 
     Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)> HandlePullLegalEntity(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken);    
 }

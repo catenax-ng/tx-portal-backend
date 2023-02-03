@@ -21,7 +21,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Models;
-using Org.Eclipse.TractusX.Portal.Backend.Bpdm.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.Models;
@@ -42,7 +41,6 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
     private readonly RegistrationSettings _settings;
     private readonly IMailingService _mailingService;
     private readonly IChecklistService _checklistService;
-    private readonly IBpdmBusinessLogic _bpdmBusinessLogic;
     private readonly IClearinghouseBusinessLogic _clearinghouseBusinessLogic;
 
     public RegistrationBusinessLogic(
@@ -50,14 +48,12 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
         IOptions<RegistrationSettings> configuration, 
         IMailingService mailingService,
         IChecklistService checklistService,
-        IBpdmBusinessLogic bpdmBusinessLogic,
         IClearinghouseBusinessLogic clearinghouseBusinessLogic)
     {
         _portalRepositories = portalRepositories;
         _settings = configuration.Value;
         _mailingService = mailingService;
         _checklistService = checklistService;
-        _bpdmBusinessLogic = bpdmBusinessLogic;
         _clearinghouseBusinessLogic = clearinghouseBusinessLogic;
     }
 
@@ -366,13 +362,6 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
             approve && businessPartnerSuccess
                 ? new [] { ProcessStepTypeId.CREATE_IDENTITY_WALLET }
                 : null);
-        await _portalRepositories.SaveAsync().ConfigureAwait(false);
-    }
-
-    /// <inheritdoc />
-    public async Task TriggerBpnDataPushAsync(string iamUserId, Guid applicationId, CancellationToken cancellationToken)
-    {
-        await _bpdmBusinessLogic.PushLegalEntity(applicationId, iamUserId, cancellationToken).ConfigureAwait(false);
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
 

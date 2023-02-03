@@ -159,14 +159,14 @@ public class RegistrationBusinessLogicTest
         var data = _fixture.Build<CompanyUserRoleWithAddress>()
             .With(x => x.AgreementsData, _fixture.CreateMany<AgreementsData>(20))
             .Create();
-        A.CallTo(() => _applicationRepository.GetCompanyUserRoleWithAdressUntrackedAsync(applicationId))
+        A.CallTo(() => _applicationRepository.GetCompanyUserRoleWithAddressUntrackedAsync(applicationId))
             .Returns(data);
 
         // Act
         var result = await _logic.GetCompanyWithAddressAsync(applicationId).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() => _applicationRepository.GetCompanyUserRoleWithAdressUntrackedAsync(applicationId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _applicationRepository.GetCompanyUserRoleWithAddressUntrackedAsync(applicationId)).MustHaveHappenedOnceExactly();
         result.Should().BeOfType<CompanyWithAddressData>();
         result.Should().Match<CompanyWithAddressData>(r =>
             r.CompanyId == data.CompanyId &&
@@ -205,14 +205,14 @@ public class RegistrationBusinessLogicTest
             .With(x => x.CountryDe, (string?)null)
             .With(x => x.InvitedCompanyUserData, _fixture.CreateMany<Guid>().Select(id => new InvitedCompanyUserData(id, null, null, null)))
             .Create();
-        A.CallTo(() => _applicationRepository.GetCompanyUserRoleWithAdressUntrackedAsync(applicationId))
+        A.CallTo(() => _applicationRepository.GetCompanyUserRoleWithAddressUntrackedAsync(applicationId))
             .Returns(data);
 
         // Act
         var result = await _logic.GetCompanyWithAddressAsync(applicationId).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() => _applicationRepository.GetCompanyUserRoleWithAdressUntrackedAsync(applicationId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _applicationRepository.GetCompanyUserRoleWithAddressUntrackedAsync(applicationId)).MustHaveHappenedOnceExactly();
         result.Should().BeOfType<CompanyWithAddressData>();
         result.Should().Match<CompanyWithAddressData>(r =>
             r.CompanyId == data.CompanyId &&
@@ -234,29 +234,6 @@ public class RegistrationBusinessLogicTest
 
     #endregion
 
-    #region Trigger bpn data push
-
-    [Fact]
-    public async Task TriggerBpnDataPush_CallsChecklistService()
-    {
-        // Act
-        var data = _fixture
-            .Build<BpdmData>()
-            .With(x => x.ApplicationStatusId, CompanyApplicationStatusId.SUBMITTED)
-            .With(x => x.BusinessPartnerNumber, (string?)null)
-            .Create();
-        A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(IamUserId, ApplicationId))
-            .Returns((true, data, true));
-
-        await _logic.TriggerBpnDataPushAsync(IamUserId, ApplicationId, CancellationToken.None).ConfigureAwait(false);
-
-        // Assert
-        A.CallTo(() => _checklistService.TriggerBpnDataPush(ApplicationId, IamUserId, CancellationToken.None)).MustHaveHappenedOnceExactly();
-        A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
-    }
-    
-    #endregion
-    
     #region UpdateCompanyBpn
     
     [Fact]
@@ -427,7 +404,7 @@ public class RegistrationBusinessLogicTest
         SetupForRegistrationVerification();
         
         // Act
-        async Task Act() => await _logic.SetRegistrationVerification(applicationId, true).ConfigureAwait(false);
+        async Task Act() => await _logic.SetRegistrationVerification(applicationId, true, null).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
@@ -441,7 +418,7 @@ public class RegistrationBusinessLogicTest
         SetupForRegistrationVerification();
 
         // Act
-        async Task Act() => await _logic.SetRegistrationVerification(IdWithStateCreated, true).ConfigureAwait(false);
+        async Task Act() => await _logic.SetRegistrationVerification(IdWithStateCreated, true, null).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -455,7 +432,7 @@ public class RegistrationBusinessLogicTest
         SetupForRegistrationVerification();
 
         // Act
-        async Task Act() => await _logic.SetRegistrationVerification(IdWithoutBpn, true).ConfigureAwait(false);
+        async Task Act() => await _logic.SetRegistrationVerification(IdWithoutBpn, true, null).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -469,7 +446,7 @@ public class RegistrationBusinessLogicTest
         SetupForRegistrationVerification();
 
         // Act
-        async Task Act() => await _logic.SetRegistrationVerification(IdWithChecklistEntryInProgress, true).ConfigureAwait(false);
+        async Task Act() => await _logic.SetRegistrationVerification(IdWithChecklistEntryInProgress, true, null).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -483,7 +460,7 @@ public class RegistrationBusinessLogicTest
         SetupForRegistrationVerification();
 
         // Act
-        async Task Act() => await _logic.SetRegistrationVerification(IdWithBpn, false).ConfigureAwait(false);
+        async Task Act() => await _logic.SetRegistrationVerification(IdWithBpn, false, null).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Act);
@@ -498,7 +475,7 @@ public class RegistrationBusinessLogicTest
         SetupForRegistrationVerification(entry);
 
         // Act
-        await _logic.SetRegistrationVerification(IdWithBpn, true).ConfigureAwait(false);
+        await _logic.SetRegistrationVerification(IdWithBpn, true, null).ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _applicationChecklistRepository.AttachAndModifyApplicationChecklist(IdWithBpn, ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, A<Action<ApplicationChecklistEntry>>._)).MustHaveHappenedOnceExactly();

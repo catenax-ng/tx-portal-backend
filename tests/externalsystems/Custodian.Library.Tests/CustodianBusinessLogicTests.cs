@@ -111,7 +111,7 @@ public class CustodianBusinessLogicTests
                 { ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.FAILED }
             }
             .ToImmutableDictionary();
-        var context = new IChecklistService.WorkerChecklistProcessStepData(applicationId, checklist, Enumerable.Empty<ProcessStep>());
+        var context = new IChecklistService.WorkerChecklistProcessStepData(applicationId, checklist, Enumerable.Empty<ProcessStepTypeId>());
         SetupForCreateWallet();
         
         // Act
@@ -134,7 +134,7 @@ public class CustodianBusinessLogicTests
                 { ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.FAILED }
             }
             .ToImmutableDictionary();
-        var context = new IChecklistService.WorkerChecklistProcessStepData(applicationId, checklist, Enumerable.Empty<ProcessStep>());
+        var context = new IChecklistService.WorkerChecklistProcessStepData(applicationId, checklist, Enumerable.Empty<ProcessStepTypeId>());
         SetupForCreateWallet();
         
         // Act
@@ -158,7 +158,7 @@ public class CustodianBusinessLogicTests
                 { ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.TO_DO },
             }
             .ToImmutableDictionary();
-        var context = new IChecklistService.WorkerChecklistProcessStepData(applicationId, checklist, Enumerable.Empty<ProcessStep>());
+        var context = new IChecklistService.WorkerChecklistProcessStepData(applicationId, checklist, Enumerable.Empty<ProcessStepTypeId>());
         SetupForCreateWallet();
         
         // Act
@@ -180,7 +180,7 @@ public class CustodianBusinessLogicTests
                 { ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.TO_DO },
             }
             .ToImmutableDictionary();
-        var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithoutBpn, checklist, Enumerable.Empty<ProcessStep>());
+        var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithoutBpn, checklist, Enumerable.Empty<ProcessStepTypeId>());
         SetupForCreateWallet();
 
         // Act
@@ -202,7 +202,7 @@ public class CustodianBusinessLogicTests
                 { ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.TO_DO },
             }
             .ToImmutableDictionary();
-        var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithBpn, checklist, Enumerable.Empty<ProcessStep>());
+        var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithBpn, checklist, Enumerable.Empty<ProcessStepTypeId>());
         SetupForCreateWallet();
 
         // Act
@@ -212,8 +212,7 @@ public class CustodianBusinessLogicTests
         result.Item3.Should().BeTrue();
         A.CallTo(() => _custodianService.CreateWalletAsync(ValidBpn, ValidCompanyName, A<CancellationToken>._))
             .MustHaveHappenedOnceExactly();
-        A.CallTo(() => _checklistService.ScheduleProcessSteps(context, A<IEnumerable<ProcessStepTypeId>>.That.Matches(x => x.Single() == ProcessStepTypeId.START_CLEARING_HOUSE)))
-            .MustHaveHappenedOnceExactly();
+        result.Item2.Should().ContainSingle().And.Match(x => x.Single() == ProcessStepTypeId.START_CLEARING_HOUSE);
     }
 
     #endregion

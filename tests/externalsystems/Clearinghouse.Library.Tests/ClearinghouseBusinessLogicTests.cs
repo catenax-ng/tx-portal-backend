@@ -91,7 +91,7 @@ public class ClearinghouseBusinessLogicTests
                 { ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO },
             }
             .ToImmutableDictionary();
-        var context = new IChecklistService.WorkerChecklistProcessStepData(applicationId, checklist, Enumerable.Empty<ProcessStep>());
+        var context = new IChecklistService.WorkerChecklistProcessStepData(applicationId, checklist, Enumerable.Empty<ProcessStepTypeId>());
         SetupForHandleStartClearingHouse();
 
         // Act
@@ -114,7 +114,7 @@ public class ClearinghouseBusinessLogicTests
                 {ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO},
             }
             .ToImmutableDictionary();
-        var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithApplicationCreated, checklist, Enumerable.Empty<ProcessStep>());
+        var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithApplicationCreated, checklist, Enumerable.Empty<ProcessStepTypeId>());
         SetupForHandleStartClearingHouse();
 
         // Act
@@ -137,7 +137,7 @@ public class ClearinghouseBusinessLogicTests
                 {ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO},
             }
             .ToImmutableDictionary();
-        var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithoutBpn, checklist, Enumerable.Empty<ProcessStep>());
+        var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithoutBpn, checklist, Enumerable.Empty<ProcessStepTypeId>());
         SetupForHandleStartClearingHouse();
 
         // Act
@@ -160,7 +160,7 @@ public class ClearinghouseBusinessLogicTests
                 {ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO},
             }
             .ToImmutableDictionary();
-        var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithBpn, checklist, Enumerable.Empty<ProcessStep>());
+        var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithBpn, checklist, Enumerable.Empty<ProcessStepTypeId>());
         SetupForHandleStartClearingHouse();
 
         // Act

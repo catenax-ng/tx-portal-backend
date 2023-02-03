@@ -31,40 +31,29 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Bpdm.Library.BusinessLogic;
 public class BpdmBusinessLogic : IBpdmBusinessLogic
 {
     private readonly IPortalRepositories _portalRepositories;
-    private readonly IChecklistService _checklistService;
     private readonly IBpdmService _bpdmService;
 
-    public BpdmBusinessLogic(IPortalRepositories portalRepositories, IBpdmService bpdmService, IChecklistService checklistService)
+    public BpdmBusinessLogic(IPortalRepositories portalRepositories, IBpdmService bpdmService)
     {
         _portalRepositories = portalRepositories;
         _bpdmService = bpdmService;
-        _checklistService = checklistService;
     }
 
-    public async Task<bool> PushLegalEntity(Guid applicationId, string iamUserId, CancellationToken cancellationToken)
+    public async Task<(Action<ApplicationChecklistEntry>?, IEnumerable<ProcessStepTypeId>?, bool)> PushLegalEntity(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
     {
-        var (isValidApplicationId, applicationStatusId, data, isUserInCompany) = await _portalRepositories.GetInstance<IApplicationRepository>().GetBpdmDataForApplicationAsync(iamUserId, applicationId).ConfigureAwait(false);
+        var result = await _portalRepositories.GetInstance<IApplicationRepository>().GetBpdmDataForApplicationAsync(context.ApplicationId).ConfigureAwait(false);
 
-        if (!isValidApplicationId)
+        if (result == default)
         {
-            throw new NotFoundException($"Application {applicationId} does not exists.");
+            throw new NotFoundException($"Application {context.ApplicationId} does not exists.");
         }
 
-        if (!isUserInCompany)
-        {
-            throw new ForbiddenException($"User is not allowed to trigger Bpn Data Push for the application {applicationId}");
-        }
-
-        if (data == null)
+        if (result.BpdmData == null)
         {
             throw new UnexpectedConditionException($"BpdmData should never be null here");
         }
 
-        if (applicationStatusId != CompanyApplicationStatusId.SUBMITTED)
-        {
-            throw new ConflictException($"CompanyApplication {applicationId} is not in status SUBMITTED");
-        }
-
+        var data = result.BpdmData;
         if (!string.IsNullOrWhiteSpace(data.BusinessPartnerNumber))
         {
             throw new ConflictException($"BusinessPartnerNumber is already set");
@@ -85,17 +74,8 @@ public class BpdmBusinessLogic : IBpdmBusinessLogic
             throw new ConflictException("StreetName must not be empty");
         }
 
-        var context = await _checklistService
-            .VerifyChecklistEntryAndProcessSteps(
-                applicationId,
-                ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER,
-                new [] { ApplicationChecklistEntryStatusId.TO_DO },
-                ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH,
-                processStepTypeIds: new [] { ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL })
-            .ConfigureAwait(false);
-
         var bpdmTransferData = new BpdmTransferData(
-            applicationId.ToString(),
+            context.ApplicationId.ToString(),
             data.CompanyName,
             data.ShortName,
             data.Alpha2Code,
@@ -108,12 +88,10 @@ public class BpdmBusinessLogic : IBpdmBusinessLogic
 
         await _bpdmService.PutInputLegalEntity(bpdmTransferData, cancellationToken).ConfigureAwait(false);
 
-        _checklistService.FinalizeChecklistEntryAndProcessSteps(
-            context,
-            entry => entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.IN_PROGRESS,
-            new [] { ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL });
-        
-        return true;
+        return (
+            entry => entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE,
+            new [] { ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL },
+            true);
     }
 
     public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)> HandlePullLegalEntity(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
