@@ -18,14 +18,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using System.Linq.Expressions;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Seeding;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Base;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 
 namespace  Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Seeder;
@@ -118,16 +114,19 @@ public class BatchUpdateSeeder : ICustomSeeder
         if (data.Any())
         {
             var typeName = typeof(T).Name;
-            _logger.LogInformation("Started to Seed {TableName}", typeName);
             var entriesForUpdate = data
                 .Join(_context.Set<T>(), keySelector, keySelector, (dataEntry, dbEntry) => new ValueTuple<T, T>(dataEntry, dbEntry))
-                .Where(x => whereClause.Invoke(x))
+                .Where(whereClause.Invoke)
                 .ToList();
-            foreach (var dbEntry in entriesForUpdate)
+            if (entriesForUpdate.Any())
             {
-                updateEntries.Invoke(dbEntry.Item1, dbEntry.Item2);
+                _logger.LogInformation("Started to Update {EntryCount} entries of {TableName}", entriesForUpdate.Count, typeName);
+                foreach (var dbEntry in entriesForUpdate)
+                {
+                    updateEntries.Invoke(dbEntry.Item1, dbEntry.Item2);
+                }
+                _logger.LogInformation("Updated {TableName}", typeName);    
             }
-            _logger.LogInformation("Seeded {TableName}", typeName);
         }
     }
 }

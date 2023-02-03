@@ -18,17 +18,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using System.Reflection;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared.TestSeeds;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Configurations;
 using DotNet.Testcontainers.Containers;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Org.Eclipse.TractusX.Portal.Backend.Framework.Seeding.DependencyInjection;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Seeder;
 using Xunit;
 using Xunit.Extensions.AssemblyFixture;
@@ -39,7 +34,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Tests.Setup
 public class TestDbFixture : IAsyncLifetime
 {
     private readonly PostgreSqlTestcontainer _container;
-    private readonly IHost _host;
 
     public TestDbFixture()
     {
@@ -54,18 +48,6 @@ public class TestDbFixture : IAsyncLifetime
             .WithCleanUp(true)
             .WithName(Guid.NewGuid().ToString())
             .Build();
-        //
-        // var builder = Host.CreateDefaultBuilder()
-        //     .ConfigureServices((hostContext, services) =>
-        //     {
-        //         services.AddDbContext<PortalDbContext>(o =>
-        //                 o.UseNpgsql(_container.ConnectionString,
-        //                     x => x.MigrationsAssembly(Assembly.GetExecutingAssembly().GetName().Name)
-        //                         .MigrationsHistoryTable("__efmigrations_history_portal")))
-        //             .AddDatabaseInitializer<PortalDbContext>(hostContext.Configuration.GetSection("Seeding"));
-        //     });
-        //
-        // _host = builder.Build();
     }
 
     /// <summary>
@@ -105,8 +87,6 @@ public class TestDbFixture : IAsyncLifetime
         await _container.StartAsync()
             .ConfigureAwait(false);
         
-        _host.Services.InitializeDatabasesAsync().GetAwaiter().GetResult();
-
         var optionsBuilder = new DbContextOptionsBuilder<PortalDbContext>();
         
         optionsBuilder.UseNpgsql(
