@@ -170,7 +170,7 @@ public class ApplicationActivationTests
 
         //Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
-        ex.Message.Should().Be($"cannot activate application {context.ApplicationId}. Checklist entries that are not in status DONE: SELF_DESCRIPTION_LP");
+        ex.Message.Should().Be($"cannot activate application {context.ApplicationId}. Checklist entries that are not in status DONE: [REGISTRATION_VERIFICATION, DONE],[BUSINESS_PARTNER_NUMBER, DONE],[IDENTITY_WALLET, DONE],[CLEARING_HOUSE, DONE],[SELF_DESCRIPTION_LP, TO_DO]");
     }
 
     [Fact]
@@ -669,30 +669,21 @@ public class ApplicationActivationTests
 
     private void SetupForDelete()
     {
-        var result = new List<UserRoleDeletionData>
+        var userData = new List<(Guid CompanyUserId, string UserEntityId, IEnumerable<Guid> UserRoleIds)>
         {
-            new(
-                CompanyUserId1,
-                "1",
-                new[]
-                {
-                    new ValueTuple<string, Guid, IEnumerable<string>>("Company Admin", CompanyUserRoleId, new[] {"remove-id"})
-                }),
-            new(
-                CompanyUserId2,
-                "2",
-                new[]
-                {
-                    new ValueTuple<string, Guid, IEnumerable<string>>("Company Admin", CompanyUserRoleId, new[] {"remove-id"})
-                }),
-            new(
-                CompanyUserId3,
-                "3",
-                new List<(string UserRoleText, Guid UserRoleId, IEnumerable<string> ClientClientIds)>()
-                )
+            new (CompanyUserId1, "1", new [] {CompanyUserRoleId}),
+            new (CompanyUserId2, "2", new [] {CompanyUserRoleId}),
+            new (CompanyUserId3, "3", new [] {CompanyUserRoleId}),
         };
-        A.CallTo(() => _applicationRepository.GetUserDataForRoleDeletionByIamClientIds(Id, A<IEnumerable<string>>.That.Matches(x => x.Contains("remove-id") && x.Count() == 1)))
-            .Returns(result.ToAsyncEnumerable());
+        var userRoles = new List<(Guid UserRoleId, string UserRoleText, string ClientClientId)>
+        {
+            new (CompanyUserRoleId, "Company Admin", "remove-id")
+        };
+        A.CallTo(() => _applicationRepository.GetUserWithUserRolesForApplicationId(Id))
+            .Returns(userData.ToAsyncEnumerable());
+        
+        A.CallTo(() => _applicationRepository.GetUserRolesByClientId(A<IEnumerable<string>>.That.Matches(x => x.Contains("remove-id") && x.Count() == 1)))
+            .Returns(userRoles.ToAsyncEnumerable());
     }
 
     #endregion

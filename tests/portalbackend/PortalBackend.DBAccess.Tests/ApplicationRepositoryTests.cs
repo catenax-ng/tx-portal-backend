@@ -308,7 +308,7 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
     }
 
     #endregion
-
+    
     #region GetSubmittedIdAndClearinghouseChecklistStatusByBpn
     
     [Fact]
@@ -325,7 +325,7 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
         data.ApplicationId.Should().Be(new Guid("2bb2005f-6e8d-41eb-967b-cde67546cafc"));
         data.StatusId.Should().Be(ApplicationChecklistEntryStatusId.TO_DO);
     }
-
+    
     [Fact]
     public async Task GetSubmittedIdAndClearinghouseChecklistStatusByBpn_WithNotExistingApplicationId_ReturnsNull()
     {
@@ -436,25 +436,43 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
 
     #endregion
 
-
-    #region GetUserDataForRoleDeletionByIamClientIdsAsync
+    #region GetUserWithUserRolesForApplicationId
 
     [Fact]
-    public async Task GetUserDataForRoleDeletionByIamClientIdsAsync_WithValidData_ReturnsExpected()
+    public async Task GetUserWithUserRolesForApplicationId_WithValidData_ReturnsExpected()
     {
         
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
         
         // Act
-        var data = await sut.GetUserDataForRoleDeletionByIamClientIds(ApplicationWithBpn, Enumerable.Repeat("Cl1-CX-Registration", 1)).ToListAsync().ConfigureAwait(false);
+        var data = await sut.GetUserWithUserRolesForApplicationId(ApplicationWithBpn).ToListAsync().ConfigureAwait(false);
         
         // Assert
-        data.Should().HaveCount(2);
-        data.First().RolesToDelete.Should().ContainSingle();
+        data.Should().HaveCount(8);
+    }
+    
+    #endregion
+
+    #region GetUserRolesByClientId
+    
+    [Fact]
+    public async Task GetUserRolesByClientId_WithValidData_ReturnsExpected()
+    {
+        
+        // Arrange
+        var sut = await CreateSut().ConfigureAwait(false);
+        
+        // Act
+        var data = await sut.GetUserRolesByClientId(Enumerable.Repeat("Cl1-CX-Registration", 1)).ToListAsync().ConfigureAwait(false);
+        
+        // Assert
+        data.Should().HaveCount(4);
+        data.Should().AllSatisfy(x => x.ClientClientId.Should().Be("Cl1-CX-Registration"));
     }
 
     #endregion
+
 
     private async Task<ApplicationRepository> CreateSut()
     {

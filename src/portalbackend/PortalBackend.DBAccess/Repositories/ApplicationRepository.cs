@@ -388,23 +388,24 @@ public class ApplicationRepository : IApplicationRepository
                             ace.ApplicationChecklistEntryStatusId,
                             ace.Comment))))
             .SingleOrDefaultAsync();
-    
-    /// <inheritdoc />
-    public IAsyncEnumerable<UserRoleDeletionData> GetUserDataForRoleDeletionByIamClientIds(Guid applicationId, IEnumerable<string> iamClientIds) =>
-        _dbContext.Invitations
+
+    public IAsyncEnumerable<(Guid CompanyUserId, string UserEntityId, IEnumerable<Guid> UserRoleIds)> GetUserWithUserRolesForApplicationId(Guid applicationId) =>
+        _dbContext.CompanyApplications
             .AsNoTracking()
-            .Where(invitation => invitation.CompanyApplicationId == applicationId)
-            .Select(invitation => invitation.CompanyUser)
-            .Where(companyUser => companyUser!.CompanyUserStatusId == CompanyUserStatusId.ACTIVE)
-            .Select(companyUser => new UserRoleDeletionData(
-                companyUser!.Id,
-                companyUser.IamUser!.UserEntityId,
-                companyUser.CompanyUserAssignedRoles
-                    .Where(x => x.UserRole!.Offer!.AppInstances.Any(ai => iamClientIds.Contains(ai.IamClient!.ClientClientId)))
-                    .Select(companyUserAssignedRole => new ValueTuple<string, Guid, IEnumerable<string>>(
-                        companyUserAssignedRole.UserRole!.UserRoleText,
-                        companyUserAssignedRole.UserRoleId,
-                        companyUserAssignedRole.UserRole!.Offer!.AppInstances.Select(x => x.IamClient!.ClientClientId)
-                    ))))
-            .AsAsyncEnumerable();
+            .Where(a => a.Id == applicationId)
+            .Select(a => a.Company!.CompanyUsers)
+            .SelectMany(x => x.Select(cu => new ValueTuple<Guid, string, IEnumerable<Guid>>(cu.Id, cu.IamUser!.UserEntityId, cu.UserRoles.Select(ur => ur.Id))))
+            .ToAsyncEnumerable();
+
+    public IAsyncEnumerable<(Guid UserRoleId, string UserRoleText, string ClientClientId)> GetUserRolesByClientId(IEnumerable<string> iamClientIds) =>
+        _dbContext.AppInstances
+            .AsNoTracking()
+            .Where(instance => iamClientIds.Contains(instance.IamClient!.ClientClientId))
+            .Select(instance => new
+            {
+                Instance = instance,
+                Roles = instance.App!.UserRoles
+            })
+            .SelectMany(x => x.Roles.Select(ur => new ValueTuple<Guid, string, string>(ur.Id, ur.UserRoleText, x.Instance.IamClient!.ClientClientId)))
+            .ToAsyncEnumerable();
 }
