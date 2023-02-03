@@ -63,11 +63,11 @@ public class ApplicationActivationService : IApplicationActivationService
         _settings = options.Value;
     }
 
-    public Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> HandleApplicationActivation(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
+    public Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)> HandleApplicationActivation(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
     {
         if (!InProcessingTime())
         {
-            return Task.FromResult<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)>((null,null,false));
+            return Task.FromResult<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)>((null,null,false));
         }
         var prerequisiteEntries = context.Checklist.Where(entry => entry.Key != ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION);
         if (prerequisiteEntries.Any(entry => entry.Value != ApplicationChecklistEntryStatusId.DONE))
@@ -77,7 +77,7 @@ public class ApplicationActivationService : IApplicationActivationService
         return HandleApplicationActivationInternal(context, cancellationToken);
     }
 
-    private async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> HandleApplicationActivationInternal(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken _) //TODO: CancellationToken - could be used e.g. in sending mail (keycloak-library does not support it yet). Would require to refactor the applicationActivation into sub-process-steps where the ones that are cancellable and (in best case all) reentrant                                                                                 
+    private async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)> HandleApplicationActivationInternal(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken _) //TODO: CancellationToken - could be used e.g. in sending mail (keycloak-library does not support it yet). Would require to refactor the applicationActivation into sub-process-steps where the ones that are cancellable and (in best case all) reentrant                                                                                 
     {
         var applicationRepository = _portalRepositories.GetInstance<IApplicationRepository>();
         var result = await applicationRepository.GetCompanyAndApplicationDetailsForApprovalAsync(context.ApplicationId).ConfigureAwait(false);

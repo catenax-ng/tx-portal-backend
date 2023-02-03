@@ -108,7 +108,12 @@ public class ChecklistExecutionServiceTests
     public async Task ExecuteAsync_WithException_LogsError()
     {
         // Arrange
-        var stepData = _fixture.CreateMany<(Guid ApplicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> Checklist, IEnumerable<ProcessStep> ProcessSteps)>().ToImmutableArray();
+        var stepData = _fixture.CreateMany<int>(5)
+            .Select(_ => _fixture
+                .Build<(Guid ApplicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> Checklist, IEnumerable<ProcessStep> ProcessSteps)>()
+                .With(x => x.Checklist, Enum.GetValues<ApplicationChecklistEntryTypeId>().Select(type => (type, _fixture.Create<ApplicationChecklistEntryStatusId>())))
+                .With(x => x.ProcessSteps, _fixture.CreateMany<int>(5).Select(_ => _fixture.Build<ProcessStep>().With(x => x.ProcessStepStatusId, ProcessStepStatusId.TODO).Create()))
+                .Create()).ToImmutableArray();
 
         A.CallTo(() => _applicationChecklistRepository.GetChecklistProcessStepData())
             .Returns(stepData.ToAsyncEnumerable());

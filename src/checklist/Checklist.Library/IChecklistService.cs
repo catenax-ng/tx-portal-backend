@@ -27,11 +27,10 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 public interface IChecklistService
 {
     record ManualChecklistProcessStepData(Guid ApplicationId, Guid ProcessStepId, ApplicationChecklistEntryTypeId EntryTypeId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> Checklist, IEnumerable<ProcessStep> ProcessSteps);
-    record WorkerChecklistProcessStepData(Guid ApplicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> Checklist, IEnumerable<ProcessStep> ProcessSteps);
+    record WorkerChecklistProcessStepData(Guid ApplicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> Checklist, IEnumerable<ProcessStepTypeId> ProcessStepTypeIds);
 
     Task<ManualChecklistProcessStepData> VerifyChecklistEntryAndProcessSteps(Guid applicationId, ApplicationChecklistEntryTypeId entryTypeId, IEnumerable<ApplicationChecklistEntryStatusId> entryStatusIds, ProcessStepTypeId processStepTypeId, IEnumerable<ApplicationChecklistEntryTypeId>? entryTypeIds = null, IEnumerable<ProcessStepTypeId>? processStepTypeIds = null);
-    void SkipProcessSteps(IChecklistService.WorkerChecklistProcessStepData context, IEnumerable<ProcessStepTypeId> processStepTypeIds);
     void SkipProcessSteps(IChecklistService.ManualChecklistProcessStepData context, IEnumerable<ProcessStepTypeId> processStepTypeIds);
     void FinalizeChecklistEntryAndProcessSteps(ManualChecklistProcessStepData context, Action<ApplicationChecklistEntry> modifyApplicationChecklistEntry, IEnumerable<ProcessStepTypeId>? nextProcessStepTypeIds);
-    IEnumerable<ProcessStep> ScheduleProcessSteps(WorkerChecklistProcessStepData context, IEnumerable<ProcessStepTypeId> processStepTypeIds);
+    bool ScheduleProcessSteps(WorkerChecklistProcessStepData context, IEnumerable<ProcessStepTypeId> processStepTypeIds);
 }

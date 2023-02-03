@@ -25,7 +25,6 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
-using System.Collections.Immutable;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Custodian.Library.BusinessLogic;
 
@@ -58,7 +57,7 @@ public class CustodianBusinessLogic : ICustodianBusinessLogic
         return walletData;
     }
 
-    public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStep>?,bool)> CreateIdentityWalletAsync(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
+    public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)> CreateIdentityWalletAsync(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
     {
         if (context.Checklist[ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER] == ApplicationChecklistEntryStatusId.FAILED || context.Checklist[ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION] == ApplicationChecklistEntryStatusId.FAILED)
         {
@@ -73,7 +72,7 @@ public class CustodianBusinessLogic : ICustodianBusinessLogic
                         checklist.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE;
                         checklist.Comment = message;
                     },
-                    _checklistService.ScheduleProcessSteps(context, new [] { ProcessStepTypeId.START_CLEARING_HOUSE }),
+                    new [] { ProcessStepTypeId.START_CLEARING_HOUSE },
                     true);
         }
         return (null,null,false);

@@ -24,5 +24,7 @@ public enum ProcessStepStatusId : int
 {
     TODO = 1,
     DONE = 2,
-    FAILED = 3,
+    SKIPPED = 3,
+    FAILED = 4,
+    DUPLICATE = 5,
 }

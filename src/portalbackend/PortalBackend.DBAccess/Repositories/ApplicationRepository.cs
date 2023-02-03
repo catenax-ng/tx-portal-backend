@@ -354,15 +354,6 @@ public class ApplicationRepository : IApplicationRepository
             .AsAsyncEnumerable();
 
     /// <inheritdoc />
-    public Task<Guid> GetCompanyIdForSubmittedApplicationId(Guid applicationId) =>
-        _dbContext.CompanyApplications
-            .Where(ca =>
-                ca.Id == applicationId &&
-                ca.ApplicationStatusId == CompanyApplicationStatusId.SUBMITTED)
-            .Select(ca => ca.CompanyId)
-            .SingleOrDefaultAsync();
-
-    /// <inheritdoc />
     public Task<(bool IsValidApplicationId, CompanyApplicationStatusId ApplicationStatusId, BpdmData? BpdmData, bool IsUserInCompany)> GetBpdmDataForApplicationAsync(string iamUserId, Guid applicationId) =>
         _dbContext.CompanyApplications.AsNoTracking()
             .Where(x => x.Id == applicationId)

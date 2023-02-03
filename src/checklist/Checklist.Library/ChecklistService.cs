@@ -74,22 +74,22 @@ public class ChecklistService : IChecklistService
         return new IChecklistService.ManualChecklistProcessStepData(applicationId, processStep.Id, entryTypeId, checklistData.Checklist.ToImmutableDictionary(entry => entry.TypeId, entry => entry.StatusId), checklistData.ProcessSteps);
     }
 
-    public void SkipProcessSteps(IChecklistService.WorkerChecklistProcessStepData context, IEnumerable<ProcessStepTypeId> processStepTypeIds)
-    {
-        SkipProcessStepsInternal(context.ProcessSteps, processStepTypeIds);
-    }
-
     public void SkipProcessSteps(IChecklistService.ManualChecklistProcessStepData context, IEnumerable<ProcessStepTypeId> processStepTypeIds)
     {
-        SkipProcessStepsInternal(context.ProcessSteps, processStepTypeIds);
-    }
-
-    private void SkipProcessStepsInternal(IEnumerable<ProcessStep> processSteps, IEnumerable<ProcessStepTypeId> processStepTypeIds)
-    {
         var processStepRepository = _portalRepositories.GetInstance<IProcessStepRepository>();
-        foreach (var processStepId in processSteps.IntersectBy(processStepTypeIds, step => step.ProcessStepTypeId).Select(step => step.Id))
+        foreach (var processStepGroup in context.ProcessSteps.GroupBy(step => step.ProcessStepTypeId).IntersectBy(processStepTypeIds, step => step.Key))
         {
-            processStepRepository.AttachAndModifyProcessStep(processStepId, null, step => step.ProcessStepStatusId = ProcessStepStatusId.DONE);
+            bool firstModified = false;
+            foreach (var processStep in processStepGroup)
+            {
+                processStepRepository.AttachAndModifyProcessStep(
+                    processStep.Id,
+                    null,
+                    step => step.ProcessStepStatusId =
+                        firstModified
+                            ? ProcessStepStatusId.DUPLICATE
+                            : ProcessStepStatusId.SKIPPED);
+            }
         }
     }
 
@@ -112,16 +112,18 @@ public class ChecklistService : IChecklistService
         }
     }
 
-    public IEnumerable<ProcessStep> ScheduleProcessSteps(IChecklistService.WorkerChecklistProcessStepData context, IEnumerable<ProcessStepTypeId> processStepTypeIds)
+    public bool ScheduleProcessSteps(IChecklistService.WorkerChecklistProcessStepData context, IEnumerable<ProcessStepTypeId> processStepTypeIds)
     {
+        var modified = false;
         foreach (var processStepTypeId in processStepTypeIds)
         {
-            if (!context.ProcessSteps.Any(step => step.ProcessStepTypeId == processStepTypeId))
+            if (!context.ProcessStepTypeIds.Contains(processStepTypeId))
             {
                 var step = _portalRepositories.GetInstance<IProcessStepRepository>().CreateProcessStep(processStepTypeId, ProcessStepStatusId.TODO);
                 _portalRepositories.GetInstance<IApplicationChecklistRepository>().CreateApplicationAssignedProcessStep(context.ApplicationId, step.Id);
-                yield return step;
+                modified = true;
             }
         }
+        return modified;
     }
 }

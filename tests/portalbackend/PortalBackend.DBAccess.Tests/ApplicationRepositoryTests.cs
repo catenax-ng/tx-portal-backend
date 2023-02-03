@@ -341,37 +341,6 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
     
     #endregion
     
-    #region GetCompanyIdForSubmittedApplicationId
-    
-    [Fact]
-    public async Task GetCompanyIdForSubmittedApplicationId_WithValidApplicationId_ReturnsCorrectData()
-    {
-        // Arrange
-        var sut = await CreateSut().ConfigureAwait(false);
-        
-        // Act
-        var data = await sut.GetCompanyIdForSubmittedApplicationId(SubmittedApplicationWithBpn).ConfigureAwait(false);
-        
-        // Assert
-        data.Should().NotBeEmpty();
-        data.Should().Be(CompanyId);
-    }
-
-    [Fact]
-    public async Task GetCompanyIdForSubmittedApplicationId_WithNotExistingApplicationId_ReturnsDefault()
-    {
-        // Arrange
-        var sut = await CreateSut().ConfigureAwait(false);
-        
-        // Act
-        var data = await sut.GetCompanyIdForSubmittedApplicationId(Guid.NewGuid()).ConfigureAwait(false);
-        
-        // Assert
-        data.Should().Be(Guid.Empty);
-    }
-
-    #endregion
-    
     #region GetCompanyAndApplicationDetailsForApprovalAsync
 
     [Fact]
