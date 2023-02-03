@@ -18,9 +18,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
+using System.Collections.Immutable;
 using Org.Eclipse.TractusX.Portal.Backend.Bpdm.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Bpdm.Library.Models;
+using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
@@ -36,13 +37,13 @@ public class BpdmBusinessLogicTests
     private static readonly Guid IdWithBpn = new ("c244f79a-7faf-4c59-bb85-fbfdf72ce46f");
     private static readonly Guid IdWithStateCreated = new ("bda6d1b5-042e-493a-894c-11f3a89c12b1");
     private static readonly Guid IdWithoutZipCode = new ("beaa6de5-d411-4da8-850e-06047d3170be");
+    private static readonly Guid ValidCompanyId = new ("abf990f8-0c27-43dc-bbd0-b1bce964d8f4");
     private static readonly string IamUserId = new Guid("4C1A6851-D4E7-4E10-A011-3732CD045E8A").ToString();
     private const string ValidCompanyName = "valid company";
 
     private readonly IFixture _fixture;
     private readonly IApplicationRepository _applicationRepository;
     private readonly IBpdmService _bpdmService;
-    private readonly IChecklistService _checklistService;
     private readonly BpdmBusinessLogic _logic;
 
     public BpdmBusinessLogicTests()
@@ -55,11 +56,10 @@ public class BpdmBusinessLogicTests
         var portalRepository = A.Fake<IPortalRepositories>();
         _applicationRepository = A.Fake<IApplicationRepository>();
         _bpdmService = A.Fake<IBpdmService>();
-        _checklistService = A.Fake<IChecklistService>();
 
         A.CallTo(() => portalRepository.GetInstance<IApplicationRepository>()).Returns(_applicationRepository);
 
-        _logic = new BpdmBusinessLogic(portalRepository, _bpdmService, _checklistService);
+        _logic = new BpdmBusinessLogic(portalRepository, _bpdmService);
     }
 
     #endregion
@@ -71,10 +71,18 @@ public class BpdmBusinessLogicTests
     {
         // Arrange
         var applicationId = Guid.NewGuid();
+        var checklist = new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
+            {
+                {ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE},
+                {ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.TO_DO},
+                {ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.DONE},
+            }
+            .ToImmutableDictionary();
+        var context = new IChecklistService.WorkerChecklistProcessStepData(applicationId, checklist, Enumerable.Empty<ProcessStepTypeId>());
         SetupFakesForTrigger();
 
         // Act
-        async Task Act() => await _logic.PushLegalEntity(applicationId, IamUserId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _logic.PushLegalEntity(context, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
@@ -82,28 +90,21 @@ public class BpdmBusinessLogicTests
     }
 
     [Fact]
-    public async Task PushLegalEntity_WithInvalidUser_ThrowsForbiddenException()
-    {
-        // Arrange
-        var user = Guid.NewGuid().ToString();
-        SetupFakesForTrigger();
-
-        // Act
-        async Task Act() => await _logic.PushLegalEntity(IdWithBpn, user, CancellationToken.None).ConfigureAwait(false);
-
-        // Assert
-        var ex = await Assert.ThrowsAsync<ForbiddenException>(Act);
-        ex.Message.Should().Be($"User is not allowed to trigger Bpn Data Push for the application {IdWithBpn}");
-    }
-
-    [Fact]
     public async Task PushLegalEntity_WithCreatedApplication_ThrowsArgumentException()
     {
         // Arrange
+        var checklist = new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
+            {
+                {ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE},
+                {ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.TO_DO},
+                {ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.DONE},
+            }
+            .ToImmutableDictionary();
+        var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithStateCreated, checklist, Enumerable.Empty<ProcessStepTypeId>());
         SetupFakesForTrigger();
 
         // Act
-        async Task Act() => await _logic.PushLegalEntity(IdWithStateCreated, IamUserId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _logic.PushLegalEntity(context, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -114,10 +115,18 @@ public class BpdmBusinessLogicTests
     public async Task PushLegalEntity_WithEmptyZipCode_ThrowsConflictException()
     {
         // Arrange
+        var checklist = new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
+            {
+                {ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE},
+                {ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.TO_DO},
+                {ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.DONE},
+            }
+            .ToImmutableDictionary();
+        var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithoutZipCode, checklist, Enumerable.Empty<ProcessStepTypeId>());
         SetupFakesForTrigger();
 
         // Act
-        async Task Act() => await _logic.PushLegalEntity(IdWithoutZipCode, IamUserId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _logic.PushLegalEntity(context, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -128,13 +137,21 @@ public class BpdmBusinessLogicTests
     public async Task PushLegalEntity_WithValidData_CallsExpected()
     {
         // Arrange
+        var checklist = new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
+            {
+                {ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE},
+                {ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.TO_DO},
+                {ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.DONE},
+            }
+            .ToImmutableDictionary();
+        var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithBpn, checklist, Enumerable.Empty<ProcessStepTypeId>());
         SetupFakesForTrigger();
 
         // Act
-        var result = await _logic.PushLegalEntity(IdWithBpn, IamUserId, CancellationToken.None).ConfigureAwait(false);
+        var result = await _logic.PushLegalEntity(context, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
-        result.Should().BeTrue();
+        result.Item3.Should().BeTrue();
         A.CallTo(() => _bpdmService.PutInputLegalEntity(
                 A<BpdmTransferData>.That.Matches(x => x.ZipCode == "50668" && x.CompanyName == ValidCompanyName),
                 A<CancellationToken>._))
@@ -148,21 +165,18 @@ public class BpdmBusinessLogicTests
     private void SetupFakesForTrigger()
     {
         var validData = _fixture.Build<BpdmData>()
-            .With(x => x.BusinessPartnerNumber, (string?)null)
             .With(x => x.ZipCode, "50668")
             .With(x => x.CompanyName, ValidCompanyName)
             .Create();
 
-        A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(A<string>.That.Not.Matches(x => x == IamUserId), IdWithBpn))
-            .Returns((true, CompanyApplicationStatusId.SUBMITTED, (BpdmData?)null, false));
-        A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(IamUserId, A<Guid>.That.Matches(x => x == IdWithBpn)))
-            .Returns((true, CompanyApplicationStatusId.SUBMITTED, validData, true));
-        A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(IamUserId, A<Guid>.That.Matches(x => x == IdWithStateCreated)))
-            .Returns((true, CompanyApplicationStatusId.CREATED, new BpdmData(ValidCompanyName, null!, null, null, null, null, null, null, null, null!), true));
-        A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(IamUserId, A<Guid>.That.Matches(x => x == IdWithoutZipCode)))
-            .Returns((true, CompanyApplicationStatusId.SUBMITTED, new BpdmData(ValidCompanyName, null!, null, null, null, null, null, null, null, null!), true));
-        A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(IamUserId, A<Guid>.That.Not.Matches(x => x == IdWithStateCreated || x == IdWithBpn || x == IdWithoutZipCode)))
-            .Returns((false, default, (BpdmData?)null, false));
+        A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(A<Guid>.That.Matches(x => x == IdWithBpn)))
+            .ReturnsLazily(() => (ValidCompanyId, validData));
+        A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(A<Guid>.That.Matches(x => x == IdWithStateCreated)))
+            .ReturnsLazily(() => (ValidCompanyId, new BpdmData(ValidCompanyName, null!, null!, null!, null!, null!, null!, null!, null!, new List<(BpdmIdentifierId UniqueIdentifierId, string Value)>())));
+        A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(A<Guid>.That.Matches(x => x == IdWithoutZipCode)))
+            .ReturnsLazily(() => (ValidCompanyId, new BpdmData(ValidCompanyName, null!, null!, null!, null!, null!, null!, null!, null!, new List<(BpdmIdentifierId UniqueIdentifierId, string Value)>())));
+        A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(A<Guid>.That.Not.Matches(x => x == IdWithStateCreated || x == IdWithBpn || x == IdWithoutZipCode)))
+            .ReturnsLazily(() => new ValueTuple<Guid, BpdmData>());
 
         A.CallTo(() => _bpdmService.PutInputLegalEntity(
                 A<BpdmTransferData>.That.Matches(x => x.CompanyName == ValidCompanyName && x.ZipCode == "50668"),

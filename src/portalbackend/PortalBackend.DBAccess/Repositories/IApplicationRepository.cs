@@ -80,12 +80,9 @@ public interface IApplicationRepository
     /// <summary>
     /// Gets the bpdm data for the given application
     /// </summary>
-    /// <param name="iamUserId">Id of the user</param>
     /// <param name="applicationId">Id of the application</param>
     /// <returns>Returns the bpdm data</returns>
-    Task<(bool IsValidApplicationId, CompanyApplicationStatusId ApplicationStatusId, BpdmData? BpdmData, bool IsUserInCompany)> GetBpdmDataForApplicationAsync(string iamUserId, Guid applicationId);
-
-    Task<(Guid CompanyId, BpdmData)> GetBpdmDataForApplicationAsync(Guid applicationId);
+    Task<(Guid CompanyId, BpdmData BpdmData)> GetBpdmDataForApplicationAsync(Guid applicationId);
 
     /// Gets the checklist data for a specific application
     /// </summary>

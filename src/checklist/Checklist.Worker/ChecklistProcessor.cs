@@ -17,6 +17,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
+
 using Microsoft.Extensions.Logging;
 using Org.Eclipse.TractusX.Portal.Backend.ApplicationActivation.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Bpdm.Library.BusinessLogic;
@@ -65,6 +66,7 @@ public class ChecklistProcessor : IChecklistProcessor
 
         _stepExecutions = new (ApplicationChecklistEntryTypeId ApplicationChecklistEntryTypeId, ProcessStepTypeId ProcessStepTypeId, Func<IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)>> ProcessFunc) []
         {
+            new (ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH, (context, cancellationToken) => _bpdmBusinessLogic.PushLegalEntity(context, cancellationToken)),
             new (ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL, (context, cancellationToken) => _bpdmBusinessLogic.HandlePullLegalEntity(context, cancellationToken)),
             new (ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ProcessStepTypeId.CREATE_IDENTITY_WALLET, (context, cancellationToken) => _custodianBusinessLogic.CreateIdentityWalletAsync(context, cancellationToken)),
             new (ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ProcessStepTypeId.START_CLEARING_HOUSE, (context, cancellationToken) => _clearinghouseBusinessLogic.HandleStartClearingHouse(context, cancellationToken)),
@@ -74,7 +76,6 @@ public class ChecklistProcessor : IChecklistProcessor
     }
 
     private static readonly IEnumerable<ProcessStepTypeId> _manuelProcessSteps = new [] {
-        ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH,
         ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_MANUAL,
         ProcessStepTypeId.END_CLEARING_HOUSE,
         ProcessStepTypeId.VERIFY_REGISTRATION,
