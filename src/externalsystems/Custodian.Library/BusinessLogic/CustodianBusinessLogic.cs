@@ -32,13 +32,11 @@ public class CustodianBusinessLogic : ICustodianBusinessLogic
 {
     private readonly IPortalRepositories _portalRepositories;
     private readonly ICustodianService _custodianService;
-    private readonly IChecklistService _checklistService;
 
-    public CustodianBusinessLogic(IPortalRepositories portalRepositories, ICustodianService custodianService, IChecklistService checklistService)
+    public CustodianBusinessLogic(IPortalRepositories portalRepositories, ICustodianService custodianService)
     {
         _portalRepositories = portalRepositories;
         _custodianService = custodianService;
-        _checklistService = checklistService;
     }
     
     /// <inheritdoc />
@@ -53,7 +51,7 @@ public class CustodianBusinessLogic : ICustodianBusinessLogic
 
         var walletData = await _custodianService.GetWalletByBpnAsync(bpn, cancellationToken)
             .ConfigureAwait(false);
-        
+
         return walletData;
     }
 
@@ -91,7 +89,7 @@ public class CustodianBusinessLogic : ICustodianBusinessLogic
         {
             throw new ConflictException($"BusinessPartnerNumber (bpn) for CompanyApplications {applicationId} company {companyId} is empty");
         }
-        
+
         return await _custodianService.CreateWalletAsync(businessPartnerNumber, companyName, cancellationToken).ConfigureAwait(false);
     }
 

@@ -260,7 +260,7 @@ public class ClearinghouseBusinessLogicTests
             .ReturnsLazily(() => (ClearinghouseData?)null);
     }
 
-    private void SetupForProcessClearinghouseResponse(ApplicationChecklistEntry? applicationChecklistEntry = null)
+    private void SetupForProcessClearinghouseResponse(ApplicationChecklistEntry applicationChecklistEntry)
     {
         A.CallTo(() => _checklistService.FinalizeChecklistEntryAndProcessSteps(A<IChecklistService.ManualChecklistProcessStepData>._, A<Action<ApplicationChecklistEntry>>._, A<IEnumerable<ProcessStepTypeId>>._))
             .Invokes((IChecklistService.ManualChecklistProcessStepData _, Action<ApplicationChecklistEntry> modifyApplicationChecklistEntry, IEnumerable<ProcessStepTypeId> _) =>
@@ -276,7 +276,7 @@ public class ClearinghouseBusinessLogicTests
                 ProcessStepTypeId.END_CLEARING_HOUSE, 
                 A<IEnumerable<ApplicationChecklistEntryTypeId>?>._,
                 A<IEnumerable<ProcessStepTypeId>?>._))
-            .ReturnsLazily(() => new IChecklistService.ManualChecklistProcessStepData(Guid.Empty, Guid.Empty, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ImmutableDictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>.Empty, new List<ProcessStep>()));
+            .Returns(new IChecklistService.ManualChecklistProcessStepData(Guid.Empty, Guid.Empty, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ImmutableDictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>.Empty, new List<ProcessStep>()));
     }
 
     #endregion

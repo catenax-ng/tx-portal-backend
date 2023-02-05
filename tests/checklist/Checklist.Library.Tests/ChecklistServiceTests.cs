@@ -64,10 +64,10 @@ public class ChecklistServiceTests
         // Arrange
         var applicationId = Guid.NewGuid();
         var entryTypeId = _fixture.Create<ApplicationChecklistEntryTypeId>();
-        var entryStatusIds = _fixture.CreateMany<ApplicationChecklistEntryStatusId>(Enum.GetValues<ApplicationChecklistEntryStatusId>().Count()-1).ToImmutableArray();
+        var entryStatusIds = _fixture.CreateMany<ApplicationChecklistEntryStatusId>(Enum.GetValues<ApplicationChecklistEntryStatusId>().Length-1).ToImmutableArray();
         var processStepTypeId = _fixture.Create<ProcessStepTypeId>();
-        var entryTypeIds = _fixture.CreateMany<ApplicationChecklistEntryTypeId>(Enum.GetValues<ApplicationChecklistEntryTypeId>().Count()-2).ToImmutableArray();
-        var processStepTypeIds = _fixture.CreateMany<ProcessStepTypeId>(Enum.GetValues<ProcessStepTypeId>().Count()-2).ToImmutableArray();
+        var entryTypeIds = _fixture.CreateMany<ApplicationChecklistEntryTypeId>(Enum.GetValues<ApplicationChecklistEntryTypeId>().Length-2).ToImmutableArray();
+        var processStepTypeIds = _fixture.CreateMany<ProcessStepTypeId>(Enum.GetValues<ProcessStepTypeId>().Length-2).ToImmutableArray();
 
         IEnumerable<(ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId)>? checklistData = null;
         IEnumerable<ProcessStep>? processSteps = null;
@@ -101,7 +101,7 @@ public class ChecklistServiceTests
         result.ProcessSteps.Select(step => step.ProcessStepStatusId).Should().AllSatisfy(statusId => statusId.Should().Be(ProcessStepStatusId.TODO));
     }
 
-    private IEnumerable<ApplicationChecklistEntryStatusId> ProduceEntryStatusIds(IEnumerable<ApplicationChecklistEntryStatusId> statusIds)
+    private static IEnumerable<ApplicationChecklistEntryStatusId> ProduceEntryStatusIds(IEnumerable<ApplicationChecklistEntryStatusId> statusIds)
     {
         while (true)
         {

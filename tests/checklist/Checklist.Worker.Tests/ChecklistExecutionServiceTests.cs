@@ -101,7 +101,7 @@ public class ChecklistExecutionServiceTests
 
         // Assert
         A.CallTo(() => _checklistProcessor.ProcessChecklist(A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,A<IEnumerable<ProcessStep>>._,A<CancellationToken>._))
-            .MustHaveHappened(stepData.Count(),Times.Exactly);
+            .MustHaveHappened(stepData.Length,Times.Exactly);
     }
 
     [Fact]
@@ -151,7 +151,7 @@ public class ChecklistExecutionServiceTests
 
         // Assert
         A.CallTo(() => _checklistProcessor.ProcessChecklist(A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,A<IEnumerable<ProcessStep>>._,A<CancellationToken>._))
-            .MustHaveHappened(stepData.Count(),Times.Exactly);
+            .MustHaveHappened(stepData.Length,Times.Exactly);
         A.CallTo(() => _checklistCreationService.CreateMissingChecklistItems(A<Guid>._,A<IEnumerable<ApplicationChecklistEntryTypeId>>._))
             .MustNotHaveHappened();
         A.CallTo(() => _checklistCreationService.CreateInitialProcessSteps(A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._))
@@ -183,7 +183,7 @@ public class ChecklistExecutionServiceTests
 
         // Assert
         A.CallTo(() => _checklistProcessor.ProcessChecklist(A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,A<IEnumerable<ProcessStep>>._,A<CancellationToken>._))
-            .MustHaveHappened(stepData.Count(),Times.Exactly);
+            .MustHaveHappened(stepData.Length,Times.Exactly);
         A.CallTo(() => _portalRepositories.SaveAsync())
             .MustHaveHappened(stepData.SelectMany(entry => entry.ProcessSteps).Where(step => step.ProcessStepStatusId == ProcessStepStatusId.TODO).Count(),Times.Exactly);
     }
@@ -222,15 +222,15 @@ public class ChecklistExecutionServiceTests
 
         // Assert
         A.CallTo(() => _checklistProcessor.ProcessChecklist(A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,A<IEnumerable<ProcessStep>>._,A<CancellationToken>._))
-            .MustHaveHappened(stepData.Count(),Times.Exactly);
+            .MustHaveHappened(stepData.Length,Times.Exactly);
         A.CallTo(() => _checklistCreationService.CreateMissingChecklistItems(A<Guid>._,A<IEnumerable<ApplicationChecklistEntryTypeId>>._))
-            .MustHaveHappened(stepData.Count(),Times.Exactly);
+            .MustHaveHappened(stepData.Length,Times.Exactly);
         A.CallTo(() => _checklistCreationService.CreateInitialProcessSteps(A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>.That.Matches(entries => entries.Count() == 2)))
-            .MustHaveHappened(stepData.Count(),Times.Exactly);
+            .MustHaveHappened(stepData.Length,Times.Exactly);
         A.CallTo(() => _portalRepositories.SaveAsync())
-            .MustHaveHappened(stepData.Count(),Times.Exactly);
+            .MustHaveHappened(stepData.Length,Times.Exactly);
         
-        A.CallTo(() => _mockLogger.Log(A<LogLevel>.That.IsEqualTo(LogLevel.Information), A<Exception?>._, A<string>.That.StartsWith("Processed application"))).MustHaveHappened(stepData.Count(),Times.Exactly);
+        A.CallTo(() => _mockLogger.Log(A<LogLevel>.That.IsEqualTo(LogLevel.Information), A<Exception?>._, A<string>.That.StartsWith("Processed application"))).MustHaveHappened(stepData.Length,Times.Exactly);
 
         messages.Should().HaveSameCount(stepData);
         messages.Should().AllSatisfy(message => message.Should().ContainAll(Enum.GetNames<ApplicationChecklistEntryTypeId>()));
@@ -268,15 +268,15 @@ public class ChecklistExecutionServiceTests
 
         // Assert
         A.CallTo(() => _checklistProcessor.ProcessChecklist(A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,A<IEnumerable<ProcessStep>>._,A<CancellationToken>._))
-            .MustHaveHappened(stepData.Count(),Times.Exactly);
+            .MustHaveHappened(stepData.Length,Times.Exactly);
         A.CallTo(() => _checklistCreationService.CreateMissingChecklistItems(A<Guid>._,A<IEnumerable<ApplicationChecklistEntryTypeId>>._))
-            .MustHaveHappened(stepData.Count(),Times.Exactly);
+            .MustHaveHappened(stepData.Length,Times.Exactly);
         A.CallTo(() => _checklistCreationService.CreateInitialProcessSteps(A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>.That.IsEmpty()))
-            .MustHaveHappened(stepData.Count(),Times.Exactly);
+            .MustHaveHappened(stepData.Length,Times.Exactly);
         A.CallTo(() => _portalRepositories.SaveAsync())
-            .MustHaveHappened(stepData.Count(),Times.Exactly);
+            .MustHaveHappened(stepData.Length,Times.Exactly);
         
-        A.CallTo(() => _mockLogger.Log(A<LogLevel>.That.IsEqualTo(LogLevel.Information), A<Exception?>._, A<string>.That.StartsWith("Processed application"))).MustHaveHappened(stepData.Count(),Times.Exactly);
+        A.CallTo(() => _mockLogger.Log(A<LogLevel>.That.IsEqualTo(LogLevel.Information), A<Exception?>._, A<string>.That.StartsWith("Processed application"))).MustHaveHappened(stepData.Length,Times.Exactly);
 
         messages.Should().HaveSameCount(stepData);
         

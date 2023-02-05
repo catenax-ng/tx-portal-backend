@@ -20,7 +20,7 @@
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 
-public enum ProcessStepTypeId : int
+public enum ProcessStepTypeId
 {
     VERIFY_REGISTRATION = 1,
     CREATE_BUSINESS_PARTNER_NUMBER_PUSH = 2,

@@ -44,7 +44,6 @@ public class CustodianBusinessLogicTests
     
     private readonly ICustodianService _custodianService;
     private readonly CustodianBusinessLogic _logic;
-    private readonly IChecklistService _checklistService;
 
     public CustodianBusinessLogicTests()
     {
@@ -56,11 +55,10 @@ public class CustodianBusinessLogicTests
         var portalRepository = A.Fake<IPortalRepositories>();
         _applicationRepository = A.Fake<IApplicationRepository>();
         _custodianService = A.Fake<ICustodianService>();
-        _checklistService = A.Fake<IChecklistService>();
 
         A.CallTo(() => portalRepository.GetInstance<IApplicationRepository>()).Returns(_applicationRepository);
 
-        _logic = new CustodianBusinessLogic(portalRepository, _custodianService, _checklistService);
+        _logic = new CustodianBusinessLogic(portalRepository, _custodianService);
     }
 
     #endregion
@@ -120,7 +118,6 @@ public class CustodianBusinessLogicTests
         // Assert
         result.Item3.Should().BeTrue();
         A.CallTo(() =>  _custodianService.CreateWalletAsync(A<string>._, A<string>._, A<CancellationToken>._)).MustNotHaveHappened();
-        A.CallTo(() => _checklistService.ScheduleProcessSteps(context, A<IEnumerable<ProcessStepTypeId>>._)).MustNotHaveHappened();
     }
 
     [Fact]
@@ -143,7 +140,6 @@ public class CustodianBusinessLogicTests
         // Assert
         result.Item3.Should().BeTrue();
         A.CallTo(() =>  _custodianService.CreateWalletAsync(A<string>._, A<string>._, A<CancellationToken>._)).MustNotHaveHappened();
-        A.CallTo(() => _checklistService.ScheduleProcessSteps(context, A<IEnumerable<ProcessStepTypeId>>._)).MustNotHaveHappened();
     }
 
     [Fact]

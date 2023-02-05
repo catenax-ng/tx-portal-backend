@@ -20,7 +20,7 @@
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 
-public enum ProcessStepStatusId : int
+public enum ProcessStepStatusId
 {
     TODO = 1,
     DONE = 2,

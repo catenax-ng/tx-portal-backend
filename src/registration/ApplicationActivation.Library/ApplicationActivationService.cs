@@ -63,6 +63,11 @@ public class ApplicationActivationService : IApplicationActivationService
         _settings = options.Value;
     }
 
+    public Task HandleApplicationActivation(Guid applicationId)
+    {
+        return InProcessingTime() ? ApplicationActivation(applicationId) : Task.CompletedTask;
+    }
+
     public Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)> HandleApplicationActivation(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
     {
         if (!InProcessingTime())
@@ -74,10 +79,10 @@ public class ApplicationActivationService : IApplicationActivationService
         {
             throw new ConflictException($"cannot activate application {context.ApplicationId}. Checklist entries that are not in status DONE: {string.Join(",",prerequisiteEntries)}");
         }
-        return HandleApplicationActivationInternal(context, cancellationToken);
+        return HandleApplicationActivationInternal(context);
     }
 
-    private async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)> HandleApplicationActivationInternal(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken _) //TODO: CancellationToken - could be used e.g. in sending mail (keycloak-library does not support it yet). Would require to refactor the applicationActivation into sub-process-steps where the ones that are cancellable and (in best case all) reentrant                                                                                 
+    private async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)> HandleApplicationActivationInternal(IChecklistService.WorkerChecklistProcessStepData context)
     {
         var applicationRepository = _portalRepositories.GetInstance<IApplicationRepository>();
         var result = await applicationRepository.GetCompanyAndApplicationDetailsForApprovalAsync(context.ApplicationId).ConfigureAwait(false);
@@ -126,11 +131,6 @@ public class ApplicationActivationService : IApplicationActivationService
             }
         }
         return (entry => entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE, null, true);
-    }
-
-    public Task HandleApplicationActivation(Guid applicationId)
-    {
-        return InProcessingTime() ? ApplicationActivation(applicationId) : Task.CompletedTask;
     }
 
     private async Task ApplicationActivation(Guid applicationId)

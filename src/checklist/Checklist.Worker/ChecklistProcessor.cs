@@ -36,6 +36,7 @@ using System.Runtime.CompilerServices;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Worker;
 
+/// <inheritdoc />
 public class ChecklistProcessor : IChecklistProcessor
 {
     private readonly IPortalRepositories _portalRepositories;
@@ -47,6 +48,7 @@ public class ChecklistProcessor : IChecklistProcessor
     private readonly ILogger<IChecklistProcessor> _logger;
     private readonly ImmutableDictionary<ProcessStepTypeId, (ApplicationChecklistEntryTypeId EntryTypeId, Func<IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>? modifyApplicationChecklistEntry, IEnumerable<ProcessStepTypeId>? NextSteps, bool Modified)>> ProcessFunc)> _stepExecutions;
 
+    /// <inheritdoc />
     public ChecklistProcessor(
         IPortalRepositories portalRepositories,
         IBpdmBusinessLogic bpdmBusinessLogic,
@@ -64,7 +66,7 @@ public class ChecklistProcessor : IChecklistProcessor
         _applicationActivationService = applicationActivationService;
         _logger = logger;
 
-        _stepExecutions = new (ApplicationChecklistEntryTypeId ApplicationChecklistEntryTypeId, ProcessStepTypeId ProcessStepTypeId, Func<IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)>> ProcessFunc) []
+        _stepExecutions = new (ApplicationChecklistEntryTypeId EntryTypeId, ProcessStepTypeId ProcessStepTypeId, Func<IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)>> ProcessFunc) []
         {
             new (ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH, (context, cancellationToken) => _bpdmBusinessLogic.PushLegalEntity(context, cancellationToken)),
             new (ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL, (context, cancellationToken) => _bpdmBusinessLogic.HandlePullLegalEntity(context, cancellationToken)),
@@ -72,7 +74,7 @@ public class ChecklistProcessor : IChecklistProcessor
             new (ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ProcessStepTypeId.START_CLEARING_HOUSE, (context, cancellationToken) => _clearinghouseBusinessLogic.HandleStartClearingHouse(context, cancellationToken)),
             new (ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP, (context, cancellationToken) => _sdFactoryBusinessLogic.RegisterSelfDescription(context, cancellationToken)),
             new (ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, ProcessStepTypeId.ACTIVATE_APPLICATION, (context, cancellationToken) => _applicationActivationService.HandleApplicationActivation(context, cancellationToken)),
-        }.ToImmutableDictionary(x => x.ProcessStepTypeId, x => (x.ApplicationChecklistEntryTypeId, x.ProcessFunc));
+        }.ToImmutableDictionary(x => x.ProcessStepTypeId, x => (x.EntryTypeId, x.ProcessFunc));
     }
 
     private static readonly IEnumerable<ProcessStepTypeId> _manuelProcessSteps = new [] {
@@ -81,109 +83,160 @@ public class ChecklistProcessor : IChecklistProcessor
         ProcessStepTypeId.VERIFY_REGISTRATION,
     };
 
+    private record ProcessingContext(Guid ApplicationId, IDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> Checklist, IDictionary<ProcessStepTypeId, IEnumerable<ProcessStep>> AllSteps, Queue<ProcessStepTypeId> WorkerStepTypeIds, IList<ProcessStepTypeId> ManualStepTypeIds, IApplicationChecklistRepository ChecklistRepository, IProcessStepRepository ProcessStepRepository);
+
+    /// <inheritdoc />
     public async IAsyncEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> ProcessChecklist(Guid applicationId, IEnumerable<(ApplicationChecklistEntryTypeId EntryTypeId, ApplicationChecklistEntryStatusId EntryStatusId)> checklistEntries, IEnumerable<ProcessStep> processSteps, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        var checklist = checklistEntries.ToDictionary(entry => entry.EntryTypeId, entry => entry.EntryStatusId);
         var allSteps = processSteps.GroupBy(step => step.ProcessStepTypeId).ToDictionary(group => group.Key, group => group.AsEnumerable());
-        var workerStepTypeIds = new Queue<ProcessStepTypeId>(allSteps.Select(step => step.Key).Except(_manuelProcessSteps));
-        var manualStepTypeIds = allSteps.Select(step => step.Key).Intersect(_manuelProcessSteps).ToList();
-        var checklistRepository = _portalRepositories.GetInstance<IApplicationChecklistRepository>();
-        var processStepRepository = _portalRepositories.GetInstance<IProcessStepRepository>();
-        _logger.LogInformation("Found {StepsCount} possible steps for application {ApplicationId}", workerStepTypeIds.Count(), applicationId);
-        while (workerStepTypeIds.TryDequeue(out var stepTypeId))
-        {
-            if (_stepExecutions.TryGetValue(stepTypeId, out var execution))
-            {
-                if (!checklist.TryGetValue(execution.EntryTypeId, out var entryStatusId))
-                {
-                    throw new ConflictException($"no checklist entry {execution.EntryTypeId} for {stepTypeId}");
-                }
-                var modified = false;
-                try
-                {
-                    var result = await execution.ProcessFunc(new IChecklistService.WorkerChecklistProcessStepData(applicationId, checklist.ToImmutableDictionary(), workerStepTypeIds.Concat(manualStepTypeIds)), cancellationToken).ConfigureAwait(false);
-                    if (result.Modified)
-                    {
-                        modified |= ModifyStep(stepTypeId, ProcessStepStatusId.DONE, allSteps, processStepRepository);
-                        modified |= ScheduleNextSteps(result.NextSteps, allSteps, workerStepTypeIds, manualStepTypeIds, processStepRepository);
-                        if (result.modifyApplicationChecklistEntry != null)
-                        {
-                            var entry = checklistRepository
-                                .AttachAndModifyApplicationChecklist(applicationId, execution.EntryTypeId,
-                                    result.modifyApplicationChecklistEntry);
-                            entryStatusId = entry.ApplicationChecklistEntryStatusId;
-                            modified = true;
-                        }
-                    }
-                }
-                catch (Exception ex) when (ex is not OperationCanceledException)
-                {
-                    if (ex is not ServiceException { StatusCode: HttpStatusCode.ServiceUnavailable })
-                    {
-                        ModifyStep(stepTypeId, ProcessStepStatusId.FAILED, allSteps, processStepRepository);
-                        entryStatusId = ApplicationChecklistEntryStatusId.FAILED;
-                    }
 
-                    checklistRepository.AttachAndModifyApplicationChecklist(applicationId, execution.EntryTypeId,
-                            item => { 
-                                item.ApplicationChecklistEntryStatusId = entryStatusId;
-                                item.Comment = ex.ToString(); 
-                            });
-                    modified = true;
-                }
-                if (modified)
-                {
-                    checklist[execution.EntryTypeId] = entryStatusId;
-                    yield return (execution.EntryTypeId, entryStatusId);
-                }
-            }
-            else
+        var context = new ProcessingContext(
+            applicationId,
+            checklistEntries.ToDictionary(entry => entry.EntryTypeId, entry => entry.EntryStatusId),
+            allSteps,
+            new Queue<ProcessStepTypeId>(allSteps.Select(step => step.Key).Except(_manuelProcessSteps)),
+            allSteps.Select(step => step.Key).Intersect(_manuelProcessSteps).ToList(),
+            _portalRepositories.GetInstance<IApplicationChecklistRepository>(),
+            _portalRepositories.GetInstance<IProcessStepRepository>());
+
+        _logger.LogInformation("Found {StepsCount} possible steps for application {ApplicationId}", context.WorkerStepTypeIds.Count, applicationId);
+
+        while (context.WorkerStepTypeIds.TryDequeue(out var stepTypeId))
+        {
+            var (execution, entryStatusId) = GetExecution(stepTypeId, context.Checklist);
+            var modified = false;
+            try
             {
-                throw new ConflictException($"no execution defined for processStep {stepTypeId}");
+                var result = await execution.ProcessFunc(
+                    new IChecklistService.WorkerChecklistProcessStepData(
+                        applicationId,
+                        context.Checklist.ToImmutableDictionary(),
+                        context.WorkerStepTypeIds.Concat(context.ManualStepTypeIds)),
+                    cancellationToken).ConfigureAwait(false);
+
+                (entryStatusId, modified) = ProcessResult(
+                    result,
+                    stepTypeId,
+                    execution.EntryTypeId,
+                    entryStatusId,
+                    context);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                (entryStatusId, modified) = ProcessError(
+                    ex,
+                    stepTypeId,
+                    execution.EntryTypeId,
+                    entryStatusId,
+                    context);
+            }
+            if (modified)
+            {
+                context.Checklist[execution.EntryTypeId] = entryStatusId;
+                yield return (execution.EntryTypeId, entryStatusId);
             }
         }
+    }
 
-        static bool ScheduleNextSteps(IEnumerable<ProcessStepTypeId>? nextSteps, Dictionary<ProcessStepTypeId, IEnumerable<ProcessStep>> allSteps, Queue<ProcessStepTypeId> workerStepTypeIds, List<ProcessStepTypeId> manualStepTypeIds, IProcessStepRepository processStepRepository)
+    private ((ApplicationChecklistEntryTypeId EntryTypeId, Func<IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>? ModifyApplicationChecklistEntry,IEnumerable<ProcessStepTypeId>? NextSteps, bool Modified)>> ProcessFunc) Execution, ApplicationChecklistEntryStatusId EntryStatusId) GetExecution(
+        ProcessStepTypeId stepTypeId,
+        IDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist)
+    {
+        if (!_stepExecutions.TryGetValue(stepTypeId, out var execution))
         {
-            bool modified = false;
-            if (nextSteps != null)
-            {
-                foreach (var nextStepTypeId in nextSteps.Except(allSteps.Keys))
-                {
-                    allSteps.Add(nextStepTypeId, new[] { processStepRepository.CreateProcessStep(nextStepTypeId, ProcessStepStatusId.TODO) });
-                    if (_manuelProcessSteps.Contains(nextStepTypeId))
-                    {
-                        manualStepTypeIds.Add(nextStepTypeId);
-                    }
-                    else
-                    {
-                        workerStepTypeIds.Enqueue(nextStepTypeId);
-                    }
-                    modified = true;
-                }
-            }
-            return modified;
+            throw new ConflictException($"no execution defined for processStep {stepTypeId}");
         }
+        if (!checklist.TryGetValue(execution.EntryTypeId, out var entryStatusId))
+        {
+            throw new ConflictException($"no checklist entry {execution.EntryTypeId} for {stepTypeId}");
+        }
+        return (execution, entryStatusId);
+    }
+
+    private static (ApplicationChecklistEntryStatusId EntryStatusId, bool Modified) ProcessResult(
+        (Action<ApplicationChecklistEntry>? ModifyApplicationChecklistEntry,IEnumerable<ProcessStepTypeId>? NextSteps, bool Modified) executionResult,
+        ProcessStepTypeId stepTypeId,
+        ApplicationChecklistEntryTypeId entryTypeId,
+        ApplicationChecklistEntryStatusId entryStatusId,
+        ProcessingContext context)
+    {
+        var modified = false;
+        if (executionResult.Modified)
+        {
+            modified |= ModifyStep(stepTypeId, ProcessStepStatusId.DONE, context);
+            modified |= ScheduleNextSteps(executionResult.NextSteps, context);
+            if (executionResult.ModifyApplicationChecklistEntry != null)
+            {
+                var entry = context.ChecklistRepository
+                    .AttachAndModifyApplicationChecklist(context.ApplicationId, entryTypeId,
+                        executionResult.ModifyApplicationChecklistEntry);
+                return (entry.ApplicationChecklistEntryStatusId, true);
+            }
+        }
+        return (entryStatusId, modified);
+    }
+
+    private static (ApplicationChecklistEntryStatusId EntryStatusId, bool Modified) ProcessError(
+        Exception ex,
+        ProcessStepTypeId stepTypeId,
+        ApplicationChecklistEntryTypeId entryTypeId,
+        ApplicationChecklistEntryStatusId entryStatusId,
+        ProcessingContext context)
+    {
+        if (ex is not ServiceException { StatusCode: HttpStatusCode.ServiceUnavailable })
+        {
+            ModifyStep(stepTypeId, ProcessStepStatusId.FAILED, context);
+            entryStatusId = ApplicationChecklistEntryStatusId.FAILED;
+        }
+
+        context.ChecklistRepository.AttachAndModifyApplicationChecklist(context.ApplicationId, entryTypeId,
+                item => { 
+                    item.ApplicationChecklistEntryStatusId = entryStatusId;
+                    item.Comment = ex.ToString(); 
+                });
+        return (entryStatusId, true);
+    }
+
+    private static bool ScheduleNextSteps(IEnumerable<ProcessStepTypeId>? nextSteps, ProcessingContext context)
+    {
+        bool modified = false;
+        if (nextSteps != null)
+        {
+            foreach (var nextStepTypeId in nextSteps.Except(context.AllSteps.Keys))
+            {
+                context.AllSteps.Add(nextStepTypeId, new[] { context.ProcessStepRepository.CreateProcessStep(nextStepTypeId, ProcessStepStatusId.TODO) });
+                if (_manuelProcessSteps.Contains(nextStepTypeId))
+                {
+                    context.ManualStepTypeIds.Add(nextStepTypeId);
+                }
+                else
+                {
+                    context.WorkerStepTypeIds.Enqueue(nextStepTypeId);
+                }
+                modified = true;
+            }
+        }
+        return modified;
+    }
     
-        static bool ModifyStep(ProcessStepTypeId stepTypeId, ProcessStepStatusId statusId, IDictionary<ProcessStepTypeId,IEnumerable<ProcessStep>> allSteps, IProcessStepRepository processStepRepository)
+    private static bool ModifyStep(ProcessStepTypeId stepTypeId, ProcessStepStatusId statusId, ProcessingContext context)
+    {
+        if (context.AllSteps.Remove(stepTypeId, out var currentSteps))
         {
-            if (allSteps.Remove(stepTypeId, out var currentSteps))
+            var firstModified = false;
+            foreach (var processStep in currentSteps)
             {
-                var firstModified = false;
-                foreach (var processStep in currentSteps)
-                {
-                    processStepRepository.AttachAndModifyProcessStep(
-                        processStep.Id,
-                        null,
-                        step => step.ProcessStepStatusId =
-                            firstModified
-                                ? ProcessStepStatusId.DUPLICATE
-                                : statusId);
-                    firstModified = true;
-                }
-                return firstModified;
+                context.ProcessStepRepository.AttachAndModifyProcessStep(
+                    processStep.Id,
+                    null,
+                    step => step.ProcessStepStatusId =
+                        firstModified
+                            ? ProcessStepStatusId.DUPLICATE
+                            : statusId);
+                firstModified = true;
             }
-            return false;
+            return firstModified;
         }
+        return false;
     }
 }

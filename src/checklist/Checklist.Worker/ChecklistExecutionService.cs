@@ -30,7 +30,7 @@ using System.Collections.Immutable;
 namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Worker;
 
 /// <summary>
-/// Service that checks if there are open/pending tasks of a checklist and executes them.
+/// Service that reads all open/pending processSteps of a checklist and triggers their execution.
 /// </summary>
 public class ChecklistExecutionService
 {

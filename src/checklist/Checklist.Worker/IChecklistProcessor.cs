@@ -23,6 +23,9 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Worker;
 
+/// <summary>
+/// Service that executes open/pending processSteps of a checklist and processes their result.
+/// </summary>
 public interface IChecklistProcessor
 {
     /// <summary>

@@ -39,7 +39,7 @@ public class ChecklistCreationService : IChecklistCreationService
     {
         var (bpn, existingChecklistEntryTypeIds) = await _portalRepositories.GetInstance<IApplicationRepository>().GetBpnAndChecklistCheckForApplicationIdAsync(applicationId).ConfigureAwait(false);
         var entries = CreateEntries(applicationId, existingChecklistEntryTypeIds, bpn);
-        CreateInitialProcessSteps(applicationId, entries).ToList();
+        CreateInitialProcessSteps(applicationId, entries);
     }
 
     /// <inheritdoc />
@@ -75,11 +75,11 @@ public class ChecklistCreationService : IChecklistCreationService
     public IEnumerable<ProcessStep> CreateInitialProcessSteps(Guid applicationId, IEnumerable<(ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId)> checklistEntries)
     {
         var applicationChecklistRepository = _portalRepositories.GetInstance<IApplicationChecklistRepository>();
-        foreach (var processStep in CreateInitialProcessStepsInternal(checklistEntries))
+        return CreateInitialProcessStepsInternal(checklistEntries).Select(processStep => 
         {
             applicationChecklistRepository.CreateApplicationAssignedProcessStep(applicationId, processStep.Id);
-            yield return processStep;
-        }
+            return processStep;
+        }).ToList();
     }
 
     private IEnumerable<ProcessStep> CreateInitialProcessStepsInternal(IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)> checklistEntries)
