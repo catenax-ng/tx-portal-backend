@@ -129,7 +129,7 @@ public class ApplicationChecklistRepositoryTests : IAssemblyFixture<TestDbFixtur
         var checklistData = await sut.GetChecklistDataAsync(ApplicationWithExistingChecklistId).ToListAsync().ConfigureAwait(false);
 
         // Assert
-        checklistData.Should().HaveCount(5);
+        checklistData.Should().HaveCount(6);
     }
 
     [Fact]
@@ -147,23 +147,25 @@ public class ApplicationChecklistRepositoryTests : IAssemblyFixture<TestDbFixtur
 
     #endregion
 
-    #region GetChecklistDataGroupedByApplicationId 
+    #region GetChecklistProcessStepData 
 
     [Fact]
-    public async Task GetChecklistDataGroupedByApplicationId_ReturnsExpected()
+    public async Task GetChecklistProcessStepData_ReturnsExpected()
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
 
         // Act
-        var checklistData = await sut.GetChecklistDataOrderedByApplicationId().ToListAsync().ConfigureAwait(false);
+        var checklistData = await sut.GetChecklistProcessStepData().ToListAsync().ConfigureAwait(false);
 
         // Assert
-        checklistData.Should().HaveCount(10);
+        checklistData.Should().HaveCount(2);
     }
     
     #endregion
 
+    
+    
     private async Task<(ApplicationChecklistRepository, PortalDbContext)> CreateSutWithContext()
     {
         var context = await _dbTestDbFixture.GetPortalDbContext().ConfigureAwait(false);

@@ -90,29 +90,7 @@ public class BpdmBusinessLogicTests
     }
 
     [Fact]
-    public async Task PushLegalEntity_WithCreatedApplication_ThrowsArgumentException()
-    {
-        // Arrange
-        var checklist = new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
-            {
-                {ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE},
-                {ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.TO_DO},
-                {ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.DONE},
-            }
-            .ToImmutableDictionary();
-        var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithStateCreated, checklist, Enumerable.Empty<ProcessStepTypeId>());
-        SetupFakesForTrigger();
-
-        // Act
-        async Task Act() => await _logic.PushLegalEntity(context, CancellationToken.None).ConfigureAwait(false);
-
-        // Assert
-        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
-        ex.Message.Should().Be($"CompanyApplication {IdWithStateCreated} is not in status SUBMITTED");
-    }
-
-    [Fact]
-    public async Task PushLegalEntity_WithEmptyZipCode_ThrowsConflictException()
+    public async Task PushLegalEntity_WithBpn_ThrowsConflictException()
     {
         // Arrange
         var checklist = new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
@@ -123,7 +101,31 @@ public class BpdmBusinessLogicTests
             }
             .ToImmutableDictionary();
         var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithoutZipCode, checklist, Enumerable.Empty<ProcessStepTypeId>());
-        SetupFakesForTrigger();
+        A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(A<Guid>.That.Matches(x => x == IdWithoutZipCode)))
+            .ReturnsLazily(() => (ValidCompanyId, new BpdmData(ValidCompanyName, null!, "Test", null!, null!, "Test", "test", null!, null!, new List<(BpdmIdentifierId UniqueIdentifierId, string Value)>())));
+
+        // Act
+        async Task Act() => await _logic.PushLegalEntity(context, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be("BusinessPartnerNumber is already set");
+    }
+
+    [Fact]
+    public async Task PushLegalEntity_WithoutAlpha2Code_ThrowsConflictException()
+    {
+        // Arrange
+        var checklist = new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
+            {
+                {ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE},
+                {ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.TO_DO},
+                {ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.DONE},
+            }
+            .ToImmutableDictionary();
+        var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithoutZipCode, checklist, Enumerable.Empty<ProcessStepTypeId>());
+        A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(A<Guid>.That.Matches(x => x == IdWithoutZipCode)))
+            .ReturnsLazily(() => (ValidCompanyId, new BpdmData(ValidCompanyName, null!, null!, null!, null!, "Test", "test", null!, null!, new List<(BpdmIdentifierId UniqueIdentifierId, string Value)>())));
 
         // Act
         async Task Act() => await _logic.PushLegalEntity(context, CancellationToken.None).ConfigureAwait(false);
@@ -131,6 +133,52 @@ public class BpdmBusinessLogicTests
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
         ex.Message.Should().Be("Alpha2Code must not be empty");
+    }
+
+    [Fact]
+    public async Task PushLegalEntity_WithoutCity_ThrowsConflictException()
+    {
+        // Arrange
+        var checklist = new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
+            {
+                {ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE},
+                {ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.TO_DO},
+                {ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.DONE},
+            }
+            .ToImmutableDictionary();
+        var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithoutZipCode, checklist, Enumerable.Empty<ProcessStepTypeId>());
+        A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(A<Guid>.That.Matches(x => x == IdWithoutZipCode)))
+            .ReturnsLazily(() => (ValidCompanyId, new BpdmData(ValidCompanyName, null!, null!, "DE", null!, null, "test", null!, null!, new List<(BpdmIdentifierId UniqueIdentifierId, string Value)>())));
+
+        // Act
+        async Task Act() => await _logic.PushLegalEntity(context, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be("City must not be empty");
+    }
+
+    [Fact]
+    public async Task PushLegalEntity_WithoutStreetName_ThrowsConflictException()
+    {
+        // Arrange
+        var checklist = new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
+            {
+                {ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE},
+                {ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.TO_DO},
+                {ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.DONE},
+            }
+            .ToImmutableDictionary();
+        var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithoutZipCode, checklist, Enumerable.Empty<ProcessStepTypeId>());
+        A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(A<Guid>.That.Matches(x => x == IdWithoutZipCode)))
+            .ReturnsLazily(() => (ValidCompanyId, new BpdmData(ValidCompanyName, null!, null!, "DE", null!, "TEST", null, null!, null!, new List<(BpdmIdentifierId UniqueIdentifierId, string Value)>())));
+
+        // Act
+        async Task Act() => await _logic.PushLegalEntity(context, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be("StreetName must not be empty");
     }
 
     [Fact]
@@ -167,14 +215,18 @@ public class BpdmBusinessLogicTests
         var validData = _fixture.Build<BpdmData>()
             .With(x => x.ZipCode, "50668")
             .With(x => x.CompanyName, ValidCompanyName)
+            .With(x => x.Alpha2Code, "DE")
+            .With(x => x.City, "Test")
+            .With(x => x.StreetName, "test")
+            .With(x => x.BusinessPartnerNumber, (string?)null)
             .Create();
 
         A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(A<Guid>.That.Matches(x => x == IdWithBpn)))
             .ReturnsLazily(() => (ValidCompanyId, validData));
         A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(A<Guid>.That.Matches(x => x == IdWithStateCreated)))
-            .ReturnsLazily(() => (ValidCompanyId, new BpdmData(ValidCompanyName, null!, null!, null!, null!, null!, null!, null!, null!, new List<(BpdmIdentifierId UniqueIdentifierId, string Value)>())));
+            .ReturnsLazily(() => (ValidCompanyId, new BpdmData(ValidCompanyName, null!, null!, "DE", null!, "Test", "test", null!, null!, new List<(BpdmIdentifierId UniqueIdentifierId, string Value)>())));
         A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(A<Guid>.That.Matches(x => x == IdWithoutZipCode)))
-            .ReturnsLazily(() => (ValidCompanyId, new BpdmData(ValidCompanyName, null!, null!, null!, null!, null!, null!, null!, null!, new List<(BpdmIdentifierId UniqueIdentifierId, string Value)>())));
+            .ReturnsLazily(() => (ValidCompanyId, new BpdmData(ValidCompanyName, null!, null!, null!, null!, "Test", "test", null!, null!, new List<(BpdmIdentifierId UniqueIdentifierId, string Value)>())));
         A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(A<Guid>.That.Not.Matches(x => x == IdWithStateCreated || x == IdWithBpn || x == IdWithoutZipCode)))
             .ReturnsLazily(() => new ValueTuple<Guid, BpdmData>());
 
