@@ -24,6 +24,9 @@ using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Configurations;
 using DotNet.Testcontainers.Containers;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Seeding;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Seeder;
 using Xunit;
 using Xunit.Extensions.AssemblyFixture;
@@ -96,8 +99,16 @@ public class TestDbFixture : IAsyncLifetime
         );
         var context = new PortalDbContext(optionsBuilder.Options);
         await context.Database.MigrateAsync();
-        BaseSeed.SeedBasedata().Invoke(context);
-        await context.SaveChangesAsync();
+
+        var seederOptions = Options.Create(new SeederSettings { TestDataEnvironments = new List<string> { "consortia", "test" } });
+        var insertSeeder = new BatchInsertSeeder(context,
+            LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<BatchInsertSeeder>(),
+            seederOptions);
+        await insertSeeder.InitializeAsync(CancellationToken.None);
+        var updateSeeder = new BatchUpdateSeeder(context,
+            LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<BatchUpdateSeeder>(),
+            seederOptions);
+        await updateSeeder.InitializeAsync(CancellationToken.None);
     }
 
     /// <inheritdoc />

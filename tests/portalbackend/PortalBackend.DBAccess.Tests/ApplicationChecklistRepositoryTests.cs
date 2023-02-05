@@ -37,7 +37,7 @@ public class ApplicationChecklistRepositoryTests : IAssemblyFixture<TestDbFixtur
     private readonly TestDbFixture _dbTestDbFixture;
 
     private static readonly Guid ApplicationId = new("4829b64c-de6a-426c-81fc-c0bcf95bcb76");
-    private static readonly Guid ApplicationWithExistingChecklistId = new("1b86d973-3aac-4dcd-a9e9-0c222766202b");
+    private static readonly Guid ApplicationWithExistingChecklistId = new("4f0146c6-32aa-4bb1-b844-df7e8babdcb6");
     
     public ApplicationChecklistRepositoryTests(TestDbFixture testDbFixture)
     {
@@ -159,7 +159,7 @@ public class ApplicationChecklistRepositoryTests : IAssemblyFixture<TestDbFixtur
         var checklistData = await sut.GetChecklistProcessStepData().ToListAsync().ConfigureAwait(false);
 
         // Assert
-        checklistData.Should().HaveCount(2);
+        checklistData.Should().HaveCount(5);
     }
     
     #endregion
