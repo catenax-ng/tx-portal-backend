@@ -25,6 +25,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using System.Net;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Custodian.Library.BusinessLogic;
 
@@ -93,4 +94,23 @@ public class CustodianBusinessLogic : ICustodianBusinessLogic
         return await _custodianService.CreateWalletAsync(businessPartnerNumber, companyName, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <inheritdoc />
+    public Task<(Action<ApplicationChecklistEntry>?, IEnumerable<ProcessStepTypeId>?, bool)> HandleErrorAsync(Exception exception, IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
+    {
+        return Task.FromResult<(Action<ApplicationChecklistEntry>?, IEnumerable<ProcessStepTypeId>?, bool)>(
+            exception is not ServiceException ?
+                (item =>
+                {
+                    item.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.FAILED;
+                    item.Comment = exception.ToString();
+                },
+                new [] { ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE },
+                true) :
+                (item =>
+                {
+                    item.Comment = exception.ToString();
+                },
+                null,
+                true));
+    }
 }

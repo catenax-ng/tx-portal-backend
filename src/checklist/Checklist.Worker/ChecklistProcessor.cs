@@ -46,7 +46,6 @@ public class ChecklistProcessor : IChecklistProcessor
     {
         _portalRepositories = portalRepositories;
         _checklistHandlerService = checklistHandlerService;
-
         _logger = logger;
     }
 
