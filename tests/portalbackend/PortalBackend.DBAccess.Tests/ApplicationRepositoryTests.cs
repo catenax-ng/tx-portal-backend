@@ -404,6 +404,39 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
 
     #endregion
 
+    #region GetCompanyAndApplicationDetailsForCreateWalletAsync
+    
+    
+    [Fact]
+    public async Task GetCompanyAndApplicationDetailsForCreateWalletAsync_WithExistingApplication_ReturnsExpected()
+    {
+        // Arrange
+        var sut = await CreateSut().ConfigureAwait(false);
+        
+        // Act
+        var data = await sut.GetCompanyAndApplicationDetailsForCreateWalletAsync(SubmittedApplicationWithBpn).ConfigureAwait(false);
+        
+        // Assert
+        data.companyId.Should().Be(new Guid("27538eac-27a3-4f74-9306-e5149b93ade5"));
+        data.businessPartnerNumber.Should().Be("CAXSTESTYCATENAZZ");
+        data.companyName.Should().Be("Submitted Company With Bpn");
+    }
+
+    [Fact]
+    public async Task GetCompanyAndApplicationDetailsForCreateWalletAsync_WithNotExistingApplication_ReturnsDefault()
+    {
+        // Arrange
+        var sut = await CreateSut().ConfigureAwait(false);
+        
+        // Act
+        var data = await sut.GetCompanyAndApplicationDetailsForCreateWalletAsync(Guid.NewGuid()).ConfigureAwait(false);
+        
+        // Assert
+        data.Should().Be(default);
+    }
+    
+    #endregion
+    
     private async Task<ApplicationRepository> CreateSut()
     {
         var context = await _dbTestDbFixture.GetPortalDbContext().ConfigureAwait(false);
