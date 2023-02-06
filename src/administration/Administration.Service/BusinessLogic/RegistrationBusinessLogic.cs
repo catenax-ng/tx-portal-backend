@@ -35,7 +35,7 @@ using System.Text.RegularExpressions;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
 
-public class RegistrationBusinessLogic : IRegistrationBusinessLogic
+public sealed class RegistrationBusinessLogic : IRegistrationBusinessLogic
 {
     private readonly IPortalRepositories _portalRepositories;
     private readonly RegistrationSettings _settings;
