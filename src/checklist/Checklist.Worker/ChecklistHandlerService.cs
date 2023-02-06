@@ -44,6 +44,9 @@ public class ChecklistHandlerService : IChecklistHandlerService
         ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_MANUAL,
         ProcessStepTypeId.END_CLEARING_HOUSE,
         ProcessStepTypeId.VERIFY_REGISTRATION,
+        ProcessStepTypeId.RETRIGGER_IDENTITY_WALLET,
+        ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE,
+        ProcessStepTypeId.RETRIGGER_SELF_DESCRIPTION_LP
     };
 
     /// <inheritdoc />
@@ -64,7 +67,7 @@ public class ChecklistHandlerService : IChecklistHandlerService
         {
             (ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH, new (ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, (context, cancellationToken) => _bpdmBusinessLogic.PushLegalEntity(context, cancellationToken), null)),
             (ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL, new (ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, (context, cancellationToken) => _bpdmBusinessLogic.HandlePullLegalEntity(context, cancellationToken), null)),
-            (ProcessStepTypeId.CREATE_IDENTITY_WALLET, new (ApplicationChecklistEntryTypeId.IDENTITY_WALLET, (context, cancellationToken) => _custodianBusinessLogic.CreateIdentityWalletAsync(context, cancellationToken), null)),
+            (ProcessStepTypeId.CREATE_IDENTITY_WALLET, new (ApplicationChecklistEntryTypeId.IDENTITY_WALLET, (context, cancellationToken) => _custodianBusinessLogic.CreateIdentityWalletAsync(context, cancellationToken), (ex, context, ct) => _custodianBusinessLogic.HandleErrorAsync(ex, context, ct))),
             (ProcessStepTypeId.START_CLEARING_HOUSE, new (ApplicationChecklistEntryTypeId.CLEARING_HOUSE, (context, cancellationToken) => _clearinghouseBusinessLogic.HandleStartClearingHouse(context, cancellationToken), null)),
             (ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP, new (ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, (context, cancellationToken) => _sdFactoryBusinessLogic.RegisterSelfDescription(context, cancellationToken), null)),
             (ProcessStepTypeId.ACTIVATE_APPLICATION, new (ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, (context, cancellationToken) => _applicationActivationService.HandleApplicationActivation(context, cancellationToken), null)),

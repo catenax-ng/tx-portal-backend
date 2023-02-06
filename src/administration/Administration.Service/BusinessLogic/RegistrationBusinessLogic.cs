@@ -327,6 +327,35 @@ public sealed class RegistrationBusinessLogic : IRegistrationBusinessLogic
     }
 
     /// <inheritdoc />
+    public async Task TriggerChecklistAsync(Guid applicationId, ApplicationChecklistEntryTypeId entryTypeId)
+    {
+        var processStep = entryTypeId.GetManualTriggerProcessStepId();
+        var nextProcessStep = entryTypeId.GetManualTriggerFollowupProcessStepId();
+        if (processStep is null || nextProcessStep is null)
+        {
+            throw new ConflictException("The process can not be retriggered.");
+        }
+
+        var context = await _checklistService
+            .VerifyChecklistEntryAndProcessSteps(
+                applicationId,
+                entryTypeId,
+                new [] { ApplicationChecklistEntryStatusId.FAILED },
+                processStep.Value,
+                processStepTypeIds: new [] { nextProcessStep.Value })
+            .ConfigureAwait(false);
+
+        _checklistService.FinalizeChecklistEntryAndProcessSteps(
+            context,
+            item =>
+            {
+                item.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.TO_DO;
+            },
+            new [] { nextProcessStep.Value });
+        await _portalRepositories.SaveAsync().ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
     Task IRegistrationBusinessLogic.SetRegistrationVerification(Guid applicationId, bool approve, string? comment)
     {
         if (!approve && string.IsNullOrWhiteSpace(comment))
