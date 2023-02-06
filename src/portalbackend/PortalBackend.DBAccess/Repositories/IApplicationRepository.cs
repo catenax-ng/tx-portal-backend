@@ -84,6 +84,7 @@ public interface IApplicationRepository
     /// <returns>Returns the bpdm data</returns>
     Task<(Guid CompanyId, BpdmData BpdmData)> GetBpdmDataForApplicationAsync(Guid applicationId);
 
+    /// <summary>
     /// Gets the checklist data for a specific application
     /// </summary>
     /// <param name="applicationId">Id of the application</param>

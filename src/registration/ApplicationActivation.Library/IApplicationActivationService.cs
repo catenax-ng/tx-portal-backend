@@ -29,7 +29,7 @@ public interface IApplicationActivationService
     /// <summary>
     /// Handles the application activation
     /// </summary>
-    /// <param name="context">Context for the ApplicationActivation</param>
-    /// <param name="cancellationToken">Cancellation Token</param>
+    /// <param name="context">The context for the application activation</param>
+    /// <param name="cancellationToken">The cancellation Token</param>
     Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)> HandleApplicationActivation(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken);
 }

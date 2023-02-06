@@ -422,8 +422,9 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
         data.companyName.Should().Be("Submitted Company With Bpn");
     }
 
+
     [Fact]
-    public async Task GetCompanyAndApplicationDetailsForCreateWalletAsync_WithNotExistingApplication_ReturnsDefault()
+    public async Task GetUserDataForRoleDeletionByIamClientIdsAsync_WithValidData_ReturnsExpected()
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
