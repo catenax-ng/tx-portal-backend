@@ -404,44 +404,6 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
 
     #endregion
 
-    #region GetUserWithUserRolesForApplicationId
-
-    [Fact]
-    public async Task GetUserWithUserRolesForApplicationId_WithValidData_ReturnsExpected()
-    {
-        
-        // Arrange
-        var sut = await CreateSut().ConfigureAwait(false);
-        
-        // Act
-        var data = await sut.GetUserWithUserRolesForApplicationId(ApplicationWithBpn).ToListAsync().ConfigureAwait(false);
-        
-        // Assert
-        data.Should().HaveCount(8);
-    }
-    
-    #endregion
-
-    #region GetUserRolesByClientId
-    
-    [Fact]
-    public async Task GetUserRolesByClientId_WithValidData_ReturnsExpected()
-    {
-        
-        // Arrange
-        var sut = await CreateSut().ConfigureAwait(false);
-        
-        // Act
-        var data = await sut.GetUserRolesByClientId(Enumerable.Repeat("Cl1-CX-Registration", 1)).ToListAsync().ConfigureAwait(false);
-        
-        // Assert
-        data.Should().HaveCount(4);
-        data.Should().AllSatisfy(x => x.ClientClientId.Should().Be("Cl1-CX-Registration"));
-    }
-
-    #endregion
-
-
     private async Task<ApplicationRepository> CreateSut()
     {
         var context = await _dbTestDbFixture.GetPortalDbContext().ConfigureAwait(false);

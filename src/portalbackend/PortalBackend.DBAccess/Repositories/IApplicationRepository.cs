@@ -90,8 +90,4 @@ public interface IApplicationRepository
     /// <param name="applicationId">Id of the application</param>
     /// <returns>Returns the checklist data</returns>
     Task<(bool Exists, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId, string? Comment)> ChecklistData)> GetApplicationChecklistData(Guid applicationId);
-    
-    IAsyncEnumerable<(Guid CompanyUserId, string UserEntityId, IEnumerable<Guid> UserRoleIds)> GetUserWithUserRolesForApplicationId(Guid applicationId);
-    
-    IAsyncEnumerable<(Guid UserRoleId, string UserRoleText, string ClientClientId)> GetUserRolesByClientId(IEnumerable<string> iamClientIds);
 }

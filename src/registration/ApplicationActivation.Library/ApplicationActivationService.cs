@@ -32,6 +32,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
+using System.Collections.Immutable;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.ApplicationActivation.Library;
 
@@ -94,7 +95,7 @@ public class ApplicationActivationService : IApplicationActivationService
 
         var userRolesRepository = _portalRepositories.GetInstance<IUserRolesRepository>();
         var assignedRoles = await AssignRolesAndBpn(context.ApplicationId, userRolesRepository, applicationRepository, businessPartnerNumber).ConfigureAwait(false);
-        await RemoveRegistrationRoles(context.ApplicationId, userRolesRepository, applicationRepository).ConfigureAwait(false);
+        await RemoveRegistrationRoles(context.ApplicationId, userRolesRepository).ConfigureAwait(false);
 
         applicationRepository.AttachAndModifyCompanyApplication(context.ApplicationId, ca =>
         {
@@ -178,25 +179,34 @@ public class ApplicationActivationService : IApplicationActivationService
         return assignedRoles;
     }
 
-    private async Task RemoveRegistrationRoles(Guid applicationId, IUserRolesRepository userRolesRepository, IApplicationRepository applicationRepository)
+    private async Task RemoveRegistrationRoles(Guid applicationId, IUserRolesRepository userRolesRepository)
     {
         var iamClientIds = _settings.ClientToRemoveRolesOnActivation;
-        var invitedUsersData = applicationRepository
-            .GetUserWithUserRolesForApplicationId(applicationId);
-        var userRoles = await applicationRepository
+        var clientRoleData = await userRolesRepository
             .GetUserRolesByClientId(iamClientIds)
             .ToListAsync()
             .ConfigureAwait(false);
+        var invitedUsersData = userRolesRepository
+            .GetUserWithUserRolesForApplicationId(applicationId, clientRoleData.SelectMany(data => data.UserRoles).Select(role => role.UserRoleId));
+
+        var userRoles = clientRoleData.SelectMany(data => data.UserRoles.Select(role => (role.UserRoleId, data.ClientClientId, role.UserRoleText))).ToImmutableDictionary(x => x.UserRoleId, x => (x.ClientClientId, x.UserRoleText));
 
         await foreach (var userData in invitedUsersData.ConfigureAwait(false))
         {
-            var userRolesToDelete = userRoles.Where(x => userData.UserRoleIds.Contains(x.UserRoleId));
-            if (!userRolesToDelete.Any()) continue;
+            if (!userData.UserRoleIds.Any()) {
+                throw new UnexpectedConditionException("userRoleIds should never be empty here");
+            }
 
-            var roleNamesToDelete = iamClientIds.ToDictionary(clientId => clientId, _ => userRolesToDelete.Select(x => x.UserRoleText));
+            var roleNamesToDelete = userData.UserRoleIds
+                .Select(roleId => userRoles[roleId])
+                .GroupBy(clientRoleData => clientRoleData.ClientClientId)
+                .ToImmutableDictionary(
+                    clientRoleDataGroup => clientRoleDataGroup.Key,
+                    clientRoleData => clientRoleData.Select(y => y.UserRoleText));
+
             await _provisioningManager.DeleteClientRolesFromCentralUserAsync(userData.UserEntityId, roleNamesToDelete)
                 .ConfigureAwait(false);
-            userRolesRepository.DeleteCompanyUserAssignedRoles(userRolesToDelete.Select(x => (userData.CompanyUserId, x.UserRoleId)));
+            userRolesRepository.DeleteCompanyUserAssignedRoles(userData.UserRoleIds.Select(roleId => (userData.CompanyUserId, roleId)));
         }
     }
 

@@ -388,24 +388,4 @@ public class ApplicationRepository : IApplicationRepository
                             ace.ApplicationChecklistEntryStatusId,
                             ace.Comment))))
             .SingleOrDefaultAsync();
-
-    public IAsyncEnumerable<(Guid CompanyUserId, string UserEntityId, IEnumerable<Guid> UserRoleIds)> GetUserWithUserRolesForApplicationId(Guid applicationId) =>
-        _dbContext.CompanyApplications
-            .AsNoTracking()
-            .Where(a => a.Id == applicationId)
-            .Select(a => a.Company!.CompanyUsers)
-            .SelectMany(x => x.Select(cu => new ValueTuple<Guid, string, IEnumerable<Guid>>(cu.Id, cu.IamUser!.UserEntityId, cu.UserRoles.Select(ur => ur.Id))))
-            .ToAsyncEnumerable();
-
-    public IAsyncEnumerable<(Guid UserRoleId, string UserRoleText, string ClientClientId)> GetUserRolesByClientId(IEnumerable<string> iamClientIds) =>
-        _dbContext.AppInstances
-            .AsNoTracking()
-            .Where(instance => iamClientIds.Contains(instance.IamClient!.ClientClientId))
-            .Select(instance => new
-            {
-                Instance = instance,
-                Roles = instance.App!.UserRoles
-            })
-            .SelectMany(x => x.Roles.Select(ur => new ValueTuple<Guid, string, string>(ur.Id, ur.UserRoleText, x.Instance.IamClient!.ClientClientId)))
-            .ToAsyncEnumerable();
 }

@@ -675,15 +675,15 @@ public class ApplicationActivationTests
             new (CompanyUserId2, "2", new [] {CompanyUserRoleId}),
             new (CompanyUserId3, "3", new [] {CompanyUserRoleId}),
         };
-        var userRoles = new List<(Guid UserRoleId, string UserRoleText, string ClientClientId)>
-        {
-            new (CompanyUserRoleId, "Company Admin", "remove-id")
+        var userRoles = new (string ClientClientId, IEnumerable<(Guid UserRoleId, string UserRoleText)>)[] {
+            ( "remove-id", new [] { ( CompanyUserRoleId, "Company Admin" ) } )
         };
-        A.CallTo(() => _applicationRepository.GetUserWithUserRolesForApplicationId(Id))
-            .Returns(userData.ToAsyncEnumerable());
-        
-        A.CallTo(() => _applicationRepository.GetUserRolesByClientId(A<IEnumerable<string>>.That.Matches(x => x.Contains("remove-id") && x.Count() == 1)))
+
+        A.CallTo(() => _rolesRepository.GetUserRolesByClientId(A<IEnumerable<string>>._))
             .Returns(userRoles.ToAsyncEnumerable());
+
+        A.CallTo(() => _rolesRepository.GetUserWithUserRolesForApplicationId(A<Guid>._,A<IEnumerable<Guid>>._))
+            .Returns(userData.ToAsyncEnumerable());
     }
 
     #endregion
