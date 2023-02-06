@@ -18,24 +18,21 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
-using System.Collections.Immutable;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
+namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Worker;
 
-public interface IChecklistService
+public interface IChecklistHandlerService
 {
-    record ManualChecklistProcessStepData(Guid ApplicationId, Guid ProcessStepId, ApplicationChecklistEntryTypeId EntryTypeId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> Checklist, IEnumerable<ProcessStep> ProcessSteps);
-    record WorkerChecklistProcessStepData(Guid ApplicationId, ImmutableDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> Checklist, IEnumerable<ProcessStepTypeId> ProcessStepTypeIds);
     record ProcessStepExecution(
         ApplicationChecklistEntryTypeId EntryTypeId,
         Func<IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)>> ProcessFunc,
         Func<Exception,IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)>>? ErrorFunc
     );
 
-    Task<ManualChecklistProcessStepData> VerifyChecklistEntryAndProcessSteps(Guid applicationId, ApplicationChecklistEntryTypeId entryTypeId, IEnumerable<ApplicationChecklistEntryStatusId> entryStatusIds, ProcessStepTypeId processStepTypeId, IEnumerable<ApplicationChecklistEntryTypeId>? entryTypeIds = null, IEnumerable<ProcessStepTypeId>? processStepTypeIds = null);
-    void SkipProcessSteps(IChecklistService.ManualChecklistProcessStepData context, IEnumerable<ProcessStepTypeId> processStepTypeIds);
-    void FinalizeChecklistEntryAndProcessSteps(ManualChecklistProcessStepData context, Action<ApplicationChecklistEntry> modifyApplicationChecklistEntry, IEnumerable<ProcessStepTypeId>? nextProcessStepTypeIds);
-    bool ScheduleProcessSteps(WorkerChecklistProcessStepData context, IEnumerable<ProcessStepTypeId> processStepTypeIds);
+    ProcessStepExecution GetProcessStepExecution(ProcessStepTypeId stepTypeId);
+
+    bool IsManualProcessStep(ProcessStepTypeId stepTypeId);
 }

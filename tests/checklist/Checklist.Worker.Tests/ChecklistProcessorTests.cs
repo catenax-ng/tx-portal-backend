@@ -19,16 +19,12 @@
  ********************************************************************************/
 
 using Microsoft.Extensions.Logging;
-using Org.Eclipse.TractusX.Portal.Backend.ApplicationActivation.Library;
-using Org.Eclipse.TractusX.Portal.Backend.Bpdm.Library.BusinessLogic;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
-using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.BusinessLogic;
-using Org.Eclipse.TractusX.Portal.Backend.Custodian.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
-using Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared;
 using System.Collections.Immutable;
 
@@ -39,15 +35,17 @@ public class ChecklistProcessorTests
     private readonly IPortalRepositories _portalRepositories;
     private readonly IApplicationChecklistRepository _applicationChecklistRepository;
     private readonly IProcessStepRepository _processStepRepository;
-    private readonly IBpdmBusinessLogic _bpdmBusinessLogic;
-    private readonly ICustodianBusinessLogic _custodianBusinessLogic;
-    private readonly IClearinghouseBusinessLogic _clearinghouseBusinessLogic;
-    private readonly ISdFactoryBusinessLogic _sdFactoryBusinessLogic;
-    private readonly IApplicationActivationService _applicationActivationService;
+    private readonly IChecklistHandlerService _checklistHandlerService;
+    private readonly IChecklistHandlerService.ProcessStepExecution _firstExecution;
+    private readonly IChecklistHandlerService.ProcessStepExecution _secondExecution;
+    private readonly Func<IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)>> _firstProcessFunc;
+    private readonly Func<IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)>> _secondProcessFunc;
+    private readonly Func<Exception,IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)>> _errorFunc;
     private readonly IMockLogger<ChecklistProcessor> _mockLogger;
     private readonly ILogger<ChecklistProcessor> _logger;
     private readonly ChecklistProcessor _processor;
     private readonly IFixture _fixture;
+    private readonly IEnumerable<ProcessStepTypeId> _manualSteps;
 
     public ChecklistProcessorTests()
     {
@@ -60,11 +58,14 @@ public class ChecklistProcessorTests
         _applicationChecklistRepository = A.Fake<IApplicationChecklistRepository>();
         _processStepRepository = A.Fake<IProcessStepRepository>();
 
-        _bpdmBusinessLogic = A.Fake<IBpdmBusinessLogic>();
-        _custodianBusinessLogic = A.Fake<ICustodianBusinessLogic>();
-        _clearinghouseBusinessLogic = A.Fake<IClearinghouseBusinessLogic>();
-        _sdFactoryBusinessLogic = A.Fake<ISdFactoryBusinessLogic>();
-        _applicationActivationService = A.Fake<IApplicationActivationService>();
+        _checklistHandlerService = A.Fake<IChecklistHandlerService>();
+
+        _firstProcessFunc = A.Fake<Func<IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)>>>();
+        _errorFunc = A.Fake<Func<Exception,IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)>>>();
+        _firstExecution = new IChecklistHandlerService.ProcessStepExecution(ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER,_firstProcessFunc,_errorFunc);
+
+        _secondProcessFunc = A.Fake<Func<IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)>>>();
+        _secondExecution = new IChecklistHandlerService.ProcessStepExecution(ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION,_secondProcessFunc,null);
 
         _mockLogger = A.Fake<IMockLogger<ChecklistProcessor>>();
         _logger = new MockLogger<ChecklistProcessor>(_mockLogger);
@@ -76,12 +77,12 @@ public class ChecklistProcessorTests
 
         _processor = new ChecklistProcessor(
             _portalRepositories,
-            _bpdmBusinessLogic,
-            _custodianBusinessLogic,
-            _clearinghouseBusinessLogic,
-            _sdFactoryBusinessLogic,
-            _applicationActivationService,
+            _checklistHandlerService,
             _logger);
+
+        _manualSteps = Enum.GetValues<ProcessStepTypeId>().Except(new [] { ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH, ProcessStepTypeId.ACTIVATE_APPLICATION }).ToImmutableArray();
+
+        SetupFakes();
     }
 
     [Fact]
@@ -92,6 +93,7 @@ public class ChecklistProcessorTests
             .Select(typeId => _fixture
                 .Build<(ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId)>()
                 .With(x => x.Item1, typeId)
+                .With(x => x.Item2, ApplicationChecklistEntryStatusId.TO_DO)
                 .Create())
             .ToImmutableArray();
 
@@ -102,9 +104,9 @@ public class ChecklistProcessorTests
                     .Create())
             .ToImmutableArray();
 
-        A.CallTo(() => _bpdmBusinessLogic.PushLegalEntity(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
+        A.CallTo(() => _firstProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
             .Returns((
-                (ApplicationChecklistEntry entry) => { entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE; },
+                (ApplicationChecklistEntry entry) => { entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.IN_PROGRESS; },
                 new [] {
                     ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH,
                     ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH
@@ -117,69 +119,9 @@ public class ChecklistProcessorTests
                 null,
                 true));
 
-        A.CallTo(() => _bpdmBusinessLogic.HandlePullLegalEntity(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
+        A.CallTo(() => _secondProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
             .Returns((
-                (ApplicationChecklistEntry entry) => { entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE; },
-                new [] {
-                    ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL,
-                    ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL
-                },
-                true))
-            .Once()
-            .Then
-            .Returns((
-                (ApplicationChecklistEntry entry) => { entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE; },
-                null,
-                true));
-
-        A.CallTo(() => _custodianBusinessLogic.CreateIdentityWalletAsync(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
-            .Returns((
-                (ApplicationChecklistEntry entry) => { entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE; },
-                new [] {
-                    ProcessStepTypeId.CREATE_IDENTITY_WALLET,
-                    ProcessStepTypeId.CREATE_IDENTITY_WALLET
-                },
-                true))
-            .Once()
-            .Then
-            .Returns((
-                (ApplicationChecklistEntry entry) => { entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE; },
-                null,
-                true));
-
-        A.CallTo(() => _clearinghouseBusinessLogic.HandleStartClearingHouse(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
-            .Returns((
-                (ApplicationChecklistEntry entry) => { entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE; },
-                new [] {
-                    ProcessStepTypeId.START_CLEARING_HOUSE,
-                    ProcessStepTypeId.START_CLEARING_HOUSE
-                },
-                true))
-            .Once()
-            .Then
-            .Returns((
-                (ApplicationChecklistEntry entry) => { entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE; },
-                null,
-                true));
-
-        A.CallTo(() => _sdFactoryBusinessLogic.RegisterSelfDescription(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
-            .Returns((
-                (ApplicationChecklistEntry entry) => { entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE; },
-                new [] {
-                    ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP,
-                    ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP
-                },
-                true))
-            .Once()
-            .Then
-            .Returns((
-                (ApplicationChecklistEntry entry) => { entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE; },
-                null,
-                true));
-
-        A.CallTo(() => _applicationActivationService.HandleApplicationActivation(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
-            .Returns((
-                (ApplicationChecklistEntry entry) => { entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE; },
+                (ApplicationChecklistEntry entry) => { entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.TO_DO; },
                 new [] {
                     ProcessStepTypeId.ACTIVATE_APPLICATION,
                     ProcessStepTypeId.ACTIVATE_APPLICATION
@@ -188,54 +130,47 @@ public class ChecklistProcessorTests
             .Once()
             .Then
             .Returns((
-                (ApplicationChecklistEntry entry) => { entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE; },
+                (ApplicationChecklistEntry entry) => { entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.FAILED; },
                 null,
                 true));
 
-        var manualStepTypeIds = new [] {
-                ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_MANUAL,
-                ProcessStepTypeId.END_CLEARING_HOUSE,
-                ProcessStepTypeId.VERIFY_REGISTRATION,
-            }.ToImmutableArray();
+        var modifiedSteps = new List<ProcessStep>();
 
-        var automaticStepTypeIds = Enum.GetValues<ProcessStepTypeId>().Except(manualStepTypeIds).ToImmutableArray();
+        A.CallTo(()=> _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._))
+            .Invokes((Guid processStepId, Action<ProcessStep>? initialize, Action<ProcessStep> modify) =>
+            {
+                var step = new ProcessStep(processStepId, default, default);
+                initialize?.Invoke(step);
+                modify(step);
+                modifiedSteps.Add(step);
+            });
 
         // Act
         var result = await _processor.ProcessChecklist(Guid.NewGuid(), checklist, processSteps, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
-        result.Should().HaveCount(automaticStepTypeIds.Length * 2);
+        result.Should().HaveCount(4);
+        result.Should().Contain((ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.IN_PROGRESS));
+        result.Should().Contain((ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.DONE));
+        result.Should().Contain((ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, ApplicationChecklistEntryStatusId.TO_DO));
+        result.Should().Contain((ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, ApplicationChecklistEntryStatusId.FAILED));
 
-        A.CallTo(() => _bpdmBusinessLogic.PushLegalEntity(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
+        A.CallTo(() => _secondProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
             .MustHaveHappenedTwiceExactly();
 
-        A.CallTo(() => _bpdmBusinessLogic.HandlePullLegalEntity(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
+        A.CallTo(() => _firstProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
             .MustHaveHappenedTwiceExactly();
 
-        A.CallTo(() => _custodianBusinessLogic.CreateIdentityWalletAsync(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
-            .MustHaveHappenedTwiceExactly();
-
-        A.CallTo(() => _clearinghouseBusinessLogic.HandleStartClearingHouse(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
-            .MustHaveHappenedTwiceExactly();
-
-        A.CallTo(() => _sdFactoryBusinessLogic.RegisterSelfDescription(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
-            .MustHaveHappenedTwiceExactly();
-
-        A.CallTo(() => _applicationActivationService.HandleApplicationActivation(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
-            .MustHaveHappenedTwiceExactly();
-
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.VERIFY_REGISTRATION, ProcessStepStatusId.TODO)).MustNotHaveHappened();
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_MANUAL, ProcessStepStatusId.TODO)).MustNotHaveHappened();
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.END_CLEARING_HOUSE, ProcessStepStatusId.TODO)).MustNotHaveHappened();
-
+        A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>.That.Matches(step => _manualSteps.Contains(step)), ProcessStepStatusId.TODO)).MustNotHaveHappened();
         A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH, ProcessStepStatusId.TODO)).MustHaveHappenedOnceExactly();
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL, ProcessStepStatusId.TODO)).MustHaveHappenedOnceExactly();
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_IDENTITY_WALLET, ProcessStepStatusId.TODO)).MustHaveHappenedOnceExactly();
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.START_CLEARING_HOUSE, ProcessStepStatusId.TODO)).MustHaveHappenedOnceExactly();
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP, ProcessStepStatusId.TODO)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.ACTIVATE_APPLICATION, ProcessStepStatusId.TODO)).MustHaveHappenedOnceExactly();
 
-        A.CallTo(()=> _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._)).MustHaveHappened(processSteps.Where(step => automaticStepTypeIds.Contains(step.ProcessStepTypeId)).Count() + 6, Times.Exactly);
+        var automaticSteps = processSteps.Where(step => !_manualSteps.Contains(step.ProcessStepTypeId)).ToList();
+        var numAutomaticProcessStepTypes = automaticSteps.GroupBy(step => step.ProcessStepTypeId).Count();
+
+        A.CallTo(()=> _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._)).MustHaveHappened(automaticSteps.Count + numAutomaticProcessStepTypes, Times.Exactly);
+        modifiedSteps.Should().HaveCount(automaticSteps.Count + numAutomaticProcessStepTypes);
+        modifiedSteps.Where(step => step.ProcessStepStatusId == ProcessStepStatusId.DUPLICATE).Should().HaveCount(automaticSteps.Count-numAutomaticProcessStepTypes);
     }
 
     [Fact]
@@ -249,11 +184,7 @@ public class ChecklistProcessorTests
                 .Create())
             .ToImmutableArray();
 
-        var processSteps = new [] {
-            ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_MANUAL,
-            ProcessStepTypeId.END_CLEARING_HOUSE,
-            ProcessStepTypeId.VERIFY_REGISTRATION
-        }.Select(steptTypeId => new ProcessStep(Guid.NewGuid(), steptTypeId, ProcessStepStatusId.TODO)).ToImmutableArray();
+        var processSteps = _manualSteps.Select(steptTypeId => new ProcessStep(Guid.NewGuid(), steptTypeId, ProcessStepStatusId.TODO)).ToImmutableArray();
 
         // Act
         var result = await _processor.ProcessChecklist(Guid.NewGuid(), checklist, processSteps, CancellationToken.None).ToListAsync().ConfigureAwait(false);
@@ -261,30 +192,14 @@ public class ChecklistProcessorTests
         // Assert
         result.Should().BeEmpty();
 
-        A.CallTo(() => _bpdmBusinessLogic.HandlePullLegalEntity(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
+        A.CallTo(() => _firstProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
             .MustNotHaveHappened();
 
-        A.CallTo(() => _custodianBusinessLogic.CreateIdentityWalletAsync(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
+        A.CallTo(() => _secondProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
             .MustNotHaveHappened();
 
-        A.CallTo(() => _clearinghouseBusinessLogic.HandleStartClearingHouse(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
-            .MustNotHaveHappened();
-
-        A.CallTo(() => _sdFactoryBusinessLogic.RegisterSelfDescription(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
-            .MustNotHaveHappened();
-
-        A.CallTo(() => _applicationActivationService.HandleApplicationActivation(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
-            .MustNotHaveHappened();
-    
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.VERIFY_REGISTRATION, ProcessStepStatusId.TODO)).MustNotHaveHappened();
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_MANUAL, ProcessStepStatusId.TODO)).MustNotHaveHappened();
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.END_CLEARING_HOUSE, ProcessStepStatusId.TODO)).MustNotHaveHappened();
-
+        A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>.That.Matches(step => _manualSteps.Contains(step)), ProcessStepStatusId.TODO)).MustNotHaveHappened();
         A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH, ProcessStepStatusId.TODO)).MustNotHaveHappened();
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL, ProcessStepStatusId.TODO)).MustNotHaveHappened();
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_IDENTITY_WALLET, ProcessStepStatusId.TODO)).MustNotHaveHappened();
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.START_CLEARING_HOUSE, ProcessStepStatusId.TODO)).MustNotHaveHappened();
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP, ProcessStepStatusId.TODO)).MustNotHaveHappened();
         A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.ACTIVATE_APPLICATION, ProcessStepStatusId.TODO)).MustNotHaveHappened();
     
         A.CallTo(()=> _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._)).MustNotHaveHappened();
@@ -302,10 +217,10 @@ public class ChecklistProcessorTests
             .ToImmutableArray();
 
         var processSteps = new [] {
-            ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL
+            ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH
         }.Select(steptTypeId => new ProcessStep(Guid.NewGuid(), steptTypeId, ProcessStepStatusId.TODO)).ToImmutableArray();
 
-        A.CallTo(() => _bpdmBusinessLogic.HandlePullLegalEntity(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
+        A.CallTo(() => _firstProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
             .Returns((
                 (ApplicationChecklistEntry entry) => { entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE; },
                 new [] {
@@ -324,19 +239,10 @@ public class ChecklistProcessorTests
         // Assert
         result.Should().HaveCount(1);
 
-        A.CallTo(() => _bpdmBusinessLogic.HandlePullLegalEntity(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
+        A.CallTo(() => _firstProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
             .MustHaveHappenedOnceExactly();
 
-        A.CallTo(() => _custodianBusinessLogic.CreateIdentityWalletAsync(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
-            .MustNotHaveHappened();
-
-        A.CallTo(() => _clearinghouseBusinessLogic.HandleStartClearingHouse(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
-            .MustNotHaveHappened();
-
-        A.CallTo(() => _sdFactoryBusinessLogic.RegisterSelfDescription(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
-            .MustNotHaveHappened();
-
-        A.CallTo(() => _applicationActivationService.HandleApplicationActivation(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
+        A.CallTo(() => _secondProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
             .MustNotHaveHappened();
 
         A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.VERIFY_REGISTRATION, ProcessStepStatusId.TODO)).MustHaveHappenedOnceExactly();
@@ -351,5 +257,275 @@ public class ChecklistProcessorTests
         A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.ACTIVATE_APPLICATION, ProcessStepStatusId.TODO)).MustNotHaveHappened();
 
         A.CallTo(()=> _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._)).MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task ProcessChecklist_SkipStep_ReturnsExpected()
+    {
+        // Arrange
+        var checklist = Enum.GetValues<ApplicationChecklistEntryTypeId>()
+            .Select(typeId => _fixture
+                .Build<(ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId)>()
+                .With(x => x.Item1, typeId)
+                .With(x => x.Item2, ApplicationChecklistEntryStatusId.TO_DO)
+                .Create())
+            .ToImmutableArray();
+
+        var processSteps = new [] {
+            ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH
+        }.Select(steptTypeId => new ProcessStep(Guid.NewGuid(), steptTypeId, ProcessStepStatusId.TODO)).ToImmutableArray();
+
+        A.CallTo(() => _firstProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
+            .Returns((
+                null,
+                null,
+                false));
+
+        // Act
+        var result = await _processor.ProcessChecklist(Guid.NewGuid(), checklist, processSteps, CancellationToken.None).ToListAsync().ConfigureAwait(false);
+
+        // Assert
+        result.Should().BeEmpty();
+
+        A.CallTo(() => _firstProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
+            .MustHaveHappenedOnceExactly();
+
+        A.CallTo(() => _secondProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
+            .MustNotHaveHappened();
+
+        A.CallTo(() => _errorFunc(A<Exception>._, A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
+            .MustNotHaveHappened();
+
+        A.CallTo(()=> _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._)).MustNotHaveHappened();
+    }
+
+    [Fact]
+    public async Task ProcessChecklist_ErrorFunc_ReturnsExpected()
+    {
+        // Arrange
+        var checklist = Enum.GetValues<ApplicationChecklistEntryTypeId>()
+            .Select(typeId => _fixture
+                .Build<(ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId)>()
+                .With(x => x.Item1, typeId)
+                .With(x => x.Item2, ApplicationChecklistEntryStatusId.TO_DO)
+                .Create())
+            .ToImmutableArray();
+
+        var processSteps = new [] {
+            ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH
+        }.Select(steptTypeId => new ProcessStep(Guid.NewGuid(), steptTypeId, ProcessStepStatusId.TODO)).ToImmutableArray();
+
+        var message = _fixture.Create<string>();
+
+        A.CallTo(() => _firstProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
+            .Throws(new TestException(message));
+
+        A.CallTo(() => _secondProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
+            .Returns((
+                (ApplicationChecklistEntry entry) => { entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE; },
+                null,
+                true));
+
+        A.CallTo(() => _errorFunc(A<Exception>._,A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
+            .ReturnsLazily((Exception ex, IChecklistService.WorkerChecklistProcessStepData _, CancellationToken _) => (
+                (ApplicationChecklistEntry entry) => { entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.IN_PROGRESS; },
+                new [] {
+                    ProcessStepTypeId.ACTIVATE_APPLICATION,
+                },
+                true));
+
+        // Act
+        var result = await _processor.ProcessChecklist(Guid.NewGuid(), checklist, processSteps, CancellationToken.None).ToListAsync().ConfigureAwait(false);
+
+        // Assert
+        result.Should().HaveCount(2);
+        result.Should().Contain((ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.IN_PROGRESS));
+        result.Should().Contain((ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, ApplicationChecklistEntryStatusId.DONE));
+
+        A.CallTo(() => _firstProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
+            .MustHaveHappenedOnceExactly();
+
+        A.CallTo(() => _secondProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
+            .MustHaveHappenedOnceExactly();
+
+        A.CallTo(() => _errorFunc(A<Exception>._, A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
+            .MustHaveHappenedOnceExactly();
+
+        A.CallTo(()=> _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._)).MustHaveHappenedTwiceExactly();
+    }
+
+    [Fact]
+    public async Task ProcessChecklist_DefaultError_ReturnsExpected()
+    {
+        // Arrange
+        var checklist = Enum.GetValues<ApplicationChecklistEntryTypeId>()
+            .Select(typeId => _fixture
+                .Build<(ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId)>()
+                .With(x => x.Item1, typeId)
+                .With(x => x.Item2, ApplicationChecklistEntryStatusId.TO_DO)
+                .Create())
+            .ToImmutableArray();
+
+        var processSteps = new [] {
+            ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH
+        }.Select(steptTypeId => new ProcessStep(Guid.NewGuid(), steptTypeId, ProcessStepStatusId.TODO)).ToImmutableArray();
+
+        var message = _fixture.Create<string>();
+
+        A.CallTo(() => _firstProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
+            .Returns((
+                (ApplicationChecklistEntry entry) => { entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.IN_PROGRESS; },
+                new [] { ProcessStepTypeId.ACTIVATE_APPLICATION },
+                true));
+
+        A.CallTo(() => _secondProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
+            .Throws(new TestException(message));
+
+        // Act
+        var result = await _processor.ProcessChecklist(Guid.NewGuid(), checklist, processSteps, CancellationToken.None).ToListAsync().ConfigureAwait(false);
+
+        // Assert
+        result.Should().HaveCount(2);
+        result.Should().Contain((ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.IN_PROGRESS));
+        result.Should().Contain((ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, ApplicationChecklistEntryStatusId.FAILED));
+
+        A.CallTo(() => _firstProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
+            .MustHaveHappenedOnceExactly();
+
+        A.CallTo(() => _secondProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
+            .MustHaveHappenedOnceExactly();
+
+        A.CallTo(() => _errorFunc(A<Exception>._, A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
+            .MustNotHaveHappened();
+
+        A.CallTo(()=> _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._)).MustHaveHappenedTwiceExactly();
+    }
+
+    [Fact]
+    public async Task ProcessChecklist_DefaultServiceError_ReturnsExpected()
+    {
+        // Arrange
+        var checklist = Enum.GetValues<ApplicationChecklistEntryTypeId>()
+            .Select(typeId => _fixture
+                .Build<(ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId)>()
+                .With(x => x.Item1, typeId)
+                .With(x => x.Item2, ApplicationChecklistEntryStatusId.TO_DO)
+                .Create())
+            .ToImmutableArray();
+
+        var processSteps = new [] {
+            ProcessStepTypeId.ACTIVATE_APPLICATION
+        }.Select(steptTypeId => new ProcessStep(Guid.NewGuid(), steptTypeId, ProcessStepStatusId.TODO)).ToImmutableArray();
+
+        var message = _fixture.Create<string>();
+
+        A.CallTo(() => _secondProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
+            .Throws(new ServiceException(message, System.Net.HttpStatusCode.ServiceUnavailable));
+
+        var modifiedEntries = new List<ApplicationChecklistEntry>();
+
+        A.CallTo(() => _applicationChecklistRepository.AttachAndModifyApplicationChecklist(A<Guid>._,A<ApplicationChecklistEntryTypeId>._,A<Action<ApplicationChecklistEntry>>._))
+            .ReturnsLazily((Guid applicationId, ApplicationChecklistEntryTypeId entryTypeId, Action<ApplicationChecklistEntry> setFields) =>
+            {
+                var entry = new ApplicationChecklistEntry(applicationId, entryTypeId, default, default);
+                setFields(entry);
+                modifiedEntries.Add(entry);
+                return entry;
+            });
+
+        var modifiedSteps = new List<ProcessStep>();
+
+        A.CallTo(()=> _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._))
+            .Invokes((Guid processStepId, Action<ProcessStep> initialize, Action<ProcessStep> modify) =>
+            {
+                var step = new ProcessStep(processStepId, default, default);
+                initialize?.Invoke(step);
+                modify(step);
+                modifiedSteps.Add(step);
+            });
+
+        // Act
+        var result = await _processor.ProcessChecklist(Guid.NewGuid(), checklist, processSteps, CancellationToken.None).ToListAsync().ConfigureAwait(false);
+
+        // Assert
+        result.Should().HaveCount(1);
+        result.Should().Contain((ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, default));
+
+        modifiedEntries.Should().HaveCount(1);
+        modifiedEntries.Single().Should().Match<ApplicationChecklistEntry>(entry => entry.ApplicationChecklistEntryTypeId == ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION && entry.Comment != null && entry.Comment.Contains($"ServiceException: {message}"));
+
+        modifiedSteps.Should().HaveCount(1);
+        modifiedSteps.Single().Should().Match<ProcessStep>(step => step.ProcessStepStatusId == ProcessStepStatusId.TODO);
+
+        A.CallTo(() => _firstProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
+            .MustNotHaveHappened();
+
+        A.CallTo(() => _secondProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
+            .MustHaveHappenedOnceExactly();
+
+        A.CallTo(() => _errorFunc(A<Exception>._, A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
+            .MustNotHaveHappened();
+
+        A.CallTo(()=> _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._)).MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task ProcessChecklist_MissingChecklistEntry_ThrowsExpected()
+    {
+        // Arrange
+        var checklist = new [] {
+                (ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, ApplicationChecklistEntryStatusId.TO_DO)
+            }.ToImmutableArray();
+
+        var processSteps = new [] {
+            ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH
+        }.Select(steptTypeId => new ProcessStep(Guid.NewGuid(), steptTypeId, ProcessStepStatusId.TODO)).ToImmutableArray();
+
+        // Act
+        var Act = async () => await _processor.ProcessChecklist(Guid.NewGuid(), checklist, processSteps, CancellationToken.None).ToListAsync().ConfigureAwait(false);
+
+        var result = await Assert.ThrowsAsync<ConflictException>(Act).ConfigureAwait(false);
+
+        // Assert
+        result.Message.Should().Be("no checklist entry BUSINESS_PARTNER_NUMBER for CREATE_BUSINESS_PARTNER_NUMBER_PUSH");
+    }
+
+    #region Setup
+
+    private void SetupFakes()
+    {
+        A.CallTo(() => _applicationChecklistRepository.AttachAndModifyApplicationChecklist(A<Guid>._,A<ApplicationChecklistEntryTypeId>._,A<Action<ApplicationChecklistEntry>>._))
+            .ReturnsLazily((Guid applicationId, ApplicationChecklistEntryTypeId entryTypeId, Action<ApplicationChecklistEntry> setFields) =>
+            {
+                var entry = new ApplicationChecklistEntry(applicationId, entryTypeId, default, default);
+                setFields(entry);
+                return entry;
+            });
+
+        A.CallTo(() => _checklistHandlerService.GetProcessStepExecution(A<ProcessStepTypeId>._))
+            .ReturnsLazily((ProcessStepTypeId stepTypeId) =>
+                stepTypeId switch
+                {
+                    ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH => _firstExecution,
+                    ProcessStepTypeId.ACTIVATE_APPLICATION => _secondExecution,
+                    _ => throw new ConflictException($"no execution defined for processStep {stepTypeId}"),
+                }
+            );
+
+        A.CallTo(() => _checklistHandlerService.IsManualProcessStep(A<ProcessStepTypeId>._))
+            .ReturnsLazily((ProcessStepTypeId stepTypeId) => _manualSteps.Contains(stepTypeId));
+    }
+
+    #endregion
+
+    [Serializable]
+    public class TestException : Exception
+    {
+        public TestException() { }
+        public TestException(string message) : base(message) { }
+        public TestException(string message, Exception inner) : base(message, inner) { }
+        protected TestException(
+            System.Runtime.Serialization.SerializationInfo info,
+            System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 }

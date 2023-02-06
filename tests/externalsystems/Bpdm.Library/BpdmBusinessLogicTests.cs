@@ -82,7 +82,7 @@ public class BpdmBusinessLogicTests
             .ToImmutableDictionary();
         var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithBpn, checklist, Enumerable.Empty<ProcessStepTypeId>());
         A.CallTo(() => _applicationRepository.GetBpdmDataForApplicationAsync(A<Guid>.That.Matches(x => x == IdWithBpn)))
-            .ReturnsLazily(() => (ValidCompanyId, null));
+            .ReturnsLazily(() => (ValidCompanyId, null!));
 
         // Act
         async Task Act() => await _logic.PushLegalEntity(context, CancellationToken.None).ConfigureAwait(false);

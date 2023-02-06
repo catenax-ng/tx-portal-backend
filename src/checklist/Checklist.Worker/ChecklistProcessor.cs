@@ -19,17 +19,12 @@
  ********************************************************************************/
 
 using Microsoft.Extensions.Logging;
-using Org.Eclipse.TractusX.Portal.Backend.ApplicationActivation.Library;
-using Org.Eclipse.TractusX.Portal.Backend.Bpdm.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
-using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.BusinessLogic;
-using Org.Eclipse.TractusX.Portal.Backend.Custodian.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
-using Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.BusinessLogic;
 using System.Collections.Immutable;
 using System.Net;
 using System.Runtime.CompilerServices;
@@ -40,48 +35,20 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Worker;
 public class ChecklistProcessor : IChecklistProcessor
 {
     private readonly IPortalRepositories _portalRepositories;
-    private readonly IBpdmBusinessLogic _bpdmBusinessLogic;
-    private readonly ICustodianBusinessLogic _custodianBusinessLogic;
-    private readonly IClearinghouseBusinessLogic _clearinghouseBusinessLogic;
-    private readonly ISdFactoryBusinessLogic _sdFactoryBusinessLogic;
-    private readonly IApplicationActivationService _applicationActivationService;
+    private readonly IChecklistHandlerService _checklistHandlerService;
     private readonly ILogger<IChecklistProcessor> _logger;
-    private readonly ImmutableDictionary<ProcessStepTypeId, StepExecution> _stepExecutions;
 
     /// <inheritdoc />
     public ChecklistProcessor(
         IPortalRepositories portalRepositories,
-        IBpdmBusinessLogic bpdmBusinessLogic,
-        ICustodianBusinessLogic custodianBusinessLogic,
-        IClearinghouseBusinessLogic clearinghouseBusinessLogic,
-        ISdFactoryBusinessLogic sdFactoryBusinessLogic,
-        IApplicationActivationService applicationActivationService,
+        IChecklistHandlerService checklistHandlerService,
         ILogger<IChecklistProcessor> logger)
     {
         _portalRepositories = portalRepositories;
-        _bpdmBusinessLogic = bpdmBusinessLogic;
-        _custodianBusinessLogic = custodianBusinessLogic;
-        _clearinghouseBusinessLogic = clearinghouseBusinessLogic;
-        _sdFactoryBusinessLogic = sdFactoryBusinessLogic;
-        _applicationActivationService = applicationActivationService;
+        _checklistHandlerService = checklistHandlerService;
+
         _logger = logger;
-
-        _stepExecutions = new (ProcessStepTypeId ProcessStepTypeId, StepExecution StepExecution)[]
-        {
-            (ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH, new (ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, (context, cancellationToken) => _bpdmBusinessLogic.PushLegalEntity(context, cancellationToken), null)),
-            (ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL, new (ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, (context, cancellationToken) => _bpdmBusinessLogic.HandlePullLegalEntity(context, cancellationToken), null)),
-            (ProcessStepTypeId.CREATE_IDENTITY_WALLET, new (ApplicationChecklistEntryTypeId.IDENTITY_WALLET, (context, cancellationToken) => _custodianBusinessLogic.CreateIdentityWalletAsync(context, cancellationToken), null)),
-            (ProcessStepTypeId.START_CLEARING_HOUSE, new (ApplicationChecklistEntryTypeId.CLEARING_HOUSE, (context, cancellationToken) => _clearinghouseBusinessLogic.HandleStartClearingHouse(context, cancellationToken), null)),
-            (ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP, new (ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, (context, cancellationToken) => _sdFactoryBusinessLogic.RegisterSelfDescription(context, cancellationToken), null)),
-            (ProcessStepTypeId.ACTIVATE_APPLICATION, new (ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, (context, cancellationToken) => _applicationActivationService.HandleApplicationActivation(context, cancellationToken), null)),
-        }.ToImmutableDictionary(x => x.ProcessStepTypeId, x => x.StepExecution);
     }
-
-    private static readonly IEnumerable<ProcessStepTypeId> _manuelProcessSteps = new [] {
-        ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_MANUAL,
-        ProcessStepTypeId.END_CLEARING_HOUSE,
-        ProcessStepTypeId.VERIFY_REGISTRATION,
-    };
 
     private sealed record ProcessingContext(
         Guid ApplicationId,
@@ -92,12 +59,6 @@ public class ChecklistProcessor : IChecklistProcessor
         IApplicationChecklistRepository ChecklistRepository,
         IProcessStepRepository ProcessStepRepository);
 
-    private sealed record StepExecution(
-        ApplicationChecklistEntryTypeId EntryTypeId,
-        Func<IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)>> ProcessFunc,
-        Func<Exception,IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)>>? ErrorFunc
-    );
-
     /// <inheritdoc />
     public async IAsyncEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> ProcessChecklist(Guid applicationId, IEnumerable<(ApplicationChecklistEntryTypeId EntryTypeId, ApplicationChecklistEntryStatusId EntryStatusId)> checklistEntries, IEnumerable<ProcessStep> processSteps, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
@@ -107,8 +68,8 @@ public class ChecklistProcessor : IChecklistProcessor
             applicationId,
             checklistEntries.ToDictionary(entry => entry.EntryTypeId, entry => entry.EntryStatusId),
             allSteps,
-            new Queue<ProcessStepTypeId>(allSteps.Select(step => step.Key).Except(_manuelProcessSteps)),
-            allSteps.Select(step => step.Key).Intersect(_manuelProcessSteps).ToList(),
+            new Queue<ProcessStepTypeId>(allSteps.Keys.Where(step => !_checklistHandlerService.IsManualProcessStep(step))),
+            allSteps.Keys.Where(step => _checklistHandlerService.IsManualProcessStep(step)).ToList(),
             _portalRepositories.GetInstance<IApplicationChecklistRepository>(),
             _portalRepositories.GetInstance<IProcessStepRepository>());
 
@@ -116,7 +77,8 @@ public class ChecklistProcessor : IChecklistProcessor
 
         while (context.WorkerStepTypeIds.TryDequeue(out var stepTypeId))
         {
-            var (execution, entryStatusId) = GetExecution(stepTypeId, context.Checklist);
+            var execution = _checklistHandlerService.GetProcessStepExecution(stepTypeId);
+            var entryStatusId = GetEntryStatusId(execution.EntryTypeId, stepTypeId, context.Checklist);
             var modified = false;
             var stepData = new IChecklistService.WorkerChecklistProcessStepData(
                 applicationId,
@@ -127,9 +89,7 @@ public class ChecklistProcessor : IChecklistProcessor
             ProcessStepStatusId stepStatusId;
             try
             {
-                result = await execution.ProcessFunc(
-                    stepData,
-                    cancellationToken).ConfigureAwait(false);
+                result = await execution.ProcessFunc(stepData, cancellationToken).ConfigureAwait(false);
                 stepStatusId = ProcessStepStatusId.DONE;
             }
             catch (Exception ex) when (ex is not SystemException)
@@ -141,7 +101,7 @@ public class ChecklistProcessor : IChecklistProcessor
                 }
                 else
                 {
-                    result = await execution.ErrorFunc.Invoke(ex,stepData,cancellationToken).ConfigureAwait(false);
+                    result = await execution.ErrorFunc(ex,stepData,cancellationToken).ConfigureAwait(false);
                     stepStatusId = ProcessStepStatusId.FAILED;
                 }
             }
@@ -160,22 +120,19 @@ public class ChecklistProcessor : IChecklistProcessor
         }
     }
 
-    private (StepExecution, ApplicationChecklistEntryStatusId EntryStatusId) GetExecution(
+    private static ApplicationChecklistEntryStatusId GetEntryStatusId(
+        ApplicationChecklistEntryTypeId entryTypeId,
         ProcessStepTypeId stepTypeId,
         IDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> checklist)
     {
-        if (!_stepExecutions.TryGetValue(stepTypeId, out var execution))
+        if (!checklist.TryGetValue(entryTypeId, out var entryStatusId))
         {
-            throw new ConflictException($"no execution defined for processStep {stepTypeId}");
+            throw new ConflictException($"no checklist entry {entryTypeId} for {stepTypeId}");
         }
-        if (!checklist.TryGetValue(execution.EntryTypeId, out var entryStatusId))
-        {
-            throw new ConflictException($"no checklist entry {execution.EntryTypeId} for {stepTypeId}");
-        }
-        return (execution, entryStatusId);
+        return entryStatusId;
     }
 
-    private static (ApplicationChecklistEntryStatusId EntryStatusId, bool Modified) ProcessResult(
+    private (ApplicationChecklistEntryStatusId EntryStatusId, bool Modified) ProcessResult(
         (Action<ApplicationChecklistEntry>? ModifyApplicationChecklistEntry,IEnumerable<ProcessStepTypeId>? NextSteps, bool Modified) executionResult,
         ProcessStepTypeId stepTypeId,
         ProcessStepStatusId stepStatusId,
@@ -211,7 +168,7 @@ public class ChecklistProcessor : IChecklistProcessor
                     item.Comment = ex.ToString();
                 });
 
-    private static bool ScheduleNextSteps(IEnumerable<ProcessStepTypeId>? nextSteps, ProcessingContext context)
+    private bool ScheduleNextSteps(IEnumerable<ProcessStepTypeId>? nextSteps, ProcessingContext context)
     {
         bool modified = false;
         if (nextSteps != null)
@@ -219,7 +176,7 @@ public class ChecklistProcessor : IChecklistProcessor
             foreach (var nextStepTypeId in nextSteps.Except(context.AllSteps.Keys))
             {
                 context.AllSteps.Add(nextStepTypeId, new[] { context.ProcessStepRepository.CreateProcessStep(nextStepTypeId, ProcessStepStatusId.TODO) });
-                if (_manuelProcessSteps.Contains(nextStepTypeId))
+                if (_checklistHandlerService.IsManualProcessStep(nextStepTypeId))
                 {
                     context.ManualStepTypeIds.Add(nextStepTypeId);
                 }
