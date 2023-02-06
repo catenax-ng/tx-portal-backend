@@ -43,7 +43,6 @@ public class ApplicationActivationService : IApplicationActivationService
     private readonly IProvisioningManager _provisioningManager;
     private readonly IMailingService _mailingService;
     private readonly IDateTimeProvider _dateTime;
-    private readonly ILogger<ApplicationActivationService> _logger;
     private readonly ApplicationActivationSettings _settings;
 
     public ApplicationActivationService(
@@ -52,15 +51,13 @@ public class ApplicationActivationService : IApplicationActivationService
         IProvisioningManager provisioningManager,
         IMailingService mailingService,
         IDateTimeProvider dateTime,
-        IOptions<ApplicationActivationSettings> options,
-        ILogger<ApplicationActivationService> logger)
+        IOptions<ApplicationActivationSettings> options)
     {
         _portalRepositories = portalRepositories;
         _notificationService = notificationService;
         _provisioningManager = provisioningManager;
         _mailingService = mailingService;
         _dateTime = dateTime;
-        _logger = logger;
         _settings = options.Value;
     }
 

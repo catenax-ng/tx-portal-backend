@@ -18,12 +18,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using AutoFixture;
-using AutoFixture.AutoFakeItEasy;
-using FluentAssertions;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Tests.Setup;
-using Xunit;
 using Xunit.Extensions.AssemblyFixture;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Tests;
@@ -31,9 +27,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Tests;
 public class UserRolesRepositoryTests : IAssemblyFixture<TestDbFixture>
 {
     private static readonly Guid ApplicationWithBpn = new("4829b64c-de6a-426c-81fc-c0bcf95bcb76");
-    private static readonly Guid SubmittedApplicationWithBpn = new("2bb2005f-6e8d-41eb-967b-cde67546cafc");
-    private static readonly Guid ApplicationWithoutBpn = new("1b86d973-3aac-4dcd-a9e9-0c222766202b");
-    private static readonly Guid CompanyId = new("27538eac-27a3-4f74-9306-e5149b93ade5");
     private readonly IFixture _fixture;
     private readonly TestDbFixture _dbTestDbFixture;
 
@@ -79,7 +72,6 @@ public class UserRolesRepositoryTests : IAssemblyFixture<TestDbFixture>
     [Fact]
     public async Task GetUserRolesByClientId_WithValidData_ReturnsExpected()
     {
-        
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
         

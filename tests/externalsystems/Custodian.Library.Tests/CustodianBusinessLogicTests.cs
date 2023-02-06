@@ -100,6 +100,30 @@ public class CustodianBusinessLogicTests
     #region Create Wallet
 
     [Fact]
+    public async Task CreateWallet_WithBpnInProgress_Returns()
+    {
+        // Arrange
+        var applicationId = Guid.NewGuid();
+        var checklist = new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
+            {
+                { ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.IN_PROGRESS },
+                { ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE }
+            }
+            .ToImmutableDictionary();
+        var context = new IChecklistService.WorkerChecklistProcessStepData(applicationId, checklist, Enumerable.Empty<ProcessStepTypeId>());
+        SetupForCreateWallet();
+        
+        // Act
+        var result = await _logic.CreateIdentityWalletAsync(context, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        result.Item1.Should().BeNull();
+        result.Item2.Should().BeNull();
+        result.Item3.Should().BeFalse();
+        A.CallTo(() =>  _custodianService.CreateWalletAsync(A<string>._, A<string>._, A<CancellationToken>._)).MustNotHaveHappened();
+    }
+
+    [Fact]
     public async Task CreateWallet_WithBpnChecklistFailed_Returns()
     {
         // Arrange
