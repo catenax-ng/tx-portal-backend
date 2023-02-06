@@ -19,7 +19,6 @@
  ********************************************************************************/
 
 using System.Collections.Immutable;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.ApplicationActivation.Library.DependencyInjection;
 using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
@@ -198,6 +197,7 @@ public class ApplicationActivationTests
             .With(x => x.CompanyStatusId, CompanyStatusId.PENDING)
             .Create();
         SetupFakes(clientRoleNames, userRoleData, companyUserAssignedRole, companyUserAssignedBusinessPartner);
+        SetupForDelete();
         A.CallTo(() => _dateTimeProvider.Now).Returns(new DateTime(2022, 01, 01, 0, 0, 0));
         _settings.StartTime = TimeSpan.FromHours(22);
         _settings.EndTime = TimeSpan.FromHours(8);
@@ -236,6 +236,11 @@ public class ApplicationActivationTests
         A.CallTo(() => _businessPartnerRepository.CreateCompanyUserAssignedBusinessPartner(CompanyUserId2, BusinessPartnerNumber)).MustNotHaveHappened();
         A.CallTo(() => _rolesRepository.CreateCompanyUserAssignedRole(CompanyUserId3, UserRoleId)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _businessPartnerRepository.CreateCompanyUserAssignedBusinessPartner(CompanyUserId3, BusinessPartnerNumber)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _rolesRepository.GetUserRolesByClientId(A<IEnumerable<string>>.That.IsSameSequenceAs(new [] { "remove-id" }))).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _rolesRepository.GetUserWithUserRolesForApplicationId(A<Guid>._,A<IEnumerable<Guid>>.That.IsSameSequenceAs(new [] { CompanyUserRoleId }))).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _provisioningManager.DeleteClientRolesFromCentralUserAsync("1", A<IDictionary<string, IEnumerable<string>>>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _provisioningManager.DeleteClientRolesFromCentralUserAsync("2", A<IDictionary<string, IEnumerable<string>>>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _provisioningManager.DeleteClientRolesFromCentralUserAsync("3", A<IDictionary<string, IEnumerable<string>>>._)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _mailingService.SendMails(A<string>._, A<IDictionary<string, string>>._, A<IEnumerable<string>>._)).MustHaveHappened(3, Times.Exactly);
         _notifications.Should().HaveCount(5);
         companyApplication.ApplicationStatusId.Should().Be(CompanyApplicationStatusId.CONFIRMED);
@@ -298,6 +303,8 @@ public class ApplicationActivationTests
         A.CallTo(() => _businessPartnerRepository.CreateCompanyUserAssignedBusinessPartner(CompanyUserId2, BusinessPartnerNumber)).MustNotHaveHappened();
         A.CallTo(() => _rolesRepository.CreateCompanyUserAssignedRole(CompanyUserId3, UserRoleId)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _businessPartnerRepository.CreateCompanyUserAssignedBusinessPartner(CompanyUserId3, BusinessPartnerNumber)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _rolesRepository.GetUserRolesByClientId(A<IEnumerable<string>>.That.IsSameSequenceAs(new [] { "remove-id" }))).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _rolesRepository.GetUserWithUserRolesForApplicationId(A<Guid>._,A<IEnumerable<Guid>>.That.IsSameSequenceAs(new [] { CompanyUserRoleId }))).MustHaveHappenedOnceExactly();
         A.CallTo(() => _provisioningManager.DeleteClientRolesFromCentralUserAsync("1", A<IDictionary<string, IEnumerable<string>>>._)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _provisioningManager.DeleteClientRolesFromCentralUserAsync("2", A<IDictionary<string, IEnumerable<string>>>._)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _provisioningManager.DeleteClientRolesFromCentralUserAsync("3", A<IDictionary<string, IEnumerable<string>>>._)).MustHaveHappenedOnceExactly();
@@ -688,10 +695,10 @@ public class ApplicationActivationTests
             ( "remove-id", new [] { ( CompanyUserRoleId, "Company Admin" ) } )
         };
 
-        A.CallTo(() => _rolesRepository.GetUserRolesByClientId(A<IEnumerable<string>>._))
+        A.CallTo(() => _rolesRepository.GetUserRolesByClientId(A<IEnumerable<string>>.That.IsSameSequenceAs(new [] { "remove-id" })))
             .Returns(userRoles.ToAsyncEnumerable());
 
-        A.CallTo(() => _rolesRepository.GetUserWithUserRolesForApplicationId(A<Guid>._,A<IEnumerable<Guid>>._))
+        A.CallTo(() => _rolesRepository.GetUserWithUserRolesForApplicationId(A<Guid>._,A<IEnumerable<Guid>>.That.IsSameSequenceAs(new [] { CompanyUserRoleId })))
             .Returns(userData.ToAsyncEnumerable());
     }
 
