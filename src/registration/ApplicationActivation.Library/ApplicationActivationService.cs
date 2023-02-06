@@ -42,7 +42,6 @@ public class ApplicationActivationService : IApplicationActivationService
     private readonly IProvisioningManager _provisioningManager;
     private readonly IMailingService _mailingService;
     private readonly IDateTimeProvider _dateTime;
-    private readonly ILogger<ApplicationActivationService> _logger;
     private readonly ApplicationActivationSettings _settings;
 
     public ApplicationActivationService(
@@ -51,21 +50,14 @@ public class ApplicationActivationService : IApplicationActivationService
         IProvisioningManager provisioningManager,
         IMailingService mailingService,
         IDateTimeProvider dateTime,
-        IOptions<ApplicationActivationSettings> options,
-        ILogger<ApplicationActivationService> logger)
+        IOptions<ApplicationActivationSettings> options)
     {
         _portalRepositories = portalRepositories;
         _notificationService = notificationService;
         _provisioningManager = provisioningManager;
         _mailingService = mailingService;
         _dateTime = dateTime;
-        _logger = logger;
         _settings = options.Value;
-    }
-
-    public Task HandleApplicationActivation(Guid applicationId)
-    {
-        return InProcessingTime() ? ApplicationActivation(applicationId) : Task.CompletedTask;
     }
 
     public Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)> HandleApplicationActivation(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
@@ -131,63 +123,6 @@ public class ApplicationActivationService : IApplicationActivationService
             }
         }
         return (entry => entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE, null, true);
-    }
-
-    private async Task ApplicationActivation(Guid applicationId)
-    {
-        var applicationRepository = _portalRepositories.GetInstance<IApplicationRepository>();
-        var result = await applicationRepository.GetCompanyAndApplicationDetailsForApprovalAsync(applicationId).ConfigureAwait(false);
-        if (result == default)
-        {
-            throw new ConflictException($"CompanyApplication {applicationId} is not in status SUBMITTED");
-        }
-        var (companyId, businessPartnerNumber) = result;
-
-        if (string.IsNullOrWhiteSpace(businessPartnerNumber))
-        {
-            throw new ConflictException($"BusinessPartnerNumber (bpn) for CompanyApplications {applicationId} company {companyId} is empty");
-        }
-
-        var userRolesRepository = _portalRepositories.GetInstance<IUserRolesRepository>();
-        var assignedRoles = await AssignRolesAndBpn(applicationId, userRolesRepository, applicationRepository, businessPartnerNumber).ConfigureAwait(false);
-
-        applicationRepository.AttachAndModifyCompanyApplication(applicationId, ca =>
-        {
-            ca.ApplicationStatusId = CompanyApplicationStatusId.CONFIRMED;
-            ca.DateLastChanged = DateTimeOffset.UtcNow;    
-        });
-
-        _portalRepositories.GetInstance<ICompanyRepository>().AttachAndModifyCompany(companyId, null, c =>
-        {
-            c.CompanyStatusId = CompanyStatusId.ACTIVE;
-        });
-
-        var notifications = _settings.WelcomeNotificationTypeIds.Select(x => (default(string), x));
-        await _notificationService.CreateNotifications(_settings.CompanyAdminRoles, null, notifications, companyId).ConfigureAwait(false);
-
-        // If an error occurs in the following code we only log an error but won't throw an exception since that would result in a rollback of the database changes 
-        try
-        {
-            await PostRegistrationWelcomeEmailAsync(userRolesRepository, applicationRepository, applicationId).ConfigureAwait(false);
-
-            if (assignedRoles == null) return;
-        
-            var unassignedClientRoles = _settings.ApplicationApprovalInitialRoles
-                .Select(initialClientRoles => (
-                    client: initialClientRoles.Key,
-                    roles: initialClientRoles.Value.Except(assignedRoles[initialClientRoles.Key])))
-                .Where(clientRoles => clientRoles.roles.Any())
-                .ToList();
-
-            if (unassignedClientRoles.Any())
-            {
-                throw new UnexpectedConditionException($"inconsistent data, roles not assigned in keycloak: {string.Join(", ", unassignedClientRoles.Select(clientRoles => $"client: {clientRoles.client}, roles: [{string.Join(", ", clientRoles.roles)}]"))}");
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "{ErrorMessage}", ex.Message);
-        }
     }
 
     private bool InProcessingTime()

@@ -18,9 +18,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using System.Collections.Immutable;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.ApplicationActivation.Library.DependencyInjection;
+using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.DateTimeProvider;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Mailing.SendMail;
@@ -99,7 +101,7 @@ public class ApplicationActivationTests
         A.CallTo(() => _portalRepositories.GetInstance<ICompanyRepository>()).Returns(_companyRepository);
         A.CallTo(() => options.Value).Returns(_settings);
 
-        _sut = new ApplicationActivationService(_portalRepositories, _notificationService, _provisioningManager, _mailingService, _dateTimeProvider, options, A.Fake<ILogger<ApplicationActivationService>>());
+        _sut = new ApplicationActivationService(_portalRepositories, _notificationService, _provisioningManager, _mailingService, _dateTimeProvider, options);
     }
     
     #region HandleApplicationActivation
@@ -114,9 +116,15 @@ public class ApplicationActivationTests
         _settings.StartTime = TimeSpan.FromHours(4);
         _settings.EndTime = TimeSpan.FromHours(8);
         SetupFakes(new Dictionary<string, IEnumerable<string>>(), new List<UserRoleData>(), companyUserAssignedRole, companyUserAssignedBusinessPartner);
-        
+        var context = new IChecklistService.WorkerChecklistProcessStepData(Id,
+            new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
+            {
+                {ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, ApplicationChecklistEntryStatusId.TO_DO}
+            }.ToImmutableDictionary(),
+            new List<ProcessStepTypeId>());
+
         //Act
-        await _sut.HandleApplicationActivation(Id).ConfigureAwait(false);
+        await _sut.HandleApplicationActivation(context, CancellationToken.None).ConfigureAwait(false);
 
         //Assert
         A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsForApprovalAsync(Id)).MustNotHaveHappened();
@@ -165,9 +173,15 @@ public class ApplicationActivationTests
             {
                 setOptionalParameters.Invoke(company);
             });
+        var context = new IChecklistService.WorkerChecklistProcessStepData(Id,
+            new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
+            {
+                {ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, ApplicationChecklistEntryStatusId.TO_DO}
+            }.ToImmutableDictionary(),
+            new List<ProcessStepTypeId>());
 
         //Act
-        await _sut.HandleApplicationActivation(Id).ConfigureAwait(false);
+        await _sut.HandleApplicationActivation(context, CancellationToken.None).ConfigureAwait(false);
 
         //Assert
         A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsForApprovalAsync(Id)).MustHaveHappenedOnceExactly();
@@ -215,9 +229,15 @@ public class ApplicationActivationTests
             {
                 setOptionalParameters.Invoke(company);
             });
+        var context = new IChecklistService.WorkerChecklistProcessStepData(Id,
+            new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
+            {
+                {ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, ApplicationChecklistEntryStatusId.TO_DO}
+            }.ToImmutableDictionary(),
+            new List<ProcessStepTypeId>());
 
         //Act
-        await _sut.HandleApplicationActivation(Id).ConfigureAwait(false);
+        await _sut.HandleApplicationActivation(context, CancellationToken.None).ConfigureAwait(false);
 
         //Assert
         A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsForApprovalAsync(Id)).MustHaveHappenedOnceExactly();
@@ -238,7 +258,14 @@ public class ApplicationActivationTests
     public async Task HandleApplicationActivation_WithDefaultApplicationId_ThrowsConflictException()
     {
         //Act
-        async Task Action() => await _sut.HandleApplicationActivation(Guid.Empty).ConfigureAwait(false);
+        var context = new IChecklistService.WorkerChecklistProcessStepData(Guid.Empty,
+            new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
+            {
+                {ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, ApplicationChecklistEntryStatusId.TO_DO}
+            }.ToImmutableDictionary(),
+            new List<ProcessStepTypeId>());
+
+        async Task Action() => await _sut.HandleApplicationActivation(context, CancellationToken.None).ConfigureAwait(false);
         
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Action);
@@ -250,11 +277,18 @@ public class ApplicationActivationTests
     {
         // Arrange
         var applicationId = Guid.NewGuid();
+        var context = new IChecklistService.WorkerChecklistProcessStepData(applicationId,
+            new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
+            {
+                {ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, ApplicationChecklistEntryStatusId.TO_DO}
+            }.ToImmutableDictionary(),
+            new List<ProcessStepTypeId>());
+
         A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsForApprovalAsync(applicationId))
             .ReturnsLazily(() => new ValueTuple<Guid, string?>());
 
         //Act
-        async Task Action() => await _sut.HandleApplicationActivation(applicationId).ConfigureAwait(false);
+        async Task Action() => await _sut.HandleApplicationActivation(context, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Action);
@@ -265,7 +299,14 @@ public class ApplicationActivationTests
     public async Task HandleApplicationActivation_WithCompanyWithoutBPN_ThrowsConflictException()
     {
         //Act
-        async Task Action() => await _sut.HandleApplicationActivation(IdWithoutBpn).ConfigureAwait(false);
+        var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithoutBpn,
+            new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
+            {
+                {ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, ApplicationChecklistEntryStatusId.TO_DO}
+            }.ToImmutableDictionary(),
+            new List<ProcessStepTypeId>());
+
+        async Task Action() => await _sut.HandleApplicationActivation(context, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Action);
