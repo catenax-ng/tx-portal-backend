@@ -27,12 +27,11 @@ using System.Collections.Immutable;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 
-public class ChecklistService : IChecklistService
+public sealed class ChecklistService : IChecklistService
 {
     private readonly IPortalRepositories _portalRepositories;
 
-    public ChecklistService(
-        IPortalRepositories portalRepositories)
+    public ChecklistService(IPortalRepositories portalRepositories)
     {
         _portalRepositories = portalRepositories;
     }
