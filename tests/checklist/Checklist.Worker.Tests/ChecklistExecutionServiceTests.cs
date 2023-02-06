@@ -195,7 +195,7 @@ public class ChecklistExecutionServiceTests
         var stepData = _fixture.CreateMany<int>(5)
             .Select(_ => _fixture
                 .Build<(Guid ApplicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> Checklist, IEnumerable<ProcessStep> ProcessSteps)>()
-                .With(x => x.Checklist, _fixture.CreateMany<ApplicationChecklistEntryTypeId>(Enum.GetValues<ApplicationChecklistEntryTypeId>().Count()-2).Select(type => (type, _fixture.Create<ApplicationChecklistEntryStatusId>())))
+                .With(x => x.Checklist, _fixture.CreateMany<ApplicationChecklistEntryTypeId>(Enum.GetValues<ApplicationChecklistEntryTypeId>().Length-2).Select(type => (type, _fixture.Create<ApplicationChecklistEntryStatusId>())))
                 .With(x => x.ProcessSteps, _fixture.CreateMany<int>(5).Select(_ => _fixture.Build<ProcessStep>().With(x => x.ProcessStepStatusId, ProcessStepStatusId.DONE).Create()))
                 .Create()).ToImmutableArray();
 
@@ -244,7 +244,7 @@ public class ChecklistExecutionServiceTests
         var stepData = _fixture.CreateMany<int>(5)
             .Select(_ => _fixture
                 .Build<(Guid ApplicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> Checklist, IEnumerable<ProcessStep> ProcessSteps)>()
-                .With(x => x.Checklist, _fixture.CreateMany<ApplicationChecklistEntryTypeId>(Enum.GetValues<ApplicationChecklistEntryTypeId>().Count()-1).Select(type => (type, _fixture.Create<ApplicationChecklistEntryStatusId>())))
+                .With(x => x.Checklist, _fixture.CreateMany<ApplicationChecklistEntryTypeId>(Enum.GetValues<ApplicationChecklistEntryTypeId>().Length-1).Select(type => (type, _fixture.Create<ApplicationChecklistEntryStatusId>())))
                 .With(x => x.ProcessSteps, _fixture.CreateMany<int>(5).Select(_ => _fixture.Build<ProcessStep>().With(x => x.ProcessStepStatusId, ProcessStepStatusId.DONE).Create()))
                 .Create()).ToImmutableArray();
 

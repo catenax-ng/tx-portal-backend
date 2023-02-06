@@ -83,7 +83,7 @@ public class ChecklistProcessor : IChecklistProcessor
         ProcessStepTypeId.VERIFY_REGISTRATION,
     };
 
-    private record ProcessingContext(Guid ApplicationId, IDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> Checklist, IDictionary<ProcessStepTypeId, IEnumerable<ProcessStep>> AllSteps, Queue<ProcessStepTypeId> WorkerStepTypeIds, IList<ProcessStepTypeId> ManualStepTypeIds, IApplicationChecklistRepository ChecklistRepository, IProcessStepRepository ProcessStepRepository);
+    private sealed record ProcessingContext(Guid ApplicationId, IDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> Checklist, IDictionary<ProcessStepTypeId, IEnumerable<ProcessStep>> AllSteps, Queue<ProcessStepTypeId> WorkerStepTypeIds, IList<ProcessStepTypeId> ManualStepTypeIds, IApplicationChecklistRepository ChecklistRepository, IProcessStepRepository ProcessStepRepository);
 
     /// <inheritdoc />
     public async IAsyncEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> ProcessChecklist(Guid applicationId, IEnumerable<(ApplicationChecklistEntryTypeId EntryTypeId, ApplicationChecklistEntryStatusId EntryStatusId)> checklistEntries, IEnumerable<ProcessStep> processSteps, [EnumeratorCancellation] CancellationToken cancellationToken)
