@@ -30,12 +30,12 @@ public static class HttpClientExtensions
         services.AddHttpClient(typeof(T).Name, c =>
         {
             c.BaseAddress = new Uri(baseAddress);
-        }).AddHttpMessageHandler<LoggingHandler<T>>().AddHttpMessageHandler<HttpClientErrorHandler>();
+        }).AddHttpMessageHandler<LoggingHandler<T>>();
         
         services.AddHttpClient($"{typeof(T).Name}Auth", c =>
         {
             c.BaseAddress = new Uri(authAddress);
-        }).AddHttpMessageHandler<LoggingHandler<T>>().AddHttpMessageHandler<HttpClientErrorHandler>();
+        }).AddHttpMessageHandler<LoggingHandler<T>>();
         return services;
     }
 }

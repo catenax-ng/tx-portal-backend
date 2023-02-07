@@ -96,7 +96,7 @@ public class ChecklistHandlerService : IChecklistHandlerService
     private static Task<(Action<ApplicationChecklistEntry>?, IEnumerable<ProcessStepTypeId>?, bool)> HandleServiceErrorAsync(Exception exception, ProcessStepTypeId manualProcessTriggerStep)
     {
         return Task.FromResult<(Action<ApplicationChecklistEntry>?, IEnumerable<ProcessStepTypeId>?, bool)>(
-            exception is not ServiceUnavailableException ?
+            exception is not HttpRequestException ?
                 (item =>
                     {
                         item.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.FAILED;
