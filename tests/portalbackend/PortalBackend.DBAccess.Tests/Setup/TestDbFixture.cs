@@ -104,11 +104,11 @@ public class TestDbFixture : IAsyncLifetime
         var insertSeeder = new BatchInsertSeeder(context,
             LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<BatchInsertSeeder>(),
             seederOptions);
-        await insertSeeder.InitializeAsync(CancellationToken.None);
+        await insertSeeder.ExecuteAsync(CancellationToken.None);
         var updateSeeder = new BatchUpdateSeeder(context,
             LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<BatchUpdateSeeder>(),
             seederOptions);
-        await updateSeeder.InitializeAsync(CancellationToken.None);
+        await updateSeeder.ExecuteAsync(CancellationToken.None);
     }
 
     /// <inheritdoc />
