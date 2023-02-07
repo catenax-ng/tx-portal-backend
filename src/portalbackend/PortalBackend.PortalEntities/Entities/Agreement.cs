@@ -43,18 +43,6 @@ public class Agreement : IBaseEntity
         DateCreated = dateCreated;
     }
 
-    /// <summary>
-    /// Please only use when attaching the Agreement to the database
-    /// </summary>
-    /// <param name="id"></param>
-    /// <param name="documentId"></param>
-    public Agreement(Guid id, Guid? documentId) 
-        :this()
-    {
-        Id = id;
-        DocumentId = documentId;
-    }
-
     public AgreementCategoryId AgreementCategoryId { get; private set; }
 
     public Guid Id { get; private set; }
