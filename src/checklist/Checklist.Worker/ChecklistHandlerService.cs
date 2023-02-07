@@ -29,6 +29,7 @@ using System.Collections.Immutable;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Worker;
 
+    /// <inheritdoc />
 public class ChecklistHandlerService : IChecklistHandlerService
 {
     private readonly IBpdmBusinessLogic _bpdmBusinessLogic;
@@ -45,6 +46,7 @@ public class ChecklistHandlerService : IChecklistHandlerService
         ProcessStepTypeId.VERIFY_REGISTRATION,
     };
 
+    /// <inheritdoc />
     public ChecklistHandlerService(
         IBpdmBusinessLogic bpdmBusinessLogic,
         ICustodianBusinessLogic custodianBusinessLogic,
@@ -69,6 +71,7 @@ public class ChecklistHandlerService : IChecklistHandlerService
         }.ToImmutableDictionary(x => x.ProcessStepTypeId, x => x.StepExecution);
     }
 
+    /// <inheritdoc />
     public IChecklistHandlerService.ProcessStepExecution GetProcessStepExecution(ProcessStepTypeId stepTypeId)
     {
         if (!_stepExecutions.TryGetValue(stepTypeId, out var execution))
@@ -79,6 +82,7 @@ public class ChecklistHandlerService : IChecklistHandlerService
     }
 
 
+    /// <inheritdoc />
     public bool IsManualProcessStep(ProcessStepTypeId stepTypeId)
     {
         return _manuelProcessSteps.Contains(stepTypeId);

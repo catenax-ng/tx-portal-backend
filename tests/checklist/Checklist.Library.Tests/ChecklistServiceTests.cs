@@ -37,7 +37,7 @@ public class ChecklistServiceTests
     private readonly IProcessStepRepository _processStepRepository;
     private readonly IPortalRepositories _portalRepositories;
 
-    private readonly ChecklistService _service;
+    private readonly IChecklistService _service;
 
     public ChecklistServiceTests()
     {

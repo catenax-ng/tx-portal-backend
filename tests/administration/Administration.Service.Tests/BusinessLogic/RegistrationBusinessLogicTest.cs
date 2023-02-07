@@ -58,7 +58,7 @@ public class RegistrationBusinessLogicTest
     private readonly IApplicationChecklistRepository _applicationChecklistRepository;
     private readonly IUserRepository _userRepository;
     private readonly IFixture _fixture;
-    private readonly RegistrationBusinessLogic _logic;
+    private readonly IRegistrationBusinessLogic _logic;
     private readonly ICompanyRepository _companyRepository;
     private readonly IChecklistService _checklistService;
     private readonly IClearinghouseBusinessLogic _clearinghouseBusinessLogic;
@@ -404,7 +404,7 @@ public class RegistrationBusinessLogicTest
         SetupForRegistrationVerification(entry);
 
         // Act
-        async Task Act() => await _logic.SetRegistrationVerification(IdWithBpn, false, null).ConfigureAwait(false);
+        async Task Act() => await _logic.SetRegistrationVerification(IdWithBpn, false).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Act);
