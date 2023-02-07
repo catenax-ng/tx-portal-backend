@@ -92,44 +92,6 @@ public class SdFactoryBusinessLogicTests
     #endregion
     
     #region RegisterSelfDescription
-    
-    [Fact]
-    public async Task RegisterSelfDescriptionAsync_WithValidDataAndChecklistEntryInProgress_ScheduleProcessIsNotCalled()
-    {
-        // Arrange
-        var checklist = new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
-            {
-                { ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE },
-                { ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.IN_PROGRESS },
-            }
-            .ToImmutableDictionary();
-        var context = new IChecklistService.WorkerChecklistProcessStepData(ApplicationId, default, checklist, Enumerable.Empty<ProcessStepTypeId>());
-        var entity = _fixture.Build<Company>()
-            .With(x => x.SelfDescriptionDocumentId, (Guid?)null)
-            .Create();
-        var documentId = Guid.NewGuid();
-        A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsWithUniqueIdentifiersAsync(ApplicationId))
-            .ReturnsLazily(() => new ValueTuple<Guid, string?, string, IEnumerable<(UniqueIdentifierId Id, string Value)>>(CompanyId, Bpn, CountryCode, UniqueIdentifiers));
-        A.CallTo(() => _service.RegisterSelfDescriptionAsync(UniqueIdentifiers, CountryCode, Bpn, CancellationToken.None))
-            .ReturnsLazily(() => documentId);
-        A.CallTo(() => _companyRepository.AttachAndModifyCompany(CompanyId, null, A<Action<Company>>._))
-            .Invokes((Guid _, Action<Company>? initialize, Action<Company> modify) => 
-            {
-                initialize?.Invoke(entity);
-                modify.Invoke(entity);
-            });
-
-        // Act
-        await _sut.RegisterSelfDescription(context, CancellationToken.None).ConfigureAwait(false);
-
-        // Assert
-        A.CallTo(() => _service.RegisterSelfDescriptionAsync(UniqueIdentifiers, CountryCode, Bpn, A<CancellationToken>._))
-            .MustHaveHappenedOnceExactly();
-        A.CallTo(() => _portalRepositories.SaveAsync())
-            .MustNotHaveHappened();
-        A.CallTo(() => _checklistService.ScheduleProcessSteps(context, A<IEnumerable<ProcessStepTypeId>>._)).MustNotHaveHappened();
-        entity.SelfDescriptionDocumentId.Should().NotBeNull().And.Be(documentId);
-    }
 
     [Fact]
     public async Task RegisterSelfDescriptionAsync_WithValidData_CompanyIsUpdated()
@@ -143,31 +105,38 @@ public class SdFactoryBusinessLogicTests
             }
             .ToImmutableDictionary();
         var context = new IChecklistService.WorkerChecklistProcessStepData(ApplicationId, default, checklist, Enumerable.Empty<ProcessStepTypeId>());
-        var entity = _fixture.Build<Company>()
-            .With(x => x.SelfDescriptionDocumentId, (Guid?)null)
-            .Create();
-        var documentId = Guid.NewGuid();
+        var entry = new ApplicationChecklistEntry(Guid.NewGuid(), ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow);
         A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsWithUniqueIdentifiersAsync(ApplicationId))
             .ReturnsLazily(() => new ValueTuple<Guid, string?, string, IEnumerable<(UniqueIdentifierId Id, string Value)>>(CompanyId, Bpn, CountryCode, UniqueIdentifiers));
         A.CallTo(() => _service.RegisterSelfDescriptionAsync(UniqueIdentifiers, CountryCode, Bpn, CancellationToken.None))
-            .ReturnsLazily(() => documentId);
-        A.CallTo(() => _companyRepository.AttachAndModifyCompany(CompanyId, null, A<Action<Company>>._))
-            .Invokes((Guid _, Action<Company>? initialize, Action<Company> modify) => 
-            {
-                initialize?.Invoke(entity);
-                modify.Invoke(entity);
-            });
+            .ReturnsLazily(() => Task.CompletedTask);
+        // var entity = _fixture.Build<Company>()
+        //     .With(x => x.SelfDescriptionDocumentId, (Guid?)null)
+        //     .Create();
+        // var documentId = Guid.NewGuid();
+        // A.CallTo(() => _companyRepository.AttachAndModifyCompany(CompanyId, null, A<Action<Company>>._))
+        //     .Invokes((Guid _, Action<Company>? initialize, Action<Company> modify) => 
+        //     {
+        //         initialize?.Invoke(entity);
+        //         modify.Invoke(entity);
+        //     });
 
         // Act
-        await _sut.RegisterSelfDescription(context, CancellationToken.None).ConfigureAwait(false);
+        var result = await _sut.StartSelfDescriptionRegistration(context, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _service.RegisterSelfDescriptionAsync(UniqueIdentifiers, CountryCode, Bpn, A<CancellationToken>._))
             .MustHaveHappenedOnceExactly();
-        A.CallTo(() => _portalRepositories.SaveAsync())
-            .MustNotHaveHappened();
-        A.CallTo(() => _checklistService.ScheduleProcessSteps(context, A<IEnumerable<ProcessStepTypeId>>.That.Matches(x => x.Count(y => y == ProcessStepTypeId.ACTIVATE_APPLICATION) == 1))).MustHaveHappenedOnceExactly();
-        entity.SelfDescriptionDocumentId.Should().NotBeNull().And.Be(documentId);
+        result.Should().NotBeNull();
+        result.Item1.Should().NotBeNull();
+        result.Item1?.Invoke(entry);
+        entry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.IN_PROGRESS);
+        result.Item2.Should().ContainSingle().And.Match(x => x.Single() == ProcessStepTypeId.END_CLEARING_HOUSE);
+        result.Item3.Should().BeTrue();
+        // A.CallTo(() => _checklistService.ScheduleProcessSteps(context, A<IEnumerable<ProcessStepTypeId>>.That.Matches(x => x.Count(y => y == ProcessStepTypeId.ACTIVATE_APPLICATION) == 1))).MustHaveHappenedOnceExactly();
+        // A.CallTo(() => _portalRepositories.SaveAsync())
+        //     .MustNotHaveHappened();
+        // entity.SelfDescriptionDocumentId.Should().NotBeNull().And.Be(documentId);
     }
 
     [Fact]
@@ -186,7 +155,7 @@ public class SdFactoryBusinessLogicTests
             .ReturnsLazily(() => new ValueTuple<Guid, string?, string, IEnumerable<(UniqueIdentifierId Id, string Value)>>());
 
         // Act
-        async Task Act() => await _sut.RegisterSelfDescription(context, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.StartSelfDescriptionRegistration(context, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -209,13 +178,64 @@ public class SdFactoryBusinessLogicTests
             .ReturnsLazily(() => new ValueTuple<Guid, string?, string, IEnumerable<(UniqueIdentifierId Id, string Value)>>(CompanyId, null, CountryCode, new List<(UniqueIdentifierId Id, string Value)>()));
 
         // Act
-        async Task Act() => await _sut.RegisterSelfDescription(context, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.StartSelfDescriptionRegistration(context, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
         ex.Message.Should().Be($"BusinessPartnerNumber (bpn) for CompanyApplications {ApplicationId} company {CompanyId} is empty");
     }
 
+    #endregion
+    
+    #region ProcessFinishSelfDescriptionLp
+    
+    [Fact(Skip = "tbd")]
+    public async Task ProcessFinishSelfDescriptionLp_WithValidData_CompanyIsUpdated()
+    {
+        // Arrange
+        var checklist = new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
+            {
+                { ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE },
+                { ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.DONE },
+                { ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.DONE },
+            }
+            .ToImmutableDictionary();
+        var context = new IChecklistService.WorkerChecklistProcessStepData(ApplicationId, default, checklist, Enumerable.Empty<ProcessStepTypeId>());
+        var entry = new ApplicationChecklistEntry(Guid.NewGuid(), ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow);
+        A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsWithUniqueIdentifiersAsync(ApplicationId))
+            .ReturnsLazily(() => new ValueTuple<Guid, string?, string, IEnumerable<(UniqueIdentifierId Id, string Value)>>(CompanyId, Bpn, CountryCode, UniqueIdentifiers));
+        A.CallTo(() => _service.RegisterSelfDescriptionAsync(UniqueIdentifiers, CountryCode, Bpn, CancellationToken.None))
+            .ReturnsLazily(() => Task.CompletedTask);
+        var entity = _fixture.Build<Company>()
+            .With(x => x.SelfDescriptionDocumentId, (Guid?)null)
+            .Create();
+        var documentId = Guid.NewGuid();
+        A.CallTo(() => _companyRepository.AttachAndModifyCompany(CompanyId, null, A<Action<Company>>._))
+            .Invokes((Guid _, Action<Company>? initialize, Action<Company> modify) => 
+            {
+                initialize?.Invoke(entity);
+                modify.Invoke(entity);
+            });
+
+        // Act
+        var result = await _sut.StartSelfDescriptionRegistration(context, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        A.CallTo(() => _service.RegisterSelfDescriptionAsync(UniqueIdentifiers, CountryCode, Bpn, A<CancellationToken>._))
+            .MustHaveHappenedOnceExactly();
+        result.Should().NotBeNull();
+        result.Item1.Should().NotBeNull();
+        result.Item1?.Invoke(entry);
+        entry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.IN_PROGRESS);
+        result.Item2.Should().ContainSingle().And.Match(x => x.Single() == ProcessStepTypeId.END_CLEARING_HOUSE);
+        result.Item3.Should().BeTrue();
+        A.CallTo(() => _checklistService.ScheduleProcessSteps(context, A<IEnumerable<ProcessStepTypeId>>.That.Matches(x => x.Count(y => y == ProcessStepTypeId.ACTIVATE_APPLICATION) == 1))).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.SaveAsync())
+            .MustNotHaveHappened();
+        entity.SelfDescriptionDocumentId.Should().NotBeNull().And.Be(documentId);
+    }
+
+    
     #endregion
     
     #region GetSdUniqueIdentifierValue

@@ -77,7 +77,7 @@ public class SdFactoryService : ISdFactoryService
     }
 
     /// <inheritdoc />
-    public async Task<Guid> RegisterSelfDescriptionAsync(IEnumerable<(UniqueIdentifierId Id, string Value)> uniqueIdentifiers, string countryCode, string businessPartnerNumber, CancellationToken cancellationToken)
+    public async Task RegisterSelfDescriptionAsync(IEnumerable<(UniqueIdentifierId Id, string Value)> uniqueIdentifiers, string countryCode, string businessPartnerNumber, CancellationToken cancellationToken)
     {
         var httpClient = await _tokenService.GetAuthorizedClient<SdFactoryService>(_settings, cancellationToken)
             .ConfigureAwait(false);
@@ -92,17 +92,15 @@ public class SdFactoryService : ISdFactoryService
 
         var response = await httpClient.PostAsJsonAsync((string?)null, requestModel, cancellationToken).ConfigureAwait(false);
 
-        return await ProcessResponse(SdFactoryResponseModelTitle.LegalPerson, response, cancellationToken).ConfigureAwait(false);
-    }
-
-    private async Task<Guid> ProcessResponse(SdFactoryResponseModelTitle docTitle, HttpResponseMessage response, CancellationToken cancellationToken)
-    {
         if (!response.IsSuccessStatusCode)
         {
             throw new ServiceException($"Access to SD factory failed with status code {response.StatusCode}",
                 response.StatusCode);
         }
+    }
 
+    private async Task<Guid> ProcessResponse(SdFactoryResponseModelTitle docTitle, HttpResponseMessage response, CancellationToken cancellationToken)
+    {
         await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
         using var sha512Hash = SHA512.Create();
         using var ms = new MemoryStream();

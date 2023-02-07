@@ -33,6 +33,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Tests.BusinessLogic;
@@ -63,6 +64,7 @@ public class RegistrationBusinessLogicTest
     private readonly ICompanyRepository _companyRepository;
     private readonly IChecklistService _checklistService;
     private readonly IClearinghouseBusinessLogic _clearinghouseBusinessLogic;
+    private readonly ISdFactoryBusinessLogic _sdFactoryBusinessLogic;
 
     public RegistrationBusinessLogicTest()
     {
@@ -80,6 +82,7 @@ public class RegistrationBusinessLogicTest
 
         var options = A.Fake<IOptions<RegistrationSettings>>();
         _clearinghouseBusinessLogic = A.Fake<IClearinghouseBusinessLogic>();
+        _sdFactoryBusinessLogic = A.Fake<ISdFactoryBusinessLogic>();
         _checklistService = A.Fake<IChecklistService>();
         var settings = A.Fake<RegistrationSettings>();
         settings.ApplicationsMaxPageSize = 15;
@@ -94,7 +97,7 @@ public class RegistrationBusinessLogicTest
         A.CallTo(() => _userRepository.GetCompanyUserIdForIamUserUntrackedAsync(IamUserId))
             .ReturnsLazily(Guid.NewGuid);
 
-        _logic = new RegistrationBusinessLogic(_portalRepositories, options, A.Fake<IMailingService>(), _checklistService, _clearinghouseBusinessLogic);
+        _logic = new RegistrationBusinessLogic(_portalRepositories, options, A.Fake<IMailingService>(), _checklistService, _clearinghouseBusinessLogic, _sdFactoryBusinessLogic);
     }
     
     #region GetCompanyApplicationDetailsAsync
