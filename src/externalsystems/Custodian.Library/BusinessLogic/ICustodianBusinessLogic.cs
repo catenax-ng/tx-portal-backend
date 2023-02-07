@@ -42,13 +42,4 @@ public interface ICustodianBusinessLogic
     /// <param name="cancellationToken">CancellationToken</param>
     /// <returns>Returns the checklist data</returns>
     Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)> CreateIdentityWalletAsync(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken);
-
-    /// <summary>
-    /// Handles the error while creating the identity wallet
-    /// </summary>
-    /// <param name="exception">The exception that occured</param>
-    /// <param name="context">The context</param>
-    /// <param name="cancellationToken">CancellationToken</param>
-    /// <returns>Returns the checklist data</returns>
-    Task<(Action<ApplicationChecklistEntry>?, IEnumerable<ProcessStepTypeId>?, bool)> HandleErrorAsync(Exception exception, IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken);
 }
