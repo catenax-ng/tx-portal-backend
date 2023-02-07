@@ -38,8 +38,8 @@ public interface ICustodianBusinessLogic
     /// <summary>
     /// Creates the wallet for the company of the application
     /// </summary>
-    /// <param name="applicationId">Id of the application to create the company for.</param>
+    /// <param name="context">Context for the identity wallet creation.</param>
     /// <param name="cancellationToken">CancellationToken</param>
-    /// <returns>Returns the response message</returns>
+    /// <returns>Returns the checklist data</returns>
     Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)> CreateIdentityWalletAsync(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken);
 }

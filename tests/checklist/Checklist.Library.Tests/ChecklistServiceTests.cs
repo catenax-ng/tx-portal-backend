@@ -517,5 +517,51 @@ public class ChecklistServiceTests
             }
         }
     }
+
+    #endregion
+    
+    #region HandleServiceErrorAsync
+
+    [Fact]
+    public async Task HandleServiceErrorAsync_WithServiceException_OnlyCommentAdded()
+    {
+        // Arrange
+        var entity = new ApplicationChecklistEntry(Guid.NewGuid(), ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow);
+        var ex = new ServiceException("Test error");
+
+        // Act
+        var result = await ChecklistService.HandleServiceErrorAsync(ex, ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE).ConfigureAwait(false);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Item1.Should().NotBeNull();
+        result.Item1?.Invoke(entity);
+        entity.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.FAILED);
+        entity.Comment.Should().Be("Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling.ServiceException: Test error");
+        result.Item2.Should().NotBeNull();
+        result.Item2.Should().ContainSingle().And.Match(x => x.Single() == ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE);
+        result.Item3.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task HandleServiceErrorAsync_WithHttpRequestException_OnlyCommentAdded()
+    {
+        // Arrange
+        var entity = new ApplicationChecklistEntry(Guid.NewGuid(), ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow);
+        var ex = new HttpRequestException("Test error");
+
+        // Act
+        var result = await ChecklistService.HandleServiceErrorAsync(ex, ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE).ConfigureAwait(false);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Item1.Should().NotBeNull();
+        result.Item1?.Invoke(entity);
+        entity.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.TO_DO);
+        entity.Comment.Should().Be("System.Net.Http.HttpRequestException: Test error");
+        result.Item2.Should().BeNull();
+        result.Item3.Should().BeTrue();
+    }
+
     #endregion
 }

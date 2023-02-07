@@ -138,10 +138,13 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                     { 3, "CREATE_BUSINESS_PARTNER_NUMBER_PULL" },
                     { 4, "CREATE_BUSINESS_PARTNER_NUMBER_MANUAL" },
                     { 5, "CREATE_IDENTITY_WALLET" },
-                    { 6, "START_CLEARING_HOUSE" },
-                    { 7, "END_CLEARING_HOUSE" },
-                    { 8, "CREATE_SELF_DESCRIPTION_LP" },
-                    { 9, "ACTIVATE_APPLICATION" }
+                    { 6, "RETRIGGER_IDENTITY_WALLET" },
+                    { 7, "START_CLEARING_HOUSE" },
+                    { 8, "RETRIGGER_CLEARING_HOUSE" },
+                    { 9, "END_CLEARING_HOUSE" },
+                    { 10, "CREATE_SELF_DESCRIPTION_LP" },
+                    { 11, "RETRIGGER_SELF_DESCRIPTION_LP" },
+                    { 12, "ACTIVATE_APPLICATION" },
                 });
 
             migrationBuilder.CreateIndex(

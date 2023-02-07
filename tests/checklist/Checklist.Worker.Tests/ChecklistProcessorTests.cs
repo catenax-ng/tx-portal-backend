@@ -97,11 +97,8 @@ public class ChecklistProcessorTests
                 .Create())
             .ToImmutableArray();
 
-        var processSteps = _fixture.CreateMany<int>(100)
-            .Select(_ =>
-                _fixture.Build<ProcessStep>()
-                    .With(x => x.ProcessStepStatusId, ProcessStepStatusId.TODO)
-                    .Create())
+        var processSteps = _fixture.CreateMany<ProcessStepTypeId>(100)
+            .Select(typeId => new ProcessStep(Guid.NewGuid(), typeId, ProcessStepStatusId.TODO))
             .ToImmutableArray();
 
         A.CallTo(() => _firstProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
@@ -517,7 +514,7 @@ public class ChecklistProcessorTests
     }
 
     #endregion
-
+    
     [Serializable]
     public class TestException : Exception
     {

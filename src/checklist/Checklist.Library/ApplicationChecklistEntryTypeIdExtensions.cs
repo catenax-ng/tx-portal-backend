@@ -32,4 +32,22 @@ public static class ApplicationChecklistEntryTypeIdExtensions
             ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP => true,
             _ => false
         };
+
+    public static ProcessStepTypeId? GetManualTriggerProcessStepId(this ApplicationChecklistEntryTypeId entryTypeId) =>
+        entryTypeId switch
+        {
+            ApplicationChecklistEntryTypeId.CLEARING_HOUSE => ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE,
+            ApplicationChecklistEntryTypeId.IDENTITY_WALLET => ProcessStepTypeId.RETRIGGER_IDENTITY_WALLET,
+            ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP => ProcessStepTypeId.RETRIGGER_SELF_DESCRIPTION_LP,
+            _ => null,
+        };
+    
+    public static ProcessStepTypeId? GetProcessStepForChecklistEntry(this ApplicationChecklistEntryTypeId entryTypeId) =>
+        entryTypeId switch
+        {
+            ApplicationChecklistEntryTypeId.CLEARING_HOUSE => ProcessStepTypeId.START_CLEARING_HOUSE,
+            ApplicationChecklistEntryTypeId.IDENTITY_WALLET => ProcessStepTypeId.CREATE_IDENTITY_WALLET,
+            ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP => ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP,
+            _ => null,
+        };
 }
