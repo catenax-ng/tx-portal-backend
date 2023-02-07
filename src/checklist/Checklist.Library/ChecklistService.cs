@@ -125,4 +125,23 @@ public sealed class ChecklistService : IChecklistService
         }
         return modified;
     }
+
+    public static Task<(Action<ApplicationChecklistEntry>?, IEnumerable<ProcessStepTypeId>?, bool)> HandleServiceErrorAsync(Exception exception, ProcessStepTypeId manualProcessTriggerStep)
+    {
+        return Task.FromResult<(Action<ApplicationChecklistEntry>?, IEnumerable<ProcessStepTypeId>?, bool)>(
+            exception is not HttpRequestException ?
+                (item =>
+                    {
+                        item.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.FAILED;
+                        item.Comment = exception.ToString();
+                    },
+                    new [] { manualProcessTriggerStep },
+                    true) :
+                (item =>
+                    {
+                        item.Comment = exception.ToString();
+                    },
+                    null,
+                    true));
+    }
 }
