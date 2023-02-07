@@ -42,7 +42,7 @@ public static class ApplicationChecklistEntryTypeIdExtensions
             _ => null,
         };
     
-    public static ProcessStepTypeId? GetManualTriggerFollowupProcessStepId(this ApplicationChecklistEntryTypeId entryTypeId) =>
+    public static ProcessStepTypeId? GetProcessStepForChecklistEntry(this ApplicationChecklistEntryTypeId entryTypeId) =>
         entryTypeId switch
         {
             ApplicationChecklistEntryTypeId.CLEARING_HOUSE => ProcessStepTypeId.START_CLEARING_HOUSE,

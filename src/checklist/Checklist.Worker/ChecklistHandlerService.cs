@@ -25,6 +25,8 @@ using Org.Eclipse.TractusX.Portal.Backend.Custodian.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.BusinessLogic;
+using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using System.Collections.Immutable;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Worker;
@@ -67,9 +69,9 @@ public class ChecklistHandlerService : IChecklistHandlerService
         {
             (ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH, new (ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, (context, cancellationToken) => _bpdmBusinessLogic.PushLegalEntity(context, cancellationToken), null)),
             (ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL, new (ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, (context, cancellationToken) => _bpdmBusinessLogic.HandlePullLegalEntity(context, cancellationToken), null)),
-            (ProcessStepTypeId.CREATE_IDENTITY_WALLET, new (ApplicationChecklistEntryTypeId.IDENTITY_WALLET, (context, cancellationToken) => _custodianBusinessLogic.CreateIdentityWalletAsync(context, cancellationToken), (ex, context, ct) => _custodianBusinessLogic.HandleErrorAsync(ex, context, ct))),
-            (ProcessStepTypeId.START_CLEARING_HOUSE, new (ApplicationChecklistEntryTypeId.CLEARING_HOUSE, (context, cancellationToken) => _clearinghouseBusinessLogic.HandleStartClearingHouse(context, cancellationToken), null)),
-            (ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP, new (ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, (context, cancellationToken) => _sdFactoryBusinessLogic.RegisterSelfDescription(context, cancellationToken), null)),
+            (ProcessStepTypeId.CREATE_IDENTITY_WALLET, new (ApplicationChecklistEntryTypeId.IDENTITY_WALLET, (context, cancellationToken) => _custodianBusinessLogic.CreateIdentityWalletAsync(context, cancellationToken), (ex, context, ct) => HandleServiceErrorAsync(ex, ProcessStepTypeId.RETRIGGER_IDENTITY_WALLET))),
+            (ProcessStepTypeId.START_CLEARING_HOUSE, new (ApplicationChecklistEntryTypeId.CLEARING_HOUSE, (context, cancellationToken) => _clearinghouseBusinessLogic.HandleStartClearingHouse(context, cancellationToken), (ex, context, ct) => HandleServiceErrorAsync(ex, ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE))),
+            (ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP, new (ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, (context, cancellationToken) => _sdFactoryBusinessLogic.RegisterSelfDescription(context, cancellationToken), (ex, context, ct) => HandleServiceErrorAsync(ex, ProcessStepTypeId.RETRIGGER_SELF_DESCRIPTION_LP))),
             (ProcessStepTypeId.ACTIVATE_APPLICATION, new (ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, (context, cancellationToken) => _applicationActivationService.HandleApplicationActivation(context, cancellationToken), null)),
         }.ToImmutableDictionary(x => x.ProcessStepTypeId, x => x.StepExecution);
     }
@@ -89,5 +91,24 @@ public class ChecklistHandlerService : IChecklistHandlerService
     public bool IsManualProcessStep(ProcessStepTypeId stepTypeId)
     {
         return _manuelProcessSteps.Contains(stepTypeId);
+    }
+    
+    private static Task<(Action<ApplicationChecklistEntry>?, IEnumerable<ProcessStepTypeId>?, bool)> HandleServiceErrorAsync(Exception exception, ProcessStepTypeId manualProcessTriggerStep)
+    {
+        return Task.FromResult<(Action<ApplicationChecklistEntry>?, IEnumerable<ProcessStepTypeId>?, bool)>(
+            exception is not ServiceUnavailableException ?
+                (item =>
+                    {
+                        item.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.FAILED;
+                        item.Comment = exception.ToString();
+                    },
+                    new [] { manualProcessTriggerStep },
+                    true) :
+                (item =>
+                    {
+                        item.Comment = exception.ToString();
+                    },
+                    null,
+                    true));
     }
 }

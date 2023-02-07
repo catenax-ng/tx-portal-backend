@@ -35,28 +35,28 @@ public class HttpClientErrorHandler : DelegatingHandler
         }
         catch (TimeoutException ex)
         {
-            throw new ServiceException("Service Timed out", ex);
+            throw new ServiceUnavailableException("Service Timed out", ex);
+        }
+        catch (SocketException ex)
+        {
+            throw new ServiceUnavailableException("Socket Exception", ex);
+        }
+        catch (WebSocketException ex)
+        {
+            throw new ServiceUnavailableException("Websocket Exception", ex);
         }
         catch (UnauthorizedAccessException ex)
         {
             throw new ServiceException("Unauthorized Access", ex, HttpStatusCode.Unauthorized);
         }
-        catch (SocketException ex)
-        {
-            throw new ServiceException("Socket Exception", ex);
-        }
-        catch (WebSocketException ex)
-        {
-            throw new ServiceException("Websocket Exception", ex);
-        }
         catch (HttpRequestException ex)
         {
             if (ex.StatusCode.HasValue && (int) ex.StatusCode > 500 && (int) ex.StatusCode <= 599)
             {
-                throw new ServiceException("Websocket Exception", ex, ex.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
+                throw new ServiceUnavailableException($"Service responded with error code {ex.StatusCode}", ex);
             }
 
-            throw;
+            throw new ServiceException("Http Request Exception", ex);
         }
     }
 }

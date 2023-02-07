@@ -36,7 +36,8 @@ try
      {
          services
              .AddTransient<ChecklistExecutionService>()
-             .AddTransient<IChecklistProcessor, ChecklistProcessor>()
+             .AddTransient<IChecklistProcessor, ChecklistProcessor>()            
+             .AddTransient<IChecklistHandlerService, ChecklistHandlerService>()
              .AddPortalRepositories(hostContext.Configuration)
              .AddChecklist(hostContext.Configuration.GetSection("Checklist"))
              .AddChecklistCreation()

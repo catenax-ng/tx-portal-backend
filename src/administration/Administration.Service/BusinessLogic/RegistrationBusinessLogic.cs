@@ -329,9 +329,9 @@ public sealed class RegistrationBusinessLogic : IRegistrationBusinessLogic
     /// <inheritdoc />
     public async Task TriggerChecklistAsync(Guid applicationId, ApplicationChecklistEntryTypeId entryTypeId)
     {
-        var processStep = entryTypeId.GetManualTriggerProcessStepId();
-        var nextProcessStep = entryTypeId.GetManualTriggerFollowupProcessStepId();
-        if (processStep is null || nextProcessStep is null)
+        var manualProcessStep = entryTypeId.GetManualTriggerProcessStepId();
+        var nextProcessStep = entryTypeId.GetProcessStepForChecklistEntry();
+        if (manualProcessStep is null || nextProcessStep is null)
         {
             throw new ConflictException("The process can not be retriggered.");
         }
@@ -341,7 +341,7 @@ public sealed class RegistrationBusinessLogic : IRegistrationBusinessLogic
                 applicationId,
                 entryTypeId,
                 new [] { ApplicationChecklistEntryStatusId.FAILED },
-                processStep.Value,
+                manualProcessStep.Value,
                 processStepTypeIds: new [] { nextProcessStep.Value })
             .ConfigureAwait(false);
 
