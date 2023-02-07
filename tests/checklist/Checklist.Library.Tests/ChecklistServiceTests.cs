@@ -479,6 +479,30 @@ public class ChecklistServiceTests
         stepAssigned.Should().AllSatisfy(x => x.Should().Be((context.ApplicationId, ProcessStepStatusId.TODO)));
     }
 
+    [Fact]
+    public void ScheduleProcessSteps_AllreadyScheduled_ReturnsNotModified()
+    {
+        /// Arrange
+        var processStepTypeIds = _fixture.CreateMany<ProcessStepTypeId>(3);
+
+        var context = new IChecklistService.WorkerChecklistProcessStepData(
+            Guid.NewGuid(),
+            _fixture.Create<Dictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId>>().ToImmutableDictionary(),
+            Enum.GetValues<ProcessStepTypeId>()
+        );
+
+        /// Act
+        var result = _service.ScheduleProcessSteps(context, processStepTypeIds);
+
+        /// Assert
+        A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>._,A<ProcessStepStatusId>._))
+            .MustNotHaveHappened();
+        A.CallTo(() => _applicationChecklistRepository.CreateApplicationAssignedProcessStep(A<Guid>._,A<Guid>._))
+            .MustNotHaveHappened();
+
+        result.Should().BeFalse();
+    }
+
     #endregion
 
     #region Setup
