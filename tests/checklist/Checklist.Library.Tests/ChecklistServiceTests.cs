@@ -401,6 +401,7 @@ public class ChecklistServiceTests
         /// Act
         _service.SkipProcessSteps(context, processStepTypeIds);
 
+        // Assert
         var eligibleSteps = processSteps.Where(step => processStepTypeIds.Contains(step.ProcessStepTypeId)).ToImmutableArray();
 
         A.CallTo(() => _processStepRepository.AttachAndModifyProcessStep(A<Guid>._,A<Action<ProcessStep>>._,A<Action<ProcessStep>>._))
@@ -416,14 +417,69 @@ public class ChecklistServiceTests
             (modified,step) => (step.ProcessStepTypeId, modified.ProcessStepStatusId)).ToImmutableArray();
         modifiedWithType.Length.Should().Be(eligibleSteps.Length);
         modifiedWithType.Should().AllSatisfy(step => processStepTypeIds.Should().Contain(step.ProcessStepTypeId));
-   }
+    }
 
     #endregion
 
     #region ScheduleProcessSteps
 
-    #endregion
+    [Fact]
+    public void ScheduleProcessSteps()
+    {
+        /// Arrange
+        var processStepTypeIds = _fixture.CreateMany<ProcessStepTypeId>(3);
 
+        var context = new IChecklistService.WorkerChecklistProcessStepData(
+            Guid.NewGuid(),
+            _fixture.Create<Dictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId>>().ToImmutableDictionary(),
+            processStepTypeIds
+        );
+
+        var newProcessSteps = new List<ProcessStep>();
+
+        A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>._,A<ProcessStepStatusId>._))
+            .ReturnsLazily((ProcessStepTypeId stepTypeId, ProcessStepStatusId statusId) =>
+            {
+                var step = new ProcessStep(Guid.NewGuid(),stepTypeId,statusId);
+                newProcessSteps.Add(step);
+                return step;
+            });
+
+        var newApplicationAssignedProcessSteps = new List<ApplicationAssignedProcessStep>();
+
+        A.CallTo(() => _applicationChecklistRepository.CreateApplicationAssignedProcessStep(A<Guid>._,A<Guid>._))
+            .ReturnsLazily((Guid applicationId, Guid processStepId) =>
+            {
+                var assigned = new ApplicationAssignedProcessStep(applicationId,processStepId);
+                newApplicationAssignedProcessSteps.Add(assigned);
+                return assigned;
+            });
+
+        var nextProcessStepTypeIds = Enum.GetValues<ProcessStepTypeId>().Except(context.ProcessStepTypeIds).ToImmutableArray();
+
+        /// Act
+        var result = _service.ScheduleProcessSteps(context, Enum.GetValues<ProcessStepTypeId>());
+
+        /// Assert
+        A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>._,A<ProcessStepStatusId>._))
+            .MustHaveHappened(nextProcessStepTypeIds.Length,Times.Exactly);
+        A.CallTo(() => _applicationChecklistRepository.CreateApplicationAssignedProcessStep(A<Guid>._,A<Guid>._))
+            .MustHaveHappened(nextProcessStepTypeIds.Length,Times.Exactly);
+
+        result.Should().BeTrue();
+        newProcessSteps.Select(step => step.ProcessStepTypeId).Should().Contain(nextProcessStepTypeIds);
+        var stepAssigned = newProcessSteps
+            .Join(
+                newApplicationAssignedProcessSteps,
+                step => step.Id,
+                assigned => assigned.ProcessStepId,
+                (step,assigned) => (assigned.CompanyApplicationId, step.ProcessStepStatusId))
+            .ToImmutableArray();
+        stepAssigned.Should().HaveCount(nextProcessStepTypeIds.Length);
+        stepAssigned.Should().AllSatisfy(x => x.Should().Be((context.ApplicationId, ProcessStepStatusId.TODO)));
+    }
+
+    #endregion
 
     #region Setup
 
