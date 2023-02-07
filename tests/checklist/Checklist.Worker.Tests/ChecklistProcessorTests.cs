@@ -514,7 +514,7 @@ public class ChecklistProcessorTests
     }
 
     #endregion
-    
+
     [Serializable]
     public class TestException : Exception
     {
