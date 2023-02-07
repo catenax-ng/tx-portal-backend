@@ -176,6 +176,32 @@ public class ChecklistServiceTests
     }
 
     [Fact]
+    public async Task VerifyChecklistEntry_UnexpectedQueryResult_Throws()
+    {
+        // Arrange
+        var applicationId = Guid.NewGuid();
+        var entryTypeId = _fixture.Create<ApplicationChecklistEntryTypeId>();
+        var entryStatusIds = _fixture.CreateMany<ApplicationChecklistEntryStatusId>(1).ToImmutableArray();
+        var processStepTypeId = _fixture.Create<ProcessStepTypeId>();
+        IEnumerable<ApplicationChecklistEntryTypeId>? entryTypeIds = null;
+        IEnumerable<ProcessStepTypeId>? processStepTypeIds = null;
+
+        var entryData = Enum.GetValues<ApplicationChecklistEntryTypeId>().Except(new [] { entryTypeId }).Select(entryTypeId => (entryTypeId, entryStatusIds.First())).ToImmutableArray();
+        var processSteps = new ProcessStep [] { new (Guid.NewGuid(), processStepTypeId, ProcessStepStatusId.TODO) };
+
+        A.CallTo(() => _applicationChecklistRepository.GetChecklistProcessStepData(A<Guid>._, A<IEnumerable<ApplicationChecklistEntryTypeId>>._, A<IEnumerable<ProcessStepTypeId>>._))
+            .Returns((true, true, null, null));
+
+        var Act = () => _service.VerifyChecklistEntryAndProcessSteps(applicationId, entryTypeId, entryStatusIds, processStepTypeId, entryTypeIds, processStepTypeIds);
+
+        // Act
+        var result = await Assert.ThrowsAsync<UnexpectedConditionException>(Act).ConfigureAwait(false);;
+
+        // Assert
+        result.Message.Should().Be($"checklist or processSteps should never be null here");
+    }
+
+    [Fact]
     public async Task VerifyChecklistEntry_UnexpectedEntryStatusData_Throws()
     {
         // Arrange
@@ -317,7 +343,6 @@ public class ChecklistServiceTests
             Enum.GetValues<ProcessStepTypeId>());
 
         // Assert
-
         A.CallTo(() => _applicationChecklistRepository.AttachAndModifyApplicationChecklist(A<Guid>._,A<ApplicationChecklistEntryTypeId>._,A<Action<ApplicationChecklistEntry>>._))
             .MustHaveHappenedOnceExactly();
         A.CallTo(() => _processStepRepository.AttachAndModifyProcessStep(A<Guid>._,A<Action<ProcessStep>>._,A<Action<ProcessStep>>._))
@@ -344,6 +369,61 @@ public class ChecklistServiceTests
     }
 
     #endregion
+
+    #region SkipProcessSteps
+
+    [Fact]
+    public void SkipProcessSteps()
+    {
+        /// Arrange
+        var processStepTypeIds = _fixture.CreateMany<ProcessStepTypeId>(3);
+        var processSteps = _fixture.CreateMany<ProcessStepTypeId>(100).Select(stepTypeId => new ProcessStep(Guid.NewGuid(), stepTypeId, ProcessStepStatusId.TODO)).ToImmutableArray();
+
+        var context = new IChecklistService.ManualChecklistProcessStepData(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            _fixture.Create<ApplicationChecklistEntryTypeId>(),
+            _fixture.Create<Dictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId>>().ToImmutableDictionary(),
+            processSteps
+        );
+
+        var modifiedProcessSteps = new List<ProcessStep>();
+
+        A.CallTo(() => _processStepRepository.AttachAndModifyProcessStep(A<Guid>._,A<Action<ProcessStep>>._,A<Action<ProcessStep>>._))
+            .Invokes((Guid processStepId, Action<ProcessStep>? initialize, Action<ProcessStep> modify) =>
+            {
+                var step = new ProcessStep(processStepId,default,default);
+                initialize?.Invoke(step);
+                modify(step);
+                modifiedProcessSteps.Add(step);
+            });
+
+        /// Act
+        _service.SkipProcessSteps(context, processStepTypeIds);
+
+        var eligibleSteps = processSteps.Where(step => processStepTypeIds.Contains(step.ProcessStepTypeId)).ToImmutableArray();
+
+        A.CallTo(() => _processStepRepository.AttachAndModifyProcessStep(A<Guid>._,A<Action<ProcessStep>>._,A<Action<ProcessStep>>._))
+            .MustHaveHappened(eligibleSteps.Length, Times.Exactly);
+        
+        modifiedProcessSteps.Should().HaveCount(eligibleSteps.Length);
+        modifiedProcessSteps.Where(step => step.ProcessStepStatusId == ProcessStepStatusId.SKIPPED).Should().HaveCount(3);
+        modifiedProcessSteps.Where(step => step.ProcessStepStatusId == ProcessStepStatusId.DUPLICATE).Should().HaveCount(eligibleSteps.Length-3);
+        var modifiedWithType = modifiedProcessSteps.Join(
+            processSteps,
+            modified => modified.Id,
+            step => step.Id,
+            (modified,step) => (step.ProcessStepTypeId, modified.ProcessStepStatusId)).ToImmutableArray();
+        modifiedWithType.Length.Should().Be(eligibleSteps.Length);
+        modifiedWithType.Should().AllSatisfy(step => processStepTypeIds.Should().Contain(step.ProcessStepTypeId));
+   }
+
+    #endregion
+
+    #region ScheduleProcessSteps
+
+    #endregion
+
 
     #region Setup
 

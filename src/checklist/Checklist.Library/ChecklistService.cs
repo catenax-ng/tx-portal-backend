@@ -92,6 +92,7 @@ public sealed class ChecklistService : IChecklistService
                         firstModified
                             ? ProcessStepStatusId.DUPLICATE
                             : ProcessStepStatusId.SKIPPED);
+                firstModified = true;
             }
         }
     }
