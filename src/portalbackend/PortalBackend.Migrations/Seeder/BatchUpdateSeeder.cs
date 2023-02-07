@@ -52,7 +52,7 @@ public class BatchUpdateSeeder : ICustomSeeder
     public int Order => 2;
 
     /// <inheritdoc />
-    public async Task InitializeAsync(CancellationToken cancellationToken)
+    public async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Start BaseEntityBatch Seeder");
         await SeedTable<Language>(
