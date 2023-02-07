@@ -90,11 +90,4 @@ public interface IApplicationRepository
     /// <param name="applicationId">Id of the application</param>
     /// <returns>Returns the checklist data</returns>
     Task<(bool Exists, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId, string? Comment)> ChecklistData)> GetApplicationChecklistData(Guid applicationId);
-
-    /// <summary>
-    /// Gets the application status and all checklist entries for the given application
-    /// </summary>
-    /// <param name="applicationId">Id of the application to get the data for</param>
-    /// <returns>Returns the application status and all related checklist entries</returns>
-    Task<(CompanyApplicationStatusId ApplicationStatusId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> ChecklistEntries)> GetApplicationStatusWithChecklistDataAsync(Guid applicationId);
 }
