@@ -118,12 +118,14 @@ public sealed class ChecklistService : IChecklistService
     public bool ScheduleProcessSteps(IChecklistService.WorkerChecklistProcessStepData context, IEnumerable<ProcessStepTypeId> processStepTypeIds)
     {
         var modified = false;
+        var processStepRepository = _portalRepositories.GetInstance<IProcessStepRepository>();
+        var checklistRepository = _portalRepositories.GetInstance<IApplicationChecklistRepository>();
         foreach (var processStepTypeId in processStepTypeIds)
         {
             if (!context.ProcessStepTypeIds.Contains(processStepTypeId))
             {
-                var step = _portalRepositories.GetInstance<IProcessStepRepository>().CreateProcessStep(processStepTypeId, ProcessStepStatusId.TODO);
-                _portalRepositories.GetInstance<IApplicationChecklistRepository>().CreateApplicationAssignedProcessStep(context.ApplicationId, step.Id);
+                var step = processStepRepository.CreateProcessStep(processStepTypeId, ProcessStepStatusId.TODO);
+                checklistRepository.CreateApplicationAssignedProcessStep(context.ApplicationId, step.Id);
                 modified = true;
             }
         }

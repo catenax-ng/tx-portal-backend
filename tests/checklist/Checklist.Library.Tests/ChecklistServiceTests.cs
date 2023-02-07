@@ -253,6 +253,100 @@ public class ChecklistServiceTests
         result.Message.Should().Be($"processSteps should never have other status then TODO here");
     }
 
+    #endregion
+
+    #region FinalizeChecklistEntryAndProcessSteps
+
+    [Fact]
+    public void FinalizeChecklistEntryAndProcessSteps_ReturnsExpected()
+    {
+        // Arrange
+        var context = new IChecklistService.ManualChecklistProcessStepData(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            _fixture.Create<ApplicationChecklistEntryTypeId>(),
+            _fixture.Create<Dictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId>>().ToImmutableDictionary(),
+            new ProcessStep[] { new (Guid.NewGuid(), _fixture.Create<ProcessStepTypeId>(), ProcessStepStatusId.TODO) }
+        );
+
+        ApplicationChecklistEntry? modifiedChecklistEntry = null;
+
+        A.CallTo(() => _applicationChecklistRepository.AttachAndModifyApplicationChecklist(A<Guid>._,A<ApplicationChecklistEntryTypeId>._,A<Action<ApplicationChecklistEntry>>._))
+            .Invokes((Guid applicationId, ApplicationChecklistEntryTypeId entryTypeId, Action<ApplicationChecklistEntry> modify) =>
+            {
+                modifiedChecklistEntry = new ApplicationChecklistEntry(applicationId, entryTypeId, default, default);
+                modify(modifiedChecklistEntry);
+            });
+
+        ProcessStep? modifiedProcessStep = null;
+
+        A.CallTo(() => _processStepRepository.AttachAndModifyProcessStep(A<Guid>._,A<Action<ProcessStep>>._,A<Action<ProcessStep>>._))
+            .Invokes((Guid processStepId, Action<ProcessStep>? initialize, Action<ProcessStep> modify) =>
+            {
+                modifiedProcessStep = new ProcessStep(processStepId,default,default);
+                initialize?.Invoke(modifiedProcessStep);
+                modify(modifiedProcessStep);
+            });
+
+        var newProcessSteps = new List<ProcessStep>();
+
+        A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>._,A<ProcessStepStatusId>._))
+            .ReturnsLazily((ProcessStepTypeId stepTypeId, ProcessStepStatusId statusId) =>
+            {
+                var step = new ProcessStep(Guid.NewGuid(),stepTypeId,statusId);
+                newProcessSteps.Add(step);
+                return step;
+            });
+
+        var newApplicationAssignedProcessSteps = new List<ApplicationAssignedProcessStep>();
+
+        A.CallTo(() => _applicationChecklistRepository.CreateApplicationAssignedProcessStep(A<Guid>._,A<Guid>._))
+            .ReturnsLazily((Guid applicationId, Guid processStepId) =>
+            {
+                var assigned = new ApplicationAssignedProcessStep(applicationId,processStepId);
+                newApplicationAssignedProcessSteps.Add(assigned);
+                return assigned;
+            });
+
+        var nextProcessStepTypeIds = Enum.GetValues<ProcessStepTypeId>().Except(context.ProcessSteps.Select(step => step.ProcessStepTypeId)).ToImmutableArray();
+
+        // Act
+        _service.FinalizeChecklistEntryAndProcessSteps(
+            context,
+            entry => { entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE; },
+            Enum.GetValues<ProcessStepTypeId>());
+
+        // Assert
+
+        A.CallTo(() => _applicationChecklistRepository.AttachAndModifyApplicationChecklist(A<Guid>._,A<ApplicationChecklistEntryTypeId>._,A<Action<ApplicationChecklistEntry>>._))
+            .MustHaveHappenedOnceExactly();
+        A.CallTo(() => _processStepRepository.AttachAndModifyProcessStep(A<Guid>._,A<Action<ProcessStep>>._,A<Action<ProcessStep>>._))
+            .MustHaveHappenedOnceExactly();
+        A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>._,A<ProcessStepStatusId>._))
+            .MustHaveHappened(nextProcessStepTypeIds.Length,Times.Exactly);
+        A.CallTo(() => _applicationChecklistRepository.CreateApplicationAssignedProcessStep(A<Guid>._,A<Guid>._))
+            .MustHaveHappened(nextProcessStepTypeIds.Length,Times.Exactly);
+
+        modifiedChecklistEntry.Should().NotBeNull();
+        modifiedChecklistEntry!.ApplicationChecklistEntryTypeId.Should().Be(context.EntryTypeId);
+        modifiedChecklistEntry!.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.DONE);
+
+        modifiedProcessStep.Should().NotBeNull();
+        modifiedProcessStep!.Id.Should().Be(context.ProcessStepId);
+        modifiedProcessStep.ProcessStepStatusId.Should().Be(ProcessStepStatusId.DONE);
+
+        newProcessSteps.Count.Should().Be(nextProcessStepTypeIds.Length);
+        newApplicationAssignedProcessSteps.Count.Should().Be(nextProcessStepTypeIds.Length);
+
+        newProcessSteps.Select(step => step.ProcessStepTypeId).Should().Contain(nextProcessStepTypeIds);
+        newApplicationAssignedProcessSteps.Should().AllSatisfy(assigned => assigned.CompanyApplicationId.Should().Be(context.ApplicationId));
+        newApplicationAssignedProcessSteps.Select(assigned => assigned.ProcessStepId).Should().Contain(newProcessSteps.Select(step => step.Id));
+    }
+
+    #endregion
+
+    #region Setup
+
     private static IEnumerable<ApplicationChecklistEntryStatusId> ProduceEntryStatusIds(IEnumerable<ApplicationChecklistEntryStatusId> statusIds)
     {
         while (true)
