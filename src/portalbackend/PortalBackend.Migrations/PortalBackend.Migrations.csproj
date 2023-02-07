@@ -68,8 +68,8 @@
     <Content Include="Seeder\Data\addresses.consortia.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <None Remove="Seeder\Data\agreement_assigned_company_roles.consortia.json" />
-    <Content Include="Seeder\Data\agreement_assigned_company_roles.consortia.json">
+    <None Remove="Seeder\Data\agreement_assigned_company_roles.json" />
+    <Content Include="Seeder\Data\agreement_assigned_company_roles.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <None Remove="Seeder\Data\agreement_assigned_offer_types.consortia.json" />
