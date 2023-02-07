@@ -61,6 +61,10 @@ public sealed class ChecklistService : IChecklistService
         {
             throw new UnexpectedConditionException("checklist or processSteps should never be null here");
         }
+        if (checklistData.ProcessSteps.Any(step => step.ProcessStepStatusId != ProcessStepStatusId.TODO))
+        {
+            throw new UnexpectedConditionException("processSteps should never have other status then TODO here");
+        }
         if (!checklistData.Checklist.Any(entry => entry.TypeId == entryTypeId && entryStatusIds.Contains(entry.StatusId)))
         {
             throw new ConflictException($"application {applicationId} does not have a checklist entry for {entryTypeId} in status {string.Join(", ",entryStatusIds)}");

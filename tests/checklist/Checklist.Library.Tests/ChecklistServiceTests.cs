@@ -18,10 +18,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using System.Net;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
@@ -99,6 +97,160 @@ public class ChecklistServiceTests
         result.Checklist.Should().ContainKeys(entryTypeIds);
         result.ProcessSteps.Select(step => step.ProcessStepTypeId).Should().Contain(processStepTypeIds);
         result.ProcessSteps.Select(step => step.ProcessStepStatusId).Should().AllSatisfy(statusId => statusId.Should().Be(ProcessStepStatusId.TODO));
+    }
+
+    [Fact]
+    public async Task VerifyChecklistEntry_InvalidApplicationId_Throws()
+    {
+        // Arrange
+        // Arrange
+        var applicationId = Guid.NewGuid();
+        var entryTypeId = _fixture.Create<ApplicationChecklistEntryTypeId>();
+        var entryStatusIds = _fixture.CreateMany<ApplicationChecklistEntryStatusId>(Enum.GetValues<ApplicationChecklistEntryStatusId>().Length-1).ToImmutableArray();
+        var processStepTypeId = _fixture.Create<ProcessStepTypeId>();
+        var entryTypeIds = _fixture.CreateMany<ApplicationChecklistEntryTypeId>(Enum.GetValues<ApplicationChecklistEntryTypeId>().Length-2).ToImmutableArray();
+        var processStepTypeIds = _fixture.CreateMany<ProcessStepTypeId>(Enum.GetValues<ProcessStepTypeId>().Length-2).ToImmutableArray();
+
+        // (bool IsValidApplicationId, bool IsSubmitted, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)
+        A.CallTo(() => _applicationChecklistRepository.GetChecklistProcessStepData(A<Guid>._, A<IEnumerable<ApplicationChecklistEntryTypeId>>._, A<IEnumerable<ProcessStepTypeId>>._))
+            .Returns((false, false, null, null));
+
+        var Act = () => _service.VerifyChecklistEntryAndProcessSteps(applicationId, entryTypeId, entryStatusIds, processStepTypeId, entryTypeIds, processStepTypeIds);
+
+        // Act
+        var result = await Assert.ThrowsAsync<NotFoundException>(Act).ConfigureAwait(false);;
+
+        // Assert
+        result.Message.Should().Be($"application {applicationId} does not exist");
+    }
+
+    [Fact]
+    public async Task VerifyChecklistEntry_InvalidApplicationStatus_Throws()
+    {
+        // Arrange
+        // Arrange
+        var applicationId = Guid.NewGuid();
+        var entryTypeId = _fixture.Create<ApplicationChecklistEntryTypeId>();
+        var entryStatusIds = _fixture.CreateMany<ApplicationChecklistEntryStatusId>(Enum.GetValues<ApplicationChecklistEntryStatusId>().Length-1).ToImmutableArray();
+        var processStepTypeId = _fixture.Create<ProcessStepTypeId>();
+        var entryTypeIds = _fixture.CreateMany<ApplicationChecklistEntryTypeId>(Enum.GetValues<ApplicationChecklistEntryTypeId>().Length-2).ToImmutableArray();
+        var processStepTypeIds = _fixture.CreateMany<ProcessStepTypeId>(Enum.GetValues<ProcessStepTypeId>().Length-2).ToImmutableArray();
+
+        // (bool IsValidApplicationId, bool IsSubmitted, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)
+        A.CallTo(() => _applicationChecklistRepository.GetChecklistProcessStepData(A<Guid>._, A<IEnumerable<ApplicationChecklistEntryTypeId>>._, A<IEnumerable<ProcessStepTypeId>>._))
+            .Returns((true, false, null, null));
+
+        var Act = () => _service.VerifyChecklistEntryAndProcessSteps(applicationId, entryTypeId, entryStatusIds, processStepTypeId, entryTypeIds, processStepTypeIds);
+
+        // Act
+        var result = await Assert.ThrowsAsync<ConflictException>(Act).ConfigureAwait(false);;
+
+        // Assert
+        result.Message.Should().Be($"application {applicationId} is not in status SUBMITTED");
+    }
+
+    [Fact]
+    public async Task VerifyChecklistEntry_UnexpectedEntryData_Throws()
+    {
+        // Arrange
+        var applicationId = Guid.NewGuid();
+        var entryTypeId = _fixture.Create<ApplicationChecklistEntryTypeId>();
+        var entryStatusIds = _fixture.CreateMany<ApplicationChecklistEntryStatusId>(1).ToImmutableArray();
+        var processStepTypeId = _fixture.Create<ProcessStepTypeId>();
+        IEnumerable<ApplicationChecklistEntryTypeId>? entryTypeIds = null;
+        IEnumerable<ProcessStepTypeId>? processStepTypeIds = null;
+
+        var entryData = Enum.GetValues<ApplicationChecklistEntryTypeId>().Except(new [] { entryTypeId }).Select(entryTypeId => (entryTypeId, entryStatusIds.First())).ToImmutableArray();
+        var processSteps = new ProcessStep [] { new (Guid.NewGuid(), processStepTypeId, ProcessStepStatusId.TODO) };
+
+        A.CallTo(() => _applicationChecklistRepository.GetChecklistProcessStepData(A<Guid>._, A<IEnumerable<ApplicationChecklistEntryTypeId>>._, A<IEnumerable<ProcessStepTypeId>>._))
+            .Returns((true, true, entryData, processSteps));
+
+        var Act = () => _service.VerifyChecklistEntryAndProcessSteps(applicationId, entryTypeId, entryStatusIds, processStepTypeId, entryTypeIds, processStepTypeIds);
+
+        // Act
+        var result = await Assert.ThrowsAsync<ConflictException>(Act).ConfigureAwait(false);;
+
+        // Assert
+        result.Message.Should().Be($"application {applicationId} does not have a checklist entry for {entryTypeId} in status {string.Join(", ",entryStatusIds)}");
+    }
+
+    [Fact]
+    public async Task VerifyChecklistEntry_UnexpectedEntryStatusData_Throws()
+    {
+        // Arrange
+        var applicationId = Guid.NewGuid();
+        var entryTypeId = _fixture.Create<ApplicationChecklistEntryTypeId>();
+        var entryStatusIds = _fixture.CreateMany<ApplicationChecklistEntryStatusId>(1).ToImmutableArray();
+        var processStepTypeId = _fixture.Create<ProcessStepTypeId>();
+        IEnumerable<ApplicationChecklistEntryTypeId>? entryTypeIds = null;
+        IEnumerable<ProcessStepTypeId>? processStepTypeIds = null;
+
+        var entryData = new [] { (entryTypeId, Enum.GetValues<ApplicationChecklistEntryStatusId>().Except(entryStatusIds).First()) };
+        var processSteps = new ProcessStep [] { new (Guid.NewGuid(), processStepTypeId, ProcessStepStatusId.TODO) };
+
+        A.CallTo(() => _applicationChecklistRepository.GetChecklistProcessStepData(A<Guid>._, A<IEnumerable<ApplicationChecklistEntryTypeId>>._, A<IEnumerable<ProcessStepTypeId>>._))
+            .Returns((true, true, entryData, processSteps));
+
+        var Act = () => _service.VerifyChecklistEntryAndProcessSteps(applicationId, entryTypeId, entryStatusIds, processStepTypeId, entryTypeIds, processStepTypeIds);
+
+        // Act
+        var result = await Assert.ThrowsAsync<ConflictException>(Act).ConfigureAwait(false);;
+
+        // Assert
+        result.Message.Should().Be($"application {applicationId} does not have a checklist entry for {entryTypeId} in status {string.Join(", ",entryStatusIds)}");
+    }
+
+    [Fact]
+    public async Task VerifyChecklistEntry_UnexpectedProcessStepData_Throws()
+    {
+        // Arrange
+        var applicationId = Guid.NewGuid();
+        var entryTypeId = _fixture.Create<ApplicationChecklistEntryTypeId>();
+        var entryStatusIds = _fixture.CreateMany<ApplicationChecklistEntryStatusId>(1).ToImmutableArray();
+        var processStepTypeId = _fixture.Create<ProcessStepTypeId>();
+        IEnumerable<ApplicationChecklistEntryTypeId>? entryTypeIds = null;
+        IEnumerable<ProcessStepTypeId>? processStepTypeIds = null;
+
+        var entryData = new [] { (entryTypeId, entryStatusIds.First()) };
+        var processSteps = new ProcessStep [] { new (Guid.NewGuid(), Enum.GetValues<ProcessStepTypeId>().Except( new [] { processStepTypeId } ).First(), ProcessStepStatusId.TODO) };
+
+        A.CallTo(() => _applicationChecklistRepository.GetChecklistProcessStepData(A<Guid>._, A<IEnumerable<ApplicationChecklistEntryTypeId>>._, A<IEnumerable<ProcessStepTypeId>>._))
+            .Returns((true, true, entryData, processSteps));
+
+        var Act = () => _service.VerifyChecklistEntryAndProcessSteps(applicationId, entryTypeId, entryStatusIds, processStepTypeId, entryTypeIds, processStepTypeIds);
+
+        // Act
+        var result = await Assert.ThrowsAsync<ConflictException>(Act).ConfigureAwait(false);;
+
+        // Assert
+        result.Message.Should().Be($"application {applicationId} checklist entry {entryTypeId}, process step {processStepTypeId} is not eligible to run");
+    }
+
+    [Fact]
+    public async Task VerifyChecklistEntry_UnexpectedProcessStepStatus_Throws()
+    {
+        // Arrange
+        var applicationId = Guid.NewGuid();
+        var entryTypeId = _fixture.Create<ApplicationChecklistEntryTypeId>();
+        var entryStatusIds = _fixture.CreateMany<ApplicationChecklistEntryStatusId>(1).ToImmutableArray();
+        var processStepTypeId = _fixture.Create<ProcessStepTypeId>();
+        IEnumerable<ApplicationChecklistEntryTypeId>? entryTypeIds = null;
+        IEnumerable<ProcessStepTypeId>? processStepTypeIds = null;
+
+        var entryData = new [] { (entryTypeId, entryStatusIds.First()) };
+        var processSteps = new ProcessStep [] { new (Guid.NewGuid(), processStepTypeId, ProcessStepStatusId.SKIPPED) };
+
+        A.CallTo(() => _applicationChecklistRepository.GetChecklistProcessStepData(A<Guid>._, A<IEnumerable<ApplicationChecklistEntryTypeId>>._, A<IEnumerable<ProcessStepTypeId>>._))
+            .Returns((true, true, entryData, processSteps));
+
+        var Act = () => _service.VerifyChecklistEntryAndProcessSteps(applicationId, entryTypeId, entryStatusIds, processStepTypeId, entryTypeIds, processStepTypeIds);
+
+        // Act
+        var result = await Assert.ThrowsAsync<UnexpectedConditionException>(Act).ConfigureAwait(false);;
+
+        // Assert
+        result.Message.Should().Be($"processSteps should never have other status then TODO here");
     }
 
     private static IEnumerable<ApplicationChecklistEntryStatusId> ProduceEntryStatusIds(IEnumerable<ApplicationChecklistEntryStatusId> statusIds)
