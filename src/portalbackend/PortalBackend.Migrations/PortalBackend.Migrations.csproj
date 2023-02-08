@@ -360,6 +360,10 @@
     <Content Include="Seeder\Data\agreement_assigned_offer_types.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Remove="Seeder\Data\agreement_assigned_offers.consortia.json" />
+    <Content Include="Seeder\Data\agreement_assigned_offers.consortia.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Migrations" />
