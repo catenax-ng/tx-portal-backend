@@ -379,14 +379,14 @@ public sealed class RegistrationBusinessLogic : IRegistrationBusinessLogic
     public async Task ProcessClearinghouseSelfDescription(SelfDescriptionResponseData data, CancellationToken cancellationToken)
     {
         var result = await _portalRepositories.GetInstance<IApplicationRepository>()
-            .GetCompanyIdForSubmittedApplication(data.ApplicationId)
+            .GetCompanyIdForSubmittedApplication(data.ExternalId)
             .ConfigureAwait(false);
         if (result == Guid.Empty)
         {
-            throw new NotFoundException($"No companyApplication for BPN {data.ApplicationId} is not in status SUBMITTED");
+            throw new NotFoundException($"No companyApplication for BPN {data.ExternalId} is not in status SUBMITTED");
         }
 
-        await _sdFactoryBusinessLogic.ProcessFinishSelfDescriptionLp(data, result, cancellationToken).ConfigureAwait(false);
+        await _sdFactoryBusinessLogic.ProcessFinishSelfDescriptionLpForApplication(data, result, cancellationToken).ConfigureAwait(false);
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
 

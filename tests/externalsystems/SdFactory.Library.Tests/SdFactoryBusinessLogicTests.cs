@@ -50,6 +50,7 @@ public class SdFactoryBusinessLogicTests
     private readonly IApplicationRepository _applicationRepository;
     private readonly ICompanyRepository _companyRepository;
     private readonly IDocumentRepository _documentRepository;
+    private readonly IConnectorsRepository _connectorsRepository;
     private readonly IPortalRepositories _portalRepositories;
     private readonly ISdFactoryService _service;
     private readonly ICollection<Document> _documents;
@@ -69,12 +70,14 @@ public class SdFactoryBusinessLogicTests
         _applicationRepository = A.Fake<IApplicationRepository>();
         _companyRepository = A.Fake<ICompanyRepository>();
         _documentRepository = A.Fake<IDocumentRepository>();
+        _connectorsRepository = A.Fake<IConnectorsRepository>();
         _portalRepositories = A.Fake<IPortalRepositories>();
         _checklistService = A.Fake<IChecklistService>();
         _service = A.Fake<ISdFactoryService>();
 
         A.CallTo(() => _portalRepositories.GetInstance<IApplicationRepository>()).Returns(_applicationRepository);
         A.CallTo(() => _portalRepositories.GetInstance<ICompanyRepository>()).Returns(_companyRepository);
+        A.CallTo(() => _portalRepositories.GetInstance<IConnectorsRepository>()).Returns(_connectorsRepository);
         A.CallTo(() => _portalRepositories.GetInstance<IDocumentRepository>()).Returns(_documentRepository);
 
         _sut = new SdFactoryBusinessLogic(_service, _portalRepositories, _checklistService);
@@ -238,11 +241,11 @@ public class SdFactoryBusinessLogicTests
         SetupForProcessFinish(company, applicationChecklistEntry);
 
         // Act
-        await _sut.ProcessFinishSelfDescriptionLp(data, company.Id, CancellationToken.None).ConfigureAwait(false);
+        await _sut.ProcessFinishSelfDescriptionLpForApplication(data, company.Id, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _checklistService.FinalizeChecklistEntryAndProcessSteps(A<IChecklistService.ManualChecklistProcessStepData>._, A<Action<ApplicationChecklistEntry>>._, A<IEnumerable<ProcessStepTypeId>>.That.Matches(x => x.Count(y => y == ProcessStepTypeId.ACTIVATE_APPLICATION) == 1))).MustHaveHappenedOnceExactly();
-        A.CallTo(() => _documentRepository.CreateDocument($"SelfDescription_{data.ApplicationId}.json", A<byte[]>._, A<byte[]>._, DocumentTypeId.SELF_DESCRIPTION, A<Action<Document>?>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _documentRepository.CreateDocument($"SelfDescription_LegalPerson.json", A<byte[]>._, A<byte[]>._, DocumentTypeId.SELF_DESCRIPTION, A<Action<Document>?>._)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _companyRepository.AttachAndModifyCompany(company.Id, null, A<Action<Company>>._)).MustHaveHappenedOnceExactly();
 
         applicationChecklistEntry.Comment.Should().BeNull();
@@ -250,7 +253,7 @@ public class SdFactoryBusinessLogicTests
         
         _documents.Should().HaveCount(1);
         var document = _documents.Single();
-        document.DocumentName.Should().Be($"SelfDescription_{ApplicationId}.json");
+        document.DocumentName.Should().Be($"SelfDescription_LegalPerson.json");
         company.SelfDescriptionDocumentId.Should().Be(document.Id);
     }
 
@@ -265,7 +268,7 @@ public class SdFactoryBusinessLogicTests
         var data = new SelfDescriptionResponseData(ApplicationId, SelfDescriptionStatus.Confirm, null, null);
 
         // Act
-        async Task Act() => await _sut.ProcessFinishSelfDescriptionLp(data, company.Id, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.ProcessFinishSelfDescriptionLpForApplication(data, company.Id, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -280,10 +283,34 @@ public class SdFactoryBusinessLogicTests
         var company = _fixture.Build<Company>()
             .With(x => x.SelfDescriptionDocumentId, (Guid?)null)
             .Create();
+        var data = new SelfDescriptionResponseData(ApplicationId, SelfDescriptionStatus.Failed, "test message", null);
+        SetupForProcessFinish(company, applicationChecklistEntry);
+
+        // Act
+        await _sut.ProcessFinishSelfDescriptionLpForApplication(data, company.Id, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        A.CallTo(() => _checklistService.FinalizeChecklistEntryAndProcessSteps(A<IChecklistService.ManualChecklistProcessStepData>._, A<Action<ApplicationChecklistEntry>>._, null)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _documentRepository.CreateDocument("SelfDescription_LegalPerson.json", A<byte[]>._, A<byte[]>._, DocumentTypeId.SELF_DESCRIPTION, A<Action<Document>?>._)).MustNotHaveHappened();
+        A.CallTo(() => _companyRepository.AttachAndModifyCompany(company.Id, null, A<Action<Company>>._)).MustNotHaveHappened();
+
+        applicationChecklistEntry.Comment.Should().Be("test message");
+        applicationChecklistEntry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.FAILED);
+        
+        _documents.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task ProcessFinishSelfDescriptionLp_FailedWithoutMessage_ThrowsConflictException()
+    {
+        // Arrange
+        var company = _fixture.Build<Company>()
+            .With(x => x.SelfDescriptionDocumentId, (Guid?)null)
+            .Create();
         var data = new SelfDescriptionResponseData(ApplicationId, SelfDescriptionStatus.Failed, null, null);
 
         // Act
-        async Task Act() => await _sut.ProcessFinishSelfDescriptionLp(data, company.Id, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.ProcessFinishSelfDescriptionLpForApplication(data, company.Id, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -334,6 +361,115 @@ public class SdFactoryBusinessLogicTests
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
         ex.Message.Should().Be($"BusinessPartnerNumber (bpn) for CompanyApplications {ApplicationId} company {CompanyId} is empty");
+    }
+
+    #endregion
+    
+    #region ProcessFinishSelfDescriptionLp
+    
+    [Fact]
+    public async Task ProcessFinishSelfDescriptionLpForConnector_ConfirmWithValidData_CompanyIsUpdated()
+    {
+        // Arrange
+        var connector = new Connector(Guid.NewGuid(), "con-air", "de", "https://one-url.com");
+        const string contentJson = @"{
+            'id': 'https://sdfactory.beta.demo.catena-x.net/selfdescription/vc/1fb3ca5f-234e-4639-8e96-f2ceb56714f0',
+            '@context': [
+              'https://www.w3.org/2018/credentials/v1',
+              'https://raw.githubusercontent.com/catenax-ng/product-sd-hub/eclipse_preparation/src/main/resources/verifiablecredentials.jsonld/sd-document-v0.1.jsonld',
+              'https://w3id.org/vc/status-list/2021/v1'
+            ],
+            'type': [
+              'VerifiableCredential',
+              'LegalPerson'
+            ],
+            'issuer': 'test',
+            'issuanceDate': '2022-10-08T18:12:14Z',
+            'expirationDate': '2023-01-06T18:12:14Z',
+            'credentialSubject': {
+              'headquarter_country': 'DE',
+              'legal_country': 'DE',
+              'bpn': 'BPNL000000000000',
+              'registration_number': '12345678',
+              'id': 'test'
+            },
+            'credentialStatus': {
+              'id': 'https://managed-identity-wallets.beta.demo.catena-x.net/api/credentials/status/fe5da20d-35c1-4154-b764-1e7dc875ca1d#61',
+              'type': 'StatusList2021Entry',
+              'statusPurpose': 'revocation',
+              'statusListIndex': '61',
+              'statusListCredential': 'https://managed-identity-wallets.beta.demo.catena-x.net/api/credentials/status/fe5da20d-35c1-4154-b764-1e7dc875ca1d'
+            },
+            'proof': {
+              'type': 'abc',
+              'created': '2022-10-08T18:12:16Z',
+              'proofPurpose': 'assertionMethod',
+              'verificationMethod': 'test',
+              'jws': 'abc'
+            }
+          }";
+        var serializeToElement = JsonSerializer.SerializeToDocument(contentJson);
+        var data = new SelfDescriptionResponseData(connector.Id, SelfDescriptionStatus.Confirm, null, serializeToElement);
+        SetupForProcessFinishForConnector(connector);
+
+        // Act
+        await _sut.ProcessFinishSelfDescriptionLpForConnector(data, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        A.CallTo(() => _documentRepository.CreateDocument("SelfDescription_Connector.json", A<byte[]>._, A<byte[]>._, DocumentTypeId.SELF_DESCRIPTION, A<Action<Document>?>._)).MustHaveHappenedOnceExactly();
+        
+        _documents.Should().HaveCount(1);
+        var document = _documents.Single();
+        A.CallTo(() => _connectorsRepository.AttachAndModifyConnector(connector.Id, A<Action<Connector>>._))
+            .MustHaveHappenedOnceExactly();
+        document.DocumentName.Should().Be("SelfDescription_Connector.json");
+        connector.SelfDescriptionDocumentId.Should().Be(document.Id);
+    }
+
+    [Fact]
+    public async Task ProcessFinishSelfDescriptionLpForConnector_ConfirmWitNoDocument_ThrowsConflictException()
+    {
+        // Arrange
+        var data = new SelfDescriptionResponseData(Guid.NewGuid(), SelfDescriptionStatus.Confirm, null, null);
+
+        // Act
+        async Task Act() => await _sut.ProcessFinishSelfDescriptionLpForConnector(data, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be("Please provide a selfDescriptionDocument");
+    }
+
+    [Fact]
+    public async Task ProcessFinishSelfDescriptionLpForConnector_FailedWithValidData_ConnectorIsUpdated()
+    {
+        // Arrange
+        var connector = new Connector(Guid.NewGuid(), "con-air", "de", "https://one-url.com");
+        var data = new SelfDescriptionResponseData(connector.Id, SelfDescriptionStatus.Failed, "test message", null);
+        SetupForProcessFinishForConnector(connector);
+        
+        // Act
+        await _sut.ProcessFinishSelfDescriptionLpForConnector(data, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        A.CallTo(() => _connectorsRepository.AttachAndModifyConnector(connector.Id, A<Action<Connector>>._))
+            .MustHaveHappenedOnceExactly();
+        connector.SelfDescriptionMessage.Should().Be("test message");
+        _documents.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task ProcessFinishSelfDescriptionLpForConnector_FailedWithoutMessage_ThrowsConflictException()
+    {
+        // Arrange
+        var data = new SelfDescriptionResponseData(ApplicationId, SelfDescriptionStatus.Failed, null, null);
+        
+        // Act
+        async Task Act() => await _sut.ProcessFinishSelfDescriptionLpForConnector(data, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be("Please provide a messsage");
     }
 
     #endregion
@@ -420,6 +556,27 @@ public class SdFactoryBusinessLogicTests
                 init?.Invoke(company);
                 modify.Invoke(company);
             });
+    }
+    
+    private void SetupForProcessFinishForConnector(Connector connector)
+    {
+        A.CallTo(() => _connectorsRepository.AttachAndModifyConnector(connector.Id, A<Action<Connector>>._))
+            .Invokes((Guid _, Action<Connector> modify) =>
+            {
+                modify.Invoke(connector);
+            });
+        var documentId = Guid.NewGuid();
+        A.CallTo(() =>
+                _documentRepository.CreateDocument(A<string>._, A<byte[]>._, A<byte[]>._, A<DocumentTypeId>._,
+                    A<Action<Document>?>._))
+            .Invokes((string documentName, byte[] documentContent, byte[] hash, DocumentTypeId documentTypeId, Action<Document>? setupOptionalFields) =>
+            {
+                var document = new Document(documentId, documentContent, hash, documentName, DateTimeOffset.UtcNow,
+                    DocumentStatusId.PENDING, documentTypeId);
+                setupOptionalFields?.Invoke(document);
+                _documents.Add(document);
+            })
+            .Returns(new Document(documentId, null!, null!, null!, default, default, default));
     }
     
     #endregion

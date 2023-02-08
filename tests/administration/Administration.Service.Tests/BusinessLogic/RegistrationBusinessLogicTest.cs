@@ -590,7 +590,7 @@ public class RegistrationBusinessLogicTest
         await _logic.ProcessClearinghouseSelfDescription(data, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() => _sdFactoryBusinessLogic.ProcessFinishSelfDescriptionLp(data, companyId, A<CancellationToken>._))
+        A.CallTo(() => _sdFactoryBusinessLogic.ProcessFinishSelfDescriptionLpForApplication(data, companyId, A<CancellationToken>._))
             .MustHaveHappenedOnceExactly();
         A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
     }

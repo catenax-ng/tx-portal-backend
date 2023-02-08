@@ -19,7 +19,6 @@
  ********************************************************************************/
 
 using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
@@ -46,12 +45,15 @@ public class SdFactoryBusinessLogic : ISdFactoryBusinessLogic
     }
 
     /// <inheritdoc />
-    public Task<Guid> RegisterConnectorAsync(
+    public Task RegisterConnectorAsync(
         Guid connectorId, 
         string connectorUrl,
         string businessPartnerNumber,
-        CancellationToken cancellationToken) =>
-        _sdFactoryService.RegisterConnectorAsync(connectorId, connectorUrl, businessPartnerNumber, cancellationToken);
+        CancellationToken cancellationToken)
+    {
+        return _sdFactoryService.RegisterConnectorAsync(connectorId, connectorUrl, businessPartnerNumber,
+            cancellationToken);
+    }
 
     /// <inheritdoc />
     public async Task<(Action<ApplicationChecklistEntry>?, IEnumerable<ProcessStepTypeId>?, bool)> StartSelfDescriptionRegistration(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
@@ -87,20 +89,12 @@ public class SdFactoryBusinessLogic : ISdFactoryBusinessLogic
             .ConfigureAwait(false);
     }
 
-    public async Task ProcessFinishSelfDescriptionLp(SelfDescriptionResponseData data, Guid companyId, CancellationToken cancellationToken)
+    public async Task ProcessFinishSelfDescriptionLpForApplication(SelfDescriptionResponseData data, Guid companyId, CancellationToken cancellationToken)
     {
-        var confirm = data.Status == SelfDescriptionStatus.Confirm;
-        switch (confirm)
-        {
-            case false when string.IsNullOrEmpty(data.Message):
-                throw new ConflictException("Please provide a messsage");
-            case true when data.Content == null:
-                throw new ConflictException("Please provide a selfDescriptionDocument");
-        }
-
+        var confirm = ValidateData(data);
         var context = await _checklistService
             .VerifyChecklistEntryAndProcessSteps(
-                data.ApplicationId,
+                data.ExternalId,
                 ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP,
                 new[] {ApplicationChecklistEntryStatusId.IN_PROGRESS},
                 ProcessStepTypeId.FINISH_SELF_DESCRIPTION_LP,
@@ -109,22 +103,9 @@ public class SdFactoryBusinessLogic : ISdFactoryBusinessLogic
 
         if (confirm)
         {
-            using var sha512Hash = SHA512.Create();
-            using var ms = new MemoryStream();
-            using var writer = new Utf8JsonWriter(ms);
-            data.Content!.WriteTo(writer);
-            await writer.FlushAsync(cancellationToken);
-            var hash = await sha512Hash.ComputeHashAsync(ms, cancellationToken);
-            var documentContent = ms.GetBuffer();
-
-            var document = _portalRepositories.GetInstance<IDocumentRepository>().CreateDocument(
-                $"SelfDescription_{data.ApplicationId}.json",
-                documentContent,
-                hash,
-                DocumentTypeId.SELF_DESCRIPTION,
-                doc => { doc.DocumentStatusId = DocumentStatusId.LOCKED; });
+            var documentId = await ProcessDocument(SdFactoryResponseModelTitle.LegalPerson, data, cancellationToken).ConfigureAwait(false);
             _portalRepositories.GetInstance<ICompanyRepository>().AttachAndModifyCompany(companyId, null,
-                c => { c.SelfDescriptionDocumentId = document.Id; });
+                c => { c.SelfDescriptionDocumentId = documentId; });
         }
 
         _checklistService.FinalizeChecklistEntryAndProcessSteps(
@@ -138,5 +119,61 @@ public class SdFactoryBusinessLogic : ISdFactoryBusinessLogic
                 item.Comment = data.Message;
             },
             confirm ? new[] {ProcessStepTypeId.ACTIVATE_APPLICATION} : null);
+    }
+
+    /// <inheritdoc />
+    public async Task ProcessFinishSelfDescriptionLpForConnector(SelfDescriptionResponseData data, CancellationToken cancellationToken)
+    {
+        var confirm = ValidateData(data);
+        Guid? documentId = null; 
+        if (confirm)
+        {
+            documentId = await ProcessDocument(SdFactoryResponseModelTitle.Connector, data, cancellationToken).ConfigureAwait(false);
+        }
+        _portalRepositories.GetInstance<IConnectorsRepository>().AttachAndModifyConnector(data.ExternalId, con =>
+        {
+            if (documentId != null)
+            {
+                con.SelfDescriptionDocumentId = documentId;
+            }
+
+            if (!confirm)
+            {
+                con.SelfDescriptionMessage = data.Message!;
+            }
+        });
+    }
+
+    private static bool ValidateData(SelfDescriptionResponseData data)
+    {
+        var confirm = data.Status == SelfDescriptionStatus.Confirm;
+        switch (confirm)
+        {
+            case false when string.IsNullOrEmpty(data.Message):
+                throw new ConflictException("Please provide a messsage");
+            case true when data.Content == null:
+                throw new ConflictException("Please provide a selfDescriptionDocument");
+        }
+
+        return confirm;
+    }
+
+    private async Task<Guid> ProcessDocument(SdFactoryResponseModelTitle title, SelfDescriptionResponseData data, CancellationToken cancellationToken)
+    {
+        using var sha512Hash = SHA512.Create();
+        using var ms = new MemoryStream();
+        using var writer = new Utf8JsonWriter(ms);
+        data.Content!.WriteTo(writer);
+        await writer.FlushAsync(cancellationToken);
+        var hash = await sha512Hash.ComputeHashAsync(ms, cancellationToken);
+        var documentContent = ms.GetBuffer();
+
+        var document = _portalRepositories.GetInstance<IDocumentRepository>().CreateDocument(
+            $"SelfDescription_{title}.json",
+            documentContent,
+            hash,
+            DocumentTypeId.SELF_DESCRIPTION,
+            doc => { doc.DocumentStatusId = DocumentStatusId.LOCKED; });
+        return document.Id;
     }
 }

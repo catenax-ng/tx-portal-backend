@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021, 2023 BMW Group AG
  * Copyright (c) 2021, 2023 Contributors to the Eclipse Foundation
  *
@@ -18,13 +18,19 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using System.ComponentModel.DataAnnotations;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.Models;
+namespace Org.Eclipse.TractusX.Portal.Backend.Daps.Library;
 
-public record SelfDescriptionResponseData(
-    [property: JsonPropertyName("externalId")] Guid ExternalId,
-    [property: JsonPropertyName("status")] SelfDescriptionStatus Status,
-    [property: JsonPropertyName("message")] string? Message,
-    [property: JsonPropertyName("selfDescriptionDocument")] JsonDocument? Content);
+/// <summary>
+/// Settings used in business logic concerning daps.
+/// </summary>
+public class DapsSettings : KeyVaultAuthSettings
+{
+    /// <summary>
+    /// Daps endpoint.
+    /// </summary>
+    [Required]
+    public string DapsUrl { get; set; } = null!;
+}

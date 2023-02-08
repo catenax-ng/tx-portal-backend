@@ -36,7 +36,7 @@ public interface ISdFactoryService
     /// <param name="businessPartnerNumber">the bpn</param>
     /// <param name="cancellationToken"></param>
     /// <exception cref="ServiceException">throws an exception if the service call wasn't successfully</exception>
-    Task<Guid> RegisterConnectorAsync(Guid connectorId, string connectorUrl, string businessPartnerNumber, CancellationToken cancellationToken);
+    Task RegisterConnectorAsync(Guid connectorId, string connectorUrl, string businessPartnerNumber, CancellationToken cancellationToken);
 
     Task RegisterSelfDescriptionAsync(Guid applicationId, IEnumerable<(UniqueIdentifierId Id, string Value)> uniqueIdentifiers, string countryCode, string businessPartnerNumber, CancellationToken cancellationToken);
 }
