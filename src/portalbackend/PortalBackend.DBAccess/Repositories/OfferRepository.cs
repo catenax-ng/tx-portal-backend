@@ -509,9 +509,4 @@ public class OfferRepository : IOfferRepository
             modifyPrivacyPolicy,
             privacyPolicy => new OfferAssignedPrivacypolicy(appId, privacyPolicy));
 
-    /// <inheritdoc />
-    public IAsyncEnumerable<PrivacyPolicyId> GetPrivacyPolicyDataAsync() =>
-        _context.PrivacyPolicies
-            .Select(privacyPolicy => privacyPolicy.Id)
-            .AsAsyncEnumerable();
 }

@@ -448,9 +448,8 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         _offerService.DeclineOfferAsync(appId, iamUserId, data, OfferTypeId.APP, NotificationTypeId.APP_RELEASE_REJECTION, _settings.ServiceManagerRoles, _settings.AppOverviewAddress);
 
     /// <inheritdoc/>
-    public async Task<PrivacyPolicyData> GetPrivacyPolicyDataAsync()
-    {
-        var data = await _portalRepositories.GetInstance<IOfferRepository>().GetPrivacyPolicyDataAsync().ToListAsync().ConfigureAwait(false);
-        return new PrivacyPolicyData(data);
+    public  Task<PrivacyPolicyData> GetPrivacyPolicyDataAsync()
+    {   
+        return Task.FromResult(new PrivacyPolicyData(Enum.GetNames<PrivacyPolicyId>()));
     }
 }

@@ -336,9 +336,4 @@ public interface IOfferRepository
     /// <param name="modifyPrivacyPolicy"></param>
     /// <returns></returns>
     void CreateDeleteAppAssignedPrivacyPolicy(Guid appId, IEnumerable<PrivacyPolicyId> initialPrivacyPolicy, IEnumerable<PrivacyPolicyId> modifyPrivacyPolicy);
-    
-    /// <summary>
-    /// Retrieve All Privacy Policy
-    /// </summary>
-    IAsyncEnumerable<PrivacyPolicyId> GetPrivacyPolicyDataAsync();
 }

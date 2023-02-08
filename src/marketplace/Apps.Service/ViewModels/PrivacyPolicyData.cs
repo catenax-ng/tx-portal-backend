@@ -25,4 +25,4 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
 /// model of Privacy Policy data.
 /// </summary>
 /// <param name="PrivacyPolicies">Privacy Policy.</param>
-public record PrivacyPolicyData(IEnumerable<PrivacyPolicyId> PrivacyPolicies);
+public record PrivacyPolicyData(IEnumerable<string> PrivacyPolicies);
