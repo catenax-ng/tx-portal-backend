@@ -323,7 +323,7 @@ public sealed class RegistrationBusinessLogic : IRegistrationBusinessLogic
             throw new NotFoundException($"Application {applicationId} does not exists");
         }
 
-        return data.ChecklistData.Select(x => new ChecklistDetails(x.TypeId, x.StatusId, x.Comment, x.TypeId.GetManualTriggerProcessStepIds() != null));
+        return data.ChecklistData.OrderBy(x => x.TypeId).Select(x => new ChecklistDetails(x.TypeId, x.StatusId, x.Comment, x.TypeId.GetManualTriggerProcessStepIds() != null));
     }
 
     /// <inheritdoc />
