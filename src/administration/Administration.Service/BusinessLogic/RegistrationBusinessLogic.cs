@@ -323,41 +323,37 @@ public sealed class RegistrationBusinessLogic : IRegistrationBusinessLogic
             throw new NotFoundException($"Application {applicationId} does not exists");
         }
 
-        return data.ChecklistData.OrderBy(x => x.TypeId).Select(x => new ChecklistDetails(x.TypeId, x.StatusId, x.Comment, x.TypeId.GetManualTriggerProcessStepIds() != null));
+        return data.ChecklistData
+            .OrderBy(x => x.TypeId)
+            .Select(x =>
+                new ChecklistDetails(
+                    x.TypeId, 
+                    x.StatusId, 
+                    x.Comment,
+                    data.ProcessSteps.Where(ps => x.TypeId.GetManualTriggerProcessStepIds() != null && x.TypeId.GetManualTriggerProcessStepIds()!.Contains(ps))));
     }
 
     /// <inheritdoc />
-    public async Task TriggerChecklistAsync(Guid applicationId, ApplicationChecklistEntryTypeId entryTypeId)
+    public async Task TriggerChecklistAsync(Guid applicationId, ApplicationChecklistEntryTypeId entryTypeId, ProcessStepTypeId processStepTypeId)
     {
-        var manualProcessSteps = entryTypeId.GetManualTriggerProcessStepIds();
-        if (manualProcessSteps is null)
+        var possibleSteps = entryTypeId.GetManualTriggerProcessStepIds();
+        if (possibleSteps is null || !possibleSteps.Contains(processStepTypeId))
         {
-            throw new ConflictException("The process can not be retriggered.");
+            throw new ConflictException("The process can not be retriggered");
         }
 
-        ProcessStepTypeId manualProcessStep;
-        if (manualProcessSteps.Length > 1)
+        var isStepInTodo = await _portalRepositories.GetInstance<IProcessStepRepository>()
+            .GetProcessStepByApplicationIdInStatusTodo(applicationId, processStepTypeId)
+            .ConfigureAwait(false);
+        if (!isStepInTodo)
         {
-            var failedSteps = await _portalRepositories.GetInstance<IProcessStepRepository>()
-                .GetProcessStepByApplicationIdInStatusTodo(applicationId, manualProcessSteps)
-                .ToListAsync()
-                .ConfigureAwait(false);
-            if (failedSteps.Count(x => x.IsToDo) != 1)
-            {
-                throw new ConflictException($"There must only be one process step in status Todo for Checklist Entry {entryTypeId}");
-            }
-
-            manualProcessStep = failedSteps.Single(x => x.IsToDo).ProcessStepTypeId;
-        }
-        else
-        {
-            manualProcessStep = manualProcessSteps.Single();
+            throw new ConflictException($"{processStepTypeId} is not in state TODO");
         }
 
-        var nextProcessStep = manualProcessStep.GetProcessStepForChecklistEntry();
+        var nextProcessStep = processStepTypeId.GetProcessStepForChecklistEntry();
         if (nextProcessStep is null)
         {
-            throw new ConflictException("No next step configured.");
+            throw new ConflictException("No next step configured");
         }
 
         var context = await _checklistService
@@ -365,7 +361,7 @@ public sealed class RegistrationBusinessLogic : IRegistrationBusinessLogic
                 applicationId,
                 entryTypeId,
                 new [] { ApplicationChecklistEntryStatusId.FAILED },
-                manualProcessStep,
+                processStepTypeId,
                 processStepTypeIds: new [] { nextProcessStep.Value })
             .ConfigureAwait(false);
 

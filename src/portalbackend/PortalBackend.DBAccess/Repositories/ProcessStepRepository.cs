@@ -18,6 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Microsoft.EntityFrameworkCore;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
@@ -50,13 +51,11 @@ public class ProcessStepRepository : IProcessStepRepository
     }
 
     /// <inheritdoc />
-    public IAsyncEnumerable<(ProcessStepTypeId ProcessStepTypeId, bool IsToDo)> GetProcessStepByApplicationIdInStatusTodo(Guid applicationId, ProcessStepTypeId[] processSteps) =>
+    public Task<bool> GetProcessStepByApplicationIdInStatusTodo(Guid applicationId, ProcessStepTypeId processStep) =>
         _context.ProcessSteps
             .Where(x => 
                 x.ApplicationAssignedProcessStep!.CompanyApplication!.ApplicationStatusId == CompanyApplicationStatusId.SUBMITTED &&
                 x.ApplicationAssignedProcessStep!.CompanyApplicationId == applicationId &&
-                processSteps.Contains(x.ProcessStepTypeId))
-            .GroupBy(x => x.ProcessStepTypeId)
-            .Select(x => new ValueTuple<ProcessStepTypeId, bool>(x.Key, x.OrderByDescending(x => x.DateLastChanged).Last().ProcessStepStatusId == ProcessStepStatusId.TODO))
-            .ToAsyncEnumerable();
+                x.ProcessStepTypeId == processStep)
+            .AnyAsync(x => x.ProcessStepStatusId == ProcessStepStatusId.TODO);
 }

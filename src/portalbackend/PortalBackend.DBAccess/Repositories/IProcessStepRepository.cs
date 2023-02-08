@@ -32,10 +32,10 @@ public interface IProcessStepRepository
     void AttachAndModifyProcessStep(Guid processStepId, Action<ProcessStep>? initialize, Action<ProcessStep> modify);
     
     /// <summary>
-    /// Gets the process steps for the given application in status todo 
+    /// Checks whether the process step is in state TODO for the given application 
     /// </summary>
     /// <param name="applicationId">Id of the application</param>
-    /// <param name="processSteps">the process steps to check</param>
-    /// <returns>The process steps that are in status todo</returns>
-    IAsyncEnumerable<(ProcessStepTypeId ProcessStepTypeId, bool IsToDo)> GetProcessStepByApplicationIdInStatusTodo(Guid applicationId, ProcessStepTypeId[] processSteps);
+    /// <param name="processStep">the process step to check</param>
+    /// <returns><c>true</c> if the processStep is in state todo, otherwise <c>false</c></returns>
+    Task<bool> GetProcessStepByApplicationIdInStatusTodo(Guid applicationId, ProcessStepTypeId processStep);
 }
