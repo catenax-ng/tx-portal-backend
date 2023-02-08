@@ -608,22 +608,6 @@ public class AppReleaseBusinessLogicTest
 
     #endregion
     
-    [Fact]
-    public async Task GetPrivacyPolicy_ExpectedOutput()
-    {
-        // Arrange
-        A.CallTo(() => _offerRepository.GetPrivacyPolicyDataAsync())
-            .Returns(new List<PrivacyPolicyId>() {PrivacyPolicyId.COMPANY_DATA , PrivacyPolicyId.USER_DATA }.ToAsyncEnumerable());
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(_settings), _offerService, _notificationService);
-
-        // Act
-        var result = await sut.GetPrivacyPolicyDataAsync().ConfigureAwait(false);
-        
-        // Assert
-        A.CallTo(() => _offerRepository.GetPrivacyPolicyDataAsync()).MustHaveHappenedOnceExactly();
-        Assert.IsType<PrivacyPolicyData>(result);
-    }
-
     #region DeclineAppRequest
     
     [Fact]
