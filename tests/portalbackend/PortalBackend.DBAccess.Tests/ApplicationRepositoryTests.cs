@@ -76,9 +76,9 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
         result.Region.Should().BeNull();
         result.Zipcode.Should().Be("00001");
 
-        result.AgreementsData.Should().HaveCount(3);
-        result.AgreementsData.Where(x => x.CompanyRoleId == CompanyRoleId.APP_PROVIDER).Should().HaveCount(1);
-        result.AgreementsData.Where(x => x.CompanyRoleId == CompanyRoleId.ACTIVE_PARTICIPANT).Should().HaveCount(2);
+        result.AgreementsData.Should().HaveCount(5);
+        result.AgreementsData.Where(x => x.CompanyRoleId == CompanyRoleId.APP_PROVIDER).Should().HaveCount(2);
+        result.AgreementsData.Where(x => x.CompanyRoleId == CompanyRoleId.ACTIVE_PARTICIPANT).Should().HaveCount(3);
 
         result.InvitedCompanyUserData.Should().BeEmpty();
         
@@ -156,7 +156,7 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
         
         // Assert
         bpn.Should().Be("BPNL00000003LLHB");
-        existingChecklistEntryTypeIds.Should().HaveCount(6);
+        existingChecklistEntryTypeIds.Should().HaveCount(5);
     }
 
     [Fact]
@@ -200,20 +200,6 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
         
         // Assert
         applicationStatus.Should().Be(CompanyApplicationStatusId.SUBMITTED);
-        checklistEntryStatus.Should().Be(ApplicationChecklistEntryStatusId.DONE);
-    }
-
-    [Fact]
-    public async Task GetApplicationStatusWithChecklistTypeStatusAsync_WithApplicationWithoutChecklist_ReturnExpected()
-    {
-        // Arrange
-        var sut = await CreateSut().ConfigureAwait(false);
-        
-        // Act
-        var (applicationStatus, checklistEntryStatus) = await sut.GetApplicationStatusWithChecklistTypeStatusAsync(ApplicationWithBpn, ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION).ConfigureAwait(false);
-        
-        // Assert
-        applicationStatus.Should().Be(CompanyApplicationStatusId.CONFIRMED);
         checklistEntryStatus.Should().Be(ApplicationChecklistEntryStatusId.DONE);
     }
 
@@ -415,9 +401,9 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
         var data = await sut.GetCompanyAndApplicationDetailsForCreateWalletAsync(SubmittedApplicationWithBpn).ConfigureAwait(false);
         
         // Assert
-        data.companyId.Should().Be(new Guid("27538eac-27a3-4f74-9306-e5149b93ade5"));
-        data.businessPartnerNumber.Should().Be("CAXSTESTYCATENAZZ");
-        data.companyName.Should().Be("Submitted Company With Bpn");
+        data.companyId.Should().Be(new Guid("d14eba77-0b18-4e41-9d84-49ef875c0763"));
+        data.businessPartnerNumber.Should().Be("BPNL00000003LLHB");
+        data.companyName.Should().Be("Dummy Corp. 1");
     }
 
 

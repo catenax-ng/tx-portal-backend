@@ -576,11 +576,11 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         var sut = await CreateSut().ConfigureAwait(false);
 
         // Act
-        var result = await sut.GetProviderCompanyUserIdForOfferUntrackedAsync(new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA5"), "623770c5-cf38-4b9f-9a35-f8b9ae972e2e", OfferStatusId.CREATED, OfferTypeId.SERVICE);
+        var result = await sut.GetProviderCompanyUserIdForOfferUntrackedAsync(new Guid("0ffcb416-1101-4ba6-8d4a-a9dfa31745a4"), "502dabcf-01c7-47d9-a88e-0be4279097b5", OfferStatusId.ACTIVE, OfferTypeId.CORE_COMPONENT);
 
         // Assert
         result.Should().NotBeNull();
-        result.CompanyUserId.Should().Be(new Guid("ac1cf001-7fbc-1f2f-817f-bce058019990"));
+        result.CompanyUserId.Should().Be(new Guid("ac1cf001-7fbc-1f2f-817f-bce058020006"));
     }
 
     #endregion
