@@ -153,7 +153,7 @@ public class RegistrationControllerTest
     }
 
     [Fact]
-    public async Task TriggerChecklist_ReturnsExpectedResult()
+    public async Task TriggerClearinghouse_ReturnsExpectedResult()
     {
         // Arrange
         var applicationId = _fixture.Create<Guid>();
@@ -161,10 +161,58 @@ public class RegistrationControllerTest
             .ReturnsLazily(() => Task.CompletedTask);
         
         // Act
-        var result = await this._controller.TriggerChecklist(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE);
+        var result = await this._controller.TriggerClearinghouseChecklist(applicationId);
         
         // Assert
         A.CallTo(() => _logic.TriggerChecklistAsync(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE)).MustHaveHappenedOnceExactly();
+        result.Should().BeOfType<NoContentResult>();
+    }
+    
+    [Fact]
+    public async Task TriggerIdentityWallet_ReturnsExpectedResult()
+    {
+        // Arrange
+        var applicationId = _fixture.Create<Guid>();
+        A.CallTo(() => _logic.TriggerChecklistAsync(applicationId, A<ApplicationChecklistEntryTypeId>._))
+            .ReturnsLazily(() => Task.CompletedTask);
+        
+        // Act
+        var result = await this._controller.TriggerIdentityWallet(applicationId);
+        
+        // Assert
+        A.CallTo(() => _logic.TriggerChecklistAsync(applicationId, ApplicationChecklistEntryTypeId.IDENTITY_WALLET)).MustHaveHappenedOnceExactly();
+        result.Should().BeOfType<NoContentResult>();
+    }
+    
+    [Fact]
+    public async Task TriggerSelfDescription_ReturnsExpectedResult()
+    {
+        // Arrange
+        var applicationId = _fixture.Create<Guid>();
+        A.CallTo(() => _logic.TriggerChecklistAsync(applicationId, A<ApplicationChecklistEntryTypeId>._))
+            .ReturnsLazily(() => Task.CompletedTask);
+        
+        // Act
+        var result = await this._controller.TriggerSelfDescription(applicationId);
+        
+        // Assert
+        A.CallTo(() => _logic.TriggerChecklistAsync(applicationId, ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP)).MustHaveHappenedOnceExactly();
+        result.Should().BeOfType<NoContentResult>();
+    }
+    
+    [Fact]
+    public async Task TriggerBpn_ReturnsExpectedResult()
+    {
+        // Arrange
+        var applicationId = _fixture.Create<Guid>();
+        A.CallTo(() => _logic.TriggerChecklistAsync(applicationId, A<ApplicationChecklistEntryTypeId>._))
+            .ReturnsLazily(() => Task.CompletedTask);
+        
+        // Act
+        var result = await this._controller.TriggerBpn(applicationId);
+        
+        // Assert
+        A.CallTo(() => _logic.TriggerChecklistAsync(applicationId, ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER)).MustHaveHappenedOnceExactly();
         result.Should().BeOfType<NoContentResult>();
     }
 }

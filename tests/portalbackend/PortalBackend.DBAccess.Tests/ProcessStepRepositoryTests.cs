@@ -80,10 +80,58 @@ public class ProcessStepRepositoryTests : IAssemblyFixture<TestDbFixture>
     
     #endregion
 
+    #region GetProcessStepByApplicationIdInStatusTodo
+    
+    [Fact]
+    public async Task GetProcessStepByApplicationIdInStatusTodo_WithTwoInTodo_ReturnsExpected()
+    {
+        // Arrange
+        var sut = await CreateSut().ConfigureAwait(false);
+
+        // Act
+        var result = await sut
+            .GetProcessStepByApplicationIdInStatusTodo(
+                new Guid("2bb2005f-6e8d-41eb-967b-cde67546cafc"),
+                new[] {ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_MANUAL, ProcessStepTypeId.VERIFY_REGISTRATION})
+            .ToListAsync()
+            .ConfigureAwait(false);
+
+        // Assert
+        result.Should().HaveCount(2);
+        result.Should().AllSatisfy(x => x.IsToDo.Should().BeTrue());
+    }
+    
+    [Fact]
+    public async Task GetProcessStepByApplicationIdInStatusTodo_WithAllStepsInDone_ReturnsEmpty()
+    {
+        // Arrange
+        var sut = await CreateSut().ConfigureAwait(false);
+
+        // Act
+        var result = await sut
+            .GetProcessStepByApplicationIdInStatusTodo(
+                new Guid("4829b64c-de6a-426c-81fc-c0bcf95bcb76"),
+                new[] {ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_MANUAL, ProcessStepTypeId.VERIFY_REGISTRATION})
+            .ToListAsync()
+            .ConfigureAwait(false);
+
+        // Assert
+        result.Should().BeEmpty();
+    }
+
+    #endregion
+
     private async Task<(ProcessStepRepository sut, PortalDbContext dbContext)> CreateSutWithContext()
     {
         var context = await _dbTestDbFixture.GetPortalDbContext().ConfigureAwait(false);
         var sut = new ProcessStepRepository(context);
         return (sut, context);
+    }
+    
+    private async Task<ProcessStepRepository> CreateSut()
+    {
+        var context = await _dbTestDbFixture.GetPortalDbContext().ConfigureAwait(false);
+        var sut = new ProcessStepRepository(context);
+        return sut;
     }
 }

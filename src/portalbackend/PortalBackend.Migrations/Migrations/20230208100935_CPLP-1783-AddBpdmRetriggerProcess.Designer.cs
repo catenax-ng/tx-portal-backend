@@ -22,6 +22,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
@@ -31,9 +32,10 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migrations
 {
     [DbContext(typeof(PortalDbContext))]
-    partial class PortalDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230208100935_CPLP-1783-AddBpdmRetriggerProcess")]
+    partial class CPLP1783AddBpdmRetriggerProcess
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2840,25 +2842,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                     b.ToTable("offer_assigned_licenses", "portal");
                 });
 
-            modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.OfferAssignedPrivacyPolicy", b =>
-                {
-                    b.Property<Guid>("OfferId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("offer_id");
-
-                    b.Property<int>("PrivacyPolicyId")
-                        .HasColumnType("integer")
-                        .HasColumnName("privacy_policy_id");
-
-                    b.HasKey("OfferId", "PrivacyPolicyId")
-                        .HasName("pk_offer_assigned_privacy_policies");
-
-                    b.HasIndex("PrivacyPolicyId")
-                        .HasDatabaseName("ix_offer_assigned_privacy_policies_privacy_policy_id");
-
-                    b.ToTable("offer_assigned_privacy_policies", "portal");
-                });
-
             modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.OfferDescription", b =>
                 {
                     b.Property<Guid>("OfferId")
@@ -3096,51 +3079,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         {
                             Id = 3,
                             Label = "SERVICE"
-                        });
-                });
-
-            modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.PrivacyPolicy", b =>
-                {
-                    b.Property<int>("Id")
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    b.Property<string>("Label")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("label");
-
-                    b.HasKey("Id")
-                        .HasName("pk_privacy_policies");
-
-                    b.ToTable("privacy_policies", "portal");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Label = "COMPANY_DATA"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Label = "USER_DATA"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Label = "LOCATION"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Label = "BROWSER_HISTORY"
-                        },
-                        new
-                        {
-                            Id = 5,
-                            Label = "NONE"
                         });
                 });
 
@@ -4495,25 +4433,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                     b.Navigation("OfferLicense");
                 });
 
-            modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.OfferAssignedPrivacyPolicy", b =>
-                {
-                    b.HasOne("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.Offer", "Offer")
-                        .WithMany("OfferAssignedPrivacyPolicies")
-                        .HasForeignKey("OfferId")
-                        .IsRequired()
-                        .HasConstraintName("fk_offer_assigned_privacy_policies_offers_offer_id");
-
-                    b.HasOne("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.PrivacyPolicy", "PrivacyPolicy")
-                        .WithMany("OfferAssignedPrivacyPolicies")
-                        .HasForeignKey("PrivacyPolicyId")
-                        .IsRequired()
-                        .HasConstraintName("fk_offer_assigned_privacy_policies_privacy_policies_privacy_po");
-
-                    b.Navigation("Offer");
-
-                    b.Navigation("PrivacyPolicy");
-                });
-
             modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.OfferDescription", b =>
                 {
                     b.HasOne("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.Language", "Language")
@@ -4949,8 +4868,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
 
                     b.Navigation("ConsentAssignedOffers");
 
-                    b.Navigation("OfferAssignedPrivacyPolicies");
-
                     b.Navigation("OfferDescriptions");
 
                     b.Navigation("OfferSubscriptions");
@@ -4984,11 +4901,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                     b.Navigation("AgreementAssignedOfferTypes");
 
                     b.Navigation("Offers");
-                });
-
-            modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.PrivacyPolicy", b =>
-                {
-                    b.Navigation("OfferAssignedPrivacyPolicies");
                 });
 
             modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.ProcessStep", b =>

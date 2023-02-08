@@ -24,30 +24,31 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 
 public static class ApplicationChecklistEntryTypeIdExtensions
 {
-    public static bool IsAutomated(this ApplicationChecklistEntryTypeId entryTypeId) =>
+    public static ProcessStepTypeId[]? GetManualTriggerProcessStepIds(this ApplicationChecklistEntryTypeId entryTypeId) =>
         entryTypeId switch
         {
-            ApplicationChecklistEntryTypeId.CLEARING_HOUSE => true,
-            ApplicationChecklistEntryTypeId.IDENTITY_WALLET => true,
-            ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP => true,
-            _ => false
-        };
-
-    public static ProcessStepTypeId? GetManualTriggerProcessStepId(this ApplicationChecklistEntryTypeId entryTypeId) =>
-        entryTypeId switch
-        {
-            ApplicationChecklistEntryTypeId.CLEARING_HOUSE => ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE,
-            ApplicationChecklistEntryTypeId.IDENTITY_WALLET => ProcessStepTypeId.RETRIGGER_IDENTITY_WALLET,
-            ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP => ProcessStepTypeId.RETRIGGER_SELF_DESCRIPTION_LP,
+            ApplicationChecklistEntryTypeId.CLEARING_HOUSE => new []{ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE},
+            ApplicationChecklistEntryTypeId.IDENTITY_WALLET => new []{ProcessStepTypeId.RETRIGGER_IDENTITY_WALLET},
+            ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP => new []{ProcessStepTypeId.RETRIGGER_SELF_DESCRIPTION_LP},
+            ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER => new []{ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PUSH, ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PULL},
             _ => null,
         };
     
-    public static ProcessStepTypeId? GetProcessStepForChecklistEntry(this ApplicationChecklistEntryTypeId entryTypeId) =>
-        entryTypeId switch
+    public static ProcessStepTypeId? GetProcessStepForChecklistEntry(this ProcessStepTypeId processStepTypeId) =>
+        processStepTypeId switch
         {
-            ApplicationChecklistEntryTypeId.CLEARING_HOUSE => ProcessStepTypeId.START_CLEARING_HOUSE,
-            ApplicationChecklistEntryTypeId.IDENTITY_WALLET => ProcessStepTypeId.CREATE_IDENTITY_WALLET,
-            ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP => ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP,
+            ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE => ProcessStepTypeId.START_CLEARING_HOUSE,
+            ProcessStepTypeId.RETRIGGER_IDENTITY_WALLET => ProcessStepTypeId.CREATE_IDENTITY_WALLET,
+            ProcessStepTypeId.RETRIGGER_SELF_DESCRIPTION_LP => ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP,
+            ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PUSH => ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH,
+            ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PULL => ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL,
             _ => null,
+        };
+
+    public static ApplicationChecklistEntryStatusId GetChecklistStatus(this ProcessStepTypeId processStepTypeId) =>
+        processStepTypeId switch
+        {
+            ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL => ApplicationChecklistEntryStatusId.IN_PROGRESS,
+            _ => ApplicationChecklistEntryStatusId.TO_DO,
         };
 }

@@ -38,13 +38,25 @@ public class ProcessStepRepository : IProcessStepRepository
     }
 
     public ProcessStep CreateProcessStep(ProcessStepTypeId processStepTypeId, ProcessStepStatusId processStepStatusId) =>
-        _context.Add(new ProcessStep(Guid.NewGuid(), processStepTypeId, processStepStatusId)).Entity;
+        _context.Add(new ProcessStep(Guid.NewGuid(), processStepTypeId, processStepStatusId, DateTimeOffset.UtcNow)).Entity;
 
     public void AttachAndModifyProcessStep(Guid processStepId, Action<ProcessStep>? initialize, Action<ProcessStep> modify)
     {
-        var step = new ProcessStep(processStepId, default, default);
+        var step = new ProcessStep(processStepId, default, default, default);
         initialize?.Invoke(step);
         _context.Attach(step);
+        step.DateLastChanged = DateTimeOffset.UtcNow;
         modify(step);
     }
+
+    /// <inheritdoc />
+    public IAsyncEnumerable<(ProcessStepTypeId ProcessStepTypeId, bool IsToDo)> GetProcessStepByApplicationIdInStatusTodo(Guid applicationId, ProcessStepTypeId[] processSteps) =>
+        _context.ProcessSteps
+            .Where(x => 
+                x.ApplicationAssignedProcessStep!.CompanyApplication!.ApplicationStatusId == CompanyApplicationStatusId.SUBMITTED &&
+                x.ApplicationAssignedProcessStep!.CompanyApplicationId == applicationId &&
+                processSteps.Contains(x.ProcessStepTypeId))
+            .GroupBy(x => x.ProcessStepTypeId)
+            .Select(x => new ValueTuple<ProcessStepTypeId, bool>(x.Key, x.OrderByDescending(x => x.DateLastChanged).Last().ProcessStepStatusId == ProcessStepStatusId.TODO))
+            .ToAsyncEnumerable();
 }

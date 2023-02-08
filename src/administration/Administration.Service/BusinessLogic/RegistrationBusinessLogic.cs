@@ -323,17 +323,41 @@ public sealed class RegistrationBusinessLogic : IRegistrationBusinessLogic
             throw new NotFoundException($"Application {applicationId} does not exists");
         }
 
-        return data.ChecklistData.Select(x => new ChecklistDetails(x.TypeId, x.StatusId, x.Comment, x.TypeId.IsAutomated()));
+        return data.ChecklistData.Select(x => new ChecklistDetails(x.TypeId, x.StatusId, x.Comment, x.TypeId.GetManualTriggerProcessStepIds() != null));
     }
 
     /// <inheritdoc />
     public async Task TriggerChecklistAsync(Guid applicationId, ApplicationChecklistEntryTypeId entryTypeId)
     {
-        var manualProcessStep = entryTypeId.GetManualTriggerProcessStepId();
-        var nextProcessStep = entryTypeId.GetProcessStepForChecklistEntry();
-        if (manualProcessStep is null || nextProcessStep is null)
+        var manualProcessSteps = entryTypeId.GetManualTriggerProcessStepIds();
+        if (manualProcessSteps is null)
         {
             throw new ConflictException("The process can not be retriggered.");
+        }
+
+        ProcessStepTypeId manualProcessStep;
+        if (manualProcessSteps.Length > 1)
+        {
+            var failedSteps = await _portalRepositories.GetInstance<IProcessStepRepository>()
+                .GetProcessStepByApplicationIdInStatusTodo(applicationId, manualProcessSteps)
+                .ToListAsync()
+                .ConfigureAwait(false);
+            if (failedSteps.Count(x => x.IsToDo) != 1)
+            {
+                throw new ConflictException($"There must only be one process step in status Todo for Checklist Entry {entryTypeId}");
+            }
+
+            manualProcessStep = failedSteps.Single(x => x.IsToDo).ProcessStepTypeId;
+        }
+        else
+        {
+            manualProcessStep = manualProcessSteps.Single();
+        }
+
+        var nextProcessStep = manualProcessStep.GetProcessStepForChecklistEntry();
+        if (nextProcessStep is null)
+        {
+            throw new ConflictException("No next step configured.");
         }
 
         var context = await _checklistService
@@ -341,7 +365,7 @@ public sealed class RegistrationBusinessLogic : IRegistrationBusinessLogic
                 applicationId,
                 entryTypeId,
                 new [] { ApplicationChecklistEntryStatusId.FAILED },
-                manualProcessStep.Value,
+                manualProcessStep,
                 processStepTypeIds: new [] { nextProcessStep.Value })
             .ConfigureAwait(false);
 
@@ -349,7 +373,7 @@ public sealed class RegistrationBusinessLogic : IRegistrationBusinessLogic
             context,
             item =>
             {
-                item.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.TO_DO;
+                item.ApplicationChecklistEntryStatusId = nextProcessStep.Value.GetChecklistStatus();
             },
             new [] { nextProcessStep.Value });
         await _portalRepositories.SaveAsync().ConfigureAwait(false);

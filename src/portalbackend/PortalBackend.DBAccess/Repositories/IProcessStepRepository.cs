@@ -30,4 +30,12 @@ public interface IProcessStepRepository
 {
     ProcessStep CreateProcessStep(ProcessStepTypeId processStepTypeId, ProcessStepStatusId processStepStatusId);
     void AttachAndModifyProcessStep(Guid processStepId, Action<ProcessStep>? initialize, Action<ProcessStep> modify);
+    
+    /// <summary>
+    /// Gets the process steps for the given application in status todo 
+    /// </summary>
+    /// <param name="applicationId">Id of the application</param>
+    /// <param name="processSteps">the process steps to check</param>
+    /// <returns>The process steps that are in status todo</returns>
+    IAsyncEnumerable<(ProcessStepTypeId ProcessStepTypeId, bool IsToDo)> GetProcessStepByApplicationIdInStatusTodo(Guid applicationId, ProcessStepTypeId[] processSteps);
 }
