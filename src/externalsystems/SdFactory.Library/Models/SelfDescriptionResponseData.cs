@@ -18,6 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.Models;
@@ -25,5 +26,5 @@ namespace Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.Models;
 public record SelfDescriptionResponseData(
     [property: JsonPropertyName("externalId")] Guid ApplicationId,
     [property: JsonPropertyName("status")] SelfDescriptionStatus Status,
-    [property: JsonPropertyName("message")] string Message,
-    [property: JsonPropertyName("content")] string Content);
+    [property: JsonPropertyName("message")] string? Message,
+    [property: JsonPropertyName("selfDescriptionDocument")] JsonDocument? Content);

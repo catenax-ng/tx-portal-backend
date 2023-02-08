@@ -330,12 +330,12 @@ public class RegistrationController : ControllerBase
         await _logic.TriggerChecklistAsync(applicationId, ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, processTypeId).ConfigureAwait(false);
         return NoContent();
     }
-    
+
     /// <summary>
     /// Processes the clearinghouse self description push
     /// </summary>
     /// <param name="data">The response data for the self description</param>
-    /// <returns>NoContent</returns>
+    /// <param name="cancellationToken">CancellationToken</param>
     /// Example: POST: api/administration/registration/clearinghouse/selfDescription <br />
     /// <response code="200">the result as a boolean.</response>
     /// <response code="400">The CompanyApplication is not in status SUBMITTED.</response>
@@ -345,7 +345,7 @@ public class RegistrationController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    public async Task<NoContentResult> ProcessClearinghouseSelfDescription([FromForm] SelfDescriptionResponseData data, CancellationToken cancellationToken)
+    public async Task<NoContentResult> ProcessClearinghouseSelfDescription([FromBody] SelfDescriptionResponseData data, CancellationToken cancellationToken)
     {
         await _logic.ProcessClearinghouseSelfDescription(data, cancellationToken).ConfigureAwait(false);
         return NoContent();

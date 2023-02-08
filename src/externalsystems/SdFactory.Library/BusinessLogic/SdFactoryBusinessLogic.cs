@@ -20,6 +20,7 @@
 
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
@@ -46,10 +47,11 @@ public class SdFactoryBusinessLogic : ISdFactoryBusinessLogic
 
     /// <inheritdoc />
     public Task<Guid> RegisterConnectorAsync(
+        Guid connectorId, 
         string connectorUrl,
         string businessPartnerNumber,
         CancellationToken cancellationToken) =>
-        _sdFactoryService.RegisterConnectorAsync(connectorUrl, businessPartnerNumber, cancellationToken);
+        _sdFactoryService.RegisterConnectorAsync(connectorId, connectorUrl, businessPartnerNumber, cancellationToken);
 
     /// <inheritdoc />
     public async Task<(Action<ApplicationChecklistEntry>?, IEnumerable<ProcessStepTypeId>?, bool)> StartSelfDescriptionRegistration(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
@@ -81,12 +83,21 @@ public class SdFactoryBusinessLogic : ISdFactoryBusinessLogic
         }
 
         await _sdFactoryService
-            .RegisterSelfDescriptionAsync(uniqueIdentifiers, countryCode, businessPartnerNumber, cancellationToken)
+            .RegisterSelfDescriptionAsync(applicationId, uniqueIdentifiers, countryCode, businessPartnerNumber, cancellationToken)
             .ConfigureAwait(false);
     }
 
     public async Task ProcessFinishSelfDescriptionLp(SelfDescriptionResponseData data, Guid companyId, CancellationToken cancellationToken)
     {
+        var confirm = data.Status == SelfDescriptionStatus.Confirm;
+        switch (confirm)
+        {
+            case false when string.IsNullOrEmpty(data.Message):
+                throw new ConflictException("Please provide a messsage");
+            case true when data.Content == null:
+                throw new ConflictException("Please provide a selfDescriptionDocument");
+        }
+
         var context = await _checklistService
             .VerifyChecklistEntryAndProcessSteps(
                 data.ApplicationId,
@@ -96,15 +107,19 @@ public class SdFactoryBusinessLogic : ISdFactoryBusinessLogic
                 processStepTypeIds: new[] {ProcessStepTypeId.START_SELF_DESCRIPTION_LP})
             .ConfigureAwait(false);
 
-        var confirm = data.Status == SelfDescriptionStatus.Confirm;
         if (confirm)
         {
             using var sha512Hash = SHA512.Create();
-            var docContent = Encoding.UTF8.GetBytes(data.Content);
-            var hash = sha512Hash.ComputeHash(docContent);
+            using var ms = new MemoryStream();
+            using var writer = new Utf8JsonWriter(ms);
+            data.Content!.WriteTo(writer);
+            await writer.FlushAsync(cancellationToken);
+            var hash = await sha512Hash.ComputeHashAsync(ms, cancellationToken);
+            var documentContent = ms.GetBuffer();
+
             var document = _portalRepositories.GetInstance<IDocumentRepository>().CreateDocument(
-                $"SelfDescription_{data.Content}.json",
-                docContent,
+                $"SelfDescription_{data.ApplicationId}.json",
+                documentContent,
                 hash,
                 DocumentTypeId.SELF_DESCRIPTION,
                 doc => { doc.DocumentStatusId = DocumentStatusId.LOCKED; });

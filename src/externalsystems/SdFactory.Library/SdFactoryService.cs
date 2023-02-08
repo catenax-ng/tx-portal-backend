@@ -57,12 +57,13 @@ public class SdFactoryService : ISdFactoryService
     }
 
     /// <inheritdoc />
-    public async Task<Guid> RegisterConnectorAsync(string connectorUrl, string businessPartnerNumber, CancellationToken cancellationToken)
+    public async Task<Guid> RegisterConnectorAsync(Guid connectorId, string connectorUrl, string businessPartnerNumber, CancellationToken cancellationToken)
     {
         var httpClient = await _tokenService.GetAuthorizedClient<SdFactoryService>(_settings, cancellationToken)
             .ConfigureAwait(false);
         // TODO The hardcoded values (headquarterCountry, legalCountry, sdType, issuer) will be fetched from the user input or db in future
         var requestModel = new ConnectorSdFactoryRequestModel(
+            connectorId.ToString(),
             SdFactoryRequestModelSdType.ServiceOffering,
             connectorUrl,
             string.Empty,
@@ -77,11 +78,12 @@ public class SdFactoryService : ISdFactoryService
     }
 
     /// <inheritdoc />
-    public async Task RegisterSelfDescriptionAsync(IEnumerable<(UniqueIdentifierId Id, string Value)> uniqueIdentifiers, string countryCode, string businessPartnerNumber, CancellationToken cancellationToken)
+    public async Task RegisterSelfDescriptionAsync(Guid applicationId, IEnumerable<(UniqueIdentifierId Id, string Value)> uniqueIdentifiers, string countryCode, string businessPartnerNumber, CancellationToken cancellationToken)
     {
         var httpClient = await _tokenService.GetAuthorizedClient<SdFactoryService>(_settings, cancellationToken)
             .ConfigureAwait(false);
         var requestModel = new SdFactoryRequestModel(
+            applicationId.ToString(),
             uniqueIdentifiers.Select(x => new RegistrationNumber(x.Id.GetSdUniqueIdentifierValue(), x.Value)),
             countryCode,
             countryCode,
@@ -101,6 +103,12 @@ public class SdFactoryService : ISdFactoryService
 
     private async Task<Guid> ProcessResponse(SdFactoryResponseModelTitle docTitle, HttpResponseMessage response, CancellationToken cancellationToken)
     {
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new ServiceException($"Access to SD factory failed with status code {response.StatusCode}",
+                response.StatusCode);
+        }
+
         await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
         using var sha512Hash = SHA512.Create();
         using var ms = new MemoryStream();

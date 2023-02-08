@@ -104,12 +104,13 @@ public class SdFactoryServiceTests
             'jws': 'this-is-a-super-secret-secret-not'
           }
         }";
+        var id = Guid.NewGuid();
         var httpMessageHandlerMock = new HttpMessageHandlerMock(HttpStatusCode.OK, contentJson.ToFormContent("application/vc+ld+json"));
         CreateHttpClient(httpMessageHandlerMock);
         var service = new SdFactoryService(_portalRepositories, _tokenService, _options);
 
         // Act
-        await service.RegisterConnectorAsync("https://connect-tor.com", bpn, CancellationToken.None).ConfigureAwait(false);
+        await service.RegisterConnectorAsync(id, "https://connect-tor.com", bpn, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         _documents.Should().HaveCount(1);
@@ -121,13 +122,14 @@ public class SdFactoryServiceTests
     public async Task  RegisterConnectorAsync_WithInvalidData_ThrowsException()
     {
         // Arrange
+        var id = Guid.NewGuid();
         const string bpn = "BPNL000000000009";
         var httpMessageHandlerMock = new HttpMessageHandlerMock(HttpStatusCode.BadRequest);
         CreateHttpClient(httpMessageHandlerMock);
         var service = new SdFactoryService(_portalRepositories, _tokenService, _options);
 
         // Act
-        async Task Action() => await service.RegisterConnectorAsync("https://connect-tor.com", bpn, CancellationToken.None).ConfigureAwait(false);
+        async Task Action() => await service.RegisterConnectorAsync(id, "https://connect-tor.com", bpn, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         var exception = await Assert.ThrowsAsync<ServiceException>(Action);
@@ -173,30 +175,30 @@ public class SdFactoryServiceTests
             'jws': 'this-is-a-super-secret-secret-not'
           }
         }";
+        var applicationId = Guid.NewGuid();
         var httpMessageHandlerMock = new HttpMessageHandlerMock(HttpStatusCode.OK, contentJson.ToFormContent("application/vc+ld+json"));
         CreateHttpClient(httpMessageHandlerMock);
         var service = new SdFactoryService(_portalRepositories, _tokenService, _options);
 
         // Act
-        await service.RegisterSelfDescriptionAsync(UniqueIdentifiers, "de", bpn, CancellationToken.None).ConfigureAwait(false);
+        await service.RegisterSelfDescriptionAsync(applicationId, UniqueIdentifiers, "de", bpn, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
-        _documents.Should().HaveCount(1);
-        var document = _documents.Single();
-        document.DocumentName.Should().Be($"SelfDescription_LegalPerson.json");
+        _documents.Should().BeEmpty();
     }
 
     [Fact]
     public async Task  RegisterSelfDescriptionAsync_WithInvalidData_ThrowsException()
     {
         // Arrange
+        var applicationId = Guid.NewGuid();
         const string bpn = "BPNL000000000009";
         var httpMessageHandlerMock = new HttpMessageHandlerMock(HttpStatusCode.BadRequest);
         CreateHttpClient(httpMessageHandlerMock);
         var service = new SdFactoryService(_portalRepositories, _tokenService, _options);
 
         // Act
-        async Task Action() => await service.RegisterSelfDescriptionAsync(UniqueIdentifiers, "de", bpn, CancellationToken.None).ConfigureAwait(false);
+        async Task Action() => await service.RegisterSelfDescriptionAsync(applicationId, UniqueIdentifiers, "de", bpn, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         var exception = await Assert.ThrowsAsync<ServiceException>(Action);

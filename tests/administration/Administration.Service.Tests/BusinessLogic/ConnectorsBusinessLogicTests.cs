@@ -349,7 +349,7 @@ public class ConnectorsBusinessLogicTests
         A.CallTo(() => _userRepository.GetServiceAccountCompany(A<string>.That.Not.Matches(x => x == TechnicalUserId)))
             .ReturnsLazily(() => Guid.Empty);
 
-        A.CallTo(() => _sdFactoryBusinessLogic.RegisterConnectorAsync(A<string>._, A<string>._, A<CancellationToken>._))
+        A.CallTo(() => _sdFactoryBusinessLogic.RegisterConnectorAsync(A<Guid>._, A<string>._, A<string>._, A<CancellationToken>._))
             .ReturnsLazily(Guid.NewGuid);
         
         A.CallTo(() => _portalRepositories.GetInstance<ICountryRepository>()).Returns(_countryRepository);

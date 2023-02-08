@@ -234,7 +234,7 @@ public class ConnectorsBusinessLogic : IConnectorsBusinessLogic
         }
 
         var documentId = await _sdFactoryBusinessLogic
-            .RegisterConnectorAsync(connectorInputModel.ConnectorUrl, businessPartnerNumber, cancellationToken)
+            .RegisterConnectorAsync(createdConnector.Id, connectorInputModel.ConnectorUrl, businessPartnerNumber, cancellationToken)
             .ConfigureAwait(false);
         createdConnector.SelfDescriptionDocumentId = documentId;
 
