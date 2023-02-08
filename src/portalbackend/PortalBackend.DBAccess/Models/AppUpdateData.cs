@@ -30,4 +30,4 @@ public record AppUpdateData
     IEnumerable<Guid> MatchingUseCases, 
     ValueTuple<Guid, string, bool> OfferLicense,
     Guid? SalesManagerId,
-    IEnumerable<string> MatchingPrivacyPolicies);
+    IEnumerable<PrivacyPolicyId> MatchingPrivacyPolicies);

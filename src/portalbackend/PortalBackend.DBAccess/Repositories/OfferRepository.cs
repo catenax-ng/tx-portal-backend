@@ -127,7 +127,7 @@ public class OfferRepository : IOfferRepository
                 offer.Documents
                     .Where(doc => doc.DocumentTypeId != DocumentTypeId.APP_IMAGE && doc.DocumentTypeId != DocumentTypeId.APP_LEADIMAGE) 
                     .Select(d => new DocumentTypeData(d.DocumentTypeId, d.Id, d.DocumentName)),
-                offer.OfferAssignedPrivacypolicies.Select(x => x.PrivacyPolicy!.Label)
+                offer.OfferAssignedPrivacypolicies.Select(x => x.PrivacyPolicyId)
             ))
             .SingleOrDefaultAsync();
 
@@ -382,7 +382,7 @@ public class OfferRepository : IOfferRepository
                     offer.ContactNumber,
                     offer.Documents.Select(d => new DocumentTypeData(d.DocumentTypeId, d.Id, d.DocumentName)),
                     offer.SalesManagerId,
-                    offer.OfferAssignedPrivacypolicies.Select(x => x.PrivacyPolicy!.Label)),
+                    offer.OfferAssignedPrivacypolicies.Select(x => x.PrivacyPolicyId)),
                 offer.ProviderCompany!.CompanyUsers.Any(companyUser => companyUser.IamUser!.UserEntityId == userId)
                 ))
             .SingleOrDefaultAsync();
@@ -435,7 +435,7 @@ public class OfferRepository : IOfferRepository
                 x.UseCases.Select(uc => uc.Id),
                 x.OfferLicenses.Select(ol => new ValueTuple<Guid, string, bool>(ol.Id, ol.Licensetext, ol.Offers.Count > 1)).FirstOrDefault(),
                 x.SalesManagerId,
-                x.OfferAssignedPrivacypolicies.Select(x => x.PrivacyPolicyId.ToString())
+                x.OfferAssignedPrivacypolicies.Select(x => x.PrivacyPolicyId)
             ))
             .SingleOrDefaultAsync();
     
@@ -499,19 +499,19 @@ public class OfferRepository : IOfferRepository
             .SingleOrDefaultAsync();
 
     /// <inheritdoc />
-    public void AddAppAssignedPrivacyPolicy(IEnumerable<(Guid appId, string privacyPolicy)> privacyPolicies) =>
-        _context.OfferAssignedPrivacypolicies.AddRange(privacyPolicies.Select(s => new OfferAssignedPrivacypolicy(s.appId, (PrivacyPolicyId) Enum.Parse(typeof(PrivacyPolicyId), s.privacyPolicy))));
+    public void AddAppAssignedPrivacyPolicy(IEnumerable<(Guid appId, PrivacyPolicyId privacyPolicy)> privacyPolicies) =>
+        _context.OfferAssignedPrivacypolicies.AddRange(privacyPolicies.Select(s => new OfferAssignedPrivacypolicy(s.appId, s.privacyPolicy)));
     
     /// <inheritdoc />
-    public void CreateDeleteAppAssignedPrivacyPolicy(Guid appId, IEnumerable<string> initialPrivacyPolicy, IEnumerable<string> modifyPrivacyPolicy)=>
+    public void CreateDeleteAppAssignedPrivacyPolicy(Guid appId, IEnumerable<PrivacyPolicyId> initialPrivacyPolicy, IEnumerable<PrivacyPolicyId> modifyPrivacyPolicy)=>
         _context.AddRemoveRange(
             initialPrivacyPolicy,
             modifyPrivacyPolicy,
-            privacyPolicy => new OfferAssignedPrivacypolicy(appId, (PrivacyPolicyId) Enum.Parse(typeof(PrivacyPolicyId), privacyPolicy)));
+            privacyPolicy => new OfferAssignedPrivacypolicy(appId, privacyPolicy));
 
     /// <inheritdoc />
-    public IAsyncEnumerable<string> GetPrivacyPolicyDataAsync() =>
+    public IAsyncEnumerable<PrivacyPolicyId> GetPrivacyPolicyDataAsync() =>
         _context.PrivacyPolicies
-            .Select(privacyPolicy => privacyPolicy.Label)
+            .Select(privacyPolicy => privacyPolicy.Id)
             .AsAsyncEnumerable();
 }

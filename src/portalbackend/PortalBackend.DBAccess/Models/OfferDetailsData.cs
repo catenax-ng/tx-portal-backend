@@ -105,7 +105,7 @@ public record OfferDetailsData(
     /// <summary>
     /// privacy policy assigned to offer
     /// </summary>
-    IEnumerable<string> PrivacyPolicies
+    IEnumerable<PrivacyPolicyId> PrivacyPolicies
 );
 
 /// <summary>

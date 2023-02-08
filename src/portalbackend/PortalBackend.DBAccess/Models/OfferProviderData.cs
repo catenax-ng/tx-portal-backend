@@ -56,7 +56,7 @@ public record OfferProviderData(
     string? ContactNumber,
     IEnumerable<DocumentTypeData> Documents,
     Guid? SalesManagerId,
-    IEnumerable<string> PrivacyPolicies
+    IEnumerable<PrivacyPolicyId> PrivacyPolicies
 );
 
 /// <summary>

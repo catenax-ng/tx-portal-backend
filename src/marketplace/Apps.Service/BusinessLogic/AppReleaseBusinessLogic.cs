@@ -279,7 +279,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
             throw new ControllerArgumentException("Use Case Ids must not be null or empty", nameof(appRequestModel.UseCaseIds));
         }
 
-        var inputPrivacyPolicies = Enum.GetNames(typeof(PrivacyPolicyId));
+        var inputPrivacyPolicies = Enum.GetValues<PrivacyPolicyId>();
         if (appRequestModel.PrivacyPolicies.Except(inputPrivacyPolicies).Any())
         {
             throw new ControllerArgumentException($"At least One Privacy Policy {string.Join(",", appRequestModel.PrivacyPolicies.Except(inputPrivacyPolicies))} Not Existing", nameof(appRequestModel.PrivacyPolicies));
@@ -368,7 +368,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
             await _offerService.ValidateSalesManager(appRequestModel.SalesManagerId.Value, iamUserId, _settings.SalesManagerRoles).ConfigureAwait(false);
         }
 
-        var inputPrivacyPolicies = Enum.GetNames(typeof(PrivacyPolicyId));
+        var inputPrivacyPolicies = Enum.GetValues<PrivacyPolicyId>();
         if (appRequestModel.PrivacyPolicies.Except(inputPrivacyPolicies).Any())
         {
             throw new ControllerArgumentException($"At least One Privacy Policy {string.Join(",", appRequestModel.PrivacyPolicies.Except(inputPrivacyPolicies))} Not Existing", nameof(appRequestModel.PrivacyPolicies));

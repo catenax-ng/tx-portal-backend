@@ -58,5 +58,5 @@ public record AppDetailResponse(
     OfferSubscriptionStatusId? IsSubscribed,
     IEnumerable<string> Languages,
     IDictionary<DocumentTypeId, IEnumerable<DocumentData>> Documents,
-    IEnumerable<string> PrivacyPolicies
+    IEnumerable<PrivacyPolicyId> PrivacyPolicies
 );

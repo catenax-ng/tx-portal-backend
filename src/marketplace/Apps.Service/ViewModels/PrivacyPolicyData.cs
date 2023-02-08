@@ -17,6 +17,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
+using  Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
 
@@ -24,4 +25,4 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
 /// model of Privacy Policy data.
 /// </summary>
 /// <param name="PrivacyPolicies">Privacy Policy.</param>
-public record PrivacyPolicyData(IEnumerable<string> PrivacyPolicies);
+public record PrivacyPolicyData(IEnumerable<PrivacyPolicyId> PrivacyPolicies);
