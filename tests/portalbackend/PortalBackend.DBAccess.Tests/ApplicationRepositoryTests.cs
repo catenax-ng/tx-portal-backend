@@ -448,7 +448,7 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
         var data = await sut.GetCompanyIdForSubmittedApplication(SubmittedApplicationWithBpn).ConfigureAwait(false);
         
         // Assert
-        data.Should().Be(new Guid("27538eac-27a3-4f74-9306-e5149b93ade5"));
+        data.Should().Be(new Guid("d14eba77-0b18-4e41-9d84-49ef875c0763"));
     }
 
 
