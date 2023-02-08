@@ -91,7 +91,7 @@ public class ProcessStepRepositoryTests : IAssemblyFixture<TestDbFixture>
         // Act
         var result = await sut
             .GetProcessStepByApplicationIdInStatusTodo(
-                new Guid("2bb2005f-6e8d-41eb-967b-cde67546cafc"), ProcessStepTypeId.VERIFY_REGISTRATION)
+                new Guid("4f0146c6-32aa-4bb1-b844-df7e8babdcb6"), ProcessStepTypeId.VERIFY_REGISTRATION)
             .ConfigureAwait(false);
 
         // Assert
@@ -107,7 +107,7 @@ public class ProcessStepRepositoryTests : IAssemblyFixture<TestDbFixture>
         // Act
         var result = await sut
             .GetProcessStepByApplicationIdInStatusTodo(
-                new Guid("4829b64c-de6a-426c-81fc-c0bcf95bcb76"), ProcessStepTypeId.VERIFY_REGISTRATION)
+                new Guid("4f0146c6-32aa-4bb1-b844-df7e8babdcb3"), ProcessStepTypeId.VERIFY_REGISTRATION)
             .ConfigureAwait(false);
 
         // Assert
