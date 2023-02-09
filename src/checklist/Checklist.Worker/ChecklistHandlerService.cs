@@ -47,7 +47,9 @@ public class ChecklistHandlerService : IChecklistHandlerService
         ProcessStepTypeId.VERIFY_REGISTRATION,
         ProcessStepTypeId.RETRIGGER_IDENTITY_WALLET,
         ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE,
-        ProcessStepTypeId.RETRIGGER_SELF_DESCRIPTION_LP
+        ProcessStepTypeId.RETRIGGER_SELF_DESCRIPTION_LP,
+        ProcessStepTypeId.OVERWRITE_BUSINESS_PARTNER_NUMBER,
+        ProcessStepTypeId.OVERWRITE_CLEARING_HOUSE
     };
 
     /// <inheritdoc />
