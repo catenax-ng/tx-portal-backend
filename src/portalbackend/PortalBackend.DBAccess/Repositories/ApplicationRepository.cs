@@ -397,4 +397,13 @@ public class ApplicationRepository : IApplicationRepository
                             ace.Comment)),
                     x.ProcessSteps))
             .SingleOrDefaultAsync();
+    
+    /// <inheritdoc />
+    public Task<bool> IsClearinghouseOverwrite(Guid applicationId) =>
+        _dbContext.CompanyApplications
+            .AnyAsync(x => 
+                x.ApplicationStatusId == CompanyApplicationStatusId.SUBMITTED && 
+                x.Id == applicationId &&
+                x.ApplicationAssignedProcessSteps.Any(aaps => aaps.ProcessStep!.ProcessStepTypeId == ProcessStepTypeId.OVERWRITE_CLEARING_HOUSE && aaps.ProcessStep.ProcessStepStatusId == ProcessStepStatusId.DONE) &&
+                x.ApplicationAssignedProcessSteps.Any(aaps => aaps.ProcessStep!.ProcessStepTypeId == ProcessStepTypeId.END_CLEARING_HOUSE && aaps.ProcessStep.ProcessStepStatusId == ProcessStepStatusId.FAILED));
 }

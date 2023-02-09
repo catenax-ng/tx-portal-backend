@@ -42,12 +42,10 @@ public class ClearinghouseBusinessLogicTests
     private static readonly Guid IdWithBpn = new ("c244f79a-7faf-4c59-bb85-fbfdf72ce46f");
     private const string ValidBpn = "BPNL123698762345";
     private const string ValidDid = "thisisavaliddid";
-    private const string FailingBpn = "FAILINGBPN";
 
     private readonly IFixture _fixture;
     
     private readonly IApplicationRepository _applicationRepository;
-    private readonly IApplicationChecklistRepository _applicationChecklistRepository;
     private readonly IPortalRepositories _portalRepositories;
     
     private readonly ClearinghouseBusinessLogic _logic;
@@ -63,15 +61,12 @@ public class ClearinghouseBusinessLogicTests
         _fixture.Behaviors.Add(new OmitOnRecursionBehavior());
 
         _applicationRepository = A.Fake<IApplicationRepository>();
-        _applicationChecklistRepository = A.Fake<IApplicationChecklistRepository>();
         _portalRepositories = A.Fake<IPortalRepositories>();
         _clearinghouseService = A.Fake<IClearinghouseService>();
         _custodianBusinessLogic = A.Fake<ICustodianBusinessLogic>();
         _checklistService = A.Fake<IChecklistService>();
-        
 
         A.CallTo(() => _portalRepositories.GetInstance<IApplicationRepository>()).Returns(_applicationRepository);
-        A.CallTo(() => _portalRepositories.GetInstance<IApplicationChecklistRepository>()).Returns(_applicationChecklistRepository);
 
         _logic = new ClearinghouseBusinessLogic(_portalRepositories, _clearinghouseService, _custodianBusinessLogic, _checklistService);
     }
@@ -148,10 +143,13 @@ public class ClearinghouseBusinessLogicTests
         ex.Message.Should().Be("BusinessPartnerNumber is null");
     }
 
-    [Fact]
-    public async Task HandleStartClearingHouse_WithValidData_CallsExpected()
+    [Theory]
+    [InlineData(false, ApplicationChecklistEntryStatusId.IN_PROGRESS, ProcessStepTypeId.END_CLEARING_HOUSE)]
+    [InlineData(true, ApplicationChecklistEntryStatusId.DONE, ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP)]
+    public async Task HandleStartClearingHouse_WithValidData_CallsExpected(bool overwrite, ApplicationChecklistEntryStatusId statusId, ProcessStepTypeId expectedProcessTypeId)
     {
         // Arrange
+        var entry = new ApplicationChecklistEntry(Guid.NewGuid(), ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow);
         var checklist = new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
             {
                 {ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE},
@@ -161,15 +159,18 @@ public class ClearinghouseBusinessLogicTests
             }
             .ToImmutableDictionary();
         var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithBpn, checklist, Enumerable.Empty<ProcessStepTypeId>());
-        SetupForHandleStartClearingHouse();
+        SetupForHandleStartClearingHouse(overwrite);
 
         // Act
         var result = await _logic.HandleStartClearingHouse(context, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
+        result.Item1.Should().NotBeNull();
+        result.Item1!.Invoke(entry);
+        entry.ApplicationChecklistEntryStatusId.Should().Be(statusId);
         A.CallTo(() => _clearinghouseService.TriggerCompanyDataPost(A<ClearinghouseTransferData>._, A<CancellationToken>._))
             .MustHaveHappenedOnceExactly();
-        A.CallTo(() => _checklistService.ScheduleProcessSteps(context, A<IEnumerable<ProcessStepTypeId>>.That.Matches(x => x.Single() == ProcessStepTypeId.END_CLEARING_HOUSE))).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _checklistService.ScheduleProcessSteps(context, A<IEnumerable<ProcessStepTypeId>>.That.Matches(x => x.Single() == expectedProcessTypeId))).MustHaveHappenedOnceExactly();
         result.Item3.Should().BeTrue();
     }
 
@@ -213,7 +214,7 @@ public class ClearinghouseBusinessLogicTests
         await _logic.ProcessEndClearinghouse(IdWithBpn, data, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() => _checklistService.FinalizeChecklistEntryAndProcessSteps(A<IChecklistService.ManualChecklistProcessStepData>._, A<Action<ApplicationChecklistEntry>>._, null)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _checklistService.FinalizeChecklistEntryAndProcessSteps(A<IChecklistService.ManualChecklistProcessStepData>._, A<Action<ApplicationChecklistEntry>>._, A<IEnumerable<ProcessStepTypeId>>.That.Matches(x => x.Count(y => y == ProcessStepTypeId.OVERWRITE_CLEARING_HOUSE) == 1))).MustHaveHappenedOnceExactly();
         A.CallTo(() => _portalRepositories.SaveAsync()).MustNotHaveHappened();
         entry.Comment.Should().Be("Comment about the error");
         entry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.FAILED);
@@ -223,7 +224,7 @@ public class ClearinghouseBusinessLogicTests
     
     #region Setup
     
-    private void SetupForHandleStartClearingHouse()
+    private void SetupForHandleStartClearingHouse(bool overwrite = true)
     {
         A.CallTo(() => _custodianBusinessLogic.GetWalletByBpnAsync(A<Guid>.That.Matches(x => x == IdWithoutBpn || x == IdWithBpn || x == IdWithApplicationCreated), A<CancellationToken>._))
             .ReturnsLazily(() => new WalletData("Name", ValidBpn, ValidDid, DateTime.UtcNow, false, null));
@@ -231,6 +232,8 @@ public class ClearinghouseBusinessLogicTests
             .ReturnsLazily(() => (WalletData?)null);
         A.CallTo(() => _custodianBusinessLogic.GetWalletByBpnAsync(A<Guid>.That.Not.Matches(x => x == IdWithoutBpn || x == IdWithBpn || x == IdWithApplicationCreated || x== IdWithCustodianUnavailable), A<CancellationToken>._))
             .ReturnsLazily(() => new WalletData("Name", ValidBpn, null, DateTime.UtcNow, false, null));
+
+        A.CallTo(() => _applicationRepository.IsClearinghouseOverwrite(A<Guid>._)).ReturnsLazily(() => overwrite);
 
         var participantDetailsWithoutBpn = _fixture.Build<ParticipantDetails>()
             .With(x => x.Bpn, (string?)null)

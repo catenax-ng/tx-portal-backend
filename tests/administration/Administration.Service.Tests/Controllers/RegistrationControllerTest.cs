@@ -155,8 +155,10 @@ public class RegistrationControllerTest
         result.Where(x => x.Status == ApplicationChecklistEntryStatusId.FAILED).Should().ContainSingle();
     }
 
-    [Fact]
-    public async Task TriggerClearinghouse_ReturnsExpectedResult()
+    [Theory]
+    [InlineData(ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PULL)]
+    [InlineData(ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PUSH)]
+    public async Task TriggerClearinghouse_ReturnsExpectedResult(ProcessStepTypeId processStepTypeId)
     {
         // Arrange
         var applicationId = _fixture.Create<Guid>();
@@ -164,10 +166,10 @@ public class RegistrationControllerTest
             .ReturnsLazily(() => Task.CompletedTask);
         
         // Act
-        var result = await this._controller.TriggerClearinghouseChecklist(applicationId);
+        var result = await this._controller.TriggerClearinghouseChecklist(applicationId, processStepTypeId);
         
         // Assert
-        A.CallTo(() => _logic.TriggerChecklistAsync(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _logic.TriggerChecklistAsync(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, processStepTypeId)).MustHaveHappenedOnceExactly();
         result.Should().BeOfType<NoContentResult>();
     }
     

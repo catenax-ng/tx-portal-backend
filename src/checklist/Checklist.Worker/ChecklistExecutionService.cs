@@ -56,6 +56,7 @@ public class ChecklistExecutionService
         ProcessStepTypeId.START_CLEARING_HOUSE,
         ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP,
         ProcessStepTypeId.ACTIVATE_APPLICATION,
+        ProcessStepTypeId.OVERWRITE_CLEARING_HOUSE
     }.ToImmutableArray();
 
     /// <summary>

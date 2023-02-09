@@ -52,7 +52,8 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 {
                     { 13, "RETRIGGER_BUSINESS_PARTNER_NUMBER_PUSH" },
                     { 14, "RETRIGGER_BUSINESS_PARTNER_NUMBER_PULL" },
-                    { 15, "OVERWRITE_BUSINESS_PARTNER_NUMBER" }
+                    { 15, "OVERWRITE_BUSINESS_PARTNER_NUMBER" },
+                    { 16, "OVERWRITE_CLEARING_HOUSE" }
                 });
         }
 

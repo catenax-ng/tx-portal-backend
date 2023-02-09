@@ -29,7 +29,7 @@ public static class ApplicationChecklistEntryTypeIdExtensions
         {
             ApplicationChecklistEntryTypeId.CLEARING_HOUSE => new []{ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE},
             ApplicationChecklistEntryTypeId.IDENTITY_WALLET => new []{ProcessStepTypeId.RETRIGGER_IDENTITY_WALLET},
-            ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP => new []{ProcessStepTypeId.RETRIGGER_SELF_DESCRIPTION_LP},
+            ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP => new []{ProcessStepTypeId.RETRIGGER_SELF_DESCRIPTION_LP, ProcessStepTypeId.OVERWRITE_CLEARING_HOUSE},
             ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER => new []{ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PUSH, ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PULL},
             _ => null,
         };
@@ -42,6 +42,7 @@ public static class ApplicationChecklistEntryTypeIdExtensions
             ProcessStepTypeId.RETRIGGER_SELF_DESCRIPTION_LP => ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP,
             ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PUSH => ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH,
             ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PULL => ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL,
+            ProcessStepTypeId.OVERWRITE_CLEARING_HOUSE => ProcessStepTypeId.START_CLEARING_HOUSE,
             _ => null,
         };
 
