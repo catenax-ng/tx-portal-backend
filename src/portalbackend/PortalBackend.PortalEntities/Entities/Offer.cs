@@ -47,7 +47,7 @@ public class Offer : IAuditableV1, IBaseEntity
         AppInstances = new HashSet<AppInstance>();
         ConsentAssignedOffers = new HashSet<ConsentAssignedOffer>();
         ServiceTypes = new HashSet<ServiceType>();
-        OfferAssignedPrivacypolicies = new HashSet<OfferAssignedPrivacypolicy>();
+        OfferAssignedPrivacyPolicies = new HashSet<OfferAssignedPrivacyPolicy>();
     }
 
     public Offer(Guid id, string provider, DateTimeOffset dateCreated, OfferTypeId offerTypeId) : this()
@@ -112,5 +112,5 @@ public class Offer : IAuditableV1, IBaseEntity
     public virtual ICollection<UserRole> UserRoles { get; private set; }
     public virtual ICollection<ConsentAssignedOffer> ConsentAssignedOffers { get; private set; }
     public virtual ICollection<ServiceType> ServiceTypes { get; private set; }
-    public virtual ICollection<OfferAssignedPrivacypolicy> OfferAssignedPrivacypolicies { get; private set; }
+    public virtual ICollection<OfferAssignedPrivacyPolicy> OfferAssignedPrivacyPolicies { get; private set; }
 }

@@ -127,7 +127,7 @@ public class OfferRepository : IOfferRepository
                 offer.Documents
                     .Where(doc => doc.DocumentTypeId != DocumentTypeId.APP_IMAGE && doc.DocumentTypeId != DocumentTypeId.APP_LEADIMAGE) 
                     .Select(d => new DocumentTypeData(d.DocumentTypeId, d.Id, d.DocumentName)),
-                offer.OfferAssignedPrivacypolicies.Select(x => x.PrivacyPolicyId)
+                offer.OfferAssignedPrivacyPolicies.Select(x => x.PrivacyPolicyId)
             ))
             .SingleOrDefaultAsync();
 
@@ -382,7 +382,7 @@ public class OfferRepository : IOfferRepository
                     offer.ContactNumber,
                     offer.Documents.Select(d => new DocumentTypeData(d.DocumentTypeId, d.Id, d.DocumentName)),
                     offer.SalesManagerId,
-                    offer.OfferAssignedPrivacypolicies.Select(x => x.PrivacyPolicyId)),
+                    offer.OfferAssignedPrivacyPolicies.Select(x => x.PrivacyPolicyId)),
                 offer.ProviderCompany!.CompanyUsers.Any(companyUser => companyUser.IamUser!.UserEntityId == userId)
                 ))
             .SingleOrDefaultAsync();
@@ -425,6 +425,7 @@ public class OfferRepository : IOfferRepository
         IEnumerable<string> languageCodes) =>
         _context.Offers
             .AsNoTracking()
+            .AsSplitQuery()
             .Where(offer => offer.Id == appId && offer.OfferTypeId == OfferTypeId.APP)
             .Select(x => new AppUpdateData
             (
@@ -435,7 +436,7 @@ public class OfferRepository : IOfferRepository
                 x.UseCases.Select(uc => uc.Id),
                 x.OfferLicenses.Select(ol => new ValueTuple<Guid, string, bool>(ol.Id, ol.Licensetext, ol.Offers.Count > 1)).FirstOrDefault(),
                 x.SalesManagerId,
-                x.OfferAssignedPrivacypolicies.Select(x => x.PrivacyPolicyId)
+                x.OfferAssignedPrivacyPolicies.Select(x => x.PrivacyPolicyId)
             ))
             .SingleOrDefaultAsync();
     
@@ -499,14 +500,13 @@ public class OfferRepository : IOfferRepository
             .SingleOrDefaultAsync();
 
     /// <inheritdoc />
-    public void AddAppAssignedPrivacyPolicy(IEnumerable<(Guid appId, PrivacyPolicyId privacyPolicy)> privacyPolicies) =>
-        _context.OfferAssignedPrivacypolicies.AddRange(privacyPolicies.Select(s => new OfferAssignedPrivacypolicy(s.appId, s.privacyPolicy)));
+    public void AddAppAssignedPrivacyPolicies(IEnumerable<(Guid appId, PrivacyPolicyId privacyPolicy)> privacyPolicies) =>
+        _context.OfferAssignedPrivacyPolicies.AddRange(privacyPolicies.Select(s => new OfferAssignedPrivacyPolicy(s.appId, s.privacyPolicy)));
     
     /// <inheritdoc />
-    public void CreateDeleteAppAssignedPrivacyPolicy(Guid appId, IEnumerable<PrivacyPolicyId> initialPrivacyPolicy, IEnumerable<PrivacyPolicyId> modifyPrivacyPolicy)=>
+    public void CreateDeleteAppAssignedPrivacyPolicies(Guid appId, IEnumerable<PrivacyPolicyId> initialPrivacyPolicy, IEnumerable<PrivacyPolicyId> modifyPrivacyPolicy)=>
         _context.AddRemoveRange(
             initialPrivacyPolicy,
             modifyPrivacyPolicy,
-            privacyPolicy => new OfferAssignedPrivacypolicy(appId, privacyPolicy));
-
+            privacyPolicy => new OfferAssignedPrivacyPolicy(appId, privacyPolicy));
 }

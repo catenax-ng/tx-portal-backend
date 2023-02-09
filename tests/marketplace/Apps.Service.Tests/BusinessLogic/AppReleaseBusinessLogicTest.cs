@@ -148,9 +148,9 @@ public class AppReleaseBusinessLogicTest
     public async Task AddAppAsync_WithoutEmptyLanguageCodes_ThrowsException()
     {
         // Arrange
-        var data = new AppRequestModel("test", "test", Guid.NewGuid(), new List<Guid>(), new List<LocalizedDescription>(), new [] { string.Empty }, "123",new[]
+        var data = new AppRequestModel("test", "test", Guid.NewGuid(), new List<Guid>(), new List<LocalizedDescription>(), new [] { string.Empty }, "123", new[]
             {
-              PrivacyPolicyId.COMPANY_DATA  
+                PrivacyPolicyId.COMPANY_DATA  
             });
         var settings = new AppsSettings();
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
@@ -167,9 +167,9 @@ public class AppReleaseBusinessLogicTest
     public async Task AddAppAsync_WithEmptyUseCaseIds_ThrowsException()
     {
         // Arrange
-        var data = new AppRequestModel("test", "test", Guid.NewGuid(), new []{ Guid.Empty }, new List<LocalizedDescription>(), new [] { "de" }, "123",new[]
+        var data = new AppRequestModel("test", "test", Guid.NewGuid(), new []{ Guid.Empty }, new List<LocalizedDescription>(), new [] { "de" }, "123", new[]
             {
-              PrivacyPolicyId.COMPANY_DATA  
+                PrivacyPolicyId.COMPANY_DATA  
             });
         var settings = new AppsSettings();
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
@@ -186,9 +186,9 @@ public class AppReleaseBusinessLogicTest
     public async Task AddAppAsync_WithSalesManagerValidData_ReturnsExpected()
     {
         // Arrange
-        var data = new AppRequestModel("test", "test", _companyUser.Id, new []{ Guid.NewGuid() }, new List<LocalizedDescription>{ new("de", "Long description", "desc")}, new [] { "de" }, "123",new[]
+        var data = new AppRequestModel("test", "test", _companyUser.Id, new []{ Guid.NewGuid() }, new List<LocalizedDescription>{ new("de", "Long description", "desc")}, new [] { "de" }, "123", new[]
             {
-              PrivacyPolicyId.COMPANY_DATA   
+                PrivacyPolicyId.COMPANY_DATA   
             });
         var settings = new AppsSettings();
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
@@ -217,9 +217,9 @@ public class AppReleaseBusinessLogicTest
     {
         // Arrange
         A.CallTo(() => _userRepository.GetOwnCompanyId(A<string>.That.IsEqualTo(_iamUser.UserEntityId))).Returns(_companyUser.CompanyId);
-        var data = new AppRequestModel("test", "test", null, new []{ Guid.NewGuid() }, new List<LocalizedDescription>{ new("de", "Long description", "desc")}, new [] { "de" }, "123",new[]
+        var data = new AppRequestModel("test", "test", null, new []{ Guid.NewGuid() }, new List<LocalizedDescription>{ new("de", "Long description", "desc")}, new [] { "de" }, "123", new[]
             {
-              PrivacyPolicyId.COMPANY_DATA   
+                PrivacyPolicyId.COMPANY_DATA   
             });
         var settings = new AppsSettings();
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
@@ -253,9 +253,9 @@ public class AppReleaseBusinessLogicTest
     {
         // Arrange
         SetupUpdateApp();
-        var data = new AppRequestModel("test", "test", Guid.NewGuid(), new List<Guid>(), new List<LocalizedDescription>(), new [] { string.Empty }, "123",new[]
+        var data = new AppRequestModel("test", "test", Guid.NewGuid(), new List<Guid>(), new List<LocalizedDescription>(), new [] { string.Empty }, "123", new[]
             {
-              PrivacyPolicyId.COMPANY_DATA   
+                PrivacyPolicyId.COMPANY_DATA   
             });
         var settings = new AppsSettings();
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
@@ -273,9 +273,9 @@ public class AppReleaseBusinessLogicTest
     {
         // Arrange
         SetupUpdateApp();
-        var data = new AppRequestModel("test", "test", Guid.NewGuid(), new []{ Guid.Empty }, new List<LocalizedDescription>(), new [] { "de" }, "123",new[]
+        var data = new AppRequestModel("test", "test", Guid.NewGuid(), new []{ Guid.Empty }, new List<LocalizedDescription>(), new [] { "de" }, "123", new[]
             {
-              PrivacyPolicyId.COMPANY_DATA  
+                PrivacyPolicyId.COMPANY_DATA  
             });
         var settings = new AppsSettings();
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
@@ -293,9 +293,9 @@ public class AppReleaseBusinessLogicTest
     {
         // Arrange
         SetupUpdateApp();
-        var data = new AppRequestModel("test", "test", Guid.NewGuid(), new []{ Guid.NewGuid() }, new List<LocalizedDescription>(), new [] { "de" }, "123",new[]
+        var data = new AppRequestModel("test", "test", Guid.NewGuid(), new []{ Guid.NewGuid() }, new List<LocalizedDescription>(), new [] { "de" }, "123", new[]
             {
-              PrivacyPolicyId.COMPANY_DATA  
+                PrivacyPolicyId.COMPANY_DATA  
             });
         var settings = new AppsSettings();
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
@@ -313,9 +313,9 @@ public class AppReleaseBusinessLogicTest
     {
         // Arrange
         SetupUpdateApp();
-        var data = new AppRequestModel("test", "test", _companyUser.Id, new []{ Guid.NewGuid() }, new List<LocalizedDescription>(), new [] { "de", "en", "invalid" }, "123",new[]
+        var data = new AppRequestModel("test", "test", _companyUser.Id, new []{ Guid.NewGuid() }, new List<LocalizedDescription>(), new [] { "de", "en", "invalid" }, "123", new[]
             {
-              PrivacyPolicyId.COMPANY_DATA  
+                PrivacyPolicyId.COMPANY_DATA  
             });
         var settings = new AppsSettings();
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
@@ -347,7 +347,7 @@ public class AppReleaseBusinessLogicTest
             "43",
             new[]
             {
-              PrivacyPolicyId.COMPANY_DATA  
+                PrivacyPolicyId.COMPANY_DATA  
             });
         var settings = new AppsSettings();
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
@@ -607,7 +607,7 @@ public class AppReleaseBusinessLogicTest
     }
 
     #endregion
-    
+
     #region DeclineAppRequest
     
     [Fact]
@@ -644,11 +644,11 @@ public class AppReleaseBusinessLogicTest
         A.CallTo(() => _offerRepository.GetAppUpdateData(_notExistingAppId, _iamUser.UserEntityId, A<IEnumerable<string>>._))
             .ReturnsLazily(() => (AppUpdateData?)null);
         A.CallTo(() => _offerRepository.GetAppUpdateData(_activeAppId, _iamUser.UserEntityId, A<IEnumerable<string>>._))
-            .ReturnsLazily(() => new AppUpdateData(OfferStatusId.ACTIVE, false, Array.Empty<(string, string, string)>(), Array.Empty<(string Shortname, bool IsMatch)>(), Array.Empty<Guid>(), new ValueTuple<Guid, string, bool>(), null,Array.Empty<PrivacyPolicyId>()));
+            .ReturnsLazily(() => new AppUpdateData(OfferStatusId.ACTIVE, false, Array.Empty<(string, string, string)>(), Array.Empty<(string Shortname, bool IsMatch)>(), Array.Empty<Guid>(), new ValueTuple<Guid, string, bool>(), null, Array.Empty<PrivacyPolicyId>()));
         A.CallTo(() => _offerRepository.GetAppUpdateData(_differentCompanyAppId, _iamUser.UserEntityId, A<IEnumerable<string>>._))
-            .ReturnsLazily(() => new AppUpdateData(OfferStatusId.CREATED, false, Array.Empty<(string, string, string)>(), Array.Empty<(string Shortname, bool IsMatch)>(), Array.Empty<Guid>(), new ValueTuple<Guid, string, bool>(), null,Array.Empty<PrivacyPolicyId>()));
+            .ReturnsLazily(() => new AppUpdateData(OfferStatusId.CREATED, false, Array.Empty<(string, string, string)>(), Array.Empty<(string Shortname, bool IsMatch)>(), Array.Empty<Guid>(), new ValueTuple<Guid, string, bool>(), null, Array.Empty<PrivacyPolicyId>()));
         A.CallTo(() => _offerRepository.GetAppUpdateData(_existingAppId, _iamUser.UserEntityId, A<IEnumerable<string>>._))
-            .ReturnsLazily(() => new AppUpdateData(OfferStatusId.CREATED, true, Array.Empty<(string, string, string)>(), Array.Empty<(string Shortname, bool IsMatch)>(), Array.Empty<Guid>(), new ValueTuple<Guid, string, bool>(Guid.NewGuid(), "123", false), null,Array.Empty<PrivacyPolicyId>()));
+            .ReturnsLazily(() => new AppUpdateData(OfferStatusId.CREATED, true, Array.Empty<(string, string, string)>(), Array.Empty<(string Shortname, bool IsMatch)>(), Array.Empty<Guid>(), new ValueTuple<Guid, string, bool>(Guid.NewGuid(), "123", false), null, Array.Empty<PrivacyPolicyId>()));
         A.CallTo(() => _offerService.ValidateSalesManager(A<Guid>._, A<string>._, A<IDictionary<string, IEnumerable<string>>>._)).Returns(_companyUser.CompanyId);
         
         A.CallTo(() => _portalRepositories.GetInstance<ILanguageRepository>()).Returns(_languageRepository);

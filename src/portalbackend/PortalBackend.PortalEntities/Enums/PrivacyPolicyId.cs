@@ -1,6 +1,6 @@
 /********************************************************************************
- * Copyright (c) 2021,2022 BMW Group AG
- * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
+ * Copyright (c) 2021, 2023 BMW Group AG
+ * Copyright (c) 2021, 2023 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -26,5 +26,5 @@ public enum PrivacyPolicyId
     USER_DATA = 2,
     LOCATION = 3,
     BROWSER_HISTORY = 4,
-    NONE = 5
+    NONE = 5,
 }

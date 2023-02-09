@@ -326,7 +326,7 @@ public interface IOfferRepository
     /// Adds <see cref="OfferAssignedPrivacyPolicy"/>s to the database
     /// </summary>
     /// <param name="privacyPolicies">The privacy policies that should be added to the database</param>
-    void AddAppAssignedPrivacyPolicy(IEnumerable<(Guid appId, PrivacyPolicyId privacyPolicy)> privacyPolicies);
+    void AddAppAssignedPrivacyPolicies(IEnumerable<(Guid appId, PrivacyPolicyId privacyPolicy)> privacyPolicies);
     
     /// <summary>
     /// Add offer Id and privacy policy Id in Offer Assigned Privacy Policies table 
@@ -335,5 +335,5 @@ public interface IOfferRepository
     /// <param name="initialPrivacyPolicy"></param>
     /// <param name="modifyPrivacyPolicy"></param>
     /// <returns></returns>
-    void CreateDeleteAppAssignedPrivacyPolicy(Guid appId, IEnumerable<PrivacyPolicyId> initialPrivacyPolicy, IEnumerable<PrivacyPolicyId> modifyPrivacyPolicy);
+    void CreateDeleteAppAssignedPrivacyPolicies(Guid appId, IEnumerable<PrivacyPolicyId> initialPrivacyPolicy, IEnumerable<PrivacyPolicyId> modifyPrivacyPolicy);
 }

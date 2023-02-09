@@ -279,12 +279,6 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
             throw new ControllerArgumentException("Use Case Ids must not be null or empty", nameof(appRequestModel.UseCaseIds));
         }
 
-        var inputPrivacyPolicies = Enum.GetValues<PrivacyPolicyId>();
-        if (appRequestModel.PrivacyPolicies.Except(inputPrivacyPolicies).Any())
-        {
-            throw new ControllerArgumentException($"At least One Privacy Policy {string.Join(",", appRequestModel.PrivacyPolicies.Except(inputPrivacyPolicies))} Not Existing", nameof(appRequestModel.PrivacyPolicies));
-        }
-       
         return this.CreateAppAsync(appRequestModel, iamUserId);
     }
 
@@ -323,7 +317,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
               (appId, c)));
         appRepository.AddAppAssignedUseCases(appRequestModel.UseCaseIds.Select(uc =>
               (appId, uc)));
-        appRepository.AddAppAssignedPrivacyPolicy(appRequestModel.PrivacyPolicies.Select(pp =>
+        appRepository.AddAppAssignedPrivacyPolicies(appRequestModel.PrivacyPolicies.Select(pp =>
               (appId, pp)));
         var licenseId = appRepository.CreateOfferLicenses(appRequestModel.Price).Id;
         appRepository.CreateOfferAssignedLicense(appId, licenseId);
@@ -368,12 +362,6 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
             await _offerService.ValidateSalesManager(appRequestModel.SalesManagerId.Value, iamUserId, _settings.SalesManagerRoles).ConfigureAwait(false);
         }
 
-        var inputPrivacyPolicies = Enum.GetValues<PrivacyPolicyId>();
-        if (appRequestModel.PrivacyPolicies.Except(inputPrivacyPolicies).Any())
-        {
-            throw new ControllerArgumentException($"At least One Privacy Policy {string.Join(",", appRequestModel.PrivacyPolicies.Except(inputPrivacyPolicies))} Not Existing", nameof(appRequestModel.PrivacyPolicies));
-        }
-
         var newSupportedLanguages = appRequestModel.SupportedLanguageCodes.Except(appData.Languages.Where(x => x.IsMatch).Select(x => x.Shortname));
         var existingLanguageCodes = await _portalRepositories.GetInstance<ILanguageRepository>().GetLanguageCodesUntrackedAsync(newSupportedLanguages).ToListAsync().ConfigureAwait(false);
         if (newSupportedLanguages.Except(existingLanguageCodes).Any())
@@ -401,7 +389,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
 
         appRepository.CreateDeleteAppAssignedUseCases(appId, appData.MatchingUseCases, appRequestModel.UseCaseIds);
 
-        appRepository.CreateDeleteAppAssignedPrivacyPolicy(appId, appData.MatchingPrivacyPolicies, appRequestModel.PrivacyPolicies);
+        appRepository.CreateDeleteAppAssignedPrivacyPolicies(appId, appData.MatchingPrivacyPolicies, appRequestModel.PrivacyPolicies);
 
         _offerService.CreateOrUpdateOfferLicense(appId, appRequestModel.Provider, appData.OfferLicense);
         
@@ -443,13 +431,13 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         }       
     }
 
-    /// <inheritdoc />
-    public Task DeclineAppRequestAsync(Guid appId, string iamUserId, OfferDeclineRequest data) => 
-        _offerService.DeclineOfferAsync(appId, iamUserId, data, OfferTypeId.APP, NotificationTypeId.APP_RELEASE_REJECTION, _settings.ServiceManagerRoles, _settings.AppOverviewAddress);
-
     /// <inheritdoc/>
     public  Task<PrivacyPolicyData> GetPrivacyPolicyDataAsync()
     {   
-        return Task.FromResult(new PrivacyPolicyData(Enum.GetNames<PrivacyPolicyId>()));
+        return Task.FromResult(new PrivacyPolicyData(Enum.GetValues<PrivacyPolicyId>()));
     }
+
+    /// <inheritdoc />
+    public Task DeclineAppRequestAsync(Guid appId, string iamUserId, OfferDeclineRequest data) => 
+        _offerService.DeclineOfferAsync(appId, iamUserId, data, OfferTypeId.APP, NotificationTypeId.APP_RELEASE_REJECTION, _settings.ServiceManagerRoles, _settings.AppOverviewAddress);
 }

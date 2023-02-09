@@ -566,20 +566,6 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
    }
 
     #endregion
-    
-    [Fact]
-    public async Task GetPrivacyPolicyAsync_ReturnsExpectedResult()
-    {
-        // Arrange
-        var sut = await CreateSut().ConfigureAwait(false);
-
-        // Act
-        var result = await sut.GetPrivacyPolicyDataAsync().ToListAsync().ConfigureAwait(false);
-        
-        // Assert
-        result.Should().NotBeNull(); 
-        result.Should().HaveCount(5);
-    }
 
     #region GetProviderCompanyUserIdforOffer
 

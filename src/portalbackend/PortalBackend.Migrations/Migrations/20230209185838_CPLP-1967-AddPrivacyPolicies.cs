@@ -25,7 +25,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migrations
 {
-    public partial class CPLP1967AddPrivacyPolicy : Migration
+    public partial class CPLP1967AddPrivacyPolicies : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -43,7 +43,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 });
 
             migrationBuilder.CreateTable(
-                name: "offer_assigned_privacypolicies",
+                name: "offer_assigned_privacy_policies",
                 schema: "portal",
                 columns: table => new
                 {
@@ -52,15 +52,15 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_offer_assigned_privacypolicies", x => new { x.offer_id, x.privacy_policy_id });
+                    table.PrimaryKey("pk_offer_assigned_privacy_policies", x => new { x.offer_id, x.privacy_policy_id });
                     table.ForeignKey(
-                        name: "fk_offer_assigned_privacypolicies_offers_offer_id",
+                        name: "fk_offer_assigned_privacy_policies_offers_offer_id",
                         column: x => x.offer_id,
                         principalSchema: "portal",
                         principalTable: "offers",
                         principalColumn: "id");
                     table.ForeignKey(
-                        name: "fk_offer_assigned_privacypolicies_privacy_policies_privacy_pol",
+                        name: "fk_offer_assigned_privacy_policies_privacy_policies_privacy_po",
                         column: x => x.privacy_policy_id,
                         principalSchema: "portal",
                         principalTable: "privacy_policies",
@@ -81,16 +81,16 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 });
 
             migrationBuilder.CreateIndex(
-                name: "ix_offer_assigned_privacypolicies_privacy_policy_id",
+                name: "ix_offer_assigned_privacy_policies_privacy_policy_id",
                 schema: "portal",
-                table: "offer_assigned_privacypolicies",
+                table: "offer_assigned_privacy_policies",
                 column: "privacy_policy_id");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "offer_assigned_privacypolicies",
+                name: "offer_assigned_privacy_policies",
                 schema: "portal");
 
             migrationBuilder.DropTable(

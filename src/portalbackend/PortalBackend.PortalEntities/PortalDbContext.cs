@@ -112,7 +112,7 @@ public class PortalDbContext : DbContext
     public virtual DbSet<Offer> Offers { get; set; } = default!;
     public virtual DbSet<OfferAssignedDocument> OfferAssignedDocuments { get; set; } = default!;
     public virtual DbSet<OfferAssignedLicense> OfferAssignedLicenses { get; set; } = default!;
-    public virtual DbSet<OfferAssignedPrivacypolicy> OfferAssignedPrivacypolicies { get; set; } = default!;
+    public virtual DbSet<OfferAssignedPrivacyPolicy> OfferAssignedPrivacyPolicies { get; set; } = default!;
     public virtual DbSet<OfferDescription> OfferDescriptions { get; set; } = default!;
     public virtual DbSet<OfferLicense> OfferLicenses { get; set; } = default!;
     public virtual DbSet<OfferStatus> OfferStatuses { get; set; } = default!;
@@ -1060,17 +1060,17 @@ public class PortalDbContext : DbContext
                     .Select(e => new PrivacyPolicy(e))
             );
         
-        modelBuilder.Entity<OfferAssignedPrivacypolicy>(entity =>
+        modelBuilder.Entity<OfferAssignedPrivacyPolicy>(entity =>
         {
             entity.HasKey(e => new { e.OfferId, e.PrivacyPolicyId });
 
             entity.HasOne(d => d.Offer)
-                .WithMany(p => p!.OfferAssignedPrivacypolicies)
+                .WithMany(p => p!.OfferAssignedPrivacyPolicies)
                 .HasForeignKey(d => d.OfferId)
                 .OnDelete(DeleteBehavior.ClientSetNull);
 
             entity.HasOne(d => d.PrivacyPolicy)
-                .WithMany(p => p!.OfferAssignedPrivacypolicies)
+                .WithMany(p => p!.OfferAssignedPrivacyPolicies)
                 .HasForeignKey(d => d.PrivacyPolicyId)
                 .OnDelete(DeleteBehavior.ClientSetNull);
         });

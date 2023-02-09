@@ -18,28 +18,22 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using System.ComponentModel.DataAnnotations;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
+namespace Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
 
-public class PrivacyPolicy
+public class ValidateEnumValueAttribute : ValidationAttribute
 {
-    private PrivacyPolicy()
+    override protected ValidationResult? IsValid(object? value, ValidationContext validationContext)
     {
-        Label = null!;
-        OfferAssignedPrivacyPolicies = new HashSet<OfferAssignedPrivacyPolicy>();
+        var type = value?.GetType();
+        if (type is null || !type.IsEnum)
+        {
+            throw new UnexpectedConditionException($"invalid use of attribute ValidateEnumValue: {validationContext.MemberName}, value {validationContext.ObjectInstance} is of type {validationContext.ObjectType} which is not an Enum-type");
+        }
+        return Array.BinarySearch(type.GetEnumValues(), value) < 0
+            ? new ValidationResult($"{value} is not a valid value for {type}. Valid values are: {string.Join(", ", type.GetEnumNames())}")
+            : null;
     }
-
-    public PrivacyPolicy(PrivacyPolicyId privacyPolicyId) : this()
-    {
-        Id = privacyPolicyId;
-        Label = privacyPolicyId.ToString();
-    }
-
-    public PrivacyPolicyId Id { get; private set; }
-
-    [MaxLength(255)]
-    public string Label { get; private set; }
-    public virtual ICollection<OfferAssignedPrivacyPolicy> OfferAssignedPrivacyPolicies { get; private set; }
 }

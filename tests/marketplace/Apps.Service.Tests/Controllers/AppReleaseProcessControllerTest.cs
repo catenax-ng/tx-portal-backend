@@ -261,7 +261,7 @@ public class AppReleaseProcessControllerTest
             "19€",
             new[]
             {
-              PrivacyPolicyId.COMPANY_DATA 
+                PrivacyPolicyId.COMPANY_DATA 
             });
         A.CallTo(() => _logic.UpdateAppReleaseAsync(A<Guid>._, A<AppRequestModel>._, A<string>._))
             .ReturnsLazily(() => Task.CompletedTask);
@@ -360,5 +360,4 @@ public class AppReleaseProcessControllerTest
         A.CallTo(() => _logic.DeclineAppRequestAsync(appId, IamUserId, data)).MustHaveHappenedOnceExactly();
         result.Should().BeOfType<NoContentResult>();
     }
-   
 }
