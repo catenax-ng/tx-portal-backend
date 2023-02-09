@@ -229,8 +229,8 @@ public class RegistrationController : ControllerBase
     /// </summary>
     /// <param name="applicationId" example="">Id of the application that should be triggered</param>
     /// <returns>NoContent</returns>
-    /// Example: POST: api/administration/registration/application/4f0146c6-32aa-4bb1-b844-df7e8babdcb4/trigger-clearinghouse&processTypeId=RETRIGGER_CLEARING_HOUSE <br />
-    /// Example: POST: api/administration/registration/application/4f0146c6-32aa-4bb1-b844-df7e8babdcb4/trigger-clearinghouse&processTypeId=OVERWRITE_CLEARING_HOUSE
+    /// Example: POST: api/administration/registration/application/4f0146c6-32aa-4bb1-b844-df7e8babdcb4/trigger-clearinghouse?processTypeId=RETRIGGER_CLEARING_HOUSE <br />
+    /// Example: POST: api/administration/registration/application/4f0146c6-32aa-4bb1-b844-df7e8babdcb4/trigger-clearinghouse?processTypeId=OVERWRITE_CLEARING_HOUSE
     /// <response code="200">the result as a boolean.</response>
     /// <response code="400">Either the CompanyApplication is not in status SUBMITTED or the next step can't automatically retriggered.</response>
     /// <response code="404">No application found for the applicationId.</response>
