@@ -69,7 +69,6 @@
     <Content Include="Seeder\Data\consents.test.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <None Remove="Seeder\Data\invitations.test.json" />
     <None Remove="Seeder\Data\documents.test.json" />
     <Content Include="Seeder\Data\documents.test.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
