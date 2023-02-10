@@ -381,12 +381,16 @@ public sealed class RegistrationBusinessLogic : IRegistrationBusinessLogic
         var result = await _portalRepositories.GetInstance<IApplicationRepository>()
             .GetCompanyIdForSubmittedApplication(data.ExternalId)
             .ConfigureAwait(false);
-        if (result == Guid.Empty)
+        if (!result.IsValidApplicationId)
         {
-            throw new NotFoundException($"No companyApplication for BPN {data.ExternalId} is not in status SUBMITTED");
+            throw new NotFoundException($"companyApplication {data.ExternalId} not found");
+        }
+        if (!result.IsSubmitted)
+        {
+            throw new ConflictException($"companyApplication {data.ExternalId} is not in status SUBMITTED");
         }
 
-        await _sdFactoryBusinessLogic.ProcessFinishSelfDescriptionLpForApplication(data, result, cancellationToken).ConfigureAwait(false);
+        await _sdFactoryBusinessLogic.ProcessFinishSelfDescriptionLpForApplication(data, result.CompanyId, cancellationToken).ConfigureAwait(false);
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
 

@@ -584,7 +584,7 @@ public class RegistrationBusinessLogicTest
         var data = new SelfDescriptionResponseData(ApplicationId, SelfDescriptionStatus.Confirm, null, JsonDocument.Parse("{ \"test\": true }"));
         var companyId = Guid.NewGuid();
         A.CallTo(() => _applicationRepository.GetCompanyIdForSubmittedApplication(ApplicationId))
-            .ReturnsLazily(() => companyId);
+            .Returns((true, companyId, true));
         
         // Act
         await _logic.ProcessClearinghouseSelfDescription(data, CancellationToken.None).ConfigureAwait(false);
@@ -601,14 +601,30 @@ public class RegistrationBusinessLogicTest
         // Arrange
         var data = new SelfDescriptionResponseData(ApplicationId, SelfDescriptionStatus.Confirm, null, JsonDocument.Parse("{ \"test\": true }"));
         A.CallTo(() => _applicationRepository.GetCompanyIdForSubmittedApplication(ApplicationId))
-            .ReturnsLazily(() => Guid.Empty);
+            .Returns(((bool,Guid,bool))default);
         
         // Act
         async Task Act() => await _logic.ProcessClearinghouseSelfDescription(data, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
-        ex.Message.Should().Be($"No companyApplication for BPN {ApplicationId} is not in status SUBMITTED");
+        ex.Message.Should().Be($"companyApplication {ApplicationId} not found");
+    }
+
+    [Fact]
+    public async Task ProcessClearinghouseSelfDescription_WithNotSubmittedApplication_ThrowsConflictException()
+    {
+        // Arrange
+        var data = new SelfDescriptionResponseData(ApplicationId, SelfDescriptionStatus.Confirm, null, JsonDocument.Parse("{ \"test\": true }"));
+        A.CallTo(() => _applicationRepository.GetCompanyIdForSubmittedApplication(ApplicationId))
+            .Returns((true,Guid.NewGuid(),false));
+        
+        // Act
+        async Task Act() => await _logic.ProcessClearinghouseSelfDescription(data, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be($"companyApplication {ApplicationId} is not in status SUBMITTED");
     }
 
     [Theory]
