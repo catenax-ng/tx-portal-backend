@@ -119,7 +119,7 @@ public interface IOfferRepository
 
     void RemoveOfferDescriptions(IEnumerable<(Guid offerId, string languageShortName)> offerDescriptionIds);
 
-    void AttachAndModifyOfferDescription(Guid offerId, string languageShortName, Action<OfferDescription> setOptionalParameters);
+    void AttachAndModifyOfferDescription(Guid offerId, string languageShortName, Action<OfferDescription> initialize, Action<OfferDescription> modify);
 
     /// <summary>
     /// Adds <see cref="AppLanguage"/>s to the database
@@ -343,4 +343,13 @@ public interface IOfferRepository
     /// <param name="appId"></param>
     /// <param name ="iamUserId"></param>
     Task<InReviewOfferData?> GetinReviewAppDataByIdAsync(Guid Id, OfferTypeId offerTypeId);
+
+    /// <summary>
+    /// Gets Offer Descriptions Data for Apps
+    /// </summary>
+    /// <param name="appId"></param>
+    /// <param name ="iamUserId"></param>
+    /// <param name="offerTypeId"></param>
+    /// <returns></returns>
+    Task<AppDescriptionsData?> GetActiveOfferDescriptionDataByIdAsync(Guid appId, OfferTypeId offerTypeId, string iamUserId);
 }

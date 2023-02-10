@@ -322,4 +322,56 @@ public class AppsBusinessLogic : IAppsBusinessLogic
         }
         return (document.Content, document.FileName.MapToContentType(), document.FileName);
     }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<OfferDescriptionData>> GetAppUpdateDescritionByIdAsync(Guid appId, string iamUserId)
+    {        
+        var offerRepository = _portalRepositories.GetInstance<IOfferRepository>();
+        var result = await ValidateAndGetAppDescription(appId, iamUserId, offerRepository);        
+        return result.OfferDescriptionDatas;
+    }
+
+    /// <inheritdoc />
+    public async Task CreateOrUpdateAppDescriptionByIdAsync(Guid appId, string iamUserId, IEnumerable<LocalizedDescription> offerDescriptionData)
+    {
+        var offerRepository = _portalRepositories.GetInstance<IOfferRepository>();
+        var result = await ValidateAndGetAppDescription(appId, iamUserId, offerRepository);
+       
+        if(result.OfferDescriptionDatas != null)
+        {
+            foreach(var description in offerDescriptionData.Where(od => result.OfferDescriptionDatas.Any(
+                languageCode => languageCode.languageCode == od.LanguageCode)))
+            {
+                offerRepository.AttachAndModifyOfferDescription(appId, description.LanguageCode,
+                A => {
+                    A.DescriptionLong = result.OfferDescriptionDatas.SingleOrDefault(od => od.languageCode == description.LanguageCode)!.longDescription;
+                    A.DescriptionShort = result.OfferDescriptionDatas.SingleOrDefault(od => od.languageCode == description.LanguageCode)!.shortDescription;
+                },
+                A => {
+                    A.DescriptionLong = description.LongDescription;
+                    A.DescriptionShort = description.ShortDescription;
+                });
+            }
+        }
+        else
+        {
+            offerRepository.AddOfferDescriptions(offerDescriptionData.Select(d => 
+                new ValueTuple<Guid, string, string, string>(appId, d.LanguageCode, d.LongDescription, d.ShortDescription)));
+        }
+        await _portalRepositories.SaveAsync().ConfigureAwait(false);
+    }
+
+    private static async Task<AppDescriptionsData> ValidateAndGetAppDescription(Guid appId, string iamUserId, IOfferRepository offerRepository)
+    {
+        var result = await offerRepository.GetActiveOfferDescriptionDataByIdAsync(appId,OfferTypeId.APP,iamUserId).ConfigureAwait(false);
+        if(result == default)
+            throw new NotFoundException($"App {appId} does not exist.");
+
+        if(!result.IsStatusActive)
+            throw new ConflictException($"App {appId} is in InCorrect Status");
+
+        if(!result.IsProviderCompanyUser)
+            throw new ForbiddenException($"user {iamUserId} is not a member of the providercompany of App {appId}");
+        return result; 
+    }
 }

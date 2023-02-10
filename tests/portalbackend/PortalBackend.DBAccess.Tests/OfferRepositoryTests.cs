@@ -685,6 +685,91 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
 
     #endregion
 
+    #region OfferDescription
+
+    [Fact]
+    public async Task GetActiveOfferDescriptionDataByIdAsync_ReturnsExpectedResult()
+    {
+        // Arrange
+        var sut = await CreateSut().ConfigureAwait(false);
+
+        //Act
+        var result = await sut.GetActiveOfferDescriptionDataByIdAsync(new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4"),OfferTypeId.APP, "3d8142f1-860b-48aa-8c2b-1ccb18699f65").ConfigureAwait(false);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.OfferDescriptionDatas.Should().NotBeNull();
+        result!.OfferDescriptionDatas.Select(od => od.languageCode).Contains("en");
+    }
+
+    [Fact]
+    public async Task AttachAndModifyOfferDescription_Changed_ReturnsExpectedResult()
+    {
+        // Arrange
+        var (sut, dbContext) = await CreateSutWithContext().ConfigureAwait(false);
+
+        // Act
+        sut.AttachAndModifyOfferDescription(new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4"),"en",
+        od => { od.DescriptionLong = null!; od.DescriptionShort = null!; },
+        od => { od.DescriptionLong = "some long Description for Testing"; od.DescriptionShort = "some short Description for Testing";});
+
+        // Assert
+        var changeTracker = dbContext.ChangeTracker;
+        var changedEntries = changeTracker.Entries().ToList();
+        changeTracker.HasChanges().Should().BeTrue();
+        changedEntries.Should().NotBeEmpty();
+        changedEntries.Should().HaveCount(1);
+        var changedEntity = changedEntries.Single();
+        changedEntity.State.Should().Be(EntityState.Modified);
+        changedEntity.Entity.Should().BeOfType<OfferDescription>().Which.DescriptionLong.Should().Be("some long Description for Testing");
+    }
+
+    [Fact]
+    public async Task AttachAndModifyOfferDescription_UnChanged_ReturnsExpectedResult()
+    {
+        // Arrange
+        var (sut, dbContext) = await CreateSutWithContext().ConfigureAwait(false);
+
+        // Act
+        sut.AttachAndModifyOfferDescription(new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4"),"en",
+        od => { od.DescriptionLong = "some long Description for Testing"; od.DescriptionShort = "some short Description for Testing"; },
+        od => { od.DescriptionLong = "some long Description for Testing"; od.DescriptionShort = "some short Description for Testing";});
+
+        // Assert
+        var changeTracker = dbContext.ChangeTracker;
+        var changedEntries = changeTracker.Entries().ToList();
+        changeTracker.HasChanges().Should().BeFalse();
+        changedEntries.Should().NotBeEmpty();
+        changedEntries.Should().HaveCount(1);
+        var changedEntity = changedEntries.Single();
+        changedEntity.State.Should().Be(EntityState.Unchanged);
+        changedEntity.Entity.Should().BeOfType<OfferDescription>().Which.DescriptionLong.Should().Be("some long Description for Testing");
+    }
+
+    [Fact]
+    public async Task AddOfferDescriptions_ReturnsExpectedResult()
+    {
+        // Arrange
+        var descriptions = new []{(new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4"),
+            "en",
+            "New Long Description for Testing",
+            "New Short Description for Testing")};
+        var (sut, context) = await CreateSutWithContext().ConfigureAwait(false);
+
+        // Act
+        sut.AddOfferDescriptions(descriptions);
+
+        // Assert
+        var changeTracker = context.ChangeTracker;
+        var changedEntries = changeTracker.Entries().ToList();
+        changeTracker.HasChanges().Should().BeTrue();
+        changedEntries.Should().NotBeEmpty();
+        changedEntries.Should().HaveCount(1);
+        changedEntries.Single().Entity.Should().BeOfType<OfferDescription>().Which.LanguageShortName.Should().Be("en");
+    }
+
+    #endregion
+
     #region Setup
     
     private async Task<OfferRepository> CreateSut()
