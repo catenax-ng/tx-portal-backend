@@ -411,7 +411,7 @@ public class RegistrationBusinessLogicTest
     {
         // Arrange
         var entry = new ApplicationChecklistEntry(IdWithBpn, ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow);
-        SetupForRegistrationVerification(entry);
+        SetupForRegistrationVerification(entry, _fixture.Create<CompanyApplication>(), _fixture.Create<Company>());
 
         // Act
         async Task Act() => await _logic.SetRegistrationVerification(IdWithBpn, false).ConfigureAwait(false);
@@ -426,7 +426,7 @@ public class RegistrationBusinessLogicTest
     {
         // Arrange
         var entry = new ApplicationChecklistEntry(IdWithBpn, ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow);
-        SetupForRegistrationVerification(entry);
+        SetupForRegistrationVerification(entry, _fixture.Create<CompanyApplication>(), _fixture.Create<Company>());
 
         // Act
         await _logic.SetRegistrationVerification(IdWithBpn, true, null).ConfigureAwait(false);
@@ -726,7 +726,7 @@ public class RegistrationBusinessLogicTest
             }.ToImmutableDictionary(), new List<ProcessStep>()));
     }
 
-    private void SetupForRegistrationVerification(ApplicationChecklistEntry applicationChecklistEntry, CompanyApplication application = null, Company company = null)
+    private void SetupForRegistrationVerification(ApplicationChecklistEntry applicationChecklistEntry, CompanyApplication application, Company company)
     {
         A.CallTo(() => _checklistService.FinalizeChecklistEntryAndProcessSteps(A<IChecklistService.ManualChecklistProcessStepData>._, A<Action<ApplicationChecklistEntry>>._, A<IEnumerable<ProcessStepTypeId>?>._))
             .Invokes((IChecklistService.ManualChecklistProcessStepData _, Action<ApplicationChecklistEntry> action, IEnumerable<ProcessStepTypeId>? _) =>

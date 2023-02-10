@@ -396,7 +396,7 @@ public sealed class RegistrationBusinessLogic : IRegistrationBusinessLogic
     {
         var applicationRepository = _portalRepositories.GetInstance<IApplicationRepository>();
         var companyId = await applicationRepository.GetCompanyIdForSubmittedApplication(applicationId).ConfigureAwait(false);
-        if (companyId == default)
+        if (companyId == Guid.Empty)
         {
             throw new ArgumentException($"CompanyApplication {applicationId} is not in status SUBMITTED", nameof(applicationId));
         }
