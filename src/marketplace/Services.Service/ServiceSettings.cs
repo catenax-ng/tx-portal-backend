@@ -32,7 +32,7 @@ public class ServiceSettings
     public int ApplicationsMaxPageSize { get; init; }
 
     [Required]
-    public IDictionary<string,IEnumerable<string>> CompanyAdminRoles { get; init; } = null!;
+    public IDictionary<string,IEnumerable<string>> CatenaAdminRoles { get; init; } = null!;
     
     [Required]
     public IDictionary<string,IEnumerable<string>> ServiceAccountRoles { get; init; } = null!;
@@ -88,6 +88,15 @@ public class ServiceSettings
     /// <value></value>
     [Required]
     public IEnumerable<string> ContentTypeSettings { get; set; } = null!;
+
+    [Required]
+    public IDictionary<string,IEnumerable<string>> ITAdminRoles { get; init; } = null!;
+
+    /// <summary>
+    /// UserManagementAddress url required for subscription email 
+    /// </summary>
+    [Required(AllowEmptyStrings = false)]
+    public string UserManagementAddress { get; init; } = null!;
 }
 
 public static class ServiceSettingsExtension

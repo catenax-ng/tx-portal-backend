@@ -37,7 +37,7 @@ public class ApplicationChecklistRepositoryTests : IAssemblyFixture<TestDbFixtur
     private readonly TestDbFixture _dbTestDbFixture;
 
     private static readonly Guid ApplicationId = new("4829b64c-de6a-426c-81fc-c0bcf95bcb76");
-    private static readonly Guid ApplicationWithExistingChecklistId = new("1b86d973-3aac-4dcd-a9e9-0c222766202b");
+    private static readonly Guid ApplicationWithExistingChecklistId = new("4f0146c6-32aa-4bb1-b844-df7e8babdcb6");
     
     public ApplicationChecklistRepositoryTests(TestDbFixture testDbFixture)
     {
@@ -147,23 +147,88 @@ public class ApplicationChecklistRepositoryTests : IAssemblyFixture<TestDbFixtur
 
     #endregion
 
-    #region GetChecklistDataGroupedByApplicationId 
+    #region GetChecklistProcessStepData 
 
     [Fact]
-    public async Task GetChecklistDataGroupedByApplicationId_ReturnsExpected()
+    public async Task GetChecklistProcessStepData_ReturnsExpected()
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
 
         // Act
-        var checklistData = await sut.GetChecklistDataOrderedByApplicationId().ToListAsync().ConfigureAwait(false);
+        var checklistData = await sut.GetAllChecklistProcessStepData().ToListAsync().ConfigureAwait(false);
 
         // Assert
-        checklistData.Should().HaveCount(10);
+        checklistData.Should().HaveCount(1);
+        checklistData.First().Checklist.Should().HaveCount(5);
     }
     
     #endregion
 
+    #region GetChecklistProcessStepData
+
+    [Fact]
+    public async Task GetChecklistProcessStepData_WithExisting_ReturnsExpected()
+    {
+        // Arrange
+        var sut = await CreateSut().ConfigureAwait(false);
+
+        // Act
+        var result = await sut.GetChecklistProcessStepData(new Guid("4f0146c6-32aa-4bb1-b844-df7e8babdcb6"), 
+            new[]
+            {
+                ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER,
+                ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION,
+                ApplicationChecklistEntryTypeId.CLEARING_HOUSE,
+                ApplicationChecklistEntryTypeId.IDENTITY_WALLET,
+                ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP
+            },
+            new []
+            {
+                ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_MANUAL,
+                ProcessStepTypeId.VERIFY_REGISTRATION
+            }
+            ).ConfigureAwait(false);
+
+        // Assert
+        result.IsValidApplicationId.Should().BeTrue();
+        result.IsSubmitted.Should().BeTrue();
+        result.Checklist.Should().HaveCount(5).And.Contain(new [] {
+            ( ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE ),
+            ( ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.DONE ),
+            ( ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ApplicationChecklistEntryStatusId.TO_DO ),
+            ( ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO ),
+            ( ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO ),
+        });
+    }
+
+    #endregion
+    
+    #region CreateApplicationAssignedProcessStep
+    
+    [Fact]
+    public async Task CreateApplicationAssignedProcessStep_CreatesSuccessfully()
+    {
+        // Arrange
+        var processStepId = new Guid("48f35f84-8d98-4fbd-ba80-8cbce5eeadb5");
+        var (sut, dbContext) = await CreateSutWithContext().ConfigureAwait(false);
+
+        // Act
+        sut.CreateApplicationAssignedProcessStep(new Guid("2bb2005f-6e8d-41eb-967b-cde67546cafc"), new Guid("48f35f84-8d98-4fbd-ba80-8cbce5eeadb5"));
+
+        // Assert
+        var changeTracker = dbContext.ChangeTracker;
+        var changedEntries = changeTracker.Entries().ToList();
+        changeTracker.HasChanges().Should().BeTrue();
+        changedEntries.Should().NotBeEmpty();
+        changedEntries.Should().HaveCount(1);
+        var changedEntity = changedEntries.Single();
+        changedEntity.State.Should().Be(EntityState.Added);
+        changedEntity.Entity.Should().BeOfType<ApplicationAssignedProcessStep>().Which.ProcessStepId.Should().Be(processStepId);
+    }
+    
+    #endregion
+    
     private async Task<(ApplicationChecklistRepository, PortalDbContext)> CreateSutWithContext()
     {
         var context = await _dbTestDbFixture.GetPortalDbContext().ConfigureAwait(false);

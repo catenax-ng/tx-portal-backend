@@ -68,24 +68,12 @@
     <Content Include="Seeder\Data\addresses.consortia.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <None Remove="Seeder\Data\agreement_assigned_company_roles.consortia.json" />
-    <Content Include="Seeder\Data\agreement_assigned_company_roles.consortia.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <None Remove="Seeder\Data\agreement_assigned_documents.consortia.json" />
-    <Content Include="Seeder\Data\agreement_assigned_documents.consortia.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <None Remove="Seeder\Data\agreement_assigned_offer_types.consortia.json" />
-    <Content Include="Seeder\Data\agreement_assigned_offer_types.consortia.json">
+    <None Remove="Seeder\Data\agreement_assigned_company_roles.json" />
+    <Content Include="Seeder\Data\agreement_assigned_company_roles.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <None Remove="Seeder\Data\agreement_assigned_offers.json" />
     <Content Include="Seeder\Data\agreement_assigned_offers.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <None Remove="Seeder\Data\agreement_assigned_offers.consortia.json" />
-    <Content Include="Seeder\Data\agreement_assigned_offers.consortia.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <None Remove="Seeder\Data\agreements.json" />
@@ -268,6 +256,10 @@
     <Content Include="Seeder\Data\offer_assigned_licenses.consortia.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Remove="Seeder\Data\offer_assigned_privacy_policies.consortia.json" />
+    <Content Include="Seeder\Data\offer_assigned_privacy_policies.consortia.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <None Remove="Seeder\Data\offer_descriptions.consortia.json" />
     <Content Include="Seeder\Data\offer_descriptions.consortia.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -348,10 +340,6 @@
     <Content Include="Seeder\Data\notification_type_assigned_topic.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <None Remove="Seeder\Data\agreement_assigned_documents.json" />
-    <Content Include="Seeder\Data\agreement_assigned_documents.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <None Remove="Seeder\Data\documents.json" />
     <Content Include="Seeder\Data\documents.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -370,6 +358,14 @@
     </Content>
     <None Remove="Seeder\Data\application_checklist.consortia.json" />
     <Content Include="Seeder\Data\application_checklist.consortia.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Seeder\Data\agreement_assigned_offer_types.json" />
+    <Content Include="Seeder\Data\agreement_assigned_offer_types.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Seeder\Data\agreement_assigned_offers.consortia.json" />
+    <Content Include="Seeder\Data\agreement_assigned_offers.consortia.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

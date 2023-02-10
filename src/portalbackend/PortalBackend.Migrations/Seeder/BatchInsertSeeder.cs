@@ -30,10 +30,10 @@ namespace  Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Seeder;
 /// <summary>
 /// Seeder to seed the base entities (those with an id as primary key)
 /// </summary>
-public class BatchSeeder : ICustomSeeder
+public class BatchInsertSeeder : ICustomSeeder
 {
     private readonly PortalDbContext _context;
-    private readonly ILogger<BatchSeeder> _logger;
+    private readonly ILogger<BatchInsertSeeder> _logger;
     private readonly SeederSettings _settings;
 
     /// <summary>
@@ -42,7 +42,7 @@ public class BatchSeeder : ICustomSeeder
     /// <param name="context">The database context</param>
     /// <param name="logger">The logger</param>
     /// <param name="options">The options</param>
-    public BatchSeeder(PortalDbContext context, ILogger<BatchSeeder> logger, IOptions<SeederSettings> options)
+    public BatchInsertSeeder(PortalDbContext context, ILogger<BatchInsertSeeder> logger, IOptions<SeederSettings> options)
     {
         _context = context;
         _logger = logger;
@@ -53,14 +53,13 @@ public class BatchSeeder : ICustomSeeder
     public int Order => 1;
 
     /// <inheritdoc />
-    public async Task InitializeAsync(CancellationToken cancellationToken)
+    public async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Start BaseEntityBatch Seeder");
         await SeedTable<Language>("languages", x => x.ShortName, cancellationToken).ConfigureAwait(false);
         await SeedBaseEntity(cancellationToken);
 
         await SeedTable<AgreementAssignedCompanyRole>("agreement_assigned_company_roles", x => new {x.AgreementId, x.CompanyRoleId}, cancellationToken).ConfigureAwait(false);
-        await SeedTable<AgreementAssignedDocument>("agreement_assigned_documents", x => new { x.AgreementId, x.DocumentId }, cancellationToken).ConfigureAwait(false);
         await SeedTable<AgreementAssignedOfferType>("agreement_assigned_offer_types", x => new { x.AgreementId, x.OfferTypeId }, cancellationToken).ConfigureAwait(false);
         await SeedTable<AgreementAssignedOffer>("agreement_assigned_offers", x => new { x.AgreementId, x.OfferId}, cancellationToken).ConfigureAwait(false);
         await SeedTable<AppAssignedUseCase>("app_assigned_use_cases", x => new { x.AppId, x.UseCaseId}, cancellationToken).ConfigureAwait(false);
@@ -94,6 +93,7 @@ public class BatchSeeder : ICustomSeeder
         await SeedTable<NotificationTypeAssignedTopic>("notification_type_assigned_topic", x => new { x.NotificationTypeId, x.NotificationTopicId}, cancellationToken).ConfigureAwait(false);
         await SeedTable<CompanyIdentifier>("company_identifiers", x=>  new { x.CompanyId, x.UniqueIdentifierId }, cancellationToken).ConfigureAwait(false);
         await SeedTable<CountryAssignedIdentifier>("country_assigned_identifiers", x => new { x.CountryAlpha2Code, x.UniqueIdentifierId }, cancellationToken).ConfigureAwait(false);
+        await SeedTable<OfferAssignedPrivacyPolicy>("offer_assigned_privacy_policies", x => new { x.OfferId, x.PrivacyPolicyId }, cancellationToken).ConfigureAwait(false);
         
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         _logger.LogInformation("Finished BaseEntityBatch Seeder");

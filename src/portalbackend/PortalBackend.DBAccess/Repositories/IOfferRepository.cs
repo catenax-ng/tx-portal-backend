@@ -226,7 +226,7 @@ public interface IOfferRepository
     /// <param name="offerStatusId"></param>
     /// <param name="offerTypeId"></param>
     /// <returns></returns>
-    Task<(bool OfferExists, Guid CompanyUserId)> GetProviderCompanyUserIdForOfferUntrackedAsync(Guid offerId, string userId, OfferStatusId offerStatusId, OfferTypeId offerTypeId);
+    Task<(bool OfferExists, bool IsStatusCreated, Guid CompanyUserId)> GetProviderCompanyUserIdForOfferUntrackedAsync(Guid offerId, string userId, OfferStatusId offerStatusId, OfferTypeId offerTypeId);
     
     /// <summary>
     /// Verify that user is linked to the appId ,offerstatus is in created state and roleId exist
@@ -321,7 +321,22 @@ public interface IOfferRepository
     /// <param name="offerTypeId"></param>
     /// <returns></returns>
     Task<(bool IsStatusActive, bool IsUserCompanyProvider)> GetOfferActiveStatusDataByIdAsync(Guid appId, OfferTypeId offerTypeId, string iamUserId);
-
+    
+    /// <summary>
+    /// Adds <see cref="OfferAssignedPrivacyPolicy"/>s to the database
+    /// </summary>
+    /// <param name="privacyPolicies">The privacy policies that should be added to the database</param>
+    void AddAppAssignedPrivacyPolicies(IEnumerable<(Guid appId, PrivacyPolicyId privacyPolicy)> privacyPolicies);
+    
+    /// <summary>
+    /// Add offer Id and privacy policy Id in Offer Assigned Privacy Policies table 
+    /// </summary>
+    /// <param name="appId"></param>
+    /// <param name="initialPrivacyPolicy"></param>
+    /// <param name="modifyPrivacyPolicy"></param>
+    /// <returns></returns>
+    void CreateDeleteAppAssignedPrivacyPolicies(Guid appId, IEnumerable<PrivacyPolicyId> initialPrivacyPolicy, IEnumerable<PrivacyPolicyId> modifyPrivacyPolicy);
+ 
     /// <summary>
     /// Gets Offer Descriptions Data for Apps
     /// </summary>

@@ -1,6 +1,6 @@
 /********************************************************************************
- * Copyright (c) 2021, 2023 BMW Group AG
- * Copyright (c) 2021, 2023 Contributors to the Eclipse Foundation
+ * Copyright (c) 2021,2022 BMW Group AG
+ * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -18,22 +18,28 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Base;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 
-public class AgreementAssignedDocument
+public class ProcessStep : IBaseEntity
 {
-    private AgreementAssignedDocument() {}
-
-    public AgreementAssignedDocument(Guid agreementId, Guid documentId)
+    public ProcessStep(Guid id, ProcessStepTypeId processStepTypeId, ProcessStepStatusId processStepStatusId)
     {
-        AgreementId = agreementId;
-        DocumentId = documentId;
+        Id = id;
+        ProcessStepTypeId = processStepTypeId;
+        ProcessStepStatusId = processStepStatusId;
     }
 
-    public Guid AgreementId { get; private set; }
-    public Guid DocumentId { get; private set; }
+    public Guid Id { get; private set; }
+
+    public ProcessStepTypeId ProcessStepTypeId { get; private set; }
+
+    public ProcessStepStatusId ProcessStepStatusId { get; set; }
 
     // Navigation properties
-    public virtual Agreement? Agreement { get; private set; }
-    public virtual Document? Document { get; private set; }
+    public virtual ProcessStepType? ProcessStepType { get; set; }
+    public virtual ProcessStepStatus? ProcessStepStatus { get; set; }
+    public virtual ApplicationAssignedProcessStep? ApplicationAssignedProcessStep { get; set; }
 }

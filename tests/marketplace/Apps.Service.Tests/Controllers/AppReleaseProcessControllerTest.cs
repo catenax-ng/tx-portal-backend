@@ -119,7 +119,7 @@ public class AppReleaseProcessControllerTest
     public async Task GetOfferAgreementData_ReturnsExpectedResult()
     {
         //Arrange
-        var data = _fixture.CreateMany<AgreementData>(5).ToAsyncEnumerable();
+        var data = _fixture.CreateMany<AgreementDocumentData>(5).ToAsyncEnumerable();
         A.CallTo(() => _logic.GetOfferAgreementDataAsync())
             .Returns(data);
 
@@ -258,7 +258,11 @@ public class AppReleaseProcessControllerTest
             {
                 "https://test.com/image.jpg"
             },
-            "19€");
+            "19€",
+            new[]
+            {
+                PrivacyPolicyId.COMPANY_DATA 
+            });
         A.CallTo(() => _logic.UpdateAppReleaseAsync(A<Guid>._, A<AppRequestModel>._, A<string>._))
             .ReturnsLazily(() => Task.CompletedTask);
 
@@ -324,7 +328,7 @@ public class AppReleaseProcessControllerTest
         }
     }
 
-     [Fact]
+    [Fact]
     public async Task ApproveAppRequest_ReturnsExpectedCount()
     {
         //Arrange
@@ -338,5 +342,22 @@ public class AppReleaseProcessControllerTest
         //Assert
         A.CallTo(() => _logic.ApproveAppRequestAsync(appId, IamUserId)).MustHaveHappenedOnceExactly();
         Assert.IsType<NoContentResult>(result);
+    }
+
+     [Fact]
+    public async Task DeclineAppRequest_ReturnsNoContent()
+    {
+        //Arrange
+        var appId = _fixture.Create<Guid>();
+        var data = new OfferDeclineRequest("Just a test");
+        A.CallTo(() => _logic.DeclineAppRequestAsync(A<Guid>._, A<string>._, A<OfferDeclineRequest>._))
+            .ReturnsLazily(() => Task.CompletedTask);
+
+        //Act
+        var result = await this._controller.DeclineAppRequest(appId, data).ConfigureAwait(false);
+
+        //Assert
+        A.CallTo(() => _logic.DeclineAppRequestAsync(appId, IamUserId, data)).MustHaveHappenedOnceExactly();
+        result.Should().BeOfType<NoContentResult>();
     }
 }

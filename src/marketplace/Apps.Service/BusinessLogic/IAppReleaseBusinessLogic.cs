@@ -64,7 +64,7 @@ public interface IAppReleaseBusinessLogic
     /// Return Agreements for App_Contract Category
     /// </summary>
     /// <returns></returns>
-    IAsyncEnumerable<AgreementData> GetOfferAgreementDataAsync();
+    IAsyncEnumerable<AgreementDocumentData> GetOfferAgreementDataAsync();
 
     /// <summary>
     /// Return Offer Agreement Consent
@@ -153,4 +153,18 @@ public interface IAppReleaseBusinessLogic
     /// <param name="iamUserId"></param>
     /// <returns></returns>
     Task ApproveAppRequestAsync(Guid appId, string iamUserId);
+
+    /// <summary>
+    /// Get All Privacy Policy
+    /// </summary>
+    /// <returns></returns>
+    Task<PrivacyPolicyData> GetPrivacyPolicyDataAsync();
+
+    /// <summary>
+    /// Declines the app request
+    /// </summary>
+    /// <param name="appId">Id of the app</param>
+    /// <param name="iamUserId">Id of the iamUser</param>
+    /// <param name="data">The decline request data</param>
+    Task DeclineAppRequestAsync(Guid appId, string iamUserId, OfferDeclineRequest data);
 }

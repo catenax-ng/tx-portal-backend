@@ -33,7 +33,7 @@ public class AppsSettings
     /// </summary>
     /// <value></value>
     [Required]
-    public IDictionary<string,IEnumerable<string>> CompanyAdminRoles { get; set; } = null!;
+    public IDictionary<string,IEnumerable<string>> CatenaAdminRoles { get; set; } = null!;
 
     /// <summary>
     /// Notification Type Id
@@ -129,6 +129,19 @@ public class AppsSettings
     /// <value></value>
     [Required]
     public IEnumerable<DocumentTypeId> AppImageDocumentTypeIds { get; set; } = null!;
+
+    /// <summary>
+    /// IT Admin Roles
+    /// </summary>
+    /// <value></value>
+    [Required]
+    public IDictionary<string,IEnumerable<string>> ITAdminRoles { get; set; } = null!;
+
+    /// <summary>
+    /// UserManagementAddress url required for subscription email 
+    /// </summary>
+    [Required(AllowEmptyStrings = false)]
+    public string UserManagementAddress { get; init; } = null!;
 }
 
 /// <summary>

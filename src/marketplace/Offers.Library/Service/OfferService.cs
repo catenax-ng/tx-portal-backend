@@ -18,9 +18,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Mailing.SendMail;
@@ -35,6 +32,8 @@ using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Service;
+using System.Security.Cryptography;
+using System.Text.Json;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Service;
 
@@ -156,7 +155,7 @@ public class OfferService : IOfferService
         return consentDetails;
     }
 
-    public IAsyncEnumerable<AgreementData> GetOfferTypeAgreementsAsync(OfferTypeId offerTypeId)=>
+    public IAsyncEnumerable<AgreementDocumentData> GetOfferTypeAgreementsAsync(OfferTypeId offerTypeId)=>
         _portalRepositories.GetInstance<IAgreementRepository>().GetAgreementDataForOfferType(offerTypeId);
 
     public async Task<OfferAgreementConsent> GetProviderOfferAgreementConsentById(Guid offerId, string iamUserId, OfferTypeId offerTypeId)
@@ -217,7 +216,7 @@ public class OfferService : IOfferService
         return result.OfferAgreementConsentUpdate;
     }
 
-    public async Task<OfferAutoSetupResponseData> AutoSetupServiceAsync(OfferAutoSetupData data, IDictionary<string,IEnumerable<string>> serviceAccountRoles, IDictionary<string,IEnumerable<string>> companyAdminRoles, string iamUserId, OfferTypeId offerTypeId, string basePortalAddress)
+    public async Task<OfferAutoSetupResponseData> AutoSetupServiceAsync(OfferAutoSetupData data, IDictionary<string,IEnumerable<string>> serviceAccountRoles, IDictionary<string,IEnumerable<string>> iTAdminRoles, string iamUserId, OfferTypeId offerTypeId, string basePortalAddress)
     {
         var offerSubscriptionsRepository = _portalRepositories.GetInstance<IOfferSubscriptionsRepository>();
         var offerDetails = await offerSubscriptionsRepository
@@ -279,7 +278,7 @@ public class OfferService : IOfferService
             subscription.LastEditorId = offerDetails.CompanyUserId;
         });
 
-        await CreateNotifications(companyAdminRoles, offerTypeId, offerDetails);
+        await CreateNotifications(iTAdminRoles, offerTypeId, offerDetails);
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
 
         var userName = string.Join(" ", new[] { offerDetails.RequesterFirstname, offerDetails.RequesterLastname }); 
@@ -299,7 +298,7 @@ public class OfferService : IOfferService
     }
 
     private async Task CreateNotifications(
-        IDictionary<string, IEnumerable<string>> companyAdminRoles,
+        IDictionary<string, IEnumerable<string>> iTAdminRoles,
         OfferTypeId offerTypeId,
         OfferSubscriptionTransferData offerDetails)
     {
@@ -313,7 +312,7 @@ public class OfferService : IOfferService
             offerDetails.OfferName
         });
         await _notificationService.CreateNotifications(
-            companyAdminRoles,
+            iTAdminRoles,
             offerDetails.CompanyUserId != Guid.Empty ? offerDetails.CompanyUserId : null,
             new (string?, NotificationTypeId)[]
             {
@@ -396,7 +395,8 @@ public class OfferService : IOfferService
             data.ContactEmail,
             data.ContactNumber,
             data.Documents.GroupBy(d => d.documentTypeId).ToDictionary(g => g.Key, g => g.Select(d => new DocumentData(d.documentId, d.documentName))),
-            data.SalesManagerId);
+            data.SalesManagerId,
+            data.PrivacyPolicies);
     }
     
     /// <inheritdoc />
@@ -475,7 +475,7 @@ public class OfferService : IOfferService
     }
     
     /// <inheritdoc/>
-    public async Task SubmitOfferAsync(Guid offerId, string iamUserId, OfferTypeId offerTypeId, IEnumerable<NotificationTypeId> notificationTypeIds, IDictionary<string,IEnumerable<string>> companyAdminRoles)
+    public async Task SubmitOfferAsync(Guid offerId, string iamUserId, OfferTypeId offerTypeId, IEnumerable<NotificationTypeId> notificationTypeIds, IDictionary<string,IEnumerable<string>> catenaAdminRoles)
     {
         var offerRepository = _portalRepositories.GetInstance<IOfferRepository>();
         var offerDetails = await offerRepository.GetOfferReleaseDataByIdAsync(offerId, offerTypeId).ConfigureAwait(false);
@@ -496,7 +496,7 @@ public class OfferService : IOfferService
             .GetCompanyUserIdForIamUserUntrackedAsync(iamUserId).ConfigureAwait(false);
         if (requesterId == Guid.Empty)
         {
-            throw new ConflictException($"keycloak user ${iamUserId} is not associated with any portal user");
+            throw new ConflictException($"keycloak user {iamUserId} is not associated with any portal user");
         }            
 
         var notificationContent = new
@@ -507,15 +507,15 @@ public class OfferService : IOfferService
         
         var serializeNotificationContent = JsonSerializer.Serialize(notificationContent);
         var content = notificationTypeIds.Select(typeId => new ValueTuple<string?, NotificationTypeId>(serializeNotificationContent, typeId));
-        await _notificationService.CreateNotifications(companyAdminRoles, requesterId, content, offerDetails.ProviderCompanyId!.Value).ConfigureAwait(false);
+        await _notificationService.CreateNotifications(catenaAdminRoles, requesterId, content, offerDetails.ProviderCompanyId!.Value).ConfigureAwait(false);
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
 
     private static void ValidateOfferDetails(OfferReleaseData offerDetails)
     {
         if (offerDetails.Name is not null && 
-            offerDetails.ProviderCompanyId is not null &&
-            offerDetails is { IsDescriptionLongNotSet: false, IsDescriptionShortNotSet: false }) return;
+            offerDetails.ProviderCompanyId is not null && 
+            offerDetails is { IsDescriptionLongNotSet: false, IsDescriptionShortNotSet: false, HasUserRoles: true }) return;
         
         var nullProperties = new List<string>();
         if (offerDetails.Name is null)
@@ -536,6 +536,11 @@ public class OfferService : IOfferService
         if (offerDetails.IsDescriptionShortNotSet)
         {
             nullProperties.Add($"{nameof(Offer)}.{nameof(offerDetails.IsDescriptionShortNotSet)}");
+        }
+
+        if (!offerDetails.HasUserRoles)
+        {
+            nullProperties.Add($"{nameof(Offer)}.{nameof(offerDetails.HasUserRoles)}");
         }
 
         throw new ConflictException($"Missing  : {string.Join(", ", nullProperties)}");
@@ -576,6 +581,7 @@ public class OfferService : IOfferService
         offerRepository.AttachAndModifyOffer(offerId, offer =>
         {
             offer.OfferStatusId = OfferStatusId.ACTIVE;
+            offer.DateReleased = DateTime.UtcNow;
         });
         object notificationContent = offerTypeId switch
         {
@@ -741,6 +747,9 @@ public class OfferService : IOfferService
 
         if (result == default)
             throw new NotFoundException($"{offertypeId} {Id} does not exist");
+
+        if(!result.IsStatusCreated)
+            throw new ConflictException($"offerStatus is in Incorrect State");
 
         var companyUserId = result.CompanyUserId;
         if (companyUserId == Guid.Empty)

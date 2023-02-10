@@ -127,8 +127,8 @@ public class AppReleaseProcessController : ControllerBase
     [HttpGet]
     [Route("agreementData")]
     [Authorize(Roles = "edit_apps")]
-    [ProducesResponseType(typeof(IAsyncEnumerable<AgreementData>), StatusCodes.Status200OK)]
-    public IAsyncEnumerable<AgreementData> GetOfferAgreementDataAsync() =>
+    [ProducesResponseType(typeof(IAsyncEnumerable<AgreementDocumentData>), StatusCodes.Status200OK)]
+    public IAsyncEnumerable<AgreementDocumentData> GetOfferAgreementDataAsync() =>
         _appReleaseBusinessLogic.GetOfferAgreementDataAsync();
     
     /// <summary>
@@ -326,6 +326,40 @@ public class AppReleaseProcessController : ControllerBase
     public async Task<NoContentResult> ApproveAppRequest([FromRoute] Guid appId)
     {
         await this.WithIamUserId(userId => _appReleaseBusinessLogic.ApproveAppRequestAsync(appId, userId)).ConfigureAwait(false);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Retrieve Privacy Policies
+    /// </summary>
+    /// <returns>Collection of all Privacy Policy.</returns>
+    /// <remarks>Example: GET: /api/apps/appreleaseprocess/privacyPolicies</remarks>
+    /// <response code="200">Return the privacy policies</response>
+    [HttpGet]
+    [Route("privacyPolicies")]
+    [Authorize(Roles = "add_apps")]
+    [ProducesResponseType(typeof(PrivacyPolicyData), StatusCodes.Status200OK)]
+    public Task<PrivacyPolicyData> GetPrivacyPolicyDataAsync() =>
+        _appReleaseBusinessLogic.GetPrivacyPolicyDataAsync();
+
+    /// <summary>
+    /// Declines the app request
+    /// </summary>
+    /// <param name="appId" example="D3B1ECA2-6148-4008-9E6C-C1C2AEA5C645">Id of the app that should be declined</param>
+    /// <param name="data">the data of the decline request</param>
+    /// <remarks>Example: PUT: /api/apps/appreleaseprocess/D3B1ECA2-6148-4008-9E6C-C1C2AEA5C645/decline</remarks>
+    /// <response code="204">NoContent.</response>
+    /// <response code="400">If sub claim is empty/invalid or user does not exist.</response>
+    /// <response code="404">If app does not exists.</response>
+    [HttpPut]
+    [Route("{appId:guid}/declineApp")]
+    [Authorize(Roles = "decline_app_release")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<NoContentResult> DeclineAppRequest([FromRoute] Guid appId, [FromBody] OfferDeclineRequest data)
+    {
+        await this.WithIamUserId(userId => _appReleaseBusinessLogic.DeclineAppRequestAsync(appId, userId, data)).ConfigureAwait(false);
         return NoContent();
     }
 }
