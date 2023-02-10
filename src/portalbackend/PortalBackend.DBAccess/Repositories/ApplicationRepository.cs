@@ -376,7 +376,7 @@ public class ApplicationRepository : IApplicationRepository
             .SingleOrDefaultAsync();
 
     /// <inheritdoc />
-    public Task<(bool Exists, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId, string? Comment)> ChecklistData, IEnumerable<ProcessStepTypeId> ProcessSteps)> GetApplicationChecklistData(Guid applicationId) =>
+    public Task<(bool Exists, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId, string? Comment)> ChecklistData, IEnumerable<ProcessStepTypeId> ProcessStepTypeIds)> GetApplicationChecklistData(Guid applicationId, IEnumerable<ProcessStepTypeId> processStepTypeIds) =>
         _dbContext.CompanyApplications
             .AsSplitQuery()
             .Where(x => x.Id == applicationId)
@@ -384,8 +384,9 @@ public class ApplicationRepository : IApplicationRepository
             {
                 x.ApplicationChecklistEntries,
                 ProcessSteps = x.ApplicationAssignedProcessSteps
-                    .Where(ps => ps.ProcessStep!.ProcessStepStatusId == ProcessStepStatusId.TODO)
-                    .Select(ps => ps.ProcessStep!.ProcessStepTypeId)
+                    .Where(ps =>
+                        ps.ProcessStep!.ProcessStepStatusId == ProcessStepStatusId.TODO &&
+                        processStepTypeIds.Contains(ps.ProcessStep.ProcessStepTypeId))
             })
             .Select(x => new ValueTuple<bool, IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId, string?)>, IEnumerable<ProcessStepTypeId>>(
                     true,
@@ -395,15 +396,16 @@ public class ApplicationRepository : IApplicationRepository
                             ace.ApplicationChecklistEntryTypeId,
                             ace.ApplicationChecklistEntryStatusId,
                             ace.Comment)),
-                    x.ProcessSteps))
+                    x.ProcessSteps
+                        .Select(ps => ps.ProcessStep!.ProcessStepTypeId)))
             .SingleOrDefaultAsync();
     
     /// <inheritdoc />
-    public Task<bool> IsClearinghouseOverwrite(Guid applicationId) =>
+    public Task<bool> IsClearinghouseOverride(Guid applicationId) =>
         _dbContext.CompanyApplications
             .AnyAsync(x => 
                 x.ApplicationStatusId == CompanyApplicationStatusId.SUBMITTED && 
                 x.Id == applicationId &&
-                x.ApplicationAssignedProcessSteps.Any(aaps => aaps.ProcessStep!.ProcessStepTypeId == ProcessStepTypeId.OVERWRITE_CLEARING_HOUSE && aaps.ProcessStep.ProcessStepStatusId == ProcessStepStatusId.DONE) &&
+                x.ApplicationAssignedProcessSteps.Any(aaps => aaps.ProcessStep!.ProcessStepTypeId == ProcessStepTypeId.OVERRIDE_CLEARING_HOUSE && aaps.ProcessStep.ProcessStepStatusId == ProcessStepStatusId.DONE) &&
                 x.ApplicationAssignedProcessSteps.Any(aaps => aaps.ProcessStep!.ProcessStepTypeId == ProcessStepTypeId.END_CLEARING_HOUSE && aaps.ProcessStep.ProcessStepStatusId == ProcessStepStatusId.FAILED));
 }

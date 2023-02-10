@@ -3151,14 +3151,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<DateTimeOffset>("DateCreated")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_created");
-
-                    b.Property<DateTimeOffset?>("DateLastChanged")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_last_changed");
-
                     b.Property<int>("ProcessStepStatusId")
                         .HasColumnType("integer")
                         .HasColumnName("process_step_status_id");
@@ -3301,21 +3293,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         {
                             Id = 12,
                             Label = "ACTIVATE_APPLICATION"
-                        },
-                        new
-                        {
-                            Id = 13,
-                            Label = "RETRIGGER_BUSINESS_PARTNER_NUMBER_PUSH"
-                        },
-                        new
-                        {
-                            Id = 14,
-                            Label = "RETRIGGER_BUSINESS_PARTNER_NUMBER_PULL"
-                        },
-                        new
-                        {
-                            Id = 15,
-                            Label = "OVERWRITE_BUSINESS_PARTNER_NUMBER"
                         });
                 });
 

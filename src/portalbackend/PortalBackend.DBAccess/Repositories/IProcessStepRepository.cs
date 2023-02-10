@@ -30,12 +30,4 @@ public interface IProcessStepRepository
 {
     ProcessStep CreateProcessStep(ProcessStepTypeId processStepTypeId, ProcessStepStatusId processStepStatusId);
     void AttachAndModifyProcessStep(Guid processStepId, Action<ProcessStep>? initialize, Action<ProcessStep> modify);
-    
-    /// <summary>
-    /// Checks whether the process step is in state TODO for the given application 
-    /// </summary>
-    /// <param name="applicationId">Id of the application</param>
-    /// <param name="processStep">the process step to check</param>
-    /// <returns><c>true</c> if the processStep is in state todo, otherwise <c>false</c></returns>
-    Task<bool> GetProcessStepByApplicationIdInStatusTodo(Guid applicationId, ProcessStepTypeId processStep);
 }

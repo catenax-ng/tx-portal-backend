@@ -19,37 +19,36 @@
  ********************************************************************************/
 
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using System.Collections.Immutable;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 
 public static class ApplicationChecklistEntryTypeIdExtensions
 {
-    public static ProcessStepTypeId[]? GetManualTriggerProcessStepIds(this ApplicationChecklistEntryTypeId entryTypeId) =>
-        entryTypeId switch
-        {
-            ApplicationChecklistEntryTypeId.CLEARING_HOUSE => new []{ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE},
-            ApplicationChecklistEntryTypeId.IDENTITY_WALLET => new []{ProcessStepTypeId.RETRIGGER_IDENTITY_WALLET},
-            ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP => new []{ProcessStepTypeId.RETRIGGER_SELF_DESCRIPTION_LP, ProcessStepTypeId.OVERWRITE_CLEARING_HOUSE},
-            ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER => new []{ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PUSH, ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PULL},
-            _ => null,
-        };
-    
-    public static ProcessStepTypeId? GetProcessStepForChecklistEntry(this ProcessStepTypeId processStepTypeId) =>
-        processStepTypeId switch
-        {
-            ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE => ProcessStepTypeId.START_CLEARING_HOUSE,
-            ProcessStepTypeId.RETRIGGER_IDENTITY_WALLET => ProcessStepTypeId.CREATE_IDENTITY_WALLET,
-            ProcessStepTypeId.RETRIGGER_SELF_DESCRIPTION_LP => ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP,
-            ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PUSH => ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH,
-            ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PULL => ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL,
-            ProcessStepTypeId.OVERWRITE_CLEARING_HOUSE => ProcessStepTypeId.START_CLEARING_HOUSE,
-            _ => null,
-        };
+    private static readonly ImmutableDictionary<ApplicationChecklistEntryTypeId,IEnumerable<ProcessStepTypeId>> _manualProcessStepIds = new (ApplicationChecklistEntryTypeId EntryTypeId, IEnumerable<ProcessStepTypeId> StepTypeId)[] {
+            (ApplicationChecklistEntryTypeId.CLEARING_HOUSE, new [] { ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE }),
+            (ApplicationChecklistEntryTypeId.IDENTITY_WALLET, new [] { ProcessStepTypeId.RETRIGGER_IDENTITY_WALLET }),
+            (ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, new [] { ProcessStepTypeId.RETRIGGER_SELF_DESCRIPTION_LP, ProcessStepTypeId.OVERRIDE_CLEARING_HOUSE }),
+            (ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, new [] { ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PUSH, ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PULL }),
+        }.ToImmutableDictionary(x => x.EntryTypeId, x => x.StepTypeId);
 
-    public static ApplicationChecklistEntryStatusId GetChecklistStatus(this ProcessStepTypeId processStepTypeId) =>
+    public static IEnumerable<ProcessStepTypeId> GetManualTriggerProcessStepIds(this ApplicationChecklistEntryTypeId entryTypeId) =>
+        _manualProcessStepIds.TryGetValue(entryTypeId, out var stepTypeId)
+            ? stepTypeId
+            : Enumerable.Empty<ProcessStepTypeId>();
+
+    public static IEnumerable<ProcessStepTypeId> GetManualTriggerProcessStepIds(this IEnumerable<ApplicationChecklistEntryTypeId> entryTypeIds) =>
+        _manualProcessStepIds.IntersectBy(entryTypeIds, x => x.Key).SelectMany(x => x.Value).Distinct();
+
+    public static (ProcessStepTypeId ProcessStepTypeId, ApplicationChecklistEntryStatusId ChecklistEntryStatusId) GetNextProcessStepDataForManualTriggerProcessStepId(this ProcessStepTypeId processStepTypeId) =>
         processStepTypeId switch
         {
-            ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL => ApplicationChecklistEntryStatusId.IN_PROGRESS,
-            _ => ApplicationChecklistEntryStatusId.TO_DO,
+            ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE => (ProcessStepTypeId.START_CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO),
+            ProcessStepTypeId.RETRIGGER_IDENTITY_WALLET => (ProcessStepTypeId.CREATE_IDENTITY_WALLET, ApplicationChecklistEntryStatusId.TO_DO),
+            ProcessStepTypeId.RETRIGGER_SELF_DESCRIPTION_LP => (ProcessStepTypeId.START_SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO),
+            ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PUSH => (ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH, ApplicationChecklistEntryStatusId.TO_DO),
+            ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PULL => (ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL, ApplicationChecklistEntryStatusId.IN_PROGRESS),
+            ProcessStepTypeId.OVERRIDE_CLEARING_HOUSE => (ProcessStepTypeId.START_CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO),
+            _ => default,
         };
 }

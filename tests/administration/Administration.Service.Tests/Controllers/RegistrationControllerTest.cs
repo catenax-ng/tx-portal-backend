@@ -155,10 +155,8 @@ public class RegistrationControllerTest
         result.Where(x => x.Status == ApplicationChecklistEntryStatusId.FAILED).Should().ContainSingle();
     }
 
-    [Theory]
-    [InlineData(ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PULL)]
-    [InlineData(ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PUSH)]
-    public async Task TriggerClearinghouse_ReturnsExpectedResult(ProcessStepTypeId processStepTypeId)
+    [Fact]
+    public async Task ReTriggerClearinghouse_ReturnsExpectedResult()
     {
         // Arrange
         var applicationId = _fixture.Create<Guid>();
@@ -166,10 +164,26 @@ public class RegistrationControllerTest
             .ReturnsLazily(() => Task.CompletedTask);
         
         // Act
-        var result = await this._controller.TriggerClearinghouseChecklist(applicationId, processStepTypeId);
+        var result = await this._controller.RetriggerClearinghouseChecklist(applicationId).ConfigureAwait(false);
         
         // Assert
-        A.CallTo(() => _logic.TriggerChecklistAsync(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, processStepTypeId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _logic.TriggerChecklistAsync(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE)).MustHaveHappenedOnceExactly();
+        result.Should().BeOfType<NoContentResult>();
+    }
+
+    [Fact]
+    public async Task OverrideClearinghouse_ReturnsExpectedResult()
+    {
+        // Arrange
+        var applicationId = _fixture.Create<Guid>();
+        A.CallTo(() => _logic.TriggerChecklistAsync(applicationId, A<ApplicationChecklistEntryTypeId>._, A<ProcessStepTypeId>._))
+            .ReturnsLazily(() => Task.CompletedTask);
+        
+        // Act
+        var result = await this._controller.OverrideClearinghouseChecklist(applicationId).ConfigureAwait(false);
+        
+        // Assert
+        A.CallTo(() => _logic.TriggerChecklistAsync(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ProcessStepTypeId.OVERRIDE_CLEARING_HOUSE)).MustHaveHappenedOnceExactly();
         result.Should().BeOfType<NoContentResult>();
     }
     

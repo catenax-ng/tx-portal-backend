@@ -130,7 +130,7 @@ public static class BaseSeed
             new (new Guid("ee5a6a76-fe21-4242-afb2-5b0ae070a7e7"), ProcessStepTypeId.CREATE_IDENTITY_WALLET, ProcessStepStatusId.DONE, DateTimeOffset.UtcNow),
             new (new Guid("bb772c1c-8b2e-4ea5-95db-6a61e653a37d"), ProcessStepTypeId.START_CLEARING_HOUSE, ProcessStepStatusId.DONE, DateTimeOffset.UtcNow),
             new (new Guid("b5e2b207-2fa3-4936-b3ca-406b87ca4234"), ProcessStepTypeId.END_CLEARING_HOUSE, ProcessStepStatusId.DONE, DateTimeOffset.UtcNow),
-            new (new Guid("4e17a856-5851-43ef-b8b6-53f6c19e8e61"), ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP, ProcessStepStatusId.DONE, DateTimeOffset.UtcNow),
+            new (new Guid("4e17a856-5851-43ef-b8b6-53f6c19e8e61"), ProcessStepTypeId.START_SELF_DESCRIPTION_LP, ProcessStepStatusId.DONE, DateTimeOffset.UtcNow),
             new (new Guid("8a113543-70b0-439a-9324-46a7903bb682"), ProcessStepTypeId.ACTIVATE_APPLICATION, ProcessStepStatusId.DONE, DateTimeOffset.UtcNow),
             
             new (new Guid("24b9745b-7b2f-429b-83ca-937ae3cff7ae"), ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_MANUAL, ProcessStepStatusId.DONE, DateTimeOffset.UtcNow),

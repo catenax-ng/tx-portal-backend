@@ -47,7 +47,7 @@ public class ClearinghouseBusinessLogic : IClearinghouseBusinessLogic
     public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)> HandleStartClearingHouse(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
     {
         var overwrite = await _portalRepositories.GetInstance<IApplicationRepository>()
-            .IsClearinghouseOverwrite(context.ApplicationId)
+            .IsClearinghouseOverride(context.ApplicationId)
             .ConfigureAwait(false);
         var walletData = await _custodianBusinessLogic.GetWalletByBpnAsync(context.ApplicationId, cancellationToken);
         if (walletData == null || string.IsNullOrEmpty(walletData.Did))
@@ -55,13 +55,13 @@ public class ClearinghouseBusinessLogic : IClearinghouseBusinessLogic
             throw new ConflictException($"Decentralized Identifier for application {context.ApplicationId} is not set");
         }
 
-        await TriggerCompanyDataPost(context.ApplicationId, overwrite, walletData.Did, cancellationToken).ConfigureAwait(false);
+        await TriggerCompanyDataPost(context.ApplicationId, walletData.Did, cancellationToken).ConfigureAwait(false);
 
-        _checklistService.ScheduleProcessSteps(context, new [] { overwrite ? ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP : ProcessStepTypeId.END_CLEARING_HOUSE });
+        _checklistService.ScheduleProcessSteps(context, new [] { overwrite ? ProcessStepTypeId.START_SELF_DESCRIPTION_LP : ProcessStepTypeId.END_CLEARING_HOUSE });
         return (entry => entry.ApplicationChecklistEntryStatusId = overwrite ? ApplicationChecklistEntryStatusId.DONE : ApplicationChecklistEntryStatusId.IN_PROGRESS, null, true);
     }
 
-    private async Task TriggerCompanyDataPost(Guid applicationId, bool overwrite, string decentralizedIdentifier, CancellationToken cancellationToken)
+    private async Task TriggerCompanyDataPost(Guid applicationId, string decentralizedIdentifier, CancellationToken cancellationToken)
     {
         var data = await _portalRepositories.GetInstance<IApplicationRepository>()
             .GetClearinghouseDataForApplicationId(applicationId).ConfigureAwait(false);
@@ -95,7 +95,7 @@ public class ClearinghouseBusinessLogic : IClearinghouseBusinessLogic
                 ApplicationChecklistEntryTypeId.CLEARING_HOUSE,
                 new [] { ApplicationChecklistEntryStatusId.IN_PROGRESS },
                 ProcessStepTypeId.END_CLEARING_HOUSE,
-                processStepTypeIds: new [] { ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP })
+                processStepTypeIds: new [] { ProcessStepTypeId.START_SELF_DESCRIPTION_LP })
             .ConfigureAwait(false);
 
         var declined = data.Status == ClearinghouseResponseStatus.DECLINE;
@@ -110,7 +110,7 @@ public class ClearinghouseBusinessLogic : IClearinghouseBusinessLogic
                 item.Comment = data.Message;
             },
             declined ?
-                new [] { ProcessStepTypeId.OVERWRITE_CLEARING_HOUSE } :
-                new [] { ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP });
+                new [] { ProcessStepTypeId.OVERRIDE_CLEARING_HOUSE } :
+                new [] { ProcessStepTypeId.START_SELF_DESCRIPTION_LP });
     }
 }

@@ -456,8 +456,8 @@ public class RegistrationBusinessLogicTest
     {
         // Arrange
         var applicationId = _fixture.Create<Guid>();
-        A.CallTo(() => _applicationRepository.GetApplicationChecklistData(applicationId))
-            .ReturnsLazily(() => new ValueTuple<bool, IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId, string?)>, IEnumerable<ProcessStepTypeId>>());
+        A.CallTo(() => _applicationRepository.GetApplicationChecklistData(applicationId, A<IEnumerable<ProcessStepTypeId>>._))
+            .Returns(new ValueTuple<bool, IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId, string?)>, IEnumerable<ProcessStepTypeId>>());
         
         //Act
         async Task Act() => await _logic.GetChecklistForApplicationAsync(applicationId).ConfigureAwait(false);
@@ -484,8 +484,8 @@ public class RegistrationBusinessLogicTest
         {
             ProcessStepTypeId.RETRIGGER_IDENTITY_WALLET
         };
-        A.CallTo(() => _applicationRepository.GetApplicationChecklistData(applicationId))
-            .ReturnsLazily(() => new ValueTuple<bool, IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId, string?)>, IEnumerable<ProcessStepTypeId>>(true, list, processSteps));
+        A.CallTo(() => _applicationRepository.GetApplicationChecklistData(applicationId, A<IEnumerable<ProcessStepTypeId>>._))
+            .Returns(new ValueTuple<bool, IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId, string?)>, IEnumerable<ProcessStepTypeId>>(true, list, processSteps));
         
         //Act
         var result = await _logic.GetChecklistForApplicationAsync(applicationId).ConfigureAwait(false);
@@ -506,8 +506,6 @@ public class RegistrationBusinessLogicTest
         // Arrange
         var applicationId = _fixture.Create<Guid>();
         
-        A.CallTo(() => _processStepRepository.GetProcessStepByApplicationIdInStatusTodo(applicationId, A<ProcessStepTypeId>._))
-            .ReturnsLazily(() => true);
         A.CallTo(() => _checklistService.VerifyChecklistEntryAndProcessSteps(applicationId,
             ApplicationChecklistEntryTypeId.CLEARING_HOUSE,
             A<IEnumerable<ApplicationChecklistEntryStatusId>>._,
@@ -527,7 +525,7 @@ public class RegistrationBusinessLogicTest
     [Theory]
     [InlineData(ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE, ProcessStepTypeId.START_CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO)]
     [InlineData(ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ProcessStepTypeId.RETRIGGER_IDENTITY_WALLET, ProcessStepTypeId.CREATE_IDENTITY_WALLET, ApplicationChecklistEntryStatusId.TO_DO)]
-    [InlineData(ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ProcessStepTypeId.RETRIGGER_SELF_DESCRIPTION_LP, ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO)]
+    [InlineData(ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ProcessStepTypeId.RETRIGGER_SELF_DESCRIPTION_LP, ProcessStepTypeId.START_SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO)]
     [InlineData(ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PUSH, ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH, ApplicationChecklistEntryStatusId.TO_DO)]
     [InlineData(ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PULL, ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL, ApplicationChecklistEntryStatusId.IN_PROGRESS)]
     public async Task TriggerChecklistAsync_WithValidData_ReturnsExpected(ApplicationChecklistEntryTypeId typeId, ProcessStepTypeId stepId, ProcessStepTypeId nextStepId, ApplicationChecklistEntryStatusId statusId)
@@ -549,7 +547,7 @@ public class RegistrationBusinessLogicTest
                 stepId,
                 null,
                 A<IEnumerable<ProcessStepTypeId>>._))
-            .ReturnsLazily(() => context);
+            .Returns(context);
         A.CallTo(() => _checklistService.FinalizeChecklistEntryAndProcessSteps(
                 A<IChecklistService.ManualChecklistProcessStepData>._, A<Action<ApplicationChecklistEntry>>._,
                 A<IEnumerable<ProcessStepTypeId>>._))
@@ -557,8 +555,6 @@ public class RegistrationBusinessLogicTest
             {
                 modify.Invoke(checklistEntry);
             });
-        A.CallTo(() => _processStepRepository.GetProcessStepByApplicationIdInStatusTodo(applicationId, stepId))
-            .ReturnsLazily(() => true);
 
         //Act
         await _logic.TriggerChecklistAsync(applicationId, typeId, stepId).ConfigureAwait(false);
@@ -607,46 +603,14 @@ public class RegistrationBusinessLogicTest
         async Task Act() => await _logic.TriggerChecklistAsync(applicationId, typeId, stepId).ConfigureAwait(false);
         
         // Assert
-        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
-        ex.Message.Should().Be("The process can not be retriggered");
+        var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Act);
+        ex.Message.Should().Be($"The processStep {stepId} is not retriggerable");
         A.CallTo(() => _checklistService.FinalizeChecklistEntryAndProcessSteps(A<IChecklistService.ManualChecklistProcessStepData>._, A<Action<ApplicationChecklistEntry>>._, A<IEnumerable<ProcessStepTypeId>>._)).MustNotHaveHappened();
         A.CallTo(() => _portalRepositories.SaveAsync()).MustNotHaveHappened();
     }
 
-    [Theory]
-    [InlineData(ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE)]
-    [InlineData(ApplicationChecklistEntryTypeId.IDENTITY_WALLET, ProcessStepTypeId.RETRIGGER_IDENTITY_WALLET)]
-    [InlineData(ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ProcessStepTypeId.RETRIGGER_SELF_DESCRIPTION_LP)]
-    [InlineData(ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PUSH)]
-    [InlineData(ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PULL)]
-    public async Task TriggerChecklistAsync_WithItemInStateDone_ThrowsConflictException(ApplicationChecklistEntryTypeId typeId, ProcessStepTypeId stepId)
-    {
-        // Arrange
-        var checklistEntry = new ApplicationChecklistEntry(Guid.NewGuid(), typeId, ApplicationChecklistEntryStatusId.FAILED, DateTimeOffset.UtcNow);
-        var applicationId = _fixture.Create<Guid>();
-        var context = new IChecklistService.ManualChecklistProcessStepData(
-            applicationId,
-            Guid.NewGuid(),
-            typeId,
-            new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>()
-                .ToImmutableDictionary(),
-            new List<ProcessStep>());
-       A.CallTo(() => _processStepRepository.GetProcessStepByApplicationIdInStatusTodo(applicationId, stepId))
-            .ReturnsLazily(() => false);
-
-        //Act
-        async Task Act() => await _logic.TriggerChecklistAsync(applicationId, typeId, stepId).ConfigureAwait(false);
-        
-        // Assert
-        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
-        ex.Message.Should().Be($"{stepId} is not in state TODO");
-        A.CallTo(() => _checklistService.FinalizeChecklistEntryAndProcessSteps(context, A<Action<ApplicationChecklistEntry>>._, A<IEnumerable<ProcessStepTypeId>>._)).MustNotHaveHappened();
-        checklistEntry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.FAILED);
-        A.CallTo(() => _portalRepositories.SaveAsync()).MustNotHaveHappened();
-    }
-
     #endregion
-    
+
     #region Setup
 
     private void SetupForUpdateCompanyBpn(ApplicationChecklistEntry? applicationChecklistEntry = null)

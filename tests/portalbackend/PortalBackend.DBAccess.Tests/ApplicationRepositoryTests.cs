@@ -356,7 +356,7 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
     }
 
     #endregion
-    
+
     #region GetApplicationChecklistData
 
     [Fact]
@@ -364,13 +364,26 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
-        
+
         // Act
-        var data = await sut.GetApplicationChecklistData(SubmittedApplicationWithBpn).ConfigureAwait(false);
-        
+        var data = await sut.GetApplicationChecklistData(SubmittedApplicationWithBpn, Enum.GetValues<ProcessStepTypeId>()).ConfigureAwait(false);
+
         // Assert
         data.Exists.Should().BeTrue();
         data.ChecklistData.Should().HaveCount(5);
+    }
+
+    [Fact]
+    public async Task GetApplicationChecklistData_WithNoProcessStepTypeIds_ReturnsDefault()
+    {
+        // Arrange
+        var sut = await CreateSut().ConfigureAwait(false);
+
+        // Act
+        var data = await sut.GetApplicationChecklistData(SubmittedApplicationWithBpn, Enumerable.Empty<ProcessStepTypeId>()).ConfigureAwait(false);
+
+        // Assert
+        data.Should().Be(default);
     }
 
     [Fact]
@@ -378,10 +391,10 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
-        
+
         // Act
-        var data = await sut.GetApplicationChecklistData(Guid.NewGuid()).ConfigureAwait(false);
-        
+        var data = await sut.GetApplicationChecklistData(Guid.NewGuid(), Enum.GetValues<ProcessStepTypeId>()).ConfigureAwait(false);
+
         // Assert
         data.Should().Be(default);
     }
@@ -389,8 +402,7 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
     #endregion
 
     #region GetCompanyAndApplicationDetailsForCreateWalletAsync
-    
-    
+
     [Fact]
     public async Task GetCompanyAndApplicationDetailsForCreateWalletAsync_WithExistingApplication_ReturnsExpected()
     {

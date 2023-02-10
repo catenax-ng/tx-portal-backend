@@ -24,7 +24,7 @@ public class ProcessStepRepositoryTests : IAssemblyFixture<TestDbFixture>
     }
 
     #region CreateProcessStep
-    
+
     [Fact]
     public async Task CreateProcessStep_CreatesSuccessfully()
     {
@@ -44,11 +44,11 @@ public class ProcessStepRepositoryTests : IAssemblyFixture<TestDbFixture>
         changedEntity.State.Should().Be(EntityState.Added);
         changedEntity.Entity.Should().BeOfType<ProcessStep>().Which.ProcessStepStatusId.Should().Be(ProcessStepStatusId.TODO);
     }
-    
+
     #endregion
 
     #region AttachAndModifyProcessStep
-    
+
     [Fact]
     public async Task AttachAndModifyProcessStep_WithExistingProcessStep_UpdatesStatus()
     {
@@ -77,42 +77,6 @@ public class ProcessStepRepositoryTests : IAssemblyFixture<TestDbFixture>
         changedEntity.State.Should().Be(EntityState.Modified);
         changedEntity.Entity.Should().BeOfType<ProcessStep>().Which.ProcessStepStatusId.Should().Be(ProcessStepStatusId.DONE);
     }
-    
-    #endregion
-
-    #region GetProcessStepByApplicationIdInStatusTodo
-    
-    [Fact]
-    public async Task GetProcessStepByApplicationIdInStatusTodo_WithStepInTodo_ReturnsExpected()
-    {
-        // Arrange
-        var sut = await CreateSut().ConfigureAwait(false);
-
-        // Act
-        var result = await sut
-            .GetProcessStepByApplicationIdInStatusTodo(
-                new Guid("4f0146c6-32aa-4bb1-b844-df7e8babdcb6"), ProcessStepTypeId.VERIFY_REGISTRATION)
-            .ConfigureAwait(false);
-
-        // Assert
-        result.Should().BeTrue();
-    }
-    
-    [Fact]
-    public async Task GetProcessStepByApplicationIdInStatusTodo_WithStepInDone_ReturnsEmpty()
-    {
-        // Arrange
-        var sut = await CreateSut().ConfigureAwait(false);
-
-        // Act
-        var result = await sut
-            .GetProcessStepByApplicationIdInStatusTodo(
-                new Guid("4f0146c6-32aa-4bb1-b844-df7e8babdcb3"), ProcessStepTypeId.VERIFY_REGISTRATION)
-            .ConfigureAwait(false);
-
-        // Assert
-        result.Should().BeFalse();
-    }
 
     #endregion
 
@@ -122,7 +86,7 @@ public class ProcessStepRepositoryTests : IAssemblyFixture<TestDbFixture>
         var sut = new ProcessStepRepository(context);
         return (sut, context);
     }
-    
+
     private async Task<ProcessStepRepository> CreateSut()
     {
         var context = await _dbTestDbFixture.GetPortalDbContext().ConfigureAwait(false);

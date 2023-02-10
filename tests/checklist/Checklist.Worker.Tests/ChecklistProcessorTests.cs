@@ -250,7 +250,7 @@ public class ChecklistProcessorTests
         A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL, ProcessStepStatusId.TODO)).MustNotHaveHappened();
         A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_IDENTITY_WALLET, ProcessStepStatusId.TODO)).MustNotHaveHappened();
         A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.START_CLEARING_HOUSE, ProcessStepStatusId.TODO)).MustNotHaveHappened();
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_SELF_DESCRIPTION_LP, ProcessStepStatusId.TODO)).MustNotHaveHappened();
+        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.START_SELF_DESCRIPTION_LP, ProcessStepStatusId.TODO)).MustNotHaveHappened();
         A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.ACTIVATE_APPLICATION, ProcessStepStatusId.TODO)).MustNotHaveHappened();
 
         A.CallTo(()=> _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._)).MustHaveHappenedOnceExactly();

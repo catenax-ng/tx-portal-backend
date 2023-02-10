@@ -49,13 +49,4 @@ public class ProcessStepRepository : IProcessStepRepository
         step.DateLastChanged = DateTimeOffset.UtcNow;
         modify(step);
     }
-
-    /// <inheritdoc />
-    public Task<bool> GetProcessStepByApplicationIdInStatusTodo(Guid applicationId, ProcessStepTypeId processStep) =>
-        _context.ProcessSteps
-            .Where(x => 
-                x.ApplicationAssignedProcessStep!.CompanyApplication!.ApplicationStatusId == CompanyApplicationStatusId.SUBMITTED &&
-                x.ApplicationAssignedProcessStep!.CompanyApplicationId == applicationId &&
-                x.ProcessStepTypeId == processStep)
-            .AnyAsync(x => x.ProcessStepStatusId == ProcessStepStatusId.TODO);
 }
