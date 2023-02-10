@@ -90,11 +90,4 @@ public interface IApplicationRepository
     /// <param name="applicationId">Id of the application</param>
     /// <returns>Returns the checklist data</returns>
     Task<(bool Exists, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId, string? Comment)> ChecklistData, IEnumerable<ProcessStepTypeId> ProcessStepTypeIds)> GetApplicationChecklistData(Guid applicationId, IEnumerable<ProcessStepTypeId> processStepTypeIds);
-    
-    /// <summary>
-    /// Checks whether the clearinghouse process should run in overwrite mode
-    /// </summary>
-    /// <param name="applicationId">Id of the application to check for</param>
-    /// <returns><c>true</c> if clearinghouse is in overwrite mode, otherwise <c>false</c></returns>
-    Task<bool> IsClearinghouseOverride(Guid applicationId);
 }

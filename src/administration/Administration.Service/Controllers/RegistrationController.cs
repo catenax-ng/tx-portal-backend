@@ -241,7 +241,7 @@ public class RegistrationController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<NoContentResult> OverrideClearinghouseChecklist([FromRoute] Guid applicationId)
     {
-        await _logic.TriggerChecklistAsync(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ProcessStepTypeId.OVERRIDE_CLEARING_HOUSE).ConfigureAwait(false);
+        await _logic.TriggerChecklistAsync(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ProcessStepTypeId.TRIGGER_OVERRIDE_CLEARING_HOUSE).ConfigureAwait(false);
         return NoContent();
     }
 

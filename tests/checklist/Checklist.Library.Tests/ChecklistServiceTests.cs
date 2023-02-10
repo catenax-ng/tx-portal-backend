@@ -427,7 +427,8 @@ public class ChecklistServiceTests
         var context = new IChecklistService.WorkerChecklistProcessStepData(
             Guid.NewGuid(),
             _fixture.Create<Dictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId>>().ToImmutableDictionary(),
-            processStepTypeIds
+            processStepTypeIds,
+            default
         );
 
         var newProcessSteps = new List<ProcessStep>();
@@ -483,7 +484,8 @@ public class ChecklistServiceTests
         var context = new IChecklistService.WorkerChecklistProcessStepData(
             Guid.NewGuid(),
             _fixture.Create<Dictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId>>().ToImmutableDictionary(),
-            Enum.GetValues<ProcessStepTypeId>()
+            Enum.GetValues<ProcessStepTypeId>(),
+            default
         );
 
         // Act

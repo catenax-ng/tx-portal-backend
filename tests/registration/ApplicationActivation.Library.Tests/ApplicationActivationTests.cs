@@ -124,7 +124,8 @@ public class ApplicationActivationTests
             {
                 {ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, ApplicationChecklistEntryStatusId.TO_DO}
             }.ToImmutableDictionary(),
-            new List<ProcessStepTypeId>());
+            new List<ProcessStepTypeId>(), 
+            default);
 
         //Act
         await _sut.HandleApplicationActivation(context, CancellationToken.None).ConfigureAwait(false);
@@ -163,7 +164,7 @@ public class ApplicationActivationTests
                 {ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO},
             }
             .ToImmutableDictionary();
-        var context = new IChecklistService.WorkerChecklistProcessStepData(Id, checklist, Enumerable.Empty<ProcessStepTypeId>());
+        var context = new IChecklistService.WorkerChecklistProcessStepData(Id, checklist, Enumerable.Empty<ProcessStepTypeId>(), default);
         SetupFakes(clientRoleNames, userRoleData, companyUserAssignedRole, companyUserAssignedBusinessPartner);
         A.CallTo(() => _dateTimeProvider.Now).Returns(new DateTime(2022, 01, 01, 0, 0, 0));
         _settings.StartTime = TimeSpan.FromHours(22);
@@ -222,7 +223,8 @@ public class ApplicationActivationTests
                 {ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.DONE},
                 {ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, ApplicationChecklistEntryStatusId.TO_DO}
             }.ToImmutableDictionary(),
-            new List<ProcessStepTypeId>());
+            new List<ProcessStepTypeId>(), 
+            default);
 
         //Act
         await _sut.HandleApplicationActivation(context, CancellationToken.None).ConfigureAwait(false);
@@ -289,7 +291,8 @@ public class ApplicationActivationTests
                 {ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.DONE},
                 {ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, ApplicationChecklistEntryStatusId.TO_DO}
             }.ToImmutableDictionary(),
-            new List<ProcessStepTypeId>());
+            new List<ProcessStepTypeId>(), 
+            default);
 
         //Act
         await _sut.HandleApplicationActivation(context, CancellationToken.None).ConfigureAwait(false);
@@ -328,7 +331,7 @@ public class ApplicationActivationTests
                 {ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.DONE},
             }
             .ToImmutableDictionary();
-        var context = new IChecklistService.WorkerChecklistProcessStepData(Guid.Empty, checklist, Enumerable.Empty<ProcessStepTypeId>());
+        var context = new IChecklistService.WorkerChecklistProcessStepData(Guid.Empty, checklist, Enumerable.Empty<ProcessStepTypeId>(), default);
 
         //Act
         async Task Action() => await _sut.HandleApplicationActivation(context, CancellationToken.None).ConfigureAwait(false);
@@ -353,7 +356,8 @@ public class ApplicationActivationTests
                 {ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.DONE},
                 {ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, ApplicationChecklistEntryStatusId.TO_DO}
             }.ToImmutableDictionary(),
-            new List<ProcessStepTypeId>());
+            new List<ProcessStepTypeId>(),
+            default);
 
         A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsForApprovalAsync(applicationId))
             .ReturnsLazily(() => new ValueTuple<Guid, string?>());
@@ -380,7 +384,8 @@ public class ApplicationActivationTests
                 {ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.DONE},
                 {ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, ApplicationChecklistEntryStatusId.TO_DO}
             }.ToImmutableDictionary(),
-            new List<ProcessStepTypeId>());
+            new List<ProcessStepTypeId>(), 
+            default);
 
         async Task Action() => await _sut.HandleApplicationActivation(context, CancellationToken.None).ConfigureAwait(false);
 

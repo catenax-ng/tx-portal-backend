@@ -28,7 +28,7 @@ public static class ApplicationChecklistEntryTypeIdExtensions
     private static readonly ImmutableDictionary<ApplicationChecklistEntryTypeId,IEnumerable<ProcessStepTypeId>> _manualProcessStepIds = new (ApplicationChecklistEntryTypeId EntryTypeId, IEnumerable<ProcessStepTypeId> StepTypeId)[] {
             (ApplicationChecklistEntryTypeId.CLEARING_HOUSE, new [] { ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE }),
             (ApplicationChecklistEntryTypeId.IDENTITY_WALLET, new [] { ProcessStepTypeId.RETRIGGER_IDENTITY_WALLET }),
-            (ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, new [] { ProcessStepTypeId.RETRIGGER_SELF_DESCRIPTION_LP, ProcessStepTypeId.OVERRIDE_CLEARING_HOUSE }),
+            (ApplicationChecklistEntryTypeId.SELF_DESCRIPTION_LP, new [] { ProcessStepTypeId.RETRIGGER_SELF_DESCRIPTION_LP, ProcessStepTypeId.TRIGGER_OVERRIDE_CLEARING_HOUSE }),
             (ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, new [] { ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PUSH, ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PULL }),
         }.ToImmutableDictionary(x => x.EntryTypeId, x => x.StepTypeId);
 
@@ -48,7 +48,7 @@ public static class ApplicationChecklistEntryTypeIdExtensions
             ProcessStepTypeId.RETRIGGER_SELF_DESCRIPTION_LP => (ProcessStepTypeId.START_SELF_DESCRIPTION_LP, ApplicationChecklistEntryStatusId.TO_DO),
             ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PUSH => (ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH, ApplicationChecklistEntryStatusId.TO_DO),
             ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PULL => (ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL, ApplicationChecklistEntryStatusId.IN_PROGRESS),
-            ProcessStepTypeId.OVERRIDE_CLEARING_HOUSE => (ProcessStepTypeId.START_CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO),
+            ProcessStepTypeId.TRIGGER_OVERRIDE_CLEARING_HOUSE => (ProcessStepTypeId.START_OVERRIDE_CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO),
             _ => default,
         };
 }

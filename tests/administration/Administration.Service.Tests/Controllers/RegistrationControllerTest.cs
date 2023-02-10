@@ -183,7 +183,7 @@ public class RegistrationControllerTest
         var result = await this._controller.OverrideClearinghouseChecklist(applicationId).ConfigureAwait(false);
         
         // Assert
-        A.CallTo(() => _logic.TriggerChecklistAsync(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ProcessStepTypeId.OVERRIDE_CLEARING_HOUSE)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _logic.TriggerChecklistAsync(applicationId, ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ProcessStepTypeId.TRIGGER_OVERRIDE_CLEARING_HOUSE)).MustHaveHappenedOnceExactly();
         result.Should().BeOfType<NoContentResult>();
     }
     

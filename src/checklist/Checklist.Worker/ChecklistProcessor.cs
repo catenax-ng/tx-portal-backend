@@ -86,7 +86,8 @@ public class ChecklistProcessor : IChecklistProcessor
             var stepData = new IChecklistService.WorkerChecklistProcessStepData(
                 applicationId,
                 context.Checklist.ToImmutableDictionary(),
-                context.WorkerStepTypeIds.Concat(context.ManualStepTypeIds));
+                context.WorkerStepTypeIds.Concat(context.ManualStepTypeIds),
+                stepTypeId);
 
             (Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool) result;
             ProcessStepStatusId stepStatusId;

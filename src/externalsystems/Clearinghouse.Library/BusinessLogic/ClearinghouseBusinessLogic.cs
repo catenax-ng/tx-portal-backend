@@ -44,11 +44,9 @@ public class ClearinghouseBusinessLogic : IClearinghouseBusinessLogic
         _checklistService = checklistService;
     }
 
-    public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)> HandleStartClearingHouse(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
+    public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)> HandleClearinghouse(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
     {
-        var overwrite = await _portalRepositories.GetInstance<IApplicationRepository>()
-            .IsClearinghouseOverride(context.ApplicationId)
-            .ConfigureAwait(false);
+        var overwrite = context.CurrentProcessTypeId == ProcessStepTypeId.START_OVERRIDE_CLEARING_HOUSE;
         var walletData = await _custodianBusinessLogic.GetWalletByBpnAsync(context.ApplicationId, cancellationToken);
         if (walletData == null || string.IsNullOrEmpty(walletData.Did))
         {
@@ -110,7 +108,7 @@ public class ClearinghouseBusinessLogic : IClearinghouseBusinessLogic
                 item.Comment = data.Message;
             },
             declined ?
-                new [] { ProcessStepTypeId.OVERRIDE_CLEARING_HOUSE } :
+                new [] { ProcessStepTypeId.TRIGGER_OVERRIDE_CLEARING_HOUSE } :
                 new [] { ProcessStepTypeId.START_SELF_DESCRIPTION_LP });
     }
 }
