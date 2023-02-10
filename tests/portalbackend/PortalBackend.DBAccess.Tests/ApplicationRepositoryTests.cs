@@ -371,10 +371,11 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
         // Assert
         data.Exists.Should().BeTrue();
         data.ChecklistData.Should().HaveCount(5);
+        data.ProcessStepTypeIds.Should().NotBeEmpty();
     }
 
     [Fact]
-    public async Task GetApplicationChecklistData_WithNoProcessStepTypeIds_ReturnsDefault()
+    public async Task GetApplicationChecklistData_WithNoProcessStepTypeIds_ReturnsNoProcessSteps()
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
@@ -383,7 +384,8 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
         var data = await sut.GetApplicationChecklistData(SubmittedApplicationWithBpn, Enumerable.Empty<ProcessStepTypeId>()).ConfigureAwait(false);
 
         // Assert
-        data.Should().Be(default);
+        data.Should().NotBe(default);
+        data.ProcessStepTypeIds.Should().BeEmpty();
     }
 
     [Fact]
