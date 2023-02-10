@@ -73,6 +73,38 @@ public class ClearinghouseBusinessLogicTests
     
     #region HandleStartClearingHouse
 
+    [Theory]
+    [InlineData(ProcessStepTypeId.VERIFY_REGISTRATION)]
+    [InlineData(ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH)]
+    [InlineData(ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL)]
+    [InlineData(ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_MANUAL)]
+    [InlineData(ProcessStepTypeId.CREATE_IDENTITY_WALLET)]
+    [InlineData(ProcessStepTypeId.RETRIGGER_IDENTITY_WALLET)]
+    [InlineData(ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE)]
+    [InlineData(ProcessStepTypeId.END_CLEARING_HOUSE)]
+    [InlineData(ProcessStepTypeId.START_SELF_DESCRIPTION_LP)]
+    [InlineData(ProcessStepTypeId.RETRIGGER_SELF_DESCRIPTION_LP)]
+    [InlineData(ProcessStepTypeId.ACTIVATE_APPLICATION)]
+    [InlineData(ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PUSH)]
+    [InlineData(ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PULL)]
+    [InlineData(ProcessStepTypeId.OVERRIDE_BUSINESS_PARTNER_NUMBER)]
+    [InlineData(ProcessStepTypeId.TRIGGER_OVERRIDE_CLEARING_HOUSE)]
+    [InlineData(ProcessStepTypeId.FINISH_SELF_DESCRIPTION_LP)]
+
+    public async Task HandleStartClearingHouse_ForInvalidProcessStepTypeId_ThrowsUnexpectedCondition(ProcessStepTypeId stepTypeId)
+    {
+        // Arrange
+        var checklist = _fixture.Create<Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>>().ToImmutableDictionary();
+        var context = new IChecklistService.WorkerChecklistProcessStepData(Guid.NewGuid(), stepTypeId, checklist, Enumerable.Empty<ProcessStepTypeId>());
+
+        // Act
+        async Task Act() => await _logic.HandleClearinghouse(context, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<UnexpectedConditionException>(Act);
+        ex.Message.Should().Be($"HandleClearingHouse called for unexpected processStepTypeId {stepTypeId}. Expected START_CLEARING_HOUSE or START_OVERRIDE_CLEARING_HOUSE");
+    }
+
     [Fact]
     public async Task HandleStartClearingHouse_WithNotExistingApplication_ThrowsConflictException()
     {
@@ -86,7 +118,7 @@ public class ClearinghouseBusinessLogicTests
                 { ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO },
             }
             .ToImmutableDictionary();
-        var context = new IChecklistService.WorkerChecklistProcessStepData(applicationId, checklist, Enumerable.Empty<ProcessStepTypeId>(), default);
+        var context = new IChecklistService.WorkerChecklistProcessStepData(applicationId, ProcessStepTypeId.START_CLEARING_HOUSE, checklist, Enumerable.Empty<ProcessStepTypeId>());
         SetupForHandleStartClearingHouse();
 
         // Act
@@ -109,7 +141,7 @@ public class ClearinghouseBusinessLogicTests
                 {ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO},
             }
             .ToImmutableDictionary();
-        var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithApplicationCreated, checklist, Enumerable.Empty<ProcessStepTypeId>(), default);
+        var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithApplicationCreated, ProcessStepTypeId.START_CLEARING_HOUSE, checklist, Enumerable.Empty<ProcessStepTypeId>());
         SetupForHandleStartClearingHouse();
 
         // Act
@@ -132,7 +164,7 @@ public class ClearinghouseBusinessLogicTests
                 {ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO},
             }
             .ToImmutableDictionary();
-        var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithoutBpn, checklist, Enumerable.Empty<ProcessStepTypeId>(), default);
+        var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithoutBpn, ProcessStepTypeId.START_CLEARING_HOUSE, checklist, Enumerable.Empty<ProcessStepTypeId>());
         SetupForHandleStartClearingHouse();
 
         // Act
@@ -146,7 +178,7 @@ public class ClearinghouseBusinessLogicTests
     [Theory]
     [InlineData(ProcessStepTypeId.START_CLEARING_HOUSE, ApplicationChecklistEntryStatusId.IN_PROGRESS, ProcessStepTypeId.END_CLEARING_HOUSE)]
     [InlineData(ProcessStepTypeId.START_OVERRIDE_CLEARING_HOUSE, ApplicationChecklistEntryStatusId.DONE, ProcessStepTypeId.START_SELF_DESCRIPTION_LP)]
-    public async Task HandleStartClearingHouse_WithValidData_CallsExpected(ProcessStepTypeId processStep, ApplicationChecklistEntryStatusId statusId, ProcessStepTypeId expectedProcessTypeId)
+    public async Task HandleStartClearingHouse_WithValidData_CallsExpected(ProcessStepTypeId stepTypeId, ApplicationChecklistEntryStatusId statusId, ProcessStepTypeId expectedProcessTypeId)
     {
         // Arrange
         var entry = new ApplicationChecklistEntry(Guid.NewGuid(), ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO, DateTimeOffset.UtcNow);
@@ -158,7 +190,7 @@ public class ClearinghouseBusinessLogicTests
                 {ApplicationChecklistEntryTypeId.CLEARING_HOUSE, ApplicationChecklistEntryStatusId.TO_DO},
             }
             .ToImmutableDictionary();
-        var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithBpn, checklist, Enumerable.Empty<ProcessStepTypeId>(), processStep);
+        var context = new IChecklistService.WorkerChecklistProcessStepData(IdWithBpn, stepTypeId, checklist, Enumerable.Empty<ProcessStepTypeId>());
         SetupForHandleStartClearingHouse();
 
         // Act

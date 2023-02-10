@@ -32,7 +32,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migrations
 {
     [DbContext(typeof(PortalDbContext))]
-    [Migration("20230210133313_CPLP-1783-AddBpdmRetriggerProcess")]
+    [Migration("20230210185057_CPLP-1783-AddBpdmRetriggerProcess")]
     partial class CPLP1783AddBpdmRetriggerProcess
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -3322,11 +3322,16 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         new
                         {
                             Id = 16,
-                            Label = "OVERRIDE_CLEARING_HOUSE"
+                            Label = "TRIGGER_OVERRIDE_CLEARING_HOUSE"
                         },
                         new
                         {
                             Id = 17,
+                            Label = "START_OVERRIDE_CLEARING_HOUSE"
+                        },
+                        new
+                        {
+                            Id = 18,
                             Label = "FINISH_SELF_DESCRIPTION_LP"
                         });
                 });

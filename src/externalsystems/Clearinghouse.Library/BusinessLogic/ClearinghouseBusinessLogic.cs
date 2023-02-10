@@ -46,7 +46,10 @@ public class ClearinghouseBusinessLogic : IClearinghouseBusinessLogic
 
     public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)> HandleClearinghouse(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
     {
-        var overwrite = context.CurrentProcessTypeId == ProcessStepTypeId.START_OVERRIDE_CLEARING_HOUSE;
+        if (context.ProcessStepTypeId is not ProcessStepTypeId.START_CLEARING_HOUSE and not ProcessStepTypeId.START_OVERRIDE_CLEARING_HOUSE)
+        {
+            throw new UnexpectedConditionException($"HandleClearingHouse called for unexpected processStepTypeId {context.ProcessStepTypeId}. Expected {ProcessStepTypeId.START_CLEARING_HOUSE} or {ProcessStepTypeId.START_OVERRIDE_CLEARING_HOUSE}");
+        }
         var walletData = await _custodianBusinessLogic.GetWalletByBpnAsync(context.ApplicationId, cancellationToken);
         if (walletData == null || string.IsNullOrEmpty(walletData.Did))
         {
@@ -55,8 +58,21 @@ public class ClearinghouseBusinessLogic : IClearinghouseBusinessLogic
 
         await TriggerCompanyDataPost(context.ApplicationId, walletData.Did, cancellationToken).ConfigureAwait(false);
 
-        _checklistService.ScheduleProcessSteps(context, new [] { overwrite ? ProcessStepTypeId.START_SELF_DESCRIPTION_LP : ProcessStepTypeId.END_CLEARING_HOUSE });
-        return (entry => entry.ApplicationChecklistEntryStatusId = overwrite ? ApplicationChecklistEntryStatusId.DONE : ApplicationChecklistEntryStatusId.IN_PROGRESS, null, true);
+        var overwrite = context.ProcessStepTypeId == ProcessStepTypeId.START_OVERRIDE_CLEARING_HOUSE;
+
+        _checklistService.ScheduleProcessSteps(
+            context,
+            new [] {
+                overwrite
+                    ? ProcessStepTypeId.START_SELF_DESCRIPTION_LP
+                    : ProcessStepTypeId.END_CLEARING_HOUSE });
+        return (
+            entry => entry.ApplicationChecklistEntryStatusId =
+                overwrite
+                    ? ApplicationChecklistEntryStatusId.DONE
+                    : ApplicationChecklistEntryStatusId.IN_PROGRESS,
+            null,
+            true);
     }
 
     private async Task TriggerCompanyDataPost(Guid applicationId, string decentralizedIdentifier, CancellationToken cancellationToken)
@@ -102,13 +118,13 @@ public class ClearinghouseBusinessLogic : IClearinghouseBusinessLogic
             context,
             item =>
             {
-                item.ApplicationChecklistEntryStatusId = declined ?
-                    ApplicationChecklistEntryStatusId.FAILED :
-                    ApplicationChecklistEntryStatusId.DONE;
+                item.ApplicationChecklistEntryStatusId = declined
+                    ? ApplicationChecklistEntryStatusId.FAILED
+                    : ApplicationChecklistEntryStatusId.DONE;
                 item.Comment = data.Message;
             },
-            declined ?
-                new [] { ProcessStepTypeId.TRIGGER_OVERRIDE_CLEARING_HOUSE } :
-                new [] { ProcessStepTypeId.START_SELF_DESCRIPTION_LP });
+            declined
+                ? new [] { ProcessStepTypeId.TRIGGER_OVERRIDE_CLEARING_HOUSE }
+                : new [] { ProcessStepTypeId.START_SELF_DESCRIPTION_LP });
     }
 }

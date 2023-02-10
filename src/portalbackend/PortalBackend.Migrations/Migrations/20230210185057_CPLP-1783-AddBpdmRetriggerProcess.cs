@@ -99,6 +99,12 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 keyColumn: "id",
                 keyValue: 17);
 
+            migrationBuilder.DeleteData(
+                schema: "portal",
+                table: "process_step_types",
+                keyColumn: "id",
+                keyValue: 18);
+
             migrationBuilder.DropColumn(
                 name: "date_created",
                 schema: "portal",

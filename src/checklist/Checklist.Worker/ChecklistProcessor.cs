@@ -85,9 +85,9 @@ public class ChecklistProcessor : IChecklistProcessor
             var entryStatusId = GetEntryStatusId(execution.EntryTypeId, stepTypeId, context.Checklist);
             var stepData = new IChecklistService.WorkerChecklistProcessStepData(
                 applicationId,
+                stepTypeId,
                 context.Checklist.ToImmutableDictionary(),
-                context.WorkerStepTypeIds.Concat(context.ManualStepTypeIds),
-                stepTypeId);
+                context.WorkerStepTypeIds.Concat(context.ManualStepTypeIds));
 
             (Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool) result;
             ProcessStepStatusId stepStatusId;
@@ -105,7 +105,7 @@ public class ChecklistProcessor : IChecklistProcessor
                 }
                 else
                 {
-                    result = await execution.ErrorFunc(ex,stepData,cancellationToken).ConfigureAwait(false);
+                    result = await execution.ErrorFunc(ex, stepData, cancellationToken).ConfigureAwait(false);
                     stepStatusId = ProcessStepStatusId.FAILED;
                 }
             }
