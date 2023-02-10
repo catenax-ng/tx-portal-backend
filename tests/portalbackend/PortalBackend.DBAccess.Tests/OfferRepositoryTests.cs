@@ -657,6 +657,28 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
 
     #endregion
 
+    #region GetInReviewAppData
+    
+    [Fact]
+    public async Task GetInReviewAppReleaseDataByIdAsync_ReturnsExpectedResult()
+    {
+        // Arrange
+        var sut = await CreateSut().ConfigureAwait(false);
+
+        // Act
+        var InReviewAppofferDetail = await sut.GetInReviewAppReleaseDataByIdAsync(new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA6"), OfferTypeId.APP).ConfigureAwait(false);
+
+        // Assert
+        InReviewAppofferDetail.Should().NotBeNull();
+        InReviewAppofferDetail!.title.Should().Be("Latest Service");
+        InReviewAppofferDetail!.Documents.Should().NotBeNull();
+        var documenttypeId = InReviewAppofferDetail!.Documents.Select(x => x.documentTypeId);
+        documenttypeId.Should().NotContain(DocumentTypeId.APP_LEADIMAGE);
+        documenttypeId.Should().NotContain(DocumentTypeId.APP_IMAGE);
+    }
+
+    #endregion
+
     #region Setup
     
     private async Task<OfferRepository> CreateSut()
