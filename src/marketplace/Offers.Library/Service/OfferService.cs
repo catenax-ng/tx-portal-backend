@@ -439,17 +439,20 @@ public class OfferService : IOfferService
                 .Select(existingDescription => (offerId, existingDescription.LanguageShortName))
         );
 
-        foreach (var update
-                 in updateDescriptions
+        foreach (var update in updateDescriptions
                      .Where(update => existingDescriptions.Any(existing => 
-                         existing.LanguageShortName == update.LanguageCode &&
-                         (existing.DescriptionLong != update.LongDescription ||
-                          existing.DescriptionShort != update.ShortDescription))))
+                         existing.LanguageShortName == update.LanguageCode)))
         {
-            offerRepository.AttachAndModifyOfferDescription(offerId, update.LanguageCode, offerDescription =>
+            offerRepository.AttachAndModifyOfferDescription(offerId, update.LanguageCode,
+            A =>
             {
-                offerDescription.DescriptionLong = update.LongDescription;
-                offerDescription.DescriptionShort = update.ShortDescription;
+                A.DescriptionLong = existingDescriptions.SingleOrDefault(x => x.LanguageShortName == update.LanguageCode).DescriptionLong;
+                A.DescriptionShort = existingDescriptions.SingleOrDefault(x => x.LanguageShortName == update.LanguageCode).DescriptionShort;
+            },
+            A =>
+            {
+                A.DescriptionLong = update.LongDescription;
+                A.DescriptionShort = update.ShortDescription;
             });
         }
     }

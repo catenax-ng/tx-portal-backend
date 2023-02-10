@@ -188,10 +188,12 @@ public class OfferRepository : IOfferRepository
     public void RemoveOfferDescriptions(IEnumerable<(Guid offerId, string languageShortName)> offerDescriptionIds) =>
         _context.RemoveRange(offerDescriptionIds.Select(x => new OfferDescription(x.offerId, x.languageShortName, null!, null!)));
 
-    public void AttachAndModifyOfferDescription(Guid offerId, string languageShortName, Action<OfferDescription> setOptionalParameters)
+    public void AttachAndModifyOfferDescription(Guid offerId, string languageShortName, Action<OfferDescription> initialize, Action<OfferDescription> modify)
     {
-        var offerDescription = _context.Attach(new OfferDescription(offerId, languageShortName, null!, null!)).Entity;
-        setOptionalParameters.Invoke(offerDescription);
+        var offerDescription = new OfferDescription(offerId, languageShortName, null!, null!);
+        initialize.Invoke(offerDescription);
+        _context.Attach(offerDescription);
+        modify(offerDescription);
     }
 
     /// <inheritdoc />
@@ -491,5 +493,15 @@ public class OfferRepository : IOfferRepository
             .Select(offer => new ValueTuple<bool, bool>(
                 offer.OfferStatusId == OfferStatusId.ACTIVE,
                 offer.ProviderCompany!.CompanyUsers.Any(cu => cu.IamUser!.UserEntityId == iamUserId)))
+            .SingleOrDefaultAsync();
+    
+    ///<inheritdoc/>
+    public Task<AppDescriptionsData?> GetActiveOfferDescriptionDataByIdAsync(Guid appId, OfferTypeId offerTypeId, string iamUserId) =>
+        _context.Offers
+            .Where(offer => offer.Id == appId && offer.OfferTypeId == offerTypeId)
+            .Select(offer => new AppDescriptionsData(
+                offer.OfferStatusId == OfferStatusId.ACTIVE,
+                offer.ProviderCompany!.CompanyUsers.Any(cu => cu.IamUser!.UserEntityId == iamUserId),
+                offer.OfferDescriptions.Select(od => new OfferDescriptionData(od.LanguageShortName, od.DescriptionLong, od.DescriptionShort))))
             .SingleOrDefaultAsync();
 }

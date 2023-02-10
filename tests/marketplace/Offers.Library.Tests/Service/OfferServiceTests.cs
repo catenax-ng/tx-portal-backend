@@ -743,8 +743,8 @@ public class OfferServiceTests
                 }
             });
 
-        A.CallTo(() => _offerRepository.AttachAndModifyOfferDescription(A<Guid>._, A<string>._, A<Action<OfferDescription>>._)) 
-            .Invokes((Guid offerId, string languageShortName, Action<OfferDescription> setOptionalParameters) => 
+        A.CallTo(() => _offerRepository.AttachAndModifyOfferDescription(A<Guid>._, A<string>._, A<Action<OfferDescription>>._,A<Action<OfferDescription>>._)) 
+            .Invokes((Guid offerId, string languageShortName, Action<OfferDescription> initialize, Action<OfferDescription> modify) => 
             {
                 if (!seed.TryGetValue((offerId, languageShortName), out var offerDescription))
                 {
@@ -752,7 +752,8 @@ public class OfferServiceTests
                     seed[(offerId, languageShortName)] = offerDescription;
                 }
                
-                setOptionalParameters.Invoke(offerDescription);
+                initialize.Invoke(offerDescription);
+                modify(offerDescription);
             });
 
         var sut = new OfferService(_portalRepositories, null!, null!, null!, null!);
@@ -763,7 +764,7 @@ public class OfferServiceTests
             .MustHaveHappenedOnceExactly();
         A.CallTo(() => _offerRepository.RemoveOfferDescriptions(A<IEnumerable<(Guid offerId, string languageShortName)>>._))
             .MustHaveHappenedOnceExactly();
-        A.CallTo(() => _offerRepository.AttachAndModifyOfferDescription(A<Guid>._, A<string>._, A<Action<OfferDescription>>._)) 
+        A.CallTo(() => _offerRepository.AttachAndModifyOfferDescription(A<Guid>._, A<string>._, A<Action<OfferDescription>>._, A<Action<OfferDescription>>._)) 
             .MustHaveHappenedTwiceExactly();
 
         seed.Should().HaveSameCount(updateDescriptions);
