@@ -448,7 +448,7 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
         var data = await sut.GetCompanyIdForSubmittedApplication(SubmittedApplicationWithBpn).ConfigureAwait(false);
         
         // Assert
-        data.Should().Be(new Guid("d14eba77-0b18-4e41-9d84-49ef875c0763"));
+        data.Should().Be((true, new Guid("d14eba77-0b18-4e41-9d84-49ef875c0763"), true));
     }
 
 
@@ -462,7 +462,7 @@ public class ApplicationRepositoryTests : IAssemblyFixture<TestDbFixture>
         var data = await sut.GetCompanyIdForSubmittedApplication(Guid.NewGuid()).ConfigureAwait(false);
         
         // Assert
-        data.Should().Be(Guid.Empty);
+        data.Should().Be(((bool,Guid,bool))default);
     }
     
     #endregion
