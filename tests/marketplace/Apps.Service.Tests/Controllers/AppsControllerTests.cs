@@ -371,7 +371,7 @@ public class AppsControllerTests
             .ReturnsLazily(() => Task.CompletedTask);
         
         //Act
-        var result = await this._controller.CreateOrUpdateAppDescriptionsAsync(appId,offerDescriptionData).ConfigureAwait(false);
+        var result = await this._controller.CreateOrUpdateAppDescriptionsByIdAsync(appId,offerDescriptionData).ConfigureAwait(false);
 
         //Assert
         A.CallTo(() => _logic.CreateOrUpdateAppDescriptionByIdAsync(A<Guid>._, A<string>._, A<IEnumerable<LocalizedDescription>>._)).MustHaveHappened();

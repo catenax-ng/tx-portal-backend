@@ -332,15 +332,17 @@ public class AppsBusinessLogic : IAppsBusinessLogic
     }
 
     /// <inheritdoc />
-    public async Task CreateOrUpdateAppDescriptionByIdAsync(Guid appId, string iamUserId, IEnumerable<LocalizedDescription> offerDescriptionData)
+    public async Task CreateOrUpdateAppDescriptionByIdAsync(Guid appId, string iamUserId, IEnumerable<LocalizedDescription> updateDescriptionData)
     {
         var offerRepository = _portalRepositories.GetInstance<IOfferRepository>();
         var result = await ValidateAndGetAppDescription(appId, iamUserId, offerRepository);
-       
-        if(result.OfferDescriptionDatas != null)
+        
+        var languageCode = updateDescriptionData.Where(od => result.OfferDescriptionDatas.Any(
+                languageCode => languageCode.languageCode == od.LanguageCode));
+
+        if(result.OfferDescriptionDatas != null && languageCode.Any())
         {
-            foreach(var description in offerDescriptionData.Where(od => result.OfferDescriptionDatas.Any(
-                languageCode => languageCode.languageCode == od.LanguageCode)))
+            foreach(var description in updateDescriptionData)
             {
                 offerRepository.AttachAndModifyOfferDescription(appId, description.LanguageCode,
                 A => {
@@ -355,7 +357,7 @@ public class AppsBusinessLogic : IAppsBusinessLogic
         }
         else
         {
-            offerRepository.AddOfferDescriptions(offerDescriptionData.Select(d => 
+            offerRepository.AddOfferDescriptions(updateDescriptionData.Select(d => 
                 new ValueTuple<Guid, string, string, string>(appId, d.LanguageCode, d.LongDescription, d.ShortDescription)));
         }
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
