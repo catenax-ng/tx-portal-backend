@@ -29,7 +29,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql("DELETE FROM portal.offer_assigned_documents  WHERE document_id in (select id from portal.documents where document_type_id=4);");
-            migrationBuilder.Sql("DELETE FROM portal.documents  WHERE document_id = 4;");
+            migrationBuilder.Sql("DELETE FROM portal.documents  WHERE document_type_id = 4;");
             migrationBuilder.UpdateData(
                 schema: "portal",
                 table: "document_types",

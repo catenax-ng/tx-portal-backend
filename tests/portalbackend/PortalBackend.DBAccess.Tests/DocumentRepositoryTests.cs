@@ -186,7 +186,7 @@ public class DocumentRepositoryTests : IAssemblyFixture<TestDbFixture>
         // Assert
         results.Should().NotBeNull();
         results!.DocumentStatusId.Should().Be(2);
-        results.DocumentTypeId.Should().Be(5);
+        results.DocumentTypeId.Should().Be(6);
         results.DocumentName.Should().Be("Default_App_Image");
     }
 
