@@ -511,7 +511,7 @@ public class OfferRepository : IOfferRepository
             privacyPolicy => new OfferAssignedPrivacyPolicy(appId, privacyPolicy));
     
     ///<inheritdoc/>
-    public Task<InReviewOfferData?> GetInReviewAppReleaseDataByIdAsync(Guid Id, OfferTypeId offerTypeId) =>
+    public Task<InReviewOfferData?> GetinReviewAppDataByIdAsync(Guid Id, OfferTypeId offerTypeId) =>
         _context.Offers.AsNoTracking()
             .AsSplitQuery()
             .Where(offer => offer.Id == Id && offer.OfferTypeId == offerTypeId && offer.OfferStatusId == OfferStatusId.IN_REVIEW)

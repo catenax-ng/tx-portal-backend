@@ -660,13 +660,13 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     #region GetInReviewAppData
     
     [Fact]
-    public async Task GetInReviewAppReleaseDataByIdAsync_ReturnsExpectedResult()
+    public async Task GetInReviewAppDataByIdAsync_ReturnsExpectedResult()
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
 
         // Act
-        var InReviewAppofferDetail = await sut.GetInReviewAppReleaseDataByIdAsync(new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA6"), OfferTypeId.APP).ConfigureAwait(false);
+        var InReviewAppofferDetail = await sut.GetinReviewAppDataByIdAsync(new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA6"), OfferTypeId.APP).ConfigureAwait(false);
 
         // Assert
         InReviewAppofferDetail.Should().NotBeNull();

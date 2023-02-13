@@ -172,5 +172,5 @@ public interface IAppReleaseBusinessLogic
     /// Gets InReview App Details Data by Id
     /// </summary>
     /// <param name="appId">Id of the app</param>
-    Task<InReviewAppDetails> GetInReviewAppDetailsByIdAsync(Guid appId);
+    Task<InReviewAppDetails> GetinReviewAppDetailsByIdAsync(Guid appId);
 }

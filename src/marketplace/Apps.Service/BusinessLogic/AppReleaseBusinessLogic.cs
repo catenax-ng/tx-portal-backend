@@ -442,10 +442,10 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         _offerService.DeclineOfferAsync(appId, iamUserId, data, OfferTypeId.APP, NotificationTypeId.APP_RELEASE_REJECTION, _settings.ServiceManagerRoles, _settings.AppOverviewAddress);
 
     /// <inheritdoc />
-    public async Task<InReviewAppDetails> GetInReviewAppDetailsByIdAsync(Guid appId)
+    public async Task<InReviewAppDetails> GetinReviewAppDetailsByIdAsync(Guid appId)
     {
         var result = await _portalRepositories.GetInstance<IOfferRepository>()
-            .GetInReviewAppReleaseDataByIdAsync(appId, OfferTypeId.APP).ConfigureAwait(false);
+            .GetinReviewAppDataByIdAsync(appId, OfferTypeId.APP).ConfigureAwait(false);
         
         if(result == default)
             throw new NotFoundException($"App {appId} not found or Incorrect Status");
@@ -465,7 +465,6 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
             result.ContactEmail,
             result.ContactNumber,
             result.Price ?? Constants.ErrorString,
-            result.Tags
-        );
+            result.Tags);
     }
 }

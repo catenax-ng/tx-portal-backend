@@ -638,36 +638,37 @@ public class AppReleaseBusinessLogicTest
     #region GetInReviewAppDetailsById
 
     [Fact]
-    public async Task GetInReviewAppDetailsByIdAsync_ReturnsExpected()
+    public async Task GetinReviewAppDetailsByIdAsync_CallsExpected()
     {
         // Arrange
         var appId = _fixture.Create<Guid>();
         var data = _fixture.Create<InReviewOfferData>();
-        A.CallTo(() => _offerRepository.GetInReviewAppReleaseDataByIdAsync(appId,OfferTypeId.APP))
+        A.CallTo(() => _offerRepository.GetinReviewAppDataByIdAsync(appId,OfferTypeId.APP))
             .ReturnsLazily(() => data);
 
         var sut = new AppReleaseBusinessLogic(_portalRepositories, _options, _offerService, null!);
 
         // Act
-        var result = await sut.GetInReviewAppDetailsByIdAsync(appId).ConfigureAwait(false);
+        var result = await sut.GetinReviewAppDetailsByIdAsync(appId).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() => _offerRepository.GetInReviewAppReleaseDataByIdAsync(appId, OfferTypeId.APP)).MustHaveHappened();
+        A.CallTo(() => _offerRepository.GetinReviewAppDataByIdAsync(appId, OfferTypeId.APP)).MustHaveHappened();
         result.Should().NotBeNull();
+        result.Id.Should().Be(data.id);
     }
 
     [Fact]
-    public async Task GetInReviewAppDetailsByIdAsync_ThrowsNotFoundException()
+    public async Task GetinReviewAppDetailsByIdAsync_ThrowsNotFoundException()
     {
         // Arrange
         var appId = _fixture.Create<Guid>();
-        A.CallTo(() => _offerRepository.GetInReviewAppReleaseDataByIdAsync(appId,OfferTypeId.APP))
+        A.CallTo(() => _offerRepository.GetinReviewAppDataByIdAsync(appId,OfferTypeId.APP))
             .ReturnsLazily(() => (InReviewOfferData?)null);
 
         var sut = new AppReleaseBusinessLogic(_portalRepositories, _options, _offerService, null!);
 
         //Act
-        async Task Act() => await sut.GetInReviewAppDetailsByIdAsync(appId).ConfigureAwait(false);
+        async Task Act() => await sut.GetinReviewAppDetailsByIdAsync(appId).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<NotFoundException>(Act).ConfigureAwait(false);
