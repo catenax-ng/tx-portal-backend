@@ -712,6 +712,13 @@ public class AppBusinessLogicTests
         A.CallTo(() => _offerRepository.GetActiveOfferDescriptionDataByIdAsync(appId, OfferTypeId.APP, IamUserId))
             .ReturnsLazily(() => appDescriptionData);
         
+        A.CallTo(() => _offerRepository.AttachAndModifyOfferDescription(A<Guid>._, A<string>._, A<Action<OfferDescription>>._,A<Action<OfferDescription>>._))
+            .Invokes((Guid appId, string languageShortName, Action<OfferDescription> initialize, Action<OfferDescription> modify) =>{
+                var offerDescription = new OfferDescription(appId, languageShortName, null!, null!);             
+                initialize.Invoke(offerDescription);
+                modify(offerDescription);
+                });
+        
         var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), null!);
 
         // Act
@@ -735,6 +742,13 @@ public class AppBusinessLogicTests
 
         A.CallTo(() => _offerRepository.GetActiveOfferDescriptionDataByIdAsync(appId, OfferTypeId.APP, IamUserId))
             .ReturnsLazily(() => appDescriptionData);
+        
+        A.CallTo(() => _offerRepository.AddOfferDescriptions(A<IEnumerable<(Guid offerId, string languageShortName, string descriptionLong, string descriptionShort)>>._))
+            .Invokes((IEnumerable<(Guid offerId, string languageShortName, string descriptionLong, string descriptionShort)> offerDescriptions) =>
+                {
+                    foreach( var item in offerDescriptions)
+                        new OfferDescription(item.offerId,item.languageShortName,item.descriptionLong,item.descriptionShort);
+                });
         
         var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), null!);
 
