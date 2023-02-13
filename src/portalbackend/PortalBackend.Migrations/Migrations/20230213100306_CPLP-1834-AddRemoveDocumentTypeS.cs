@@ -17,22 +17,26 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
- 
+
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migrations
 {
-    public partial class CPLP1834AddRemoveDocumentType : Migration
+    public partial class CPLP1834AddRemoveDocumentTypeS : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DeleteData(
+            migrationBuilder.Sql("DELETE FROM portal.offer_assigned_documents  WHERE document_id in (select id from portal.documents where document_type_id=4);");
+            migrationBuilder.Sql("DELETE FROM portal.documents  WHERE document_id = 4;");
+            migrationBuilder.UpdateData(
                 schema: "portal",
                 table: "document_types",
                 keyColumn: "id",
-                keyValue: 4);
+                keyValue: 4,
+                column: "label",
+                value: "CONFORMITY_APPROVAL_REGISTRATION");
 
             migrationBuilder.InsertData(
                 schema: "portal",
@@ -40,9 +44,8 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 columns: new[] { "id", "label" },
                 values: new object[,]
                 {
-                    { 10, "CONFORMITY_APPROVAL_REGISTRATION" },
-                    { 11, "CONFORMITY_APPROVAL_CONNECTOR" },
-                    { 12, "CONFORMITY_APPROVAL_BUSINESS_APPS" }
+                    { 10, "CONFORMITY_APPROVAL_CONNECTOR" },
+                    { 11, "CONFORMITY_APPROVAL_BUSINESS_APPS" }
                 });
         }
 
@@ -60,17 +63,13 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 keyColumn: "id",
                 keyValue: 11);
 
-            migrationBuilder.DeleteData(
+            migrationBuilder.UpdateData(
                 schema: "portal",
                 table: "document_types",
                 keyColumn: "id",
-                keyValue: 12);
-
-            migrationBuilder.InsertData(
-                schema: "portal",
-                table: "document_types",
-                columns: new[] { "id", "label" },
-                values: new object[] { 4, "APP_DATA_DETAILS" });
+                keyValue: 4,
+                column: "label",
+                value: "APP_DATA_DETAILS");
         }
     }
 }
