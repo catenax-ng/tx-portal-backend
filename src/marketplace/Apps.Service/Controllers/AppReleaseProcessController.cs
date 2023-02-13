@@ -374,7 +374,7 @@ public class AppReleaseProcessController : ControllerBase
     /// <response code="404">App not found.</response>
     [HttpGet]
     [Route("inReview/{appId}")]
-    [Authorize(Roles = "view_apps")]
+    [Authorize(Roles = "approve_app_release,decline_app_release")]
     [ProducesResponseType(typeof(AppDetailResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
