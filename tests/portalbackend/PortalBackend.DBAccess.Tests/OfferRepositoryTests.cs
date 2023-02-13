@@ -584,7 +584,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
 
         // Assert
         providerAppData.Should().HaveSameCount(offerIds);
-        if (offerIds.Count() > 0)
+        if (offerIds.Any())
         {
             providerAppData.Select(x => x.Id).Should().Contain(offerIds.Select(x => new Guid(x)));
             providerAppData.Join(offerIds.Select(x => new Guid(x)).Zip(leadPictureIds.Select(x => new Guid(x))),data => data.Id, zip => zip.First, (data,zip) => (data,zip)).Should().AllSatisfy(x => x.data.LeadPictureId.Should().Be(x.zip.Second));
