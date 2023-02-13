@@ -2191,42 +2191,42 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         },
                         new
                         {
-                            Id = 4,
+                            Id = 5,
                             Label = "ADDITIONAL_DETAILS"
                         },
                         new
                         {
-                            Id = 5,
+                            Id = 6,
                             Label = "APP_LEADIMAGE"
                         },
                         new
                         {
-                            Id = 6,
+                            Id = 7,
                             Label = "APP_IMAGE"
                         },
                         new
                         {
-                            Id = 7,
+                            Id = 8,
                             Label = "SELF_DESCRIPTION"
                         },
                         new
                         {
-                            Id = 8,
+                            Id = 9,
                             Label = "APP_TECHNICAL_INFORMATION"
                         },
                         new
                         {
-                            Id = 9,
+                            Id = 10,
                             Label = "CONFORMITY_APPROVAL_REGISTRATION"
                         },
                         new
                         {
-                            Id = 10,
+                            Id = 11,
                             Label = "CONFORMITY_APPROVAL_CONNECTOR"
                         },
                         new
                         {
-                            Id = 11,
+                            Id = 12,
                             Label = "CONFORMITY_APPROVAL_BUSINESS_APPS"
                         });
                 });
