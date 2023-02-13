@@ -699,7 +699,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         // Assert
         result.Should().NotBeNull();
         result!.OfferDescriptionDatas.Should().NotBeNull();
-        result!.OfferDescriptionDatas.Select(od => od.languageCode).Contains("en");
+        result!.OfferDescriptionDatas.Select(od => od.languageCode).Should().Contain("en");
     }
 
     [Fact]

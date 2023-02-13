@@ -734,6 +734,7 @@ public class AppBusinessLogicTests
     {
         // Arrange
         var appId = _fixture.Create<Guid>();
+        var seed = new Dictionary<(Guid,string),OfferDescription>() {};
         var updateDescriptionData =  new []{
             new LocalizedDescription("en", _fixture.Create<string>(), _fixture.Create<string>()),
             new LocalizedDescription("de", _fixture.Create<string>(), _fixture.Create<string>())
@@ -747,7 +748,8 @@ public class AppBusinessLogicTests
             .Invokes((IEnumerable<(Guid offerId, string languageShortName, string descriptionLong, string descriptionShort)> offerDescriptions) =>
                 {
                     foreach( var item in offerDescriptions)
-                        new OfferDescription(item.offerId,item.languageShortName,item.descriptionLong,item.descriptionShort);
+                        seed[(item.offerId, item.languageShortName)] = 
+                            new OfferDescription(item.offerId,item.languageShortName,item.descriptionLong,item.descriptionShort);
                 });
         
         var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), null!);
@@ -758,6 +760,7 @@ public class AppBusinessLogicTests
         // Assert
         A.CallTo(() => _offerRepository.AddOfferDescriptions(A<IEnumerable<(Guid appId, string languageShortName, string descriptionLong, string descriptionShort)>>._)) 
             .MustHaveHappenedOnceExactly();
+        seed.Should().HaveSameCount(updateDescriptionData);
     }
     
     #endregion
