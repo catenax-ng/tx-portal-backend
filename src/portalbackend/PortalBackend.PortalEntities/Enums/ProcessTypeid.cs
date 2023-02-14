@@ -1,6 +1,6 @@
 /********************************************************************************
- * Copyright (c) 2021,2022 BMW Group AG
- * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
+ * Copyright (c) 2021,2023 BMW Group AG
+ * Copyright (c) 2021,2023 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -18,19 +18,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
+namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 
-public class ApplicationAssignedProcessStep
+public enum ProcessTypeId
 {
-    public ApplicationAssignedProcessStep(Guid companyApplicationId, Guid processStepId)
-    {
-        this.CompanyApplicationId = companyApplicationId;
-        this.ProcessStepId = processStepId;
-    }
-
-    public Guid CompanyApplicationId  { get; private set; }
-    public Guid ProcessStepId { get; private set; }
-
-    public virtual CompanyApplication? CompanyApplication { get; private set; }
-    public virtual ProcessStep? ProcessStep { get; private set; }
+    APPLICATION_CHECKLIST = 1,
 }

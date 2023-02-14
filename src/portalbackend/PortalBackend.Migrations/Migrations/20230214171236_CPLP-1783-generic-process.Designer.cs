@@ -22,6 +22,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
@@ -31,9 +32,10 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migrations
 {
     [DbContext(typeof(PortalDbContext))]
-    partial class PortalDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230214171236_CPLP-1783-generic-process")]
+    partial class CPLP1783genericprocess
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2232,7 +2234,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         new
                         {
                             Id = 4,
-                            Label = "CONFORMITY_APPROVAL_REGISTRATION"
+                            Label = "APP_DATA_DETAILS"
                         },
                         new
                         {
@@ -2258,16 +2260,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         {
                             Id = 9,
                             Label = "APP_TECHNICAL_INFORMATION"
-                        },
-                        new
-                        {
-                            Id = 10,
-                            Label = "CONFORMITY_APPROVAL_CONNECTOR"
-                        },
-                        new
-                        {
-                            Id = 11,
-                            Label = "CONFORMITY_APPROVAL_BUSINESS_APPS"
                         });
                 });
 

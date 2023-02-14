@@ -97,8 +97,10 @@ public class ChecklistProcessorTests
                 .Create())
             .ToImmutableArray();
 
+        var processId = Guid.NewGuid();
+
         var processSteps = _fixture.CreateMany<ProcessStepTypeId>(100)
-            .Select(typeId => new ProcessStep(Guid.NewGuid(), typeId, ProcessStepStatusId.TODO, DateTimeOffset.UtcNow))
+            .Select(typeId => new ProcessStep(Guid.NewGuid(), typeId, ProcessStepStatusId.TODO, processId, DateTimeOffset.UtcNow))
             .ToImmutableArray();
 
         A.CallTo(() => _firstProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
@@ -136,7 +138,7 @@ public class ChecklistProcessorTests
         A.CallTo(()=> _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._))
             .Invokes((Guid processStepId, Action<ProcessStep>? initialize, Action<ProcessStep> modify) =>
             {
-                var step = new ProcessStep(processStepId, default, default, default);
+                var step = new ProcessStep(processStepId, default, default, default, default);
                 initialize?.Invoke(step);
                 modify(step);
                 modifiedSteps.Add(step);
@@ -144,10 +146,10 @@ public class ChecklistProcessorTests
 
         var createdSteps = new List<ProcessStep>();
 
-        A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>._, A<ProcessStepStatusId>._))
-            .ReturnsLazily((ProcessStepTypeId stepTypeId, ProcessStepStatusId stepStatusId) =>
+        A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>._, A<ProcessStepStatusId>._, A<Guid>._))
+            .ReturnsLazily((ProcessStepTypeId stepTypeId, ProcessStepStatusId stepStatusId, Guid processId) =>
             {
-                var processStep = new ProcessStep(Guid.NewGuid(), stepTypeId, stepStatusId, DateTimeOffset.UtcNow);
+                var processStep = new ProcessStep(Guid.NewGuid(), stepTypeId, stepStatusId, processId, DateTimeOffset.UtcNow);
                 createdSteps.Add(processStep);
                 return processStep;
             });
@@ -155,7 +157,7 @@ public class ChecklistProcessorTests
         var applicationId = Guid.NewGuid();
 
         // Act
-        var result = await _processor.ProcessChecklist(applicationId, checklist, processSteps, CancellationToken.None).ToListAsync().ConfigureAwait(false);
+        var result = await _processor.ProcessChecklist(applicationId, processId, checklist, processSteps, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
         result.Should().HaveCount(4);
@@ -170,19 +172,15 @@ public class ChecklistProcessorTests
         A.CallTo(() => _firstProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
             .MustHaveHappenedTwiceExactly();
 
-        A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>.That.Matches(step => _manualSteps.Contains(step)), ProcessStepStatusId.TODO)).MustNotHaveHappened();
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH, ProcessStepStatusId.TODO)).MustHaveHappenedOnceExactly();
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.ACTIVATE_APPLICATION, ProcessStepStatusId.TODO)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>.That.Matches(step => _manualSteps.Contains(step)), ProcessStepStatusId.TODO, A<Guid>._)).MustNotHaveHappened();
+        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH, ProcessStepStatusId.TODO, processId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.ACTIVATE_APPLICATION, ProcessStepStatusId.TODO, processId)).MustHaveHappenedOnceExactly();
         createdSteps.Should().HaveCount(2);
-        createdSteps.Select(step => (step.ProcessStepTypeId, step.ProcessStepStatusId)).Should().Contain(
+        createdSteps.Select(step => (step.ProcessStepTypeId, step.ProcessStepStatusId, step.ProcessId)).Should().Contain(
             new [] {
-                (ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH, ProcessStepStatusId.TODO),
-                (ProcessStepTypeId.ACTIVATE_APPLICATION, ProcessStepStatusId.TODO)
+                (ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH, ProcessStepStatusId.TODO, processId),
+                (ProcessStepTypeId.ACTIVATE_APPLICATION, ProcessStepStatusId.TODO, processId)
             });
-        foreach (var processStep in createdSteps)
-        {
-            A.CallTo(() => _applicationChecklistRepository.CreateApplicationAssignedProcessStep(applicationId, processStep.Id)).MustHaveHappenedOnceExactly();
-        }
 
         var automaticSteps = processSteps.Where(step => !_manualSteps.Contains(step.ProcessStepTypeId)).ToList();
         var numAutomaticProcessStepTypes = automaticSteps.GroupBy(step => step.ProcessStepTypeId).Count();
@@ -203,10 +201,12 @@ public class ChecklistProcessorTests
                 .Create())
             .ToImmutableArray();
 
-        var processSteps = _manualSteps.Select(steptTypeId => new ProcessStep(Guid.NewGuid(), steptTypeId, ProcessStepStatusId.TODO, DateTimeOffset.UtcNow)).ToImmutableArray();
+        var processId = Guid.NewGuid();
+
+        var processSteps = _manualSteps.Select(steptTypeId => new ProcessStep(Guid.NewGuid(), steptTypeId, ProcessStepStatusId.TODO, processId, DateTimeOffset.UtcNow)).ToImmutableArray();
 
         // Act
-        var result = await _processor.ProcessChecklist(Guid.NewGuid(), checklist, processSteps, CancellationToken.None).ToListAsync().ConfigureAwait(false);
+        var result = await _processor.ProcessChecklist(Guid.NewGuid(), processId, checklist, processSteps, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
         result.Should().BeEmpty();
@@ -217,10 +217,9 @@ public class ChecklistProcessorTests
         A.CallTo(() => _secondProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
             .MustNotHaveHappened();
 
-        A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>.That.Matches(step => _manualSteps.Contains(step)), ProcessStepStatusId.TODO)).MustNotHaveHappened();
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH, ProcessStepStatusId.TODO)).MustNotHaveHappened();
-        A.CallTo(() => _applicationChecklistRepository.CreateApplicationAssignedProcessStep(A<Guid>._, A<Guid>._)).MustNotHaveHappened();
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.ACTIVATE_APPLICATION, ProcessStepStatusId.TODO)).MustNotHaveHappened();
+        A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>.That.Matches(step => _manualSteps.Contains(step)), ProcessStepStatusId.TODO, A<Guid>._)).MustNotHaveHappened();
+        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH, ProcessStepStatusId.TODO, A<Guid>._)).MustNotHaveHappened();
+        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.ACTIVATE_APPLICATION, ProcessStepStatusId.TODO, A<Guid>._)).MustNotHaveHappened();
     
         A.CallTo(()=> _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._)).MustNotHaveHappened();
     }
@@ -236,9 +235,11 @@ public class ChecklistProcessorTests
                 .Create())
             .ToImmutableArray();
 
+        var processId = Guid.NewGuid();
+
         var processSteps = new [] {
             ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH
-        }.Select(steptTypeId => new ProcessStep(Guid.NewGuid(), steptTypeId, ProcessStepStatusId.TODO, DateTimeOffset.UtcNow)).ToImmutableArray();
+        }.Select(steptTypeId => new ProcessStep(Guid.NewGuid(), steptTypeId, ProcessStepStatusId.TODO, processId, DateTimeOffset.UtcNow)).ToImmutableArray();
 
         A.CallTo(() => _firstProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
             .Returns((
@@ -255,10 +256,10 @@ public class ChecklistProcessorTests
 
         var createdSteps = new List<ProcessStep>();
 
-        A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>._, A<ProcessStepStatusId>._))
-            .ReturnsLazily((ProcessStepTypeId stepTypeId, ProcessStepStatusId stepStatusId) =>
+        A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>._, A<ProcessStepStatusId>._, A<Guid>._))
+            .ReturnsLazily((ProcessStepTypeId stepTypeId, ProcessStepStatusId stepStatusId, Guid processId) =>
             {
-                var processStep = new ProcessStep(Guid.NewGuid(), stepTypeId, stepStatusId, DateTimeOffset.UtcNow);
+                var processStep = new ProcessStep(Guid.NewGuid(), stepTypeId, stepStatusId, processId, DateTimeOffset.UtcNow);
                 createdSteps.Add(processStep);
                 return processStep;
             });
@@ -266,7 +267,7 @@ public class ChecklistProcessorTests
         var applicationId = Guid.NewGuid();
 
         // Act
-        var result = await _processor.ProcessChecklist(applicationId, checklist, processSteps, CancellationToken.None).ToListAsync().ConfigureAwait(false);
+        var result = await _processor.ProcessChecklist(applicationId, processId, checklist, processSteps, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
         result.Should().HaveCount(1);
@@ -277,29 +278,23 @@ public class ChecklistProcessorTests
         A.CallTo(() => _secondProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
             .MustNotHaveHappened();
 
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.VERIFY_REGISTRATION, ProcessStepStatusId.TODO)).MustHaveHappenedOnceExactly();
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_MANUAL, ProcessStepStatusId.TODO)).MustHaveHappenedOnceExactly();
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.END_CLEARING_HOUSE, ProcessStepStatusId.TODO)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.VERIFY_REGISTRATION, ProcessStepStatusId.TODO, processId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_MANUAL, ProcessStepStatusId.TODO, processId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.END_CLEARING_HOUSE, ProcessStepStatusId.TODO, processId)).MustHaveHappenedOnceExactly();
         createdSteps.Should().HaveCount(3);
-        createdSteps.Select(step => step.ProcessStepTypeId).Should().Contain(new [] { ProcessStepTypeId.VERIFY_REGISTRATION, ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_MANUAL, ProcessStepTypeId.END_CLEARING_HOUSE });
-        createdSteps.Should().AllSatisfy(step => step.ProcessStepStatusId.Should().Be(ProcessStepStatusId.TODO));
-        createdSteps.Select(step => (step.ProcessStepTypeId, step.ProcessStepStatusId)).Should().Contain(
+        createdSteps.Select(step => (step.ProcessStepTypeId, step.ProcessStepStatusId, step.ProcessId)).Should().Contain(
             new [] {
-                (ProcessStepTypeId.VERIFY_REGISTRATION, ProcessStepStatusId.TODO),
-                (ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_MANUAL, ProcessStepStatusId.TODO),
-                (ProcessStepTypeId.END_CLEARING_HOUSE, ProcessStepStatusId.TODO)
+                (ProcessStepTypeId.VERIFY_REGISTRATION, ProcessStepStatusId.TODO, processId),
+                (ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_MANUAL, ProcessStepStatusId.TODO, processId),
+                (ProcessStepTypeId.END_CLEARING_HOUSE, ProcessStepStatusId.TODO, processId)
             });
-        foreach (var processStep in createdSteps)
-        {
-            A.CallTo(() => _applicationChecklistRepository.CreateApplicationAssignedProcessStep(applicationId, processStep.Id)).MustHaveHappenedOnceExactly();
-        }
 
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH, ProcessStepStatusId.TODO)).MustNotHaveHappened();
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL, ProcessStepStatusId.TODO)).MustNotHaveHappened();
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_IDENTITY_WALLET, ProcessStepStatusId.TODO)).MustNotHaveHappened();
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.START_CLEARING_HOUSE, ProcessStepStatusId.TODO)).MustNotHaveHappened();
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.START_SELF_DESCRIPTION_LP, ProcessStepStatusId.TODO)).MustNotHaveHappened();
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.ACTIVATE_APPLICATION, ProcessStepStatusId.TODO)).MustNotHaveHappened();
+        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH, ProcessStepStatusId.TODO, A<Guid>._)).MustNotHaveHappened();
+        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL, ProcessStepStatusId.TODO, A<Guid>._)).MustNotHaveHappened();
+        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_IDENTITY_WALLET, ProcessStepStatusId.TODO, A<Guid>._)).MustNotHaveHappened();
+        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.START_CLEARING_HOUSE, ProcessStepStatusId.TODO, A<Guid>._)).MustNotHaveHappened();
+        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.START_SELF_DESCRIPTION_LP, ProcessStepStatusId.TODO, A<Guid>._)).MustNotHaveHappened();
+        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.ACTIVATE_APPLICATION, ProcessStepStatusId.TODO, A<Guid>._)).MustNotHaveHappened();
 
         A.CallTo(()=> _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._)).MustHaveHappenedOnceExactly();
     }
@@ -316,9 +311,11 @@ public class ChecklistProcessorTests
                 .Create())
             .ToImmutableArray();
 
+        var processId = Guid.NewGuid();
+
         var processSteps = new [] {
             ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH
-        }.Select(steptTypeId => new ProcessStep(Guid.NewGuid(), steptTypeId, ProcessStepStatusId.TODO, DateTimeOffset.UtcNow)).ToImmutableArray();
+        }.Select(steptTypeId => new ProcessStep(Guid.NewGuid(), steptTypeId, ProcessStepStatusId.TODO, processId, DateTimeOffset.UtcNow)).ToImmutableArray();
 
         A.CallTo(() => _firstProcessFunc(A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
             .Returns((
@@ -327,7 +324,7 @@ public class ChecklistProcessorTests
                 false));
 
         // Act
-        var result = await _processor.ProcessChecklist(Guid.NewGuid(), checklist, processSteps, CancellationToken.None).ToListAsync().ConfigureAwait(false);
+        var result = await _processor.ProcessChecklist(Guid.NewGuid(), processId, checklist, processSteps, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
         result.Should().BeEmpty();
@@ -341,7 +338,7 @@ public class ChecklistProcessorTests
         A.CallTo(() => _errorFunc(A<Exception>._, A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
             .MustNotHaveHappened();
 
-        A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>._,A<ProcessStepStatusId>._)).MustNotHaveHappened();
+        A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>._,A<ProcessStepStatusId>._,A<Guid>._)).MustNotHaveHappened();
         A.CallTo(() => _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._)).MustNotHaveHappened();
     }
 
@@ -357,9 +354,11 @@ public class ChecklistProcessorTests
                 .Create())
             .ToImmutableArray();
 
+        var processId = Guid.NewGuid();
+
         var processSteps = new [] {
             ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH
-        }.Select(steptTypeId => new ProcessStep(Guid.NewGuid(), steptTypeId, ProcessStepStatusId.TODO, DateTimeOffset.UtcNow)).ToImmutableArray();
+        }.Select(steptTypeId => new ProcessStep(Guid.NewGuid(), steptTypeId, ProcessStepStatusId.TODO, processId, DateTimeOffset.UtcNow)).ToImmutableArray();
 
         var message = _fixture.Create<string>();
 
@@ -382,10 +381,10 @@ public class ChecklistProcessorTests
 
         var createdSteps = new List<ProcessStep>();
 
-        A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>._, A<ProcessStepStatusId>._))
-            .ReturnsLazily((ProcessStepTypeId stepTypeId, ProcessStepStatusId stepStatusId) =>
+        A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>._, A<ProcessStepStatusId>._, A<Guid>._))
+            .ReturnsLazily((ProcessStepTypeId stepTypeId, ProcessStepStatusId stepStatusId, Guid processId) =>
             {
-                var processStep = new ProcessStep(Guid.NewGuid(), stepTypeId, stepStatusId, DateTimeOffset.UtcNow);
+                var processStep = new ProcessStep(Guid.NewGuid(), stepTypeId, stepStatusId, processId, DateTimeOffset.UtcNow);
                 createdSteps.Add(processStep);
                 return processStep;
             });
@@ -393,7 +392,7 @@ public class ChecklistProcessorTests
         var applicationId = Guid.NewGuid();
 
         // Act
-        var result = await _processor.ProcessChecklist(applicationId, checklist, processSteps, CancellationToken.None).ToListAsync().ConfigureAwait(false);
+        var result = await _processor.ProcessChecklist(applicationId, processId, checklist, processSteps, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
         result.Should().HaveCount(2);
@@ -409,16 +408,12 @@ public class ChecklistProcessorTests
         A.CallTo(() => _errorFunc(A<Exception>._, A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
             .MustHaveHappenedOnceExactly();
 
-        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.ACTIVATE_APPLICATION, ProcessStepStatusId.TODO)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.ACTIVATE_APPLICATION, ProcessStepStatusId.TODO, processId)).MustHaveHappenedOnceExactly();
         createdSteps.Should().HaveCount(1);
-        createdSteps.Select(step => (step.ProcessStepTypeId, step.ProcessStepStatusId)).Should().Contain(
+        createdSteps.Select(step => (step.ProcessStepTypeId, step.ProcessStepStatusId, step.ProcessId)).Should().Contain(
             new [] {
-                (ProcessStepTypeId.ACTIVATE_APPLICATION, ProcessStepStatusId.TODO),
+                (ProcessStepTypeId.ACTIVATE_APPLICATION, ProcessStepStatusId.TODO, processId),
             });
-        foreach (var processStep in createdSteps)
-        {
-            A.CallTo(() => _applicationChecklistRepository.CreateApplicationAssignedProcessStep(applicationId, processStep.Id)).MustHaveHappenedOnceExactly();
-        }
 
         A.CallTo(() => _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._)).MustHaveHappenedTwiceExactly();
     }
@@ -435,9 +430,11 @@ public class ChecklistProcessorTests
                 .Create())
             .ToImmutableArray();
 
+        var processId = Guid.NewGuid();
+
         var processSteps = new [] {
             ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH
-        }.Select(steptTypeId => new ProcessStep(Guid.NewGuid(), steptTypeId, ProcessStepStatusId.TODO, DateTimeOffset.UtcNow)).ToImmutableArray();
+        }.Select(steptTypeId => new ProcessStep(Guid.NewGuid(), steptTypeId, ProcessStepStatusId.TODO, processId, DateTimeOffset.UtcNow)).ToImmutableArray();
 
         var message = _fixture.Create<string>();
 
@@ -452,10 +449,10 @@ public class ChecklistProcessorTests
 
         var createdSteps = new List<ProcessStep>();
 
-        A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>._, A<ProcessStepStatusId>._))
-            .ReturnsLazily((ProcessStepTypeId stepTypeId, ProcessStepStatusId stepStatusId) =>
+        A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>._, A<ProcessStepStatusId>._, A<Guid>._))
+            .ReturnsLazily((ProcessStepTypeId stepTypeId, ProcessStepStatusId stepStatusId, Guid processId) =>
             {
-                var processStep = new ProcessStep(Guid.NewGuid(), stepTypeId, stepStatusId, DateTimeOffset.UtcNow);
+                var processStep = new ProcessStep(Guid.NewGuid(), stepTypeId, stepStatusId, processId, DateTimeOffset.UtcNow);
                 createdSteps.Add(processStep);
                 return processStep;
             });
@@ -463,7 +460,7 @@ public class ChecklistProcessorTests
         var applicationId = Guid.NewGuid();
 
         // Act
-        var result = await _processor.ProcessChecklist(applicationId, checklist, processSteps, CancellationToken.None).ToListAsync().ConfigureAwait(false);
+        var result = await _processor.ProcessChecklist(applicationId, processId, checklist, processSteps, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
         result.Should().HaveCount(2);
@@ -479,16 +476,12 @@ public class ChecklistProcessorTests
         A.CallTo(() => _errorFunc(A<Exception>._, A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
             .MustNotHaveHappened();
 
-        A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>._,A<ProcessStepStatusId>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>._,A<ProcessStepStatusId>._,processId)).MustHaveHappenedOnceExactly();
         createdSteps.Should().HaveCount(1);
-        createdSteps.Select(step => (step.ProcessStepTypeId, step.ProcessStepStatusId)).Should().Contain(
+        createdSteps.Select(step => (step.ProcessStepTypeId, step.ProcessStepStatusId, step.ProcessId)).Should().Contain(
             new [] {
-                (ProcessStepTypeId.ACTIVATE_APPLICATION, ProcessStepStatusId.TODO),
+                (ProcessStepTypeId.ACTIVATE_APPLICATION, ProcessStepStatusId.TODO, processId),
             });
-        foreach (var processStep in createdSteps)
-        {
-            A.CallTo(() => _applicationChecklistRepository.CreateApplicationAssignedProcessStep(applicationId, processStep.Id)).MustHaveHappenedOnceExactly();
-        }
 
         A.CallTo(() => _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._)).MustHaveHappenedTwiceExactly();
     }
@@ -505,9 +498,11 @@ public class ChecklistProcessorTests
                 .Create())
             .ToImmutableArray();
 
+        var processId = Guid.NewGuid();
+
         var processSteps = new [] {
             ProcessStepTypeId.ACTIVATE_APPLICATION
-        }.Select(steptTypeId => new ProcessStep(Guid.NewGuid(), steptTypeId, ProcessStepStatusId.TODO, DateTimeOffset.UtcNow)).ToImmutableArray();
+        }.Select(steptTypeId => new ProcessStep(Guid.NewGuid(), steptTypeId, ProcessStepStatusId.TODO, processId, DateTimeOffset.UtcNow)).ToImmutableArray();
 
         var message = _fixture.Create<string>();
 
@@ -530,14 +525,14 @@ public class ChecklistProcessorTests
         A.CallTo(()=> _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._))
             .Invokes((Guid processStepId, Action<ProcessStep> initialize, Action<ProcessStep> modify) =>
             {
-                var step = new ProcessStep(processStepId, default, default, default);
+                var step = new ProcessStep(processStepId, default, default, default, default);
                 initialize?.Invoke(step);
                 modify(step);
                 modifiedSteps.Add(step);
             });
 
         // Act
-        var result = await _processor.ProcessChecklist(Guid.NewGuid(), checklist, processSteps, CancellationToken.None).ToListAsync().ConfigureAwait(false);
+        var result = await _processor.ProcessChecklist(Guid.NewGuid(), processId, checklist, processSteps, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
         result.Should().HaveCount(1);
@@ -558,8 +553,7 @@ public class ChecklistProcessorTests
         A.CallTo(() => _errorFunc(A<Exception>._, A<IChecklistService.WorkerChecklistProcessStepData>._,A<CancellationToken>._))
             .MustNotHaveHappened();
 
-        A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>._,A<ProcessStepStatusId>._)).MustNotHaveHappened();
-        A.CallTo(() => _applicationChecklistRepository.CreateApplicationAssignedProcessStep(A<Guid>._,A<Guid>._)).MustNotHaveHappened();
+        A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>._,A<ProcessStepStatusId>._,A<Guid>._)).MustNotHaveHappened();
         A.CallTo(() => _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._)).MustHaveHappenedOnceExactly();
     }
 
@@ -575,9 +569,11 @@ public class ChecklistProcessorTests
                 .Create())
             .ToImmutableArray();
 
+        var processId = Guid.NewGuid();
+
         var processSteps = new [] {
             ProcessStepTypeId.ACTIVATE_APPLICATION
-        }.Select(steptTypeId => new ProcessStep(Guid.NewGuid(), steptTypeId, ProcessStepStatusId.TODO, DateTimeOffset.UtcNow)).ToImmutableArray();
+        }.Select(steptTypeId => new ProcessStep(Guid.NewGuid(), steptTypeId, ProcessStepStatusId.TODO, processId, DateTimeOffset.UtcNow)).ToImmutableArray();
 
         var message = _fixture.Create<string>();
 
@@ -600,14 +596,14 @@ public class ChecklistProcessorTests
         A.CallTo(()=> _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._))
             .Invokes((Guid processStepId, Action<ProcessStep> initialize, Action<ProcessStep> modify) =>
             {
-                var step = new ProcessStep(processStepId, default, default, default);
+                var step = new ProcessStep(processStepId, default, default, default, default);
                 initialize?.Invoke(step);
                 modify(step);
                 modifiedSteps.Add(step);
             });
 
         // Act
-        var result = await _processor.ProcessChecklist(Guid.NewGuid(), checklist, processSteps, CancellationToken.None).ToListAsync().ConfigureAwait(false);
+        var result = await _processor.ProcessChecklist(Guid.NewGuid(), processId, checklist, processSteps, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
         result.Should().HaveCount(1);
@@ -639,12 +635,14 @@ public class ChecklistProcessorTests
                 (ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, ApplicationChecklistEntryStatusId.TO_DO)
             }.ToImmutableArray();
 
+        var processId = Guid.NewGuid();
+
         var processSteps = new [] {
             ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH
-        }.Select(steptTypeId => new ProcessStep(Guid.NewGuid(), steptTypeId, ProcessStepStatusId.TODO, DateTimeOffset.UtcNow)).ToImmutableArray();
+        }.Select(steptTypeId => new ProcessStep(Guid.NewGuid(), steptTypeId, ProcessStepStatusId.TODO, processId, DateTimeOffset.UtcNow)).ToImmutableArray();
 
         // Act
-        var Act = async () => await _processor.ProcessChecklist(Guid.NewGuid(), checklist, processSteps, CancellationToken.None).ToListAsync().ConfigureAwait(false);
+        var Act = async () => await _processor.ProcessChecklist(Guid.NewGuid(), processId, checklist, processSteps, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         var result = await Assert.ThrowsAsync<ConflictException>(Act).ConfigureAwait(false);
 

@@ -32,7 +32,7 @@ public class ProcessStepRepositoryTests : IAssemblyFixture<TestDbFixture>
         var (sut, dbContext) = await CreateSutWithContext().ConfigureAwait(false);
 
         // Act
-        sut.CreateProcessStep(ProcessStepTypeId.ACTIVATE_APPLICATION, ProcessStepStatusId.TODO);
+        sut.CreateProcessStep(ProcessStepTypeId.ACTIVATE_APPLICATION, ProcessStepStatusId.TODO, new Guid("c9aaa06c-15ad-4de7-8e42-ab3b5f4a74d4"));
 
         // Assert
         var changeTracker = dbContext.ChangeTracker;
@@ -42,7 +42,12 @@ public class ProcessStepRepositoryTests : IAssemblyFixture<TestDbFixture>
         changedEntries.Should().HaveCount(1);
         var changedEntity = changedEntries.Single();
         changedEntity.State.Should().Be(EntityState.Added);
-        changedEntity.Entity.Should().BeOfType<ProcessStep>().Which.ProcessStepStatusId.Should().Be(ProcessStepStatusId.TODO);
+        changedEntity.Entity.Should().BeOfType<ProcessStep>();
+        ((ProcessStep)changedEntity.Entity).Should().Match<ProcessStep>(
+            step =>
+                step.ProcessStepTypeId == ProcessStepTypeId.ACTIVATE_APPLICATION &&
+                step.ProcessStepStatusId == ProcessStepStatusId.TODO &&
+                step.ProcessId == new Guid("c9aaa06c-15ad-4de7-8e42-ab3b5f4a74d4"));
     }
 
     #endregion

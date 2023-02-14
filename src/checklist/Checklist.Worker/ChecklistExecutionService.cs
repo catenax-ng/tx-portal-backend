@@ -93,20 +93,20 @@ public class ChecklistExecutionService
     }
 
     private static async Task<IEnumerable<(ApplicationChecklistEntryTypeId EntryTypeId, ApplicationChecklistEntryStatusId EntryStatusId)>> HandleChecklistProcessing(
-        (Guid ApplicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> Checklist, IEnumerable<ProcessStep> ProcessSteps) entryData,
+        (Guid ApplicationId, Guid ProcessId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> Checklist, IEnumerable<ProcessStep> ProcessSteps) entryData,
         IChecklistCreationService checklistCreationService,
         IChecklistProcessor checklistProcessor,
         IPortalRepositories checklistRepositories,
         CancellationToken stoppingToken)
     {
-        var (applicationId, checklistEntries, processSteps) = entryData;
+        var (applicationId, processId, checklistEntries, processSteps) = entryData;
         if (Enum.GetValues<ApplicationChecklistEntryTypeId>().Length != checklistEntries.Count())
         {
             var createdEntries = (await checklistCreationService
                 .CreateMissingChecklistItems(applicationId, checklistEntries.Select(entry => entry.TypeId)).ConfigureAwait(false)).ToList();
             checklistEntries = checklistEntries.Concat(createdEntries);
 
-            var newSteps = checklistCreationService.CreateInitialProcessSteps(applicationId, createdEntries);
+            var newSteps = checklistCreationService.CreateInitialProcessSteps(processId, createdEntries);
             processSteps = processSteps.Concat(newSteps.IntersectBy(_automaticProcessStepTypeIds, processStep => processStep.ProcessStepTypeId));
 
             await checklistRepositories.SaveAsync().ConfigureAwait(false);
@@ -114,7 +114,7 @@ public class ChecklistExecutionService
         }
         var checklist = checklistEntries.ToDictionary(entry => entry.TypeId, entry => entry.StatusId);
 
-        await foreach (var (typeId, statusId) in checklistProcessor.ProcessChecklist(applicationId, checklistEntries, processSteps, stoppingToken).WithCancellation(stoppingToken).ConfigureAwait(false))
+        await foreach (var (typeId, statusId) in checklistProcessor.ProcessChecklist(applicationId, processId, checklistEntries, processSteps, stoppingToken).WithCancellation(stoppingToken).ConfigureAwait(false))
         {
             await checklistRepositories.SaveAsync().ConfigureAwait(false);
             checklistRepositories.Clear();

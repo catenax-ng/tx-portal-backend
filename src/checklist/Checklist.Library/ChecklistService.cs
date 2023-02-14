@@ -57,6 +57,10 @@ public sealed class ChecklistService : IChecklistService
         {
             throw new ConflictException($"application {applicationId} is not in status SUBMITTED");
         }
+        if (checklistData.ProcessId == null)
+        {
+            throw new ConflictException($"application {applicationId} is not associated with a checklist-process");
+        }
         if (checklistData.Checklist == null || checklistData.ProcessSteps == null)
         {
             throw new UnexpectedConditionException("checklist or processSteps should never be null here");
@@ -74,7 +78,7 @@ public sealed class ChecklistService : IChecklistService
         {
             throw new ConflictException($"application {applicationId} checklist entry {entryTypeId}, process step {processStepTypeId} is not eligible to run");
         }
-        return new IChecklistService.ManualChecklistProcessStepData(applicationId, processStep.Id, entryTypeId, checklistData.Checklist.ToImmutableDictionary(entry => entry.TypeId, entry => entry.StatusId), checklistData.ProcessSteps);
+        return new IChecklistService.ManualChecklistProcessStepData(applicationId, checklistData.ProcessId.Value, processStep.Id, entryTypeId, checklistData.Checklist.ToImmutableDictionary(entry => entry.TypeId, entry => entry.StatusId), checklistData.ProcessSteps);
     }
 
     public void SkipProcessSteps(IChecklistService.ManualChecklistProcessStepData context, IEnumerable<ProcessStepTypeId> processStepTypeIds)
@@ -113,8 +117,7 @@ public sealed class ChecklistService : IChecklistService
 
         foreach (var processStepTypeId in nextProcessStepTypeIds.Except(context.ProcessSteps.Select(step => step.ProcessStepTypeId)))
         {
-            var step = processStepRepository.CreateProcessStep(processStepTypeId, ProcessStepStatusId.TODO);
-            applicationChecklistRepository.CreateApplicationAssignedProcessStep(context.ApplicationId, step.Id);
+            processStepRepository.CreateProcessStep(processStepTypeId, ProcessStepStatusId.TODO, context.ProcessId);
         }
     }
 

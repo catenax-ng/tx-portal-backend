@@ -1,0 +1,29 @@
+[
+    {
+      "id": "812c49bc-8de2-477a-8556-c4abfdfdaafe",
+      "date_created": "2022-03-24 18:01:33.403000 +00:00",
+      "date_last_changed": "2022-03-24 18:01:33.403000 +00:00",
+      "application_status_id": 8,
+      "company_id": "0dcd8209-85e2-4073-b130-ac094fb47106",
+      "checklist_process_id": "c97b0676-5b07-42fa-92ef-3743e1ac2ade",
+      "last_editor_id": null
+    },
+    {
+      "id": "ea385c2b-f89a-4936-b9aa-6faa7ab4a174",
+      "date_created": "2022-03-24 18:01:33.403000 +00:00",
+      "date_last_changed": "2022-03-24 18:01:33.403000 +00:00",
+      "application_status_id": 7,
+      "company_id": "d14eba77-0b18-4e41-9d84-49ef875c0763",
+      "checklist_process_id": "dd371565-9489-4907-a2e4-b8cbfe7a8cd2",
+      "last_editor_id": null
+    },
+    {
+      "id": "48013dde-30ee-4fca-abf5-0391283a0873",
+      "date_created": "2022-03-24 18:01:33.431000 +00:00",
+      "date_last_changed": "2022-03-24 18:01:33.431000 +00:00",
+      "application_status_id": 9,
+      "company_id": "bdac6865-2a8d-4bfd-9373-9dfce8190895",
+      "checklist_process_id": "1f9a3232-9772-4ecb-8f50-c16e97772dfe",
+      "last_editor_id": null
+    }
+  ]

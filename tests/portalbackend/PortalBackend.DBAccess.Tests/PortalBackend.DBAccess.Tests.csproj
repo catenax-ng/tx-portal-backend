@@ -73,12 +73,20 @@
     <Content Include="Seeder\Data\documents.test.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Remove="Seeder\Data\processes.test.json" />
+    <Content Include="Seeder\Data\processes.test.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Seeder\Data\company_applications.test.json" />
+    <Content Include="Seeder\Data\company_applications.test.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <None Remove="Seeder\Data\process_steps.test.json" />
     <Content Include="Seeder\Data\process_steps.test.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <None Remove="Seeder\Data\application_assigned_process_steps.test.json" />
-    <Content Include="Seeder\Data\application_assigned_process_steps.test.json">
+    <None Remove="Seeder\Data\application_checklist.test.json" />
+    <Content Include="Seeder\Data\application_checklist.test.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <None Remove="Seeder\Data\offers.test.json" />

@@ -78,20 +78,20 @@ public class ChecklistExecutionServiceTests
     {
         // Arrange
         A.CallTo(() => _applicationChecklistRepository.GetAllChecklistProcessStepData())
-            .Returns(new List<(Guid ApplicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> Checklist, IEnumerable<ProcessStep> ProcessSteps)>().ToAsyncEnumerable());
+            .Returns(new List<(Guid ApplicationId, Guid ProcessId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> Checklist, IEnumerable<ProcessStep> ProcessSteps)>().ToAsyncEnumerable());
 
         // Act
         await _service.ExecuteAsync(CancellationToken.None);
 
         // Assert
-        A.CallTo(() => _checklistProcessor.ProcessChecklist(A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,A<IEnumerable<ProcessStep>>._,A<CancellationToken>._))
+        A.CallTo(() => _checklistProcessor.ProcessChecklist(A<Guid>._,A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,A<IEnumerable<ProcessStep>>._,A<CancellationToken>._))
             .MustNotHaveHappened();
     }
 
     [Fact]
     public async Task ExecuteAsync_WithPendingItems_CallsProcessExpectedNumberOfTimes()
     {
-        var stepData = _fixture.CreateMany<(Guid ApplicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> Checklist, IEnumerable<ProcessStep> ProcessSteps)>().ToImmutableArray();
+        var stepData = _fixture.CreateMany<(Guid ApplicationId, Guid ProcessId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> Checklist, IEnumerable<ProcessStep> ProcessSteps)>().ToImmutableArray();
         // Arrange
         A.CallTo(() => _applicationChecklistRepository.GetAllChecklistProcessStepData())
             .Returns(stepData.ToAsyncEnumerable());
@@ -100,7 +100,7 @@ public class ChecklistExecutionServiceTests
         await _service.ExecuteAsync(CancellationToken.None);
 
         // Assert
-        A.CallTo(() => _checklistProcessor.ProcessChecklist(A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,A<IEnumerable<ProcessStep>>._,A<CancellationToken>._))
+        A.CallTo(() => _checklistProcessor.ProcessChecklist(A<Guid>._,A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,A<IEnumerable<ProcessStep>>._,A<CancellationToken>._))
             .MustHaveHappened(stepData.Length,Times.Exactly);
     }
 
@@ -110,14 +110,14 @@ public class ChecklistExecutionServiceTests
         // Arrange
         var stepData = _fixture.CreateMany<int>(5)
             .Select(_ => _fixture
-                .Build<(Guid ApplicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> Checklist, IEnumerable<ProcessStep> ProcessSteps)>()
+                .Build<(Guid ApplicationId, Guid ProcessId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> Checklist, IEnumerable<ProcessStep> ProcessSteps)>()
                 .With(x => x.Checklist, Enum.GetValues<ApplicationChecklistEntryTypeId>().Select(type => (type, _fixture.Create<ApplicationChecklistEntryStatusId>())))
                 .With(x => x.ProcessSteps, _fixture.CreateMany<int>(5).Select(_ => _fixture.Build<ProcessStep>().With(x => x.ProcessStepStatusId, ProcessStepStatusId.TODO).Create()))
                 .Create()).ToImmutableArray();
 
         A.CallTo(() => _applicationChecklistRepository.GetAllChecklistProcessStepData())
             .Returns(stepData.ToAsyncEnumerable());
-        A.CallTo(() => _checklistProcessor.ProcessChecklist(A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,A<IEnumerable<ProcessStep>>._,A<CancellationToken>._))
+        A.CallTo(() => _checklistProcessor.ProcessChecklist(A<Guid>._,A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,A<IEnumerable<ProcessStep>>._,A<CancellationToken>._))
             .Throws(() => new Exception("Only a test"));
 
         // Act
@@ -134,7 +134,7 @@ public class ChecklistExecutionServiceTests
         // Arrange
         var stepData = _fixture.CreateMany<int>(5)
             .Select(_ => _fixture
-                .Build<(Guid ApplicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> Checklist, IEnumerable<ProcessStep> ProcessSteps)>()
+                .Build<(Guid ApplicationId, Guid ProcessId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> Checklist, IEnumerable<ProcessStep> ProcessSteps)>()
                 .With(x => x.Checklist, Enum.GetValues<ApplicationChecklistEntryTypeId>().Select(type => (type, _fixture.Create<ApplicationChecklistEntryStatusId>())))
                 .With(x => x.ProcessSteps, _fixture.CreateMany<int>(5).Select(_ => _fixture.Build<ProcessStep>().With(x => x.ProcessStepStatusId, ProcessStepStatusId.DONE).Create()))
                 .Create()).ToImmutableArray();
@@ -142,15 +142,15 @@ public class ChecklistExecutionServiceTests
         A.CallTo(() => _applicationChecklistRepository.GetAllChecklistProcessStepData())
             .Returns(stepData.ToAsyncEnumerable());
 
-        A.CallTo(() => _checklistProcessor.ProcessChecklist(A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,A<IEnumerable<ProcessStep>>._,A<CancellationToken>._))
-            .ReturnsLazily((Guid _, IEnumerable<(ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId)> _, IEnumerable<ProcessStep> processSteps, CancellationToken _) =>
+        A.CallTo(() => _checklistProcessor.ProcessChecklist(A<Guid>._,A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,A<IEnumerable<ProcessStep>>._,A<CancellationToken>._))
+            .ReturnsLazily((Guid _, Guid _, IEnumerable<(ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId)> _, IEnumerable<ProcessStep> processSteps, CancellationToken _) =>
                 processSteps.Where(step => step.ProcessStepStatusId == ProcessStepStatusId.TODO).Select(step => (_fixture.Create<ApplicationChecklistEntryTypeId>(), _fixture.Create<ApplicationChecklistEntryStatusId>())).ToAsyncEnumerable());
 
         // Act
         await _service.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() => _checklistProcessor.ProcessChecklist(A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,A<IEnumerable<ProcessStep>>._,A<CancellationToken>._))
+        A.CallTo(() => _checklistProcessor.ProcessChecklist(A<Guid>._,A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,A<IEnumerable<ProcessStep>>._,A<CancellationToken>._))
             .MustHaveHappened(stepData.Length,Times.Exactly);
         A.CallTo(() => _checklistCreationService.CreateMissingChecklistItems(A<Guid>._,A<IEnumerable<ApplicationChecklistEntryTypeId>>._))
             .MustNotHaveHappened();
@@ -166,7 +166,7 @@ public class ChecklistExecutionServiceTests
         // Arrange
         var stepData = _fixture.CreateMany<int>(5)
             .Select(_ => _fixture
-                .Build<(Guid ApplicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> Checklist, IEnumerable<ProcessStep> ProcessSteps)>()
+                .Build<(Guid ApplicationId, Guid ProcessId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> Checklist, IEnumerable<ProcessStep> ProcessSteps)>()
                 .With(x => x.Checklist, Enum.GetValues<ApplicationChecklistEntryTypeId>().Select(type => (type, _fixture.Create<ApplicationChecklistEntryStatusId>())))
                 .With(x => x.ProcessSteps, _fixture.CreateMany<ProcessStepStatusId>(5).Select(status => _fixture.Build<ProcessStep>().With(x => x.ProcessStepStatusId, status).Create()))
                 .Create()).ToImmutableArray();
@@ -174,15 +174,15 @@ public class ChecklistExecutionServiceTests
         A.CallTo(() => _applicationChecklistRepository.GetAllChecklistProcessStepData())
             .Returns(stepData.ToAsyncEnumerable());
 
-        A.CallTo(() => _checklistProcessor.ProcessChecklist(A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,A<IEnumerable<ProcessStep>>._,A<CancellationToken>._))
-            .ReturnsLazily((Guid _, IEnumerable<(ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId)> _, IEnumerable<ProcessStep> processSteps, CancellationToken _) =>
+        A.CallTo(() => _checklistProcessor.ProcessChecklist(A<Guid>._,A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,A<IEnumerable<ProcessStep>>._,A<CancellationToken>._))
+            .ReturnsLazily((Guid _, Guid _, IEnumerable<(ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId)> _, IEnumerable<ProcessStep> processSteps, CancellationToken _) =>
                 processSteps.Where(step => step.ProcessStepStatusId == ProcessStepStatusId.TODO).Select(step => (_fixture.Create<ApplicationChecklistEntryTypeId>(), _fixture.Create<ApplicationChecklistEntryStatusId>())).ToAsyncEnumerable());
 
         // Act
         await _service.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() => _checklistProcessor.ProcessChecklist(A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,A<IEnumerable<ProcessStep>>._,A<CancellationToken>._))
+        A.CallTo(() => _checklistProcessor.ProcessChecklist(A<Guid>._,A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,A<IEnumerable<ProcessStep>>._,A<CancellationToken>._))
             .MustHaveHappened(stepData.Length,Times.Exactly);
         A.CallTo(() => _portalRepositories.SaveAsync())
             .MustHaveHappened(stepData.SelectMany(entry => entry.ProcessSteps).Where(step => step.ProcessStepStatusId == ProcessStepStatusId.TODO).Count(),Times.Exactly);
@@ -194,7 +194,7 @@ public class ChecklistExecutionServiceTests
         // Arrange
         var stepData = _fixture.CreateMany<int>(5)
             .Select(_ => _fixture
-                .Build<(Guid ApplicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> Checklist, IEnumerable<ProcessStep> ProcessSteps)>()
+                .Build<(Guid ApplicationId, Guid ProcessId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> Checklist, IEnumerable<ProcessStep> ProcessSteps)>()
                 .With(x => x.Checklist, _fixture.CreateMany<ApplicationChecklistEntryTypeId>(Enum.GetValues<ApplicationChecklistEntryTypeId>().Length-2).Select(type => (type, _fixture.Create<ApplicationChecklistEntryStatusId>())))
                 .With(x => x.ProcessSteps, _fixture.CreateMany<int>(5).Select(_ => _fixture.Build<ProcessStep>().With(x => x.ProcessStepStatusId, ProcessStepStatusId.DONE).Create()))
                 .Create()).ToImmutableArray();
@@ -208,8 +208,8 @@ public class ChecklistExecutionServiceTests
                     .Except(typeIds)
                     .Select(typeId => (typeId, _fixture.Create<ApplicationChecklistEntryStatusId>())));
 
-        A.CallTo(() => _checklistProcessor.ProcessChecklist(A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,A<IEnumerable<ProcessStep>>._,A<CancellationToken>._))
-            .ReturnsLazily((Guid _, IEnumerable<(ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId)> _, IEnumerable<ProcessStep> processSteps, CancellationToken _) =>
+        A.CallTo(() => _checklistProcessor.ProcessChecklist(A<Guid>._,A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,A<IEnumerable<ProcessStep>>._,A<CancellationToken>._))
+            .ReturnsLazily((Guid _, Guid _, IEnumerable<(ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId)> _, IEnumerable<ProcessStep> processSteps, CancellationToken _) =>
                 processSteps.Where(step => step.ProcessStepStatusId == ProcessStepStatusId.TODO).Select(step => (_fixture.Create<ApplicationChecklistEntryTypeId>(), _fixture.Create<ApplicationChecklistEntryStatusId>())).ToAsyncEnumerable());
 
         var messages = new List<string>();
@@ -221,7 +221,7 @@ public class ChecklistExecutionServiceTests
         await _service.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() => _checklistProcessor.ProcessChecklist(A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,A<IEnumerable<ProcessStep>>._,A<CancellationToken>._))
+        A.CallTo(() => _checklistProcessor.ProcessChecklist(A<Guid>._,A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,A<IEnumerable<ProcessStep>>._,A<CancellationToken>._))
             .MustHaveHappened(stepData.Length,Times.Exactly);
         A.CallTo(() => _checklistCreationService.CreateMissingChecklistItems(A<Guid>._,A<IEnumerable<ApplicationChecklistEntryTypeId>>._))
             .MustHaveHappened(stepData.Length,Times.Exactly);
@@ -243,7 +243,7 @@ public class ChecklistExecutionServiceTests
         // Arrange
         var stepData = _fixture.CreateMany<int>(5)
             .Select(_ => _fixture
-                .Build<(Guid ApplicationId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> Checklist, IEnumerable<ProcessStep> ProcessSteps)>()
+                .Build<(Guid ApplicationId, Guid ProcessId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> Checklist, IEnumerable<ProcessStep> ProcessSteps)>()
                 .With(x => x.Checklist, _fixture.CreateMany<ApplicationChecklistEntryTypeId>(Enum.GetValues<ApplicationChecklistEntryTypeId>().Length-1).Select(type => (type, _fixture.Create<ApplicationChecklistEntryStatusId>())))
                 .With(x => x.ProcessSteps, _fixture.CreateMany<int>(5).Select(_ => _fixture.Build<ProcessStep>().With(x => x.ProcessStepStatusId, ProcessStepStatusId.DONE).Create()))
                 .Create()).ToImmutableArray();
@@ -254,8 +254,8 @@ public class ChecklistExecutionServiceTests
         A.CallTo(() => _checklistCreationService.CreateMissingChecklistItems(A<Guid>._,A<IEnumerable<ApplicationChecklistEntryTypeId>>._))
             .Returns(Enumerable.Empty<(ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId)>());
 
-        A.CallTo(() => _checklistProcessor.ProcessChecklist(A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,A<IEnumerable<ProcessStep>>._,A<CancellationToken>._))
-            .ReturnsLazily((Guid _, IEnumerable<(ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId)> _, IEnumerable<ProcessStep> processSteps, CancellationToken _) =>
+        A.CallTo(() => _checklistProcessor.ProcessChecklist(A<Guid>._,A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,A<IEnumerable<ProcessStep>>._,A<CancellationToken>._))
+            .ReturnsLazily((Guid _, Guid _, IEnumerable<(ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId)> _, IEnumerable<ProcessStep> processSteps, CancellationToken _) =>
                 processSteps.Where(step => step.ProcessStepStatusId == ProcessStepStatusId.TODO).Select(step => (_fixture.Create<ApplicationChecklistEntryTypeId>(), _fixture.Create<ApplicationChecklistEntryStatusId>())).ToAsyncEnumerable());
 
         var messages = new List<string>();
@@ -267,7 +267,7 @@ public class ChecklistExecutionServiceTests
         await _service.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() => _checklistProcessor.ProcessChecklist(A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,A<IEnumerable<ProcessStep>>._,A<CancellationToken>._))
+        A.CallTo(() => _checklistProcessor.ProcessChecklist(A<Guid>._,A<Guid>._,A<IEnumerable<(ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId)>>._,A<IEnumerable<ProcessStep>>._,A<CancellationToken>._))
             .MustHaveHappened(stepData.Length,Times.Exactly);
         A.CallTo(() => _checklistCreationService.CreateMissingChecklistItems(A<Guid>._,A<IEnumerable<ApplicationChecklistEntryTypeId>>._))
             .MustHaveHappened(stepData.Length,Times.Exactly);

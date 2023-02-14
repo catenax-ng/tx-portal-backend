@@ -32,8 +32,9 @@ public interface IChecklistProcessor
     /// Processes the possible automated steps of the checklist
     /// </summary>
     /// <param name="applicationId">Id of the application to process the checklist</param>
+    /// <param name="processId">Id of the process associated with the application</param>
     /// <param name="checklistEntries">The checklist entries to process</param>
     /// <param name="processSteps">The eligible processSteps</param>
     /// <param name="cancellationToken">Cancellation Token</param>
-    IAsyncEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> ProcessChecklist(Guid applicationId, IEnumerable<(ApplicationChecklistEntryTypeId EntryTypeId, ApplicationChecklistEntryStatusId EntryStatusId)> checklistEntries, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken);
+    IAsyncEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> ProcessChecklist(Guid applicationId, Guid processId, IEnumerable<(ApplicationChecklistEntryTypeId EntryTypeId, ApplicationChecklistEntryStatusId EntryStatusId)> checklistEntries, IEnumerable<ProcessStep> processSteps, CancellationToken cancellationToken);
 }

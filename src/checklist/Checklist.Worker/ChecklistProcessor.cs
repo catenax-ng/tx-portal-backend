@@ -56,6 +56,7 @@ public class ChecklistProcessor : IChecklistProcessor
 
     private sealed record ProcessingContext(
         Guid ApplicationId,
+        Guid ProcessId,
         IDictionary<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId> Checklist,
         IDictionary<ProcessStepTypeId, IEnumerable<ProcessStep>> AllSteps,
         Queue<ProcessStepTypeId> WorkerStepTypeIds,
@@ -64,12 +65,13 @@ public class ChecklistProcessor : IChecklistProcessor
         IProcessStepRepository ProcessStepRepository);
 
     /// <inheritdoc />
-    public async IAsyncEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> ProcessChecklist(Guid applicationId, IEnumerable<(ApplicationChecklistEntryTypeId EntryTypeId, ApplicationChecklistEntryStatusId EntryStatusId)> checklistEntries, IEnumerable<ProcessStep> processSteps, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)> ProcessChecklist(Guid applicationId, Guid processId, IEnumerable<(ApplicationChecklistEntryTypeId EntryTypeId, ApplicationChecklistEntryStatusId EntryStatusId)> checklistEntries, IEnumerable<ProcessStep> processSteps, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var allSteps = processSteps.GroupBy(step => step.ProcessStepTypeId).ToDictionary(group => group.Key, group => group.AsEnumerable());
 
         var context = new ProcessingContext(
             applicationId,
+            processId,
             checklistEntries.ToDictionary(entry => entry.EntryTypeId, entry => entry.EntryStatusId),
             allSteps,
             new Queue<ProcessStepTypeId>(allSteps.Keys.Where(step => !_checklistHandlerService.IsManualProcessStep(step))),
@@ -182,8 +184,7 @@ public class ChecklistProcessor : IChecklistProcessor
         var modified = false;
         foreach (var nextStepTypeId in nextSteps.Except(context.AllSteps.Keys))
         {
-            var processStep = context.ProcessStepRepository.CreateProcessStep(nextStepTypeId, ProcessStepStatusId.TODO);
-            context.ChecklistRepository.CreateApplicationAssignedProcessStep(context.ApplicationId, processStep.Id);
+            var processStep = context.ProcessStepRepository.CreateProcessStep(nextStepTypeId, ProcessStepStatusId.TODO, context.ProcessId);
             context.AllSteps.Add(nextStepTypeId, new[] { processStep });
             if (_checklistHandlerService.IsManualProcessStep(nextStepTypeId))
             {

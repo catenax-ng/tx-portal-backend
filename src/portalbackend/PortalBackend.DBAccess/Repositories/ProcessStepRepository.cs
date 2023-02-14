@@ -38,15 +38,38 @@ public class ProcessStepRepository : IProcessStepRepository
         _context = portalDbContext;
     }
 
-    public ProcessStep CreateProcessStep(ProcessStepTypeId processStepTypeId, ProcessStepStatusId processStepStatusId) =>
-        _context.Add(new ProcessStep(Guid.NewGuid(), processStepTypeId, processStepStatusId, DateTimeOffset.UtcNow)).Entity;
+    public Process CreateProcess(ProcessTypeId processTypeId) =>
+        _context.Add(new Process(Guid.NewGuid(), processTypeId)).Entity;
+
+    public ProcessStep CreateProcessStep(ProcessStepTypeId processStepTypeId, ProcessStepStatusId processStepStatusId, Guid processId) =>
+        _context.Add(new ProcessStep(Guid.NewGuid(), processStepTypeId, processStepStatusId, processId, DateTimeOffset.UtcNow)).Entity;
+
+    public IEnumerable<ProcessStep> CreateProcessStepRange(Guid processId, IEnumerable<ProcessStepTypeId> processStepTypeIds)
+    {
+        var processSteps = processStepTypeIds.Select(stepTypeId => new ProcessStep(Guid.NewGuid(), stepTypeId, ProcessStepStatusId.TODO, processId, DateTimeOffset.UtcNow)).ToList();
+        _context.AddRange(processSteps);
+        return processSteps;
+    }
 
     public void AttachAndModifyProcessStep(Guid processStepId, Action<ProcessStep>? initialize, Action<ProcessStep> modify)
     {
-        var step = new ProcessStep(processStepId, default, default, default);
+        var step = new ProcessStep(processStepId, default, default, Guid.Empty, default);
         initialize?.Invoke(step);
         _context.Attach(step);
         step.DateLastChanged = DateTimeOffset.UtcNow;
         modify(step);
     }
+
+    public Task<(ProcessTypeId ProcessTypeId, IEnumerable<(Guid ProcessStepId, ProcessStepTypeId ProcessStepTypeId)> ProcessSteps)> GetProcessStepData(Guid processId) =>
+        _context.Processes
+            .AsNoTracking()
+            .Where(process => process.Id == processId)
+            .Select(process => new ValueTuple<ProcessTypeId, IEnumerable<(Guid,ProcessStepTypeId)>>(
+                process.ProcessTypeId,
+                process.ProcessSteps
+                    .Where(step => step.ProcessStepStatusId == ProcessStepStatusId.TODO)
+                    .Select(step => new ValueTuple<Guid,ProcessStepTypeId>(
+                        step.Id,
+                        step.ProcessStepTypeId))))
+            .SingleOrDefaultAsync();
 }
