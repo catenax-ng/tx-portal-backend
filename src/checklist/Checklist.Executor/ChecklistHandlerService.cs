@@ -28,7 +28,7 @@ using Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 using System.Collections.Immutable;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Worker;
+namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Executor;
 
     /// <inheritdoc />
 public class ChecklistHandlerService : IChecklistHandlerService
@@ -40,20 +40,6 @@ public class ChecklistHandlerService : IChecklistHandlerService
     private readonly IApplicationActivationService _applicationActivationService;
 
     private readonly ImmutableDictionary<ProcessStepTypeId, IChecklistHandlerService.ProcessStepExecution> _stepExecutions;
-
-    private static readonly IEnumerable<ProcessStepTypeId> _manuelProcessSteps = new [] {
-        ProcessStepTypeId.VERIFY_REGISTRATION,
-        ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_MANUAL,
-        ProcessStepTypeId.RETRIGGER_IDENTITY_WALLET,
-        ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE,
-        ProcessStepTypeId.END_CLEARING_HOUSE,
-        ProcessStepTypeId.RETRIGGER_SELF_DESCRIPTION_LP,
-        ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PUSH,
-        ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PULL,
-        ProcessStepTypeId.OVERRIDE_BUSINESS_PARTNER_NUMBER,
-        ProcessStepTypeId.TRIGGER_OVERRIDE_CLEARING_HOUSE,
-        ProcessStepTypeId.FINISH_SELF_DESCRIPTION_LP
-    };
 
     /// <inheritdoc />
     public ChecklistHandlerService(
@@ -92,8 +78,8 @@ public class ChecklistHandlerService : IChecklistHandlerService
     }
 
     /// <inheritdoc />
-    public bool IsManualProcessStep(ProcessStepTypeId stepTypeId)
+    public bool IsExecutableProcessStep(ProcessStepTypeId stepTypeId)
     {
-        return _manuelProcessSteps.Contains(stepTypeId);
+        return _stepExecutions.ContainsKey(stepTypeId);
     }
 }
