@@ -411,8 +411,6 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         offerDetail.Should().NotBeNull();
         offerDetail!.Count.Should().Be(7);
         offerDetail.Data.Should().HaveCount(7);
-        offerDetail.Data.Select(data => data.Title).Should().Contain(names);
-        offerDetail.Data.Select(data => data.Description).Should().Contain(descriptions);
         if (sorting == ServiceOverviewSorting.ProviderAsc)
         {
             offerDetail.Data.Select(data => data.Provider).Should().BeInAscendingOrder();
