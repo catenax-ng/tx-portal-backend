@@ -309,7 +309,7 @@ public class OfferService : IOfferService
         {
             offerDetails.OfferId,
             offerDetails.CompanyName,
-            offerDetails.OfferName
+            AppName = offerDetails.OfferName
         });
         await _notificationService.CreateNotifications(
             iTAdminRoles,
