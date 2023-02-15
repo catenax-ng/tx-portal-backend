@@ -365,15 +365,21 @@ public class AppsBusinessLogic : IAppsBusinessLogic
 
     private static async Task<AppDescriptionsData> ValidateAndGetAppDescription(Guid appId, string iamUserId, IOfferRepository offerRepository)
     {
-        var result = await offerRepository.GetActiveOfferDescriptionDataByIdAsync(appId,OfferTypeId.APP,iamUserId).ConfigureAwait(false);
-        if(result == default)
+        var result = await offerRepository.GetActiveOfferDescriptionDataByIdAsync(appId, OfferTypeId.APP, iamUserId).ConfigureAwait(false);
+        if(result == null)
+        {
             throw new NotFoundException($"App {appId} does not exist.");
+        }
 
         if(!result.IsStatusActive)
+        {
             throw new ConflictException($"App {appId} is in InCorrect Status");
+        }
 
         if(!result.IsProviderCompanyUser)
+        {
             throw new ForbiddenException($"user {iamUserId} is not a member of the providercompany of App {appId}");
+        }
         return result; 
     }
 }
