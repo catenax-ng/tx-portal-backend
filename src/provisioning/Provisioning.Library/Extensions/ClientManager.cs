@@ -96,7 +96,7 @@ public partial class ProvisioningManager
         var newClient = Clone(_Settings.CentralOIDCClient);
         newClient.ClientId = clientId;
         newClient.RedirectUris = Enumerable.Repeat<string>(redirectUri, 1);
-        if (baseUrl != null)
+        if (!string.IsNullOrEmpty(baseUrl))
         {
             newClient.BaseUrl = baseUrl;
         }
