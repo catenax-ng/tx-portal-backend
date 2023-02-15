@@ -522,7 +522,7 @@ public class OfferRepository : IOfferRepository
                     offer.Documents.Where(document => document.DocumentTypeId == DocumentTypeId.APP_LEADIMAGE).Select(document => document.Id).FirstOrDefault(),
                     offer.Documents.Where(document => document.DocumentTypeId == DocumentTypeId.APP_IMAGE).Select(document => document.Id),
                     offer.Provider,
-                    offer.UseCases.Select(UC => UC.Name),
+                    offer.UseCases.Select(uc => uc.Name),
                     offer.OfferDescriptions.Select(od => new OfferDescriptionData(od.LanguageShortName, od.DescriptionLong, od.DescriptionShort)),
                     offer.Documents.Where(d => d.DocumentTypeId != DocumentTypeId.APP_IMAGE && d.DocumentTypeId != DocumentTypeId.APP_LEADIMAGE)
                         .Select(d => new DocumentTypeData(d.DocumentTypeId, d.Id, d.DocumentName)),
