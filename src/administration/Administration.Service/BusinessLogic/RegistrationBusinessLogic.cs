@@ -459,4 +459,18 @@ public sealed class RegistrationBusinessLogic : IRegistrationBusinessLogic
             }
         }  
     }
+    
+    /// <inheritdoc />
+    public async Task<(string fileName, byte[] content, string contentType)> GetDocumentAsync(Guid documentId)
+    {
+        var document = await _portalRepositories.GetInstance<IDocumentRepository>()
+            .GetDocumentByIdAsync(documentId)
+            .ConfigureAwait(false);
+        if (document == null)
+        {
+            throw new NotFoundException($"Document {documentId} does not exist");
+        }
+
+        return (document.DocumentName, document.DocumentContent, document.DocumentTypeId.GetContentType());
+    }
 }

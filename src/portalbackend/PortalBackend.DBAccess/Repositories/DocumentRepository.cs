@@ -92,8 +92,22 @@ public class DocumentRepository : IDocumentRepository
     public Task<(Guid DocumentId, bool IsSameUser)> GetDocumentIdCompanyUserSameAsIamUserAsync(Guid documentId, string iamUserId) =>
         this._dbContext.Documents
             .Where(x => x.Id == documentId)
-            .Select(x => ((Guid DocumentId, bool IsSameUser))new (x.Id, x.CompanyUser!.IamUser!.UserEntityId == iamUserId))
+            .Select(x => new ValueTuple<Guid, bool>(x.Id, x.CompanyUser!.IamUser!.UserEntityId == iamUserId))
             .SingleOrDefaultAsync();
+
+    /// <inheritdoc />
+    public Task<(byte[] Content, string FileName, DocumentTypeId DocumentTypeId, bool IsUserInCompany)> GetDocumentDataAndIsCompanyUserAsync(Guid documentId, string iamUserId) =>
+        this._dbContext.Documents
+            .Where(x => x.Id == documentId)
+            .Select(x => new ValueTuple<byte[], string, DocumentTypeId, bool>(x.DocumentContent, x.DocumentName, x.DocumentTypeId, x.CompanyUser!.Company!.CompanyUsers.Any(cu => cu.IamUser!.UserEntityId == iamUserId)))
+            .SingleOrDefaultAsync();
+
+    /// <inheritdoc />
+    public Task<(byte[] Content, string FileName)> GetDocumentDataByIdAndTypeAsync(Guid documentId, DocumentTypeId documentTypeId) =>
+        _dbContext.Documents
+        .Where(x => x.Id == documentId && x.DocumentTypeId == documentTypeId)
+        .Select(x => new ValueTuple<byte[], string>(x.DocumentContent, x.DocumentName))
+        .SingleOrDefaultAsync();
 
     /// <inheritdoc />
     public void RemoveDocument(Guid documentId) => 

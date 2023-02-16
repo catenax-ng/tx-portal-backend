@@ -46,17 +46,38 @@ public class DocumentsBusinessLogic : IDocumentsBusinessLogic
     }
 
     /// <inheritdoc />
-    public async Task<(string fileName, byte[] content)> GetDocumentAsync(Guid documentId, string iamUserId)
+    public async Task<(string fileName, byte[] content, string contentType)> GetDocumentAsync(Guid documentId, string iamUserId)
     {
-        var document = await this._portalRepositories.GetInstance<IDocumentRepository>().GetDocumentByIdAsync(documentId).ConfigureAwait(false);
-        if (document is null)
+        var documentDetails = await _portalRepositories.GetInstance<IDocumentRepository>()
+            .GetDocumentDataAndIsCompanyUserAsync(documentId, iamUserId)
+            .ConfigureAwait(false);
+        if (documentDetails == default)
         {
-            throw new NotFoundException("No document with the given id was found.");
+            throw new NotFoundException($"Document {documentId} does not exist");
         }
 
-        return (document.DocumentName, document.DocumentContent);
+        if (!documentDetails.IsUserInCompany)
+        {
+            throw new ForbiddenException("User is not allowed to access the document");
+        }
+
+        return (documentDetails.FileName, documentDetails.Content, documentDetails.DocumentTypeId.GetContentType());
     }
-    
+
+    /// <inheritdoc />
+    public async Task<(string fileName, byte[] content)> GetSelfDescriptionDocumentAsync(Guid documentId)
+    {
+        var documentDetails = await _portalRepositories.GetInstance<IDocumentRepository>()
+            .GetDocumentDataByIdAndTypeAsync(documentId, DocumentTypeId.SELF_DESCRIPTION)
+            .ConfigureAwait(false);
+        if (documentDetails == default)
+        {
+            throw new NotFoundException($"Self description document {documentId} does not exist");
+        }
+
+        return (documentDetails.FileName, documentDetails.Content);
+    }
+
     /// <inheritdoc />
     public async Task<bool> DeleteDocumentAsync(Guid documentId, string iamUserId)
     {
