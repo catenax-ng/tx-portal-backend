@@ -2193,7 +2193,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         new
                         {
                             Id = 4,
-                            Label = "APP_DATA_DETAILS"
+                            Label = "CONFORMITY_APPROVAL_REGISTRATION"
                         },
                         new
                         {
@@ -2219,6 +2219,16 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         {
                             Id = 9,
                             Label = "APP_TECHNICAL_INFORMATION"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Label = "CONFORMITY_APPROVAL_CONNECTOR"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            Label = "CONFORMITY_APPROVAL_BUSINESS_APPS"
                         });
                 });
 
