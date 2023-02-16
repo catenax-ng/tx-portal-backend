@@ -58,7 +58,7 @@ public class ContentTypeMapperExtensionTests
 
     public void MapToImageContentType_ExpectedResult(string filename, string contentType)
     {
-        var result = filename.MapToImageContentType();
+        var result = filename.MapToContentType();
         result.Should().Be(contentType);
     }
 
@@ -67,7 +67,7 @@ public class ContentTypeMapperExtensionTests
     [InlineData("deadbeaf.pdf")]
     public void MapToImageContentType_Throws(string filename)
     {
-        var Act = () => filename.MapToImageContentType();
+        var Act = () => filename.MapToContentType();
         var result = Assert.Throws<UnsupportedMediaTypeException>(Act);
     }
 

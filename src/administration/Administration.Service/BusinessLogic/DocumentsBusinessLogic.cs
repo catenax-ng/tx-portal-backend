@@ -20,6 +20,7 @@
 
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Web;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
@@ -61,7 +62,7 @@ public class DocumentsBusinessLogic : IDocumentsBusinessLogic
             throw new ForbiddenException("User is not allowed to access the document");
         }
 
-        return (documentDetails.FileName, documentDetails.Content, documentDetails.DocumentTypeId.GetContentType());
+        return (documentDetails.FileName, documentDetails.Content, documentDetails.FileName.MapToContentType());
     }
 
     /// <inheritdoc />

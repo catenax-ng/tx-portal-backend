@@ -206,11 +206,11 @@ public class DocumentsBusinessLogicTests
     {
         var content = new byte[7];
         A.CallTo(() => _documentRepository.GetDocumentDataAndIsCompanyUserAsync(ValidDocumentId, IamUserId))
-            .ReturnsLazily(() => new ValueTuple<byte[], string, DocumentTypeId, bool>(content, "test.pdf", DocumentTypeId.COMMERCIAL_REGISTER_EXTRACT, true));
+            .ReturnsLazily(() => new ValueTuple<byte[], string, bool>(content, "test.pdf", true));
         A.CallTo(() => _documentRepository.GetDocumentDataAndIsCompanyUserAsync(A<Guid>.That.Not.Matches(x => x == ValidDocumentId), IamUserId))
-            .ReturnsLazily(() => new ValueTuple<byte[], string, DocumentTypeId, bool>());
+            .ReturnsLazily(() => new ValueTuple<byte[], string, bool>());
         A.CallTo(() => _documentRepository.GetDocumentDataAndIsCompanyUserAsync(ValidDocumentId, A<string>.That.Not.Matches(x => x == IamUserId)))
-            .ReturnsLazily(() => new ValueTuple<byte[], string, DocumentTypeId, bool>(content, "test.pdf", DocumentTypeId.COMMERCIAL_REGISTER_EXTRACT, false));
+            .ReturnsLazily(() => new ValueTuple<byte[], string, bool>(content, "test.pdf", false));
     }
 
     #endregion

@@ -32,6 +32,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using System.Text.RegularExpressions;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Web;
 using Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.Models;
 
@@ -471,6 +472,6 @@ public sealed class RegistrationBusinessLogic : IRegistrationBusinessLogic
             throw new NotFoundException($"Document {documentId} does not exist");
         }
 
-        return (document.DocumentName, document.DocumentContent, document.DocumentTypeId.GetContentType());
+        return (document.DocumentName, document.DocumentContent, document.DocumentName.MapToContentType());
     }
 }
