@@ -71,7 +71,7 @@ public interface IDocumentRepository
     /// <param name="documentId">id of the document</param>
     /// <param name="iamUserId">id of the iamUser</param>
     /// <returns>Returns the document data</returns>
-    Task<(byte[]? Content, string FileName, DocumentTypeId DocumentTypeId, bool IsUserInCompany)> GetDocumentDataAndIsCompanyUserAsync(Guid documentId, string iamUserId);
+    Task<(byte[]? Content, string FileName, bool IsUserInCompany)> GetDocumentDataAndIsCompanyUserAsync(Guid documentId, string iamUserId);
 
     /// <summary>
     /// Gets the document data for the given id and type
