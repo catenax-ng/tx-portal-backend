@@ -114,6 +114,7 @@ public class DocumentsController : ControllerBase
     /// <response code="403">Call was made from a non dev environment</response>
     /// <response code="404">The document was not found.</response>
     [HttpGet]
+    [Authorize(Roles = "debug_download_documents")]
     [Route("{documentId}/seeddata")]
     [Produces("application/json")]
     [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
