@@ -62,6 +62,11 @@ public class DocumentsBusinessLogic : IDocumentsBusinessLogic
             throw new ForbiddenException("User is not allowed to access the document");
         }
 
+        if (documentDetails.Content == null)
+        {
+            throw new UnexpectedConditionException("documentContent should never be null here");
+        }
+
         return (documentDetails.FileName, documentDetails.Content, documentDetails.FileName.MapToContentType());
     }
 

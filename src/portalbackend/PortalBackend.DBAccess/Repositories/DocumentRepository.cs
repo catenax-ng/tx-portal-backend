@@ -96,10 +96,17 @@ public class DocumentRepository : IDocumentRepository
             .SingleOrDefaultAsync();
 
     /// <inheritdoc />
-    public Task<(byte[] Content, string FileName, bool IsUserInCompany)> GetDocumentDataAndIsCompanyUserAsync(Guid documentId, string iamUserId) =>
+    public Task<(byte[]? Content, string FileName, bool IsUserInCompany)> GetDocumentDataAndIsCompanyUserAsync(Guid documentId, string iamUserId) =>
         this._dbContext.Documents
             .Where(x => x.Id == documentId)
-            .Select(x => new ValueTuple<byte[], string, bool>(x.DocumentContent, x.DocumentName, x.CompanyUser!.Company!.CompanyUsers.Any(cu => cu.IamUser!.UserEntityId == iamUserId)))
+            .Select(x => new {
+                Document = x,
+                IsUserInSameCompany = x.CompanyUser!.Company!.CompanyUsers.Any(cu => cu.IamUser!.UserEntityId == iamUserId)
+            })
+            .Select(x => new ValueTuple<byte[]?, string, bool>(
+                x.IsUserInSameCompany ? x.Document.DocumentContent : null,
+                x.Document.DocumentName,
+                x.IsUserInSameCompany))
             .SingleOrDefaultAsync();
 
     /// <inheritdoc />
