@@ -55,6 +55,7 @@ public class ContentTypeMapperExtensionTests
     [InlineData("filename.SVG", "image/svg+xml")]
     [InlineData("filename.TIF", "image/tiff")]
     [InlineData("filename.TIFF", "image/tiff")]
+    [InlineData("deadbeaf.pdf", "application/pdf")]
 
     public void MapToImageContentType_ExpectedResult(string filename, string contentType)
     {
@@ -64,7 +65,6 @@ public class ContentTypeMapperExtensionTests
 
     [Theory]
     [InlineData("deadbeaf")]
-    [InlineData("deadbeaf.pdf")]
     public void MapToImageContentType_Throws(string filename)
     {
         var Act = () => filename.MapToContentType();
