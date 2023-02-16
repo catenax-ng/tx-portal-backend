@@ -712,12 +712,8 @@ public class AppBusinessLogicTests
         A.CallTo(() => _offerRepository.GetActiveOfferDescriptionDataByIdAsync(appId, OfferTypeId.APP, IamUserId))
             .ReturnsLazily(() => appDescriptionData);
         
-        A.CallTo(() => _offerRepository.AttachAndModifyOfferDescription(A<Guid>._, A<string>._, A<Action<OfferDescription>>._,A<Action<OfferDescription>>._))
-            .Invokes((Guid appId, string languageShortName, Action<OfferDescription> initialize, Action<OfferDescription> modify) =>{
-                var offerDescription = new OfferDescription(appId, languageShortName, null!, null!);             
-                initialize.Invoke(offerDescription);
-                modify(offerDescription);
-                });
+        A.CallTo(() => _offerRepository.CreateUpdateDeleteOfferDescriptions(appId, existingofferDescription,
+            updateDescriptionData.Select(od => new ValueTuple<string, string, string>(od.LanguageCode, od.LongDescription, od.ShortDescription))));
         
         var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), null!);
 
@@ -725,8 +721,8 @@ public class AppBusinessLogicTests
         await sut.CreateOrUpdateAppDescriptionByIdAsync(appId, IamUserId, updateDescriptionData).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() => _offerRepository.AttachAndModifyOfferDescription(A<Guid>._, A<string>._, A<Action<OfferDescription>>._, A<Action<OfferDescription>>._)) 
-            .MustHaveHappenedTwiceExactly();
+        A.CallTo(() => _offerRepository.CreateUpdateDeleteOfferDescriptions(A<Guid>._, A<IEnumerable<OfferDescriptionData>>._, A<IEnumerable<(string,string,string)>>._)) 
+            .MustHaveHappenedOnceExactly();
     }
 
     [Fact]
@@ -734,7 +730,6 @@ public class AppBusinessLogicTests
     {
         // Arrange
         var appId = _fixture.Create<Guid>();
-        var seed = new Dictionary<(Guid,string),OfferDescription>() {};
         var updateDescriptionData =  new []{
             new LocalizedDescription("en", _fixture.Create<string>(), _fixture.Create<string>()),
             new LocalizedDescription("de", _fixture.Create<string>(), _fixture.Create<string>())
@@ -743,14 +738,9 @@ public class AppBusinessLogicTests
 
         A.CallTo(() => _offerRepository.GetActiveOfferDescriptionDataByIdAsync(appId, OfferTypeId.APP, IamUserId))
             .ReturnsLazily(() => appDescriptionData);
-        
-        A.CallTo(() => _offerRepository.AddOfferDescriptions(A<IEnumerable<(Guid offerId, string languageShortName, string descriptionLong, string descriptionShort)>>._))
-            .Invokes((IEnumerable<(Guid offerId, string languageShortName, string descriptionLong, string descriptionShort)> offerDescriptions) =>
-                {
-                    foreach( var item in offerDescriptions)
-                        seed[(item.offerId, item.languageShortName)] = 
-                            new OfferDescription(item.offerId,item.languageShortName,item.descriptionLong,item.descriptionShort);
-                });
+
+        A.CallTo(() => _offerRepository.CreateUpdateDeleteOfferDescriptions(appId, null!,
+            updateDescriptionData.Select(od => new ValueTuple<string, string, string>(od.LanguageCode, od.LongDescription, od.ShortDescription))));        
         
         var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), null!);
 
@@ -758,9 +748,8 @@ public class AppBusinessLogicTests
         await sut.CreateOrUpdateAppDescriptionByIdAsync(appId, IamUserId, updateDescriptionData).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() => _offerRepository.AddOfferDescriptions(A<IEnumerable<(Guid appId, string languageShortName, string descriptionLong, string descriptionShort)>>._)) 
+        A.CallTo(() => _offerRepository.CreateUpdateDeleteOfferDescriptions(A<Guid>._, A<IEnumerable<OfferDescriptionData>>._, A<IEnumerable<(string,string,string)>>._)) 
             .MustHaveHappenedOnceExactly();
-        seed.Should().HaveSameCount(updateDescriptionData);
     }
     
     #endregion

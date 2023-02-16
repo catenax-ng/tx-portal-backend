@@ -546,4 +546,16 @@ public class OfferRepository : IOfferRepository
                 offer.ProviderCompany!.CompanyUsers.Any(cu => cu.IamUser!.UserEntityId == iamUserId),
                 offer.OfferDescriptions.Select(od => new OfferDescriptionData(od.LanguageShortName, od.DescriptionLong, od.DescriptionShort))))
             .SingleOrDefaultAsync();
+    
+    ///<inheritdoc/>
+    public void CreateUpdateDeleteOfferDescriptions(Guid offerId, IEnumerable<OfferDescriptionData> initialItems, IEnumerable<(string LanguageCode, string LongDescription, string ShortDescription)> modifiedItems) =>
+        _context.AddAttachRemoveRange(
+            initialItems,
+            modifiedItems,
+            initial => (offerId, initial.languageCode),
+            modify => (offerId, modify.LanguageCode),
+            OfferDescription => new OfferDescription(offerId, OfferDescription.Item2, null!, null!),
+            (initial, modified) => (initial.longDescription == modified.LongDescription && initial.shortDescription == modified.ShortDescription),
+            (entity, initial) => new ValueTuple<string, string>(entity.DescriptionLong = initial.longDescription, entity.DescriptionShort = initial.shortDescription),
+            (entity, modified) => new ValueTuple<string, string>(entity.DescriptionLong = modified.LongDescription, entity.DescriptionShort = modified.ShortDescription));
 }

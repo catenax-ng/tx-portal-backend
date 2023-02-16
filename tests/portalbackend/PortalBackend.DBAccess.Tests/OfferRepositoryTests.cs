@@ -703,61 +703,54 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     }
 
     [Fact]
-    public async Task AttachAndModifyOfferDescription_Changed_ReturnsExpectedResult()
+    public async Task CreateUpdateDeleteOfferDescriptions_Changed_ReturnsExpectedResult()
     {
         // Arrange
-        var (sut, dbContext) = await CreateSutWithContext().ConfigureAwait(false);
+        var appId = new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4");
+        var existingOfferDescription = new [] { 
+            new OfferDescriptionData("en", "some long Description for testing","some short Description for testing"),
+            new OfferDescriptionData("de", "some long Description for testing","some short Description for testing")
+        };
+        var modifedOfferDescription = new [] { 
+            ("en", "some long Description in english, for testing","some short Description in english for testing"),
+            ("de", "some long Description in germen, for testing","some short Description in germen for testing")
+        };
 
-        // Act
-        sut.AttachAndModifyOfferDescription(new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4"),"en",
-        od => { od.DescriptionLong = null!; od.DescriptionShort = null!; },
-        od => { od.DescriptionLong = "some long Description for Testing"; od.DescriptionShort = "some short Description for Testing";});
+        var (sut, context) = await CreateSutWithContext().ConfigureAwait(false);
+
+        //Act
+        sut.CreateUpdateDeleteOfferDescriptions(appId,existingOfferDescription,modifedOfferDescription);
 
         // Assert
-        var changeTracker = dbContext.ChangeTracker;
+        var changeTracker = context.ChangeTracker;
         var changedEntries = changeTracker.Entries().ToList();
         changeTracker.HasChanges().Should().BeTrue();
         changedEntries.Should().NotBeEmpty();
-        changedEntries.Should().HaveCount(1);
-        var changedEntity = changedEntries.Single();
-        changedEntity.State.Should().Be(EntityState.Modified);
-        changedEntity.Entity.Should().BeOfType<OfferDescription>().Which.DescriptionLong.Should().Be("some long Description for Testing");
+        changedEntries.Should().HaveCount(2);
+        var changedEntity = changedEntries.Where(x => x.State == EntityState.Modified).Select(x => (OfferDescription)x.Entity);
+        changedEntity.Where(x => x.LanguageShortName == "en")
+            .Select(x => x.DescriptionLong).Should().Contain("some long Description in english, for testing");
     }
 
     [Fact]
-    public async Task AttachAndModifyOfferDescription_UnChanged_ReturnsExpectedResult()
+    public async Task CreateUpdateDeleteOfferDescriptions_added_ReturnsExpectedResult()
     {
         // Arrange
-        var (sut, dbContext) = await CreateSutWithContext().ConfigureAwait(false);
+        var appId = new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4");
+        var existingOfferDescription = new [] { 
+            new OfferDescriptionData("en", "some long Description for testing","some short Description for testing"),
+            new OfferDescriptionData("de", "some long Description for testing","some short Description for testing")
+        };
+        var modifedOfferDescription = new [] { 
+            ("en", "some long Description for testing","some short Description for testing"),
+            ("de", "some long Description for testing","some short Description for testing"),
+            ("es", "newly added long Description for testing", "newly added short Description for testing")
+        };
 
-        // Act
-        sut.AttachAndModifyOfferDescription(new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4"),"en",
-        od => { od.DescriptionLong = "some long Description for Testing"; od.DescriptionShort = "some short Description for Testing"; },
-        od => { od.DescriptionLong = "some long Description for Testing"; od.DescriptionShort = "some short Description for Testing";});
-
-        // Assert
-        var changeTracker = dbContext.ChangeTracker;
-        var changedEntries = changeTracker.Entries().ToList();
-        changeTracker.HasChanges().Should().BeFalse();
-        changedEntries.Should().NotBeEmpty();
-        changedEntries.Should().HaveCount(1);
-        var changedEntity = changedEntries.Single();
-        changedEntity.State.Should().Be(EntityState.Unchanged);
-        changedEntity.Entity.Should().BeOfType<OfferDescription>().Which.DescriptionLong.Should().Be("some long Description for Testing");
-    }
-
-    [Fact]
-    public async Task AddOfferDescriptions_ReturnsExpectedResult()
-    {
-        // Arrange
-        var descriptions = new []{(new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4"),
-            "en",
-            "New Long Description for Testing",
-            "New Short Description for Testing")};
         var (sut, context) = await CreateSutWithContext().ConfigureAwait(false);
 
-        // Act
-        sut.AddOfferDescriptions(descriptions);
+        //Act
+        sut.CreateUpdateDeleteOfferDescriptions(appId,existingOfferDescription,modifedOfferDescription);
 
         // Assert
         var changeTracker = context.ChangeTracker;
@@ -765,7 +758,9 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         changeTracker.HasChanges().Should().BeTrue();
         changedEntries.Should().NotBeEmpty();
         changedEntries.Should().HaveCount(1);
-        changedEntries.Single().Entity.Should().BeOfType<OfferDescription>().Which.LanguageShortName.Should().Be("en");
+        var changedEntity = changedEntries.Where(x => x.State == EntityState.Added).Select(x => (OfferDescription)x.Entity);
+        changedEntity.Where(x => x.LanguageShortName == "es")
+            .Select(x => x.DescriptionLong).Should().Contain("newly added long Description for testing");
     }
 
     #endregion

@@ -352,4 +352,6 @@ public interface IOfferRepository
     /// <param name="offerTypeId"></param>
     /// <returns></returns>
     Task<AppDescriptionsData?> GetActiveOfferDescriptionDataByIdAsync(Guid appId, OfferTypeId offerTypeId, string iamUserId);
+
+    void CreateUpdateDeleteOfferDescriptions(Guid OfferId, IEnumerable<OfferDescriptionData> initialItems, IEnumerable<(string LanguageCode, string LongDescription, string ShortDescription)> modifiedItems);
 }
