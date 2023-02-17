@@ -429,7 +429,6 @@ public class OfferService : IOfferService
     public void UpsertRemoveOfferDescription(Guid offerId, IEnumerable<Localization> updateDescriptions, IEnumerable<OfferDescriptionData> existingDescriptions)
     {
         var offerRepository = _portalRepositories.GetInstance<IOfferRepository>();
-
         offerRepository.CreateUpdateDeleteOfferDescriptions(offerId, existingDescriptions, 
             updateDescriptions.Select(od => new ValueTuple<string, string, string>(od.LanguageCode, od.LongDescription, od.ShortDescription)));
     }
