@@ -327,27 +327,25 @@ public class AppsBusinessLogic : IAppsBusinessLogic
     public async Task<IEnumerable<OfferDescriptionData>> GetAppUpdateDescritionByIdAsync(Guid appId, string iamUserId)
     {        
         var offerRepository = _portalRepositories.GetInstance<IOfferRepository>();
-        var result = await ValidateAndGetAppDescription(appId, iamUserId, offerRepository);        
-        return result.OfferDescriptionDatas;
+        return await ValidateAndGetAppDescription(appId, iamUserId, offerRepository);        
     }
 
     /// <inheritdoc />
     public async Task CreateOrUpdateAppDescriptionByIdAsync(Guid appId, string iamUserId, IEnumerable<LocalizedDescription> offerDescriptionDatas)
     {
         var offerRepository = _portalRepositories.GetInstance<IOfferRepository>();
-        var result = await ValidateAndGetAppDescription(appId, iamUserId, offerRepository);
 
         offerRepository.CreateUpdateDeleteOfferDescriptions(appId,
-            result.OfferDescriptionDatas, 
+            await ValidateAndGetAppDescription(appId, iamUserId, offerRepository),
             offerDescriptionDatas.Select(od => new ValueTuple<string,string, string>(od.LanguageCode,od.LongDescription,od.ShortDescription)));
 
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
 
-    private static async Task<AppDescriptionsData> ValidateAndGetAppDescription(Guid appId, string iamUserId, IOfferRepository offerRepository)
+    private static async Task<IEnumerable<OfferDescriptionData>> ValidateAndGetAppDescription(Guid appId, string iamUserId, IOfferRepository offerRepository)
     {
         var result = await offerRepository.GetActiveOfferDescriptionDataByIdAsync(appId, OfferTypeId.APP, iamUserId).ConfigureAwait(false);
-        if(result == null)
+        if(result == default)
         {
             throw new NotFoundException($"App {appId} does not exist.");
         }
@@ -361,6 +359,11 @@ public class AppsBusinessLogic : IAppsBusinessLogic
         {
             throw new ForbiddenException($"user {iamUserId} is not a member of the providercompany of App {appId}");
         }
-        return result; 
+
+        if (result.OfferDescriptionDatas == null)
+        {
+            throw new UnexpectedConditionException("offerDescriptionDatas should never be null here");
+        }
+        return result.OfferDescriptionDatas;
     }
 }

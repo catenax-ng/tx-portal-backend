@@ -538,13 +538,17 @@ public class OfferRepository : IOfferRepository
             .SingleOrDefaultAsync();
     
     ///<inheritdoc/>
-    public Task<AppDescriptionsData?> GetActiveOfferDescriptionDataByIdAsync(Guid appId, OfferTypeId offerTypeId, string iamUserId) =>
+    public Task<(bool IsStatusActive, bool IsProviderCompanyUser, IEnumerable<OfferDescriptionData>? OfferDescriptionDatas)> GetActiveOfferDescriptionDataByIdAsync(Guid appId, OfferTypeId offerTypeId, string iamUserId) =>
         _context.Offers
             .Where(offer => offer.Id == appId && offer.OfferTypeId == offerTypeId)
-            .Select(offer => new AppDescriptionsData(
-                offer.OfferStatusId == OfferStatusId.ACTIVE,
-                offer.ProviderCompany!.CompanyUsers.Any(cu => cu.IamUser!.UserEntityId == iamUserId),
-                offer.OfferDescriptions.Select(od => new OfferDescriptionData(od.LanguageShortName, od.DescriptionLong, od.DescriptionShort))))
+            .Select(offer => new {
+                Offer = offer,
+                IsProviderCompanyUser = offer.ProviderCompany!.CompanyUsers.Any(cu => cu.IamUser!.UserEntityId == iamUserId)
+            })
+            .Select(x => new ValueTuple<bool,bool,IEnumerable<OfferDescriptionData>?>(
+                x.Offer.OfferStatusId == OfferStatusId.ACTIVE,
+                x.IsProviderCompanyUser,
+                x.IsProviderCompanyUser ? x.Offer.OfferDescriptions.Select(od => new OfferDescriptionData(od.LanguageShortName, od.DescriptionLong, od.DescriptionShort)) : null))
             .SingleOrDefaultAsync();
     
     ///<inheritdoc/>
@@ -556,6 +560,14 @@ public class OfferRepository : IOfferRepository
             modify =>  modify.LanguageCode,
             languageCode => new OfferDescription(offerId, languageCode, null!, null!),
             (initial, modified) => (initial.longDescription == modified.LongDescription && initial.shortDescription == modified.ShortDescription),
-            (entity, initial) => {entity.DescriptionLong = initial.longDescription; entity.DescriptionShort = initial.shortDescription;},
-            (entity, modified) => {entity.DescriptionLong = modified.LongDescription; entity.DescriptionShort = modified.ShortDescription;});
+            (entity, initial) =>
+                {
+                    entity.DescriptionLong = initial.longDescription;
+                    entity.DescriptionShort = initial.shortDescription;
+                },
+            (entity, modified) =>
+                {
+                    entity.DescriptionLong = modified.LongDescription;
+                    entity.DescriptionShort = modified.ShortDescription;
+                });
 }
