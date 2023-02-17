@@ -413,7 +413,7 @@ public sealed class RegistrationBusinessLogic : IRegistrationBusinessLogic
         });
     }
 
-    private async Task PostRegistrationCancelEmailAsync(Guid applicationId, string comment, bool sendMail)
+    private async Task PostRegistrationCancelEmailAsync(Guid applicationId, string? comment, bool sendMail)
     {
         if (!sendMail)
         {
@@ -423,6 +423,11 @@ public sealed class RegistrationBusinessLogic : IRegistrationBusinessLogic
         var userRoleIds = await _portalRepositories.GetInstance<IUserRolesRepository>()
             .GetUserRoleIdsUntrackedAsync(_settings.PartnerUserInitialRoles).ToListAsync().ConfigureAwait(false);
 
+        if (string.IsNullOrWhiteSpace(comment))
+        {
+            throw new ConflictException("No comment set.");
+        }
+        
         await foreach (var user in _portalRepositories.GetInstance<IApplicationRepository>().GetRegistrationDeclineEmailDataUntrackedAsync(applicationId, userRoleIds).ConfigureAwait(false))
         {
             var userName = string.Join(" ", new[] { user.FirstName, user.LastName }.Where(item => !string.IsNullOrWhiteSpace(item)));
