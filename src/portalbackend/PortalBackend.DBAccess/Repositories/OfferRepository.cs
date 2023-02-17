@@ -74,9 +74,6 @@ public class OfferRepository : IOfferRepository
         setOptionalParameters.Invoke(offer);
     }
 
-    public Offer DeleteOffer(Guid offerId) =>
-        _context.Remove(new Offer(offerId, null!, default, default)).Entity;
-
     /// <inheritdoc />
     public IAsyncEnumerable<(Guid Id, string? Name, string VendorCompanyName, IEnumerable<string> UseCaseNames, Guid LeadPictureId, string? ShortDescription, string? LicenseText)> GetAllActiveAppsAsync(string? languageShortName) =>
         _context.Offers.AsNoTracking()
@@ -185,17 +182,6 @@ public class OfferRepository : IOfferRepository
     /// <inheritdoc />
     public void AddOfferDescriptions(IEnumerable<(Guid offerId, string languageShortName, string descriptionLong, string descriptionShort)> offerDescriptions) =>
         _context.OfferDescriptions.AddRange(offerDescriptions.Select(s => new OfferDescription(s.offerId, s.languageShortName, s.descriptionLong, s.descriptionShort)));
-
-    public void RemoveOfferDescriptions(IEnumerable<(Guid offerId, string languageShortName)> offerDescriptionIds) =>
-        _context.RemoveRange(offerDescriptionIds.Select(x => new OfferDescription(x.offerId, x.languageShortName, null!, null!)));
-
-    public void AttachAndModifyOfferDescription(Guid offerId, string languageShortName, Action<OfferDescription> initialize, Action<OfferDescription> modify)
-    {
-        var offerDescription = new OfferDescription(offerId, languageShortName, null!, null!);
-        initialize.Invoke(offerDescription);
-        _context.Attach(offerDescription);
-        modify(offerDescription);
-    }
 
     /// <inheritdoc />
     public void AddAppLanguages(IEnumerable<(Guid appId, string languageShortName)> appLanguages) =>

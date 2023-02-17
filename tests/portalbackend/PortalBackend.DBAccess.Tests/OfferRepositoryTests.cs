@@ -213,29 +213,6 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     
     #endregion
 
-    #region Delete Offer
-    
-    [Fact]
-    public async Task DeleteOffer_WithExistingOffer_RemovesOffer()
-    {
-        // Arrange
-        var (sut, dbContext) = await CreateSutWithContext().ConfigureAwait(false);
-
-        // Act
-        sut.DeleteOffer(new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4"));
-
-        // Assert
-        var changeTracker = dbContext.ChangeTracker;
-        var changedEntries = changeTracker.Entries().ToList();
-        changeTracker.HasChanges().Should().BeTrue();
-        changedEntries.Should().NotBeEmpty();
-        changedEntries.Should().HaveCount(1);
-        var changedEntity = changedEntries.Single();
-        changedEntity.State.Should().Be(EntityState.Deleted);
-    }
-
-    #endregion
-    
     #region Create Offer
 
     [Fact]
@@ -718,28 +695,6 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         result!.IsStatusActive.Should().BeTrue();
         result.IsProviderCompanyUser.Should().BeFalse();
         result.OfferDescriptionDatas.Should().BeNull();
-    }
-
-    [Fact]
-    public async Task AttachAndModifyOfferDescription_changed_ReturnsExpected()
-    {
-        // Arrange
-        var (sut, dbContext) = await CreateSutWithContext().ConfigureAwait(false);
-
-        // Act
-        sut.AttachAndModifyOfferDescription(new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4"),"en",
-        od => { od.DescriptionLong = null!; od.DescriptionShort = null!; },
-        od => { od.DescriptionLong = "some long Description for Testing"; od.DescriptionShort = "some short Description for Testing";});
-
-        // Assert
-        var changeTracker = dbContext.ChangeTracker;
-        var changedEntries = changeTracker.Entries().ToList();
-        changeTracker.HasChanges().Should().BeTrue();
-        changedEntries.Should().NotBeEmpty();
-        changedEntries.Should().HaveCount(1);
-        var changedEntity = changedEntries.Single();
-        changedEntity.State.Should().Be(EntityState.Modified);
-        changedEntity.Entity.Should().BeOfType<OfferDescription>().Which.DescriptionLong.Should().Be("some long Description for Testing");
     }
 
     [Fact]

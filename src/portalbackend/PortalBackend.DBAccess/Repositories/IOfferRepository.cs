@@ -55,8 +55,6 @@ public interface IOfferRepository
 
     void AttachAndModifyOffer(Guid offerId, Action<Offer> setOptionalParameters, Action<Offer>? initializeParemeters = null);
 
-    Offer DeleteOffer(Guid offerId);
-
     /// <summary>
     /// Gets all active apps with an optional filtered with the languageShortName
     /// </summary>
@@ -116,10 +114,6 @@ public interface IOfferRepository
     /// </summary>
     /// <param name="offerDescriptions">The app descriptions that should be added to the database</param>
     void AddOfferDescriptions(IEnumerable<(Guid offerId, string languageShortName, string descriptionLong, string descriptionShort)> offerDescriptions);
-
-    void RemoveOfferDescriptions(IEnumerable<(Guid offerId, string languageShortName)> offerDescriptionIds);
-
-    void AttachAndModifyOfferDescription(Guid offerId, string languageShortName, Action<OfferDescription> initialize, Action<OfferDescription> modify);
 
     /// <summary>
     /// Adds <see cref="AppLanguage"/>s to the database
