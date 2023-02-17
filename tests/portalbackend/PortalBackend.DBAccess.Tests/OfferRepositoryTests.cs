@@ -722,9 +722,9 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         changeTracker.HasChanges().Should().BeTrue();
         changedEntries.Should().NotBeEmpty();
         changedEntries.Should().HaveCount(2);
-        var changedEntity = changedEntries.Where(x => x.State == EntityState.Modified).Select(x => (OfferDescription)x.Entity);
-        changedEntity.Where(x => x.LanguageShortName == "en")
-            .Select(x => x.DescriptionLong).Should().Contain("some long Description in english, for testing");
+        changedEntries.Should().AllSatisfy(entry => entry.State.Should().Be(EntityState.Modified));
+        changedEntries.Select(x => x.Entity).Should().AllBeOfType<OfferDescription>();
+        changedEntries.Select(x => x.Entity).Cast<OfferDescription>().Select(x => (x.LanguageShortName, x.DescriptionLong, x.DescriptionShort)).Should().Contain(modifedOfferDescription);
     }
 
     [Fact]
@@ -732,6 +732,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var appId = new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4");
+        var newOfferDescriptionEntry = ("es", "newly added long Description for testing", "newly added short Description for testing");
         var existingOfferDescription = new [] { 
             new OfferDescriptionData("en", "some long Description for testing","some short Description for testing"),
             new OfferDescriptionData("de", "some long Description for testing","some short Description for testing")
@@ -739,7 +740,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         var modifedOfferDescription = new [] { 
             ("en", "some long Description for testing","some short Description for testing"),
             ("de", "some long Description for testing","some short Description for testing"),
-            ("es", "newly added long Description for testing", "newly added short Description for testing")
+            newOfferDescriptionEntry
         };
 
         var (sut, context) = await CreateSutWithContext().ConfigureAwait(false);
@@ -753,9 +754,9 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         changeTracker.HasChanges().Should().BeTrue();
         changedEntries.Should().NotBeEmpty();
         changedEntries.Should().HaveCount(1);
-        var changedEntity = changedEntries.Where(x => x.State == EntityState.Added).Select(x => (OfferDescription)x.Entity);
-        changedEntity.Where(x => x.LanguageShortName == "es")
-            .Select(x => x.DescriptionLong).Should().Contain("newly added long Description for testing");
+        changedEntries.Should().AllSatisfy(entry => entry.State.Should().Be(EntityState.Added));
+        changedEntries.Select(x => x.Entity).Should().AllBeOfType<OfferDescription>();
+        changedEntries.Select(x => x.Entity).Cast<OfferDescription>().Select(x => (x.LanguageShortName, x.DescriptionLong, x.DescriptionShort)).Should().Contain(new [] { newOfferDescriptionEntry });
     }
 
     [Fact]
@@ -763,16 +764,16 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var appId = new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4");
-        var existingOfferDescription = new [] { 
+        var existingOfferDescriptions = new [] { 
             new OfferDescriptionData("en", "some long Description for testing","some short Description for testing"),
             new OfferDescriptionData("de", "some long Description for testing","some short Description for testing")
         };
-        var modifedOfferDescription = new [] { ("de", "modified long Description for testing","modified short Description for testing") };
+        var modifedOfferDescriptions = new [] { ("de", "modified long Description for testing","modified short Description for testing") };
 
         var (sut, context) = await CreateSutWithContext().ConfigureAwait(false);
 
         //Act
-        sut.CreateUpdateDeleteOfferDescriptions(appId,existingOfferDescription,modifedOfferDescription);
+        sut.CreateUpdateDeleteOfferDescriptions(appId,existingOfferDescriptions,modifedOfferDescriptions);
 
         // Assert
         var changeTracker = context.ChangeTracker;
@@ -780,8 +781,13 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         changeTracker.HasChanges().Should().BeTrue();
         changedEntries.Should().NotBeEmpty();
         changedEntries.Should().HaveCount(2);
-        var changedEntity = changedEntries.Where(x => x.State == EntityState.Deleted).Select(x => (OfferDescription)x.Entity);
-        changedEntity.Should().HaveCount(1);
+        changedEntries.Select(x => x.Entity).Should().AllBeOfType<OfferDescription>();
+        var deletedEntities = changedEntries.Where(x => x.State == EntityState.Deleted).Select(x => (OfferDescription)x.Entity);
+        deletedEntities.Should().HaveCount(1);
+        deletedEntities.Select(x => x.LanguageShortName).Should().Contain(new [] { "en" });
+        var modifiedEntities = changedEntries.Where(x => x.State == EntityState.Modified).Select(x => (OfferDescription)x.Entity);
+        modifiedEntities.Should().HaveCount(1);
+        modifiedEntities.Select(x => (x.LanguageShortName, x.DescriptionLong, x.DescriptionShort)).Should().Contain(modifedOfferDescriptions);
     }
 
     #endregion
