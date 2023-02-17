@@ -426,35 +426,12 @@ public class OfferService : IOfferService
         return responseData.UserCompanyId;
     }
     
-    public void UpsertRemoveOfferDescription(Guid offerId, IEnumerable<Localization> updateDescriptions, IEnumerable<(string LanguageShortName, string DescriptionLong, string DescriptionShort)> existingDescriptions)
+    public void UpsertRemoveOfferDescription(Guid offerId, IEnumerable<Localization> updateDescriptions, IEnumerable<OfferDescriptionData> existingDescriptions)
     {
         var offerRepository = _portalRepositories.GetInstance<IOfferRepository>();
-        offerRepository.AddOfferDescriptions(
-            updateDescriptions.ExceptBy(existingDescriptions.Select(d => d.LanguageShortName), updateDescription => updateDescription.LanguageCode)
-                .Select(updateDescription => (offerId, updateDescription.LanguageCode, updateDescription.LongDescription, updateDescription.ShortDescription))
-        );
 
-        offerRepository.RemoveOfferDescriptions(
-            existingDescriptions.ExceptBy(updateDescriptions.Select(d => d.LanguageCode), existingDescription => existingDescription.LanguageShortName)
-                .Select(existingDescription => (offerId, existingDescription.LanguageShortName))
-        );
-
-        foreach (var update in updateDescriptions
-                     .Where(update => existingDescriptions.Any(existing => 
-                         existing.LanguageShortName == update.LanguageCode)))
-        {
-            offerRepository.AttachAndModifyOfferDescription(offerId, update.LanguageCode,
-            A =>
-            {
-                A.DescriptionLong = existingDescriptions.SingleOrDefault(x => x.LanguageShortName == update.LanguageCode).DescriptionLong;
-                A.DescriptionShort = existingDescriptions.SingleOrDefault(x => x.LanguageShortName == update.LanguageCode).DescriptionShort;
-            },
-            A =>
-            {
-                A.DescriptionLong = update.LongDescription;
-                A.DescriptionShort = update.ShortDescription;
-            });
-        }
+        offerRepository.CreateUpdateDeleteOfferDescriptions(offerId, existingDescriptions, 
+            updateDescriptions.Select(od => new ValueTuple<string, string, string>(od.LanguageCode, od.LongDescription, od.ShortDescription)));
     }
 
     public void CreateOrUpdateOfferLicense(Guid offerId, string licenseText, (Guid OfferLicenseId, string LicenseText, bool AssignedToMultipleOffers) offerLicense)

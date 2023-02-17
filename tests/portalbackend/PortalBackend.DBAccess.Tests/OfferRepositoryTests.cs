@@ -763,6 +763,32 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
             .Select(x => x.DescriptionLong).Should().Contain("newly added long Description for testing");
     }
 
+    [Fact]
+    public async Task CreateUpdateDeleteOfferDescriptions_Deleted_ReturnsExpectedResult()
+    {
+        // Arrange
+        var appId = new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4");
+        var existingOfferDescription = new [] { 
+            new OfferDescriptionData("en", "some long Description for testing","some short Description for testing"),
+            new OfferDescriptionData("de", "some long Description for testing","some short Description for testing")
+        };
+        var modifedOfferDescription = new [] { ("de", "modified long Description for testing","modified short Description for testing") };
+
+        var (sut, context) = await CreateSutWithContext().ConfigureAwait(false);
+
+        //Act
+        sut.CreateUpdateDeleteOfferDescriptions(appId,existingOfferDescription,modifedOfferDescription);
+
+        // Assert
+        var changeTracker = context.ChangeTracker;
+        var changedEntries = changeTracker.Entries().ToList();
+        changeTracker.HasChanges().Should().BeTrue();
+        changedEntries.Should().NotBeEmpty();
+        changedEntries.Should().HaveCount(2);
+        var changedEntity = changedEntries.Where(x => x.State == EntityState.Deleted).Select(x => (OfferDescription)x.Entity);
+        changedEntity.Should().HaveCount(1);
+    }
+
     #endregion
 
     #region Setup
