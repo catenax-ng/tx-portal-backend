@@ -731,7 +731,7 @@ public class AppBusinessLogicTests
             new ("en", _fixture.Create<string>(), _fixture.Create<string>()),
             new ("de", _fixture.Create<string>(), _fixture.Create<string>())
             };
-        var appDescriptionData = (IsStatusActive: true, IsProviderCompanyUser: true, OfferDescriptionDatas: new OfferDescriptionData[] {});
+        var appDescriptionData = (IsStatusActive: true, IsProviderCompanyUser: true, OfferDescriptionDatas: Array.Empty<OfferDescriptionData>());
 
         A.CallTo(() => _offerRepository.GetActiveOfferDescriptionDataByIdAsync(appId, OfferTypeId.APP, IamUserId))
             .ReturnsLazily(() => appDescriptionData);

@@ -694,12 +694,30 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         var sut = await CreateSut().ConfigureAwait(false);
 
         //Act
-        var result = await sut.GetActiveOfferDescriptionDataByIdAsync(new Guid("a16e73b9-5277-4b69-9f8d-3b227495dfeb"),OfferTypeId.APP, "3d8142f1-860b-48aa-8c2b-1ccb18699f65").ConfigureAwait(false);
+        var result = await sut.GetActiveOfferDescriptionDataByIdAsync(new Guid("a16e73b9-5277-4b69-9f8d-3b227495dfeb"), OfferTypeId.APP, "502dabcf-01c7-47d9-a88e-0be4279097b5").ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
-        result!.OfferDescriptionDatas.Should().NotBeNull();
-        result!.OfferDescriptionDatas.Select(od => od.languageCode).Should().Contain("en");
+        result!.IsStatusActive.Should().BeTrue();
+        result.IsProviderCompanyUser.Should().BeTrue();
+        result.OfferDescriptionDatas.Should().NotBeNull();
+        result.OfferDescriptionDatas!.Select(od => od.languageCode).Should().Contain("en");
+    }
+
+    [Fact]
+    public async Task GetActiveOfferDescriptionDataByIdAsync_InvalidUser_ReturnsExpectedResult()
+    {
+        // Arrange
+        var sut = await CreateSut().ConfigureAwait(false);
+
+        //Act
+        var result = await sut.GetActiveOfferDescriptionDataByIdAsync(new Guid("a16e73b9-5277-4b69-9f8d-3b227495dfeb"), OfferTypeId.APP, "invalid user").ConfigureAwait(false);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.IsStatusActive.Should().BeTrue();
+        result.IsProviderCompanyUser.Should().BeFalse();
+        result.OfferDescriptionDatas.Should().BeNull();
     }
 
     [Fact]
