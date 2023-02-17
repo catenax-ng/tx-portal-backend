@@ -63,7 +63,7 @@ public class SdFactoryBusinessLogic : ISdFactoryBusinessLogic
 
         return (
             entry => entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.IN_PROGRESS,
-            new [] { ProcessStepTypeId.END_CLEARING_HOUSE },
+            new [] { ProcessStepTypeId.FINISH_SELF_DESCRIPTION_LP },
             true
         );
     }
