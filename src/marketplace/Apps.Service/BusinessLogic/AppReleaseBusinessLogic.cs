@@ -486,7 +486,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         }
         if (result.OfferStatusId != OfferStatusId.CREATED)
         {
-            throw new ConflictException($"Apps {result.OfferStatusId} is in locked state ");
+            throw new ConflictException($"Apps {result.OfferStatusId} is in locked state");
         }
         if (!result.IsDocumentTypeMatch)
         {

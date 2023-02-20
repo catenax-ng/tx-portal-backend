@@ -730,7 +730,7 @@ public class AppReleaseBusinessLogicTest
         // Assert 
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
-        ex.Message.Should().Be($"Apps in State {OfferStatusId.ACTIVE} can't be updated");
+        ex.Message.Should().Be($"Apps {OfferStatusId.ACTIVE} is in locked state");
     }
 
     [Fact]
