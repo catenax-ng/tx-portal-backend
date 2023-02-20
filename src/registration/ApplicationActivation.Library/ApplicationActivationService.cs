@@ -43,6 +43,7 @@ public class ApplicationActivationService : IApplicationActivationService
     private readonly IProvisioningManager _provisioningManager;
     private readonly IMailingService _mailingService;
     private readonly IDateTimeProvider _dateTime;
+    private readonly ILogger<ApplicationActivationService> _logger;
     private readonly ApplicationActivationSettings _settings;
 
     public ApplicationActivationService(
@@ -51,13 +52,15 @@ public class ApplicationActivationService : IApplicationActivationService
         IProvisioningManager provisioningManager,
         IMailingService mailingService,
         IDateTimeProvider dateTime,
-        IOptions<ApplicationActivationSettings> options)
+        IOptions<ApplicationActivationSettings> options,
+        ILogger<ApplicationActivationService> logger)
     {
         _portalRepositories = portalRepositories;
         _notificationService = notificationService;
         _provisioningManager = provisioningManager;
         _mailingService = mailingService;
         _dateTime = dateTime;
+        _logger = logger;
         _settings = options.Value;
     }
 
@@ -77,6 +80,7 @@ public class ApplicationActivationService : IApplicationActivationService
 
     private async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)> HandleApplicationActivationInternal(IChecklistService.WorkerChecklistProcessStepData context)
     {
+        _logger.LogDebug("Handle ApplicationActivation for {ApplicationId}", context.ApplicationId);
         var applicationRepository = _portalRepositories.GetInstance<IApplicationRepository>();
         var result = await applicationRepository.GetCompanyAndApplicationDetailsForApprovalAsync(context.ApplicationId).ConfigureAwait(false);
         if (result == default)
@@ -144,11 +148,13 @@ public class ApplicationActivationService : IApplicationActivationService
 
     private async Task<IDictionary<string, IEnumerable<string>>?> AssignRolesAndBpn(Guid applicationId, IUserRolesRepository userRolesRepository, IApplicationRepository applicationRepository, string businessPartnerNumber)
     {
+        _logger.LogDebug("Assigne roles and bpn for {ApplicationId}", applicationId);
         var userBusinessPartnersRepository = _portalRepositories.GetInstance<IUserBusinessPartnerRepository>();
 
         var applicationApprovalInitialRoles = _settings.ApplicationApprovalInitialRoles;
         var initialRolesData = await GetRoleData(userRolesRepository, applicationApprovalInitialRoles).ConfigureAwait(false);
 
+        _logger.LogDebug("initial roles {Roles}", string.Join(",", initialRolesData.Select(x => $"urt: {x.UserRoleText}; cci: {x.ClientClientId}; uri: {x.UserRoleId}")));
         IDictionary<string, IEnumerable<string>>? assignedRoles = null;
         var invitedUsersData = await applicationRepository
             .GetInvitedUsersDataByApplicationIdUntrackedAsync(applicationId)
@@ -156,23 +162,28 @@ public class ApplicationActivationService : IApplicationActivationService
             .ConfigureAwait(false);
         foreach (var userData in invitedUsersData)
         {
+            _logger.LogDebug("assign roles for user {Roles}", userData.UserEntityId);
             assignedRoles = await _provisioningManager
                 .AssignClientRolesToCentralUserAsync(userData.UserEntityId, applicationApprovalInitialRoles)
                 .ToDictionaryAsync(assigned => assigned.Client, assigned => assigned.Roles)
                 .ConfigureAwait(false);
 
-            foreach (var roleData in initialRolesData.Where(roleData => !userData.RoleIds.Contains(roleData.UserRoleId) &&
-                                                                        assignedRoles[roleData.ClientClientId].Contains(roleData.UserRoleText)))
+            var userRoleDatas = initialRolesData.Where(roleData => !userData.RoleIds.Contains(roleData.UserRoleId) &&
+                                                                   assignedRoles[roleData.ClientClientId].Contains(roleData.UserRoleText));
+            _logger.LogDebug("user role datas {Roles}", string.Join(",", userRoleDatas.Select(x => $"urt: {x.UserRoleText}; cci: {x.ClientClientId}; uri: {x.UserRoleId}")));
+            foreach (var roleData in userRoleDatas)
             {
                 userRolesRepository.CreateCompanyUserAssignedRole(userData.CompanyUserId, roleData.UserRoleId);
             }
 
             if (userData.BusinessPartnerNumbers.Contains(businessPartnerNumber)) continue;
 
+            _logger.LogDebug("create company user assignd bpn {CompanyUserId}", userData.CompanyUserId);
             userBusinessPartnersRepository.CreateCompanyUserAssignedBusinessPartner(userData.CompanyUserId, businessPartnerNumber);
             await _provisioningManager
                 .AddBpnAttributetoUserAsync(userData.UserEntityId, Enumerable.Repeat(businessPartnerNumber, 1))
                 .ConfigureAwait(false);
+            _logger.LogDebug("added attribute to user {UserEntityId}", userData.UserEntityId);
         }
 
         return assignedRoles;
@@ -180,6 +191,7 @@ public class ApplicationActivationService : IApplicationActivationService
 
     private async Task RemoveRegistrationRoles(Guid applicationId, IUserRolesRepository userRolesRepository)
     {
+        _logger.LogDebug("Remove Registration Roles {ApplicationId}", applicationId);
         var iamClientIds = _settings.ClientToRemoveRolesOnActivation;
         var clientRoleData = await userRolesRepository
             .GetUserRolesByClientId(iamClientIds)
