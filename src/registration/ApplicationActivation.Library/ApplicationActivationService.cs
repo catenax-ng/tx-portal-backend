@@ -150,9 +150,11 @@ public class ApplicationActivationService : IApplicationActivationService
         var initialRolesData = await GetRoleData(userRolesRepository, applicationApprovalInitialRoles).ConfigureAwait(false);
 
         IDictionary<string, IEnumerable<string>>? assignedRoles = null;
-        var invitedUsersData = applicationRepository
-            .GetInvitedUsersDataByApplicationIdUntrackedAsync(applicationId);
-        await foreach (var userData in invitedUsersData.ConfigureAwait(false))
+        var invitedUsersData = await applicationRepository
+            .GetInvitedUsersDataByApplicationIdUntrackedAsync(applicationId)
+            .ToListAsync()
+            .ConfigureAwait(false);
+        foreach (var userData in invitedUsersData)
         {
             assignedRoles = await _provisioningManager
                 .AssignClientRolesToCentralUserAsync(userData.UserEntityId, applicationApprovalInitialRoles)
