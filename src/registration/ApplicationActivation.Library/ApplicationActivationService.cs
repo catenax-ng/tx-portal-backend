@@ -98,21 +98,29 @@ public class ApplicationActivationService : IApplicationActivationService
         var assignedRoles = await AssignRolesAndBpn(context.ApplicationId, userRolesRepository, applicationRepository, businessPartnerNumber).ConfigureAwait(false);
         await RemoveRegistrationRoles(context.ApplicationId, userRolesRepository).ConfigureAwait(false);
 
+        _logger.LogDebug("Update Application {ApplicationId}", context.ApplicationId);
         applicationRepository.AttachAndModifyCompanyApplication(context.ApplicationId, ca =>
         {
             ca.ApplicationStatusId = CompanyApplicationStatusId.CONFIRMED;
             ca.DateLastChanged = DateTimeOffset.UtcNow;    
         });
+        _logger.LogDebug("Updated Application {ApplicationId}", context.ApplicationId);
 
+        _logger.LogDebug("Update Company {CompanyId}", companyId);
         _portalRepositories.GetInstance<ICompanyRepository>().AttachAndModifyCompany(companyId, null, c =>
         {
             c.CompanyStatusId = CompanyStatusId.ACTIVE;
         });
+        _logger.LogDebug("Updated Company {CompanyId}", companyId);
 
+        _logger.LogDebug("Create notifications");
         var notifications = _settings.WelcomeNotificationTypeIds.Select(x => (default(string), x));
         await _notificationService.CreateNotifications(_settings.CompanyAdminRoles, null, notifications, companyId).ConfigureAwait(false);
+        _logger.LogDebug("Created notifications");
 
+        _logger.LogDebug("Send mail");
         await PostRegistrationWelcomeEmailAsync(userRolesRepository, applicationRepository, context.ApplicationId).ConfigureAwait(false);
+        _logger.LogDebug("Mail send");
 
         if (assignedRoles != null)
         {
@@ -193,18 +201,23 @@ public class ApplicationActivationService : IApplicationActivationService
     {
         _logger.LogDebug("Remove Registration Roles {ApplicationId}", applicationId);
         var iamClientIds = _settings.ClientToRemoveRolesOnActivation;
+        _logger.LogDebug("GetUserRolesByClientId {ClientIds}", string.Join(",", iamClientIds));
         var clientRoleData = await userRolesRepository
             .GetUserRolesByClientId(iamClientIds)
             .ToListAsync()
             .ConfigureAwait(false);
-        var invitedUsersData = userRolesRepository
-            .GetUserWithUserRolesForApplicationId(applicationId, clientRoleData.SelectMany(data => data.UserRoles).Select(role => role.UserRoleId));
+        _logger.LogDebug("clientRoleData {ClientIds}", string.Join(",", clientRoleData.Select(x => $"{x.ClientClientId}")));
+        _logger.LogDebug("GetUserWithUserRolesForApplicationId");
+        var invitedUsersData = await userRolesRepository
+            .GetUserWithUserRolesForApplicationId(applicationId, clientRoleData.SelectMany(data => data.UserRoles).Select(role => role.UserRoleId)).ToListAsync().ConfigureAwait(false);
 
         var userRoles = clientRoleData.SelectMany(data => data.UserRoles.Select(role => (role.UserRoleId, data.ClientClientId, role.UserRoleText))).ToImmutableDictionary(x => x.UserRoleId, x => (x.ClientClientId, x.UserRoleText));
 
-        await foreach (var userData in invitedUsersData.ConfigureAwait(false))
+        _logger.LogDebug("UserRole Keys {UseRoles}", string.Join(",", userRoles.Keys));
+        foreach (var userData in invitedUsersData)
         {
             if (!userData.UserRoleIds.Any()) {
+                _logger.LogDebug("Error for user IU: {IamUser} Cu: {CompanyUserId}", userData.UserEntityId, userData.CompanyUserId);
                 throw new UnexpectedConditionException("userRoleIds should never be empty here");
             }
 
@@ -215,9 +228,13 @@ public class ApplicationActivationService : IApplicationActivationService
                     clientRoleDataGroup => clientRoleDataGroup.Key,
                     clientRoleData => clientRoleData.Select(y => y.UserRoleText));
 
+            _logger.LogDebug("Role Names to remove {UseRoles}", string.Join(",", roleNamesToDelete.Keys));
             await _provisioningManager.DeleteClientRolesFromCentralUserAsync(userData.UserEntityId, roleNamesToDelete)
                 .ConfigureAwait(false);
+            _logger.LogDebug("Deleted from Keycloak");
+            _logger.LogDebug("Removing from db");
             userRolesRepository.DeleteCompanyUserAssignedRoles(userData.UserRoleIds.Select(roleId => (userData.CompanyUserId, roleId)));
+            _logger.LogDebug("Removed from db");
         }
     }
 
