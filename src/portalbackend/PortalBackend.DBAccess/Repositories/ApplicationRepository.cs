@@ -343,7 +343,7 @@ public class ApplicationRepository : IApplicationRepository
                         ca.Address.Zipcode,
                         ca.Address.Country!.CountryNameEn,
                         ca.Address.CountryAlpha2Code),
-                ca.CompanyIdentifiers.Select(ci => new UniqueIdData(ci.UniqueIdentifier!.Label, ci.Value))))
+                ca.CompanyIdentifiers.Select(ci => new ValueTuple<UniqueIdentifierId, string>(ci.UniqueIdentifierId, ci.Value))))
             .SingleOrDefaultAsync();
 
     /// <inheritdoc />

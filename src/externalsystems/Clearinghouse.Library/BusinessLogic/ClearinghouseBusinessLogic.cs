@@ -24,6 +24,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Clearinghouse.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Custodian.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
@@ -100,7 +101,7 @@ public class ClearinghouseBusinessLogic : IClearinghouseBusinessLogic
 
         var transferData = new ClearinghouseTransferData(
             data.ParticipantDetails,
-            new IdentityDetails(decentralizedIdentifier, data.UniqueIds),
+            new IdentityDetails(decentralizedIdentifier, data.UniqueIds.Select(x => new UniqueIdData(x.TypeId.ToClearinghouseType(), x.Value))),
             _settings.CallbackUrl,
             overwrite);
 

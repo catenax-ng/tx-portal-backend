@@ -26,7 +26,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 public record ClearinghouseData(
     CompanyApplicationStatusId ApplicationStatusId,
     ParticipantDetails ParticipantDetails,
-    IEnumerable<UniqueIdData> UniqueIds);
+    IEnumerable<(UniqueIdentifierId TypeId, string Value)> UniqueIds);
 
 public record ParticipantDetails(
     [property: JsonPropertyName("name")] string Name,
