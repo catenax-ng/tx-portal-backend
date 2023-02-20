@@ -59,6 +59,8 @@ public class AppReleaseBusinessLogicTest
     private readonly ILanguageRepository _languageRepository;
     private readonly AppsSettings _settings;
     private const string ClientId = "catenax-portal";
+    private static readonly Guid ValidDocumentId = Guid.NewGuid();
+    private static readonly string IamUserId = Guid.NewGuid().ToString();
 
     public AppReleaseBusinessLogicTest()
     {
@@ -105,6 +107,7 @@ public class AppReleaseBusinessLogicTest
         A.CallTo(() => _portalRepositories.GetInstance<IOfferRepository>()).Returns(_offerRepository);
         A.CallTo(() => _portalRepositories.GetInstance<IUserRepository>()).Returns(_userRepository);
         A.CallTo(() => _portalRepositories.GetInstance<IUserRolesRepository>()).Returns(_userRolesRepository);
+         A.CallTo(() => _portalRepositories.GetInstance<IDocumentRepository>()).Returns(_documentRepository);
     }
 
     [Fact]
@@ -632,6 +635,149 @@ public class AppReleaseBusinessLogicTest
             OfferTypeId.APP, NotificationTypeId.APP_RELEASE_REJECTION,
             A<IDictionary<string, IEnumerable<string>>>._, A<string>._)).MustHaveHappenedOnceExactly();
     }
+
+    #endregion
+    
+    #region DeleteAppDocument
+    [Fact]
+    public async Task DeleteAppDocumentsAsync_ReturnsExpectedResult()
+    {
+        //Arrange
+        var appId = Guid.NewGuid();
+        var settings = new AppsSettings
+        {
+            DeleteDocumentTypeIds = new[] { DocumentTypeId.APP_CONTRACT }
+        };
+        A.CallTo(() => _documentRepository.GetAppDocumentsAsync(ValidDocumentId, IamUserId, settings.DeleteDocumentTypeIds, OfferTypeId.APP))
+            .Returns((true, OfferStatusId.CREATED, true, DocumentStatusId.PENDING, appId, true));
+
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
+
+        //Act
+        await sut.DeleteAppDocumentsAsync(ValidDocumentId, IamUserId).ConfigureAwait(false);
+
+        // Assert 
+        A.CallTo(() => _documentRepository.GetAppDocumentsAsync(ValidDocumentId, IamUserId, settings.DeleteDocumentTypeIds, OfferTypeId.APP))
+            .MustHaveHappenedOnceExactly();
+        A.CallTo(() => _offerRepository.RemoveOfferAssignedDocument(appId, ValidDocumentId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _documentRepository.RemoveDocument(ValidDocumentId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
+    }
+    
+    [Fact]
+    public async Task DeleteAppDocumentsAsync_WithNoAssignedOfferDocument_ThrowsArgumentException()
+    {
+        //Arrange
+        var appId = Guid.NewGuid();
+        var settings = new AppsSettings
+        {
+            DeleteDocumentTypeIds = new[] { DocumentTypeId.APP_CONTRACT }
+        };
+        A.CallTo(() => _documentRepository.GetAppDocumentsAsync(ValidDocumentId, IamUserId, settings.DeleteDocumentTypeIds, OfferTypeId.APP))
+            .Returns((false, OfferStatusId.CREATED, true, DocumentStatusId.PENDING, appId, true));
+
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
+
+        //Act
+        async Task Act() => await sut.DeleteAppDocumentsAsync(ValidDocumentId, IamUserId).ConfigureAwait(false);
+
+        // Assert 
+        // Assert
+        var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Act);
+        ex.Message.Should().Be($"Document {ValidDocumentId} and app id {appId} do not match.");
+    }
+    
+    [Fact]
+    public async Task DeleteAppDocumentsAsync_WithInvalidProviderCompanyUser_ThrowsForbiddenException()
+    {
+        //Arrange
+        var appId = Guid.NewGuid();
+        var settings = new AppsSettings
+        {
+            DeleteDocumentTypeIds = new[] { DocumentTypeId.APP_CONTRACT }
+        };
+        A.CallTo(() => _documentRepository.GetAppDocumentsAsync(ValidDocumentId, IamUserId, settings.DeleteDocumentTypeIds, OfferTypeId.APP))
+            .Returns((true, OfferStatusId.CREATED, true, DocumentStatusId.PENDING, appId, false));
+
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
+
+        //Act
+        async Task Act() => await sut.DeleteAppDocumentsAsync(ValidDocumentId, IamUserId).ConfigureAwait(false);
+
+        // Assert 
+        // Assert
+        var ex = await Assert.ThrowsAsync<ForbiddenException>(Act);
+        ex.Message.Should().Be($"user {IamUserId} is not a member of the same company of document {ValidDocumentId}");
+    }
+
+    [Fact]
+    public async Task DeleteAppDocumentsAsync_WithInvalidOfferStatus_ThrowsConflictException()
+    {
+        //Arrange
+        var appId = Guid.NewGuid();
+        var settings = new AppsSettings
+        {
+            DeleteDocumentTypeIds = new[] { DocumentTypeId.APP_CONTRACT }
+        };
+        A.CallTo(() => _documentRepository.GetAppDocumentsAsync(ValidDocumentId, IamUserId, settings.DeleteDocumentTypeIds, OfferTypeId.APP))
+            .Returns((true, OfferStatusId.ACTIVE, true, DocumentStatusId.PENDING, appId, true));
+
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
+
+        //Act
+        async Task Act() => await sut.DeleteAppDocumentsAsync(ValidDocumentId, IamUserId).ConfigureAwait(false);
+
+        // Assert 
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be($"Apps in State {OfferStatusId.ACTIVE} can't be updated");
+    }
+
+    [Fact]
+    public async Task DeleteAppDocumentsAsync_WithInvalidDocumentType_ThrowsArgumentException()
+    {
+        //Arrange
+        var appId = Guid.NewGuid();
+        var settings = new AppsSettings
+        {
+            DeleteDocumentTypeIds = new[] { DocumentTypeId.COMMERCIAL_REGISTER_EXTRACT }
+        };
+        A.CallTo(() => _documentRepository.GetAppDocumentsAsync(ValidDocumentId, IamUserId, settings.DeleteDocumentTypeIds, OfferTypeId.APP))
+            .Returns((true, OfferStatusId.CREATED, false, DocumentStatusId.PENDING, appId, true));
+
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
+
+        //Act
+        async Task Act() => await sut.DeleteAppDocumentsAsync(ValidDocumentId, IamUserId).ConfigureAwait(false);
+
+        // Assert 
+        // Assert
+        var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Act);
+        ex.Message.Should().Be($"Document {ValidDocumentId} can not get retrieved. Document type not supported.");
+    }
+
+    [Fact]
+    public async Task DeleteAppDocumentsAsync_WithInvalidDocumentStatus_ThrowsConflictException()
+    {
+        //Arrange
+        var appId = Guid.NewGuid();
+        var settings = new AppsSettings
+        {
+            DeleteDocumentTypeIds = new[] { DocumentTypeId.APP_CONTRACT }
+        };
+        A.CallTo(() => _documentRepository.GetAppDocumentsAsync(ValidDocumentId, IamUserId, settings.DeleteDocumentTypeIds, OfferTypeId.APP))
+            .Returns((true, OfferStatusId.CREATED, true, DocumentStatusId.LOCKED, appId, true));
+
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
+
+        //Act
+        async Task Act() => await sut.DeleteAppDocumentsAsync(ValidDocumentId, IamUserId).ConfigureAwait(false);
+
+        // Assert 
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be($"Document in State {DocumentStatusId.LOCKED} can't be updated");
+    }
     
     #endregion
 
@@ -697,4 +843,5 @@ public class AppReleaseBusinessLogicTest
     }
 
     #endregion
+
 }

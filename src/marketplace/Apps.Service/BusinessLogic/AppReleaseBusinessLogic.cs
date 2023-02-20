@@ -467,4 +467,39 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
             result.Price ?? Constants.ErrorString,
             result.Tags);
     }
+
+    /// <inheritdoc />
+    public async Task DeleteAppDocumentsAsync(Guid documentId, string iamUserId)
+    {
+        var result = await _portalRepositories.GetInstance<IDocumentRepository>().GetAppDocumentsAsync(documentId, iamUserId,_settings.DeleteDocumentTypeIds,OfferTypeId.APP).ConfigureAwait(false);
+        if (result == default)
+        {
+            throw new NotFoundException($"Document {documentId} does not exist");
+        }
+        if (!result.IsProviderCompanyUser)
+        {
+            throw new ForbiddenException($"user {iamUserId} is not a member of the same company of document {documentId}");
+        }
+        if (!result.IsOfferAssignedDocument)
+        {
+            throw new ControllerArgumentException($"Document {documentId} and app id {result.AppId} do not match.");
+        }
+        if (result.OfferStatusId != OfferStatusId.CREATED)
+        {
+            throw new ConflictException($"Apps {result.OfferStatusId} is in locked state ");
+        }
+        if (!result.IsDocumentTypeMatch)
+        {
+            throw new ControllerArgumentException($"Document {documentId} can not get retrieved. Document type not supported.");
+        }
+        if (result.DocumentStatusId == DocumentStatusId.LOCKED)
+        {
+            throw new ConflictException($"Document in State {result.DocumentStatusId} can't be updated");
+        }
+
+        _portalRepositories.GetInstance<IOfferRepository>().RemoveOfferAssignedDocument(result.AppId, documentId);
+        _portalRepositories.GetInstance<IDocumentRepository>().RemoveDocument(documentId);
+        await _portalRepositories.SaveAsync().ConfigureAwait(false);
+      
+    }
 }
