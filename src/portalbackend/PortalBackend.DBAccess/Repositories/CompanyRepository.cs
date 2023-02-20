@@ -72,9 +72,9 @@ public class CompanyRepository : ICompanyRepository
         return address;
     }
 
-    public void AttachAndModifyAddress(Guid AddressId, Action<Address>? initialize, Action<Address> modify)
+    public void AttachAndModifyAddress(Guid addressId, Action<Address>? initialize, Action<Address> modify)
     {
-        var address = new Address(AddressId, null!, null!, null!, default);
+        var address = new Address(addressId, null!, null!, null!, default);
         initialize?.Invoke(address);
         _context.Attach(address);
         modify(address);

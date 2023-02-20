@@ -274,6 +274,57 @@ public class CompanyRepositoryTests : IAssemblyFixture<TestDbFixture>
 
     #endregion
 
+    #region AttachAndModifyAddress
+
+    [Fact]
+    public async Task AttachAndModifyAddress_Changed_ReturnsExpectedResult()
+    {
+        // Arrange
+        const string city = "Munich";
+        var (sut, context) = await CreateSut().ConfigureAwait(false);
+
+        // Act
+        sut.AttachAndModifyAddress(new Guid("b4db3945-19a7-4a50-97d6-e66e8dfd04fb"),
+            address => { address.City = null!; },
+            address => { address.City = city; });
+
+        // Assert
+        var changeTracker = context.ChangeTracker;
+        var changedEntries = changeTracker.Entries().ToList();
+        changeTracker.HasChanges().Should().BeTrue();
+        changedEntries.Should().NotBeEmpty();
+        changedEntries.Should().HaveCount(1);
+        changedEntries.Single().Entity.Should().BeOfType<Address>().Which.City.Should().Be(city);
+        var entry = changedEntries.Single();
+        entry.Entity.Should().BeOfType<Address>().Which.City.Should().Be(city);
+        entry.State.Should().Be(Microsoft.EntityFrameworkCore.EntityState.Modified);
+    }
+
+    [Fact]
+    public async Task AttachAndModifyAddress_Unchanged_ReturnsExpectedResult()
+    {
+        // Arrange
+        const string city = "Munich";
+        var (sut, context) = await CreateSut().ConfigureAwait(false);
+
+        // Act
+        sut.AttachAndModifyAddress(new Guid("b4db3945-19a7-4a50-97d6-e66e8dfd04fb"),
+            address => { address.City = city; },
+            address => { address.City = city; });
+
+        // Assert
+        var changeTracker = context.ChangeTracker;
+        var changedEntries = changeTracker.Entries().ToList();
+        changeTracker.HasChanges().Should().BeFalse();
+        changedEntries.Should().NotBeEmpty();
+        changedEntries.Should().HaveCount(1);
+        var entry = changedEntries.Single();
+        entry.Entity.Should().BeOfType<Address>().Which.City.Should().Be(city);
+        entry.State.Should().Be(Microsoft.EntityFrameworkCore.EntityState.Unchanged);
+    }
+
+    #endregion
+
     #region AttachAndModifyServiceProviderDetails
 
     [Fact]
