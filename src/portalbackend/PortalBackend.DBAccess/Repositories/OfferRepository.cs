@@ -556,4 +556,16 @@ public class OfferRepository : IOfferRepository
                     entity.DescriptionLong = modified.LongDescription;
                     entity.DescriptionShort = modified.ShortDescription;
                 });
+    
+    ///<inheritdoc/>
+    public Task<(bool IsStatusActive, Guid CompanyUserId, IEnumerable<DocumentStatusData> documentStatusDatas)> GetOfferAssignedAppLeadImageDocumentsByIdAsync(Guid offerId, string iamUserId, OfferTypeId offerTypeId) =>
+        _context.Offers
+            .Where(offer => offer.Id == offerId && offer.OfferTypeId == offerTypeId)
+            .Select(offer => new ValueTuple<bool, Guid, IEnumerable<DocumentStatusData>>(
+                offer.OfferStatusId == OfferStatusId.ACTIVE,
+                offer.ProviderCompany!.CompanyUsers.Where(companyUser => companyUser.IamUser!.UserEntityId == iamUserId)
+                    .Select(cu => cu.Id).FirstOrDefault(),
+                offer.Documents.Where(doc => doc.DocumentTypeId == DocumentTypeId.APP_LEADIMAGE)
+                    .Select(doc => new DocumentStatusData(doc.Id, doc.DocumentStatusId))))
+            .SingleOrDefaultAsync();
 }

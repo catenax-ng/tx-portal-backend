@@ -355,4 +355,13 @@ public interface IOfferRepository
     /// <param name="modifiedItems"></param>
     /// <returns></returns>
     void CreateUpdateDeleteOfferDescriptions(Guid offerId, IEnumerable<OfferDescriptionData> initialItems, IEnumerable<(string LanguageCode, string LongDescription, string ShortDescription)> modifiedItems);
+
+    /// <summary>
+    /// Gets Active OfferAssigned AppLeadImage Documents
+    /// </summary>
+    /// <param name="offerId"></param>
+    /// <param name ="iamUserId"></param>
+    /// <param name="offerTypeId"></param>
+    /// <returns></returns>
+    Task<(bool IsStatusActive, Guid CompanyUserId, IEnumerable<DocumentStatusData> documentStatusDatas)> GetOfferAssignedAppLeadImageDocumentsByIdAsync(Guid offerId, string iamUserId, OfferTypeId offerTypeId);
 }

@@ -18,6 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
@@ -365,5 +366,58 @@ public class AppsBusinessLogic : IAppsBusinessLogic
             throw new UnexpectedConditionException("offerDescriptionDatas should never be null here");
         }
         return result.OfferDescriptionDatas;
+    }
+
+    /// <inheritdoc />
+    public async Task CreatOfferAssignedAppLeadImageDocumentByIdAsync(Guid appId, string iamUserId, IFormFile document, CancellationToken cancellationToken)
+    {
+        var appLeadImageContentTypes = new []{ "image/jpeg","image/png" };
+        if (!appLeadImageContentTypes.Contains(document.ContentType))
+        {
+            throw new UnsupportedMediaTypeException($"Document type not supported. File with contentType :{string.Join(",", appLeadImageContentTypes)} are allowed.");
+        }
+                
+        var offerRepository = _portalRepositories.GetInstance<IOfferRepository>();
+        var result = await offerRepository.GetOfferAssignedAppLeadImageDocumentsByIdAsync(appId, iamUserId, OfferTypeId.APP).ConfigureAwait(false);
+
+        if (!result.IsStatusActive)
+        {
+            throw new ConflictException($"offerStatus is in Incorrect State");
+        }
+        var companyUserId = result.CompanyUserId;
+        if (companyUserId == Guid.Empty)
+        {
+            throw new ForbiddenException($"user {iamUserId} is not a member of the providercompany of Apps {appId}");
+        }
+
+        var documentRepository = _portalRepositories.GetInstance<IDocumentRepository>();
+        if(result.documentStatusDatas.Any())
+        {
+            foreach(var documentData in result.documentStatusDatas)
+            {
+                documentRepository.AttachAndModifyDocument(documentData.DocumentId,
+                    A => { A.DocumentStatusId = documentData.StatusId; },
+                    A => { A.DocumentStatusId = DocumentStatusId.INACTIVE; }
+                );
+            }
+        }
+        var documentName = document.FileName;
+        using var sha512Hash = SHA512.Create();
+        using var ms = new MemoryStream((int)document.Length);
+
+        await document.CopyToAsync(ms, cancellationToken).ConfigureAwait(false);
+        var hash = sha512Hash.ComputeHash(ms);
+        var documentContent = ms.GetBuffer();
+        if (ms.Length != document.Length || documentContent.Length != document.Length)
+        {
+            throw new ControllerArgumentException($"document {document.FileName} transmitted length {document.Length} doesn't match actual length {ms.Length}.");
+        }
+        var doc = documentRepository.CreateDocument(documentName, documentContent, hash, DocumentTypeId.APP_LEADIMAGE, x =>
+        {
+            x.CompanyUserId = companyUserId;
+            x.DocumentStatusId = DocumentStatusId.LOCKED;
+        });
+        _portalRepositories.GetInstance<IOfferRepository>().CreateOfferAssignedDocument(appId, doc.Id);
+        await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
 }
