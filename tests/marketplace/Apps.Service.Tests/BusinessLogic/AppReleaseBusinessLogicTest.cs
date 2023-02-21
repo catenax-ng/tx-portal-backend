@@ -649,7 +649,7 @@ public class AppReleaseBusinessLogicTest
             DeleteDocumentTypeIds = new[] { DocumentTypeId.APP_CONTRACT }
         };
         A.CallTo(() => _documentRepository.GetAppDocumentsAsync(ValidDocumentId, IamUserId, settings.DeleteDocumentTypeIds, OfferTypeId.APP))
-            .Returns((true, OfferStatusId.CREATED, true, DocumentStatusId.PENDING, appId, true));
+            .ReturnsLazily(() => (new [] { new ValueTuple<OfferStatusId, Guid, bool>(OfferStatusId.CREATED, appId, true) }, true, DocumentStatusId.PENDING, true));
 
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
 
@@ -665,16 +665,15 @@ public class AppReleaseBusinessLogicTest
     }
     
     [Fact]
-    public async Task DeleteAppDocumentsAsync_WithNoAssignedOfferDocument_ThrowsArgumentException()
+    public async Task DeleteAppDocumentsAsync_WithNoDocument_ThrowsNotFoundException()
     {
         //Arrange
-        var appId = Guid.NewGuid();
         var settings = new AppsSettings
         {
             DeleteDocumentTypeIds = new[] { DocumentTypeId.APP_CONTRACT }
         };
         A.CallTo(() => _documentRepository.GetAppDocumentsAsync(ValidDocumentId, IamUserId, settings.DeleteDocumentTypeIds, OfferTypeId.APP))
-            .Returns((false, OfferStatusId.CREATED, true, DocumentStatusId.PENDING, appId, true));
+            .ReturnsLazily(() => new ValueTuple<IEnumerable<(OfferStatusId OfferStatusId, Guid OfferId, bool IsOfferType)>, bool, DocumentStatusId, bool>());
 
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
 
@@ -683,10 +682,85 @@ public class AppReleaseBusinessLogicTest
 
         // Assert 
         // Assert
-        var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Act);
-        ex.Message.Should().Be($"Document {ValidDocumentId} and app id {appId} do not match.");
+        var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
+        ex.Message.Should().Be($"Document {ValidDocumentId} does not exist");
+    }
+
+    [Fact]
+    public async Task DeleteAppDocumentsAsync_WithNoAssignedOfferDocument_ThrowsConflictException()
+    {
+        //Arrange
+        var settings = new AppsSettings
+        {
+            DeleteDocumentTypeIds = new[] { DocumentTypeId.APP_CONTRACT }
+        };
+        A.CallTo(() => _documentRepository.GetAppDocumentsAsync(ValidDocumentId, IamUserId, settings.DeleteDocumentTypeIds, OfferTypeId.APP))
+            .ReturnsLazily(() => (new [] { new ValueTuple<OfferStatusId, Guid, bool>() }, true, DocumentStatusId.PENDING, true));
+
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
+
+        //Act
+        async Task Act() => await sut.DeleteAppDocumentsAsync(ValidDocumentId, IamUserId).ConfigureAwait(false);
+
+        // Assert 
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be($"Document {ValidDocumentId} is not assigned to an app");
     }
     
+    [Fact]
+    public async Task DeleteAppDocumentsAsync_WithMultipleDocumentsAssigned_ThrowsConflictException()
+    {
+        //Arrange
+        var settings = new AppsSettings
+        {
+            DeleteDocumentTypeIds = new[] { DocumentTypeId.APP_CONTRACT }
+        };
+        A.CallTo(() => _documentRepository.GetAppDocumentsAsync(ValidDocumentId, IamUserId, settings.DeleteDocumentTypeIds, OfferTypeId.APP))
+            .ReturnsLazily(() => (
+                new []
+                {
+                    new ValueTuple<OfferStatusId, Guid, bool>(OfferStatusId.CREATED, Guid.NewGuid(), true), 
+                    new ValueTuple<OfferStatusId, Guid, bool>(OfferStatusId.CREATED, Guid.NewGuid(), true)
+                }, 
+                true, 
+                DocumentStatusId.PENDING, 
+                true));
+
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
+
+        //Act
+        async Task Act() => await sut.DeleteAppDocumentsAsync(ValidDocumentId, IamUserId).ConfigureAwait(false);
+
+        // Assert 
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be($"Document {ValidDocumentId} is assigned to more than one app");
+    }
+
+    [Fact]
+    public async Task DeleteAppDocumentsAsync_WithDocumentAssignedToService_ThrowsConflictException()
+    {
+        //Arrange
+        var appId = Guid.NewGuid();
+        var settings = new AppsSettings
+        {
+            DeleteDocumentTypeIds = new[] { DocumentTypeId.APP_CONTRACT }
+        };
+        A.CallTo(() => _documentRepository.GetAppDocumentsAsync(ValidDocumentId, IamUserId, settings.DeleteDocumentTypeIds, OfferTypeId.APP))
+            .ReturnsLazily(() => (new [] { new ValueTuple<OfferStatusId, Guid, bool>(OfferStatusId.CREATED, appId, false) }, true, DocumentStatusId.PENDING, true));
+
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
+
+        //Act
+        async Task Act() => await sut.DeleteAppDocumentsAsync(ValidDocumentId, IamUserId).ConfigureAwait(false);
+
+        // Assert 
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be($"Document {ValidDocumentId} is not assigned to an app");
+    }
+
     [Fact]
     public async Task DeleteAppDocumentsAsync_WithInvalidProviderCompanyUser_ThrowsForbiddenException()
     {
@@ -697,7 +771,7 @@ public class AppReleaseBusinessLogicTest
             DeleteDocumentTypeIds = new[] { DocumentTypeId.APP_CONTRACT }
         };
         A.CallTo(() => _documentRepository.GetAppDocumentsAsync(ValidDocumentId, IamUserId, settings.DeleteDocumentTypeIds, OfferTypeId.APP))
-            .Returns((true, OfferStatusId.CREATED, true, DocumentStatusId.PENDING, appId, false));
+            .ReturnsLazily(() => (new [] { new ValueTuple<OfferStatusId, Guid, bool>(OfferStatusId.CREATED, appId, true) }, true, DocumentStatusId.PENDING, false));
 
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
 
@@ -720,7 +794,7 @@ public class AppReleaseBusinessLogicTest
             DeleteDocumentTypeIds = new[] { DocumentTypeId.APP_CONTRACT }
         };
         A.CallTo(() => _documentRepository.GetAppDocumentsAsync(ValidDocumentId, IamUserId, settings.DeleteDocumentTypeIds, OfferTypeId.APP))
-            .Returns((true, OfferStatusId.ACTIVE, true, DocumentStatusId.PENDING, appId, true));
+            .ReturnsLazily(() => (new [] { new ValueTuple<OfferStatusId, Guid, bool>(OfferStatusId.ACTIVE, appId, true) }, true, DocumentStatusId.PENDING, true));
 
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
 
@@ -730,7 +804,7 @@ public class AppReleaseBusinessLogicTest
         // Assert 
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
-        ex.Message.Should().Be($"Apps {OfferStatusId.ACTIVE} is in locked state");
+        ex.Message.Should().Be($"App {appId} is in locked state");
     }
 
     [Fact]
@@ -743,7 +817,7 @@ public class AppReleaseBusinessLogicTest
             DeleteDocumentTypeIds = new[] { DocumentTypeId.COMMERCIAL_REGISTER_EXTRACT }
         };
         A.CallTo(() => _documentRepository.GetAppDocumentsAsync(ValidDocumentId, IamUserId, settings.DeleteDocumentTypeIds, OfferTypeId.APP))
-            .Returns((true, OfferStatusId.CREATED, false, DocumentStatusId.PENDING, appId, true));
+            .ReturnsLazily(() => (new [] { new ValueTuple<OfferStatusId, Guid, bool>(OfferStatusId.CREATED, appId, true) }, false, DocumentStatusId.PENDING, true));
 
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
 
@@ -753,7 +827,7 @@ public class AppReleaseBusinessLogicTest
         // Assert 
         // Assert
         var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Act);
-        ex.Message.Should().Be($"Document {ValidDocumentId} can not get retrieved. Document type not supported.");
+        ex.Message.Should().Be($"Document {ValidDocumentId} can not get retrieved. Document type not supported");
     }
 
     [Fact]
@@ -766,7 +840,7 @@ public class AppReleaseBusinessLogicTest
             DeleteDocumentTypeIds = new[] { DocumentTypeId.APP_CONTRACT }
         };
         A.CallTo(() => _documentRepository.GetAppDocumentsAsync(ValidDocumentId, IamUserId, settings.DeleteDocumentTypeIds, OfferTypeId.APP))
-            .Returns((true, OfferStatusId.CREATED, true, DocumentStatusId.LOCKED, appId, true));
+            .ReturnsLazily(() => (new [] { new ValueTuple<OfferStatusId, Guid, bool>(OfferStatusId.CREATED, appId, true) }, true, DocumentStatusId.LOCKED, true));
 
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
 

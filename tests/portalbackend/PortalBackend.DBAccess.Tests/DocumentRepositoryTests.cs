@@ -345,11 +345,12 @@ public class DocumentRepositoryTests : IAssemblyFixture<TestDbFixture>
 
         // Assert
         result.Should().NotBeNull();
-        result.IsOfferAssignedDocument.Should().Be(true);
+        result.OfferData.Should().ContainSingle();
         result.IsDocumentTypeMatch.Should().Be(true);
-        result.AppId.Should().Be(new Guid("5cf74ef8-e0b7-4984-a872-474828beb510"));
-        
+        var offer = result.OfferData.Single();
+        offer.OfferId.Should().Be(new Guid("5cf74ef8-e0b7-4984-a872-474828beb510"));
     }
+    
     #endregion
 
     #region Setup    

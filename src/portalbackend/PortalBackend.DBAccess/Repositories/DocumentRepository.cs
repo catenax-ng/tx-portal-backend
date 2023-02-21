@@ -191,27 +191,24 @@ public class DocumentRepository : IDocumentRepository
             .SingleOrDefaultAsync(cancellationToken);
 
     /// <inheritdoc />
-    public Task<(bool IsOfferAssignedDocument, OfferStatusId OfferStatusId, bool IsDocumentTypeMatch, DocumentStatusId DocumentStatusId, Guid AppId, bool IsProviderCompanyUser)> GetAppDocumentsAsync(Guid documentId, string iamUserId, IEnumerable<DocumentTypeId> documentTypeIds, OfferTypeId offerTypeId) =>
+    public Task<(IEnumerable<(OfferStatusId OfferStatusId, Guid OfferId, bool IsOfferType)> OfferData, bool IsDocumentTypeMatch, DocumentStatusId DocumentStatusId, bool IsProviderCompanyUser)> GetAppDocumentsAsync(Guid documentId, string iamUserId, IEnumerable<DocumentTypeId> documentTypeIds, OfferTypeId offerTypeId) =>
         _dbContext.Documents
             .Where(document => document.Id == documentId)
             .Select(document => new {
-                Offer = document.Offers.SingleOrDefault(offer => offer.OfferTypeId == offerTypeId),
+                Offers = document.Offers,
                 Document = document
             })
             .Select(x => new {
-                IsOfferAssignedDocument = x.Offer != null,
-                AppStatus =  x.Offer!.OfferStatusId,
+                IsOfferAssignedDocument = x.Offers.Any(),
+                OfferData =  x.Offers.Select(o => new ValueTuple<OfferStatusId, Guid, bool>(o.OfferStatusId, o.Id, o.OfferTypeId == offerTypeId)),
                 IsDocumentTypeMatch = documentTypeIds.Contains(x.Document.DocumentTypeId),
                 DocumentStatus = x.Document.DocumentStatusId,
-                OfferId = x.Offer!.Id,
                 IsProviderCompanyUser = x.Document.CompanyUser!.Company!.CompanyUsers.Any(cu => cu.IamUser!.UserEntityId == iamUserId)
             })
-            .Select(x => new ValueTuple<bool, OfferStatusId, bool, DocumentStatusId, Guid, bool>(
-                x.IsOfferAssignedDocument,
-                x.AppStatus,
+            .Select(x => new ValueTuple<IEnumerable<ValueTuple<OfferStatusId, Guid, bool>>, bool, DocumentStatusId, bool>(
+                x.OfferData,
                 x.IsDocumentTypeMatch,
                 x.DocumentStatus,
-                x.OfferId,
                 x.IsProviderCompanyUser
             ))
             .SingleOrDefaultAsync();

@@ -128,5 +128,5 @@ public interface IDocumentRepository
     /// <param name="documentTypeIds"></param>
     /// <param name="offerTypeId"></param>
     /// <returns></returns>
-    Task<(bool IsOfferAssignedDocument, OfferStatusId OfferStatusId, bool IsDocumentTypeMatch, DocumentStatusId DocumentStatusId, Guid AppId, bool IsProviderCompanyUser)> GetAppDocumentsAsync(Guid documentId, string iamUserId, IEnumerable<DocumentTypeId> documentTypeIds, OfferTypeId offerTypeId);
+    Task<(IEnumerable<(OfferStatusId OfferStatusId, Guid OfferId, bool IsOfferType)> OfferData, bool IsDocumentTypeMatch, DocumentStatusId DocumentStatusId, bool IsProviderCompanyUser)> GetAppDocumentsAsync(Guid documentId, string iamUserId, IEnumerable<DocumentTypeId> documentTypeIds, OfferTypeId offerTypeId);
 }
