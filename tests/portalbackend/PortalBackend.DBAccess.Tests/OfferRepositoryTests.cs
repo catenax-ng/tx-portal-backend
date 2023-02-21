@@ -792,7 +792,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         modifiedEntities.Select(x => (x.LanguageShortName, x.DescriptionLong, x.DescriptionShort)).Should().Contain(modifedOfferDescriptions);
 
     }
-
+    
     #endregion
 
     #region GetOfferReleaseDataById
