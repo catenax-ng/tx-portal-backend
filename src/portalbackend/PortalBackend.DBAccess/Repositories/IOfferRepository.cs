@@ -264,10 +264,10 @@ public interface IOfferRepository
     /// Adds the service types to the service
     /// </summary>
     /// <param name="serviceAssignedServiceTypes"></param>
-    void AddServiceAssignedServiceTypes(IEnumerable<(Guid serviceId, ServiceTypeId serviceTypeId)> serviceAssignedServiceTypes);
+    void AddServiceAssignedServiceTypes(IEnumerable<(Guid serviceId, ServiceTypeId serviceTypeId, bool technicalUserNeeded)> serviceAssignedServiceTypes);
 
     /// <summary>
-    /// Removes <see cref="ServiceAssignedServiceType"/>s to the database
+    /// Removes <see cref="ServiceDetail"/>s to the databasethe database
     /// </summary>
     /// <param name="serviceAssignedServiceTypes">serviceIds and serviceTypeIds of the assigned service types to be removed from the database</param>
     void RemoveServiceAssignedServiceTypes(IEnumerable<(Guid serviceId, ServiceTypeId serviceTypeId)> serviceAssignedServiceTypes);
