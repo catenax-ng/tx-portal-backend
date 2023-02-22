@@ -325,10 +325,15 @@ public class UserController : ControllerBase
         this.WithIamUserId(adminUserId => _logic.ExecuteOwnCompanyUserPasswordReset(companyUserId, adminUserId));
     
     /// <summary>
-    /// 
+    /// Gets the core offer roles
     /// </summary>
-    /// <param name="languageShortName"></param>
-    /// <returns></returns>
+    /// <param name="languageShortName" example="DE">The shortname of the user role description"</param>
+    /// <remarks>
+    /// Example: GET: api/administration/user/owncompany/roles/coreoffers <br />
+    /// Example: GET: api/administration/user/owncompany/roles/coreoffers?languageShortName=DE
+    /// </remarks>
+    /// <returns>Returns a collection of offer role infos</returns>
+    /// <response code="200">A list of OfferRoleInfos.</response>
     [HttpGet]
     [Authorize(Roles = "view_client_roles")]
     [Route("owncompany/roles/coreoffers")]
@@ -496,7 +501,7 @@ public class UserController : ControllerBase
     /// </summary>
     /// <param name="companyUserId" example="4f06431c-25ae-40ad-9cac-9dee8fe4754d">ID of the company user to be deleted.</param>
     /// <param name="businessPartnerNumber" example="CAXSDUMMYTESTCX1">BPN to be deleted.</param>
-    /// <remarks>Example: DELETE: /api/administration/user/owncompany/users/4f06431c-25ae-40ad-9cac-9dee8fe4754d/BusinessPartnerNumbers/CAXSDUMMYTESTCX1</remarks>
+    /// <remarks>Example: DELETE: /api/administration/user/owncompany/users/4f06431c-25ae-40ad-9cac-9dee8fe4754d/businessPartnerNumbers/CAXSDUMMYTESTCX1</remarks>
     /// <response code="200">Empty response on success.</response>
     /// <response code="403">ForbiddenException if both users does not belongs to same company</response>
     /// <response code="404">Record not found.</response>
