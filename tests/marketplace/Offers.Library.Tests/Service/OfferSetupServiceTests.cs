@@ -37,7 +37,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Tests.Service;
 
 public class OfferSetupServiceTests
 {
-    private readonly string _accessToken = "THISISAACCESSTOKEN";
+    private const string AccessToken = "THISISAACCESSTOKEN";
     private const string Bpn = "CAXSDUMMYCATENAZZ";
 
     private readonly Guid _companyUserCompanyId = new("395f955b-f11b-4a74-ab51-92a526c1973a");
@@ -108,7 +108,7 @@ public class OfferSetupServiceTests
             .Returns(new HttpClient(httpMessageHandlerMock));
 
         // Act
-        async Task Action() => await _sut.CallThirdPartyAutoSetupOfferAsync(_fixture.Create<OfferThirdPartyAutoSetupData>(), _accessToken, "https://www.superservice.com").ConfigureAwait(false);
+        async Task Action() => await _sut.CallThirdPartyAutoSetupOfferAsync(_fixture.Create<OfferThirdPartyAutoSetupData>(), AccessToken, "https://www.superservice.com").ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ServiceException>(Action);
@@ -124,7 +124,7 @@ public class OfferSetupServiceTests
             .Returns(new HttpClient(httpMessageHandlerMock));
 
         // Act
-        async Task Action() => await _sut.CallThirdPartyAutoSetupOfferAsync(_fixture.Create<OfferThirdPartyAutoSetupData>(), _accessToken, "https://www.superservice.com").ConfigureAwait(false);
+        async Task Action() => await _sut.CallThirdPartyAutoSetupOfferAsync(_fixture.Create<OfferThirdPartyAutoSetupData>(), AccessToken, "https://www.superservice.com").ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ServiceException>(Action);
@@ -140,7 +140,7 @@ public class OfferSetupServiceTests
             .Returns(new HttpClient(httpMessageHandlerMock));
 
         // Act
-        async Task Action() => await _sut.CallThirdPartyAutoSetupOfferAsync(_fixture.Create<OfferThirdPartyAutoSetupData>(), _accessToken, "https://www.superservice.com").ConfigureAwait(false);
+        async Task Action() => await _sut.CallThirdPartyAutoSetupOfferAsync(_fixture.Create<OfferThirdPartyAutoSetupData>(), AccessToken, "https://www.superservice.com").ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ServiceException>(Action);
@@ -158,7 +158,8 @@ public class OfferSetupServiceTests
     public async Task AutoSetup_WithValidData_ReturnsExpectedNotificationAndSecret(OfferTypeId offerTypeId, bool technicalUserRequired)
     {
         // Arrange
-        Setup(technicalUserRequired);
+        var offerSubscription = new OfferSubscription(Guid.NewGuid(), Guid.Empty, Guid.Empty, OfferSubscriptionStatusId.PENDING, Guid.Empty, Guid.Empty);
+        Setup(technicalUserRequired, offerSubscription);
         var clientId = Guid.NewGuid();
         var appInstanceId = Guid.NewGuid();
         var appSubscriptionDetailId = Guid.NewGuid();
@@ -240,6 +241,7 @@ public class OfferSetupServiceTests
         }
 
         notifications.Should().HaveCount(1);
+        offerSubscription.OfferSubscriptionStatusId.Should().Be(OfferSubscriptionStatusId.ACTIVE);
         A.CallTo(() => _mailingService.SendMails(A<string>._, A<Dictionary<string, string>>._, A<List<string>>._)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
     }
@@ -346,9 +348,19 @@ public class OfferSetupServiceTests
             .ReturnsLazily(() => Task.CompletedTask);
     }
 
-    private void Setup(bool technicalUserRequired = false)
+    private void Setup(bool technicalUserRequired = false, OfferSubscription? offerSubscription = null)
     {
         SetupServices();
+
+        if (offerSubscription != null)
+        {
+            A.CallTo(() => _offerSubscriptionsRepository.AttachAndModifyOfferSubscription(A<Guid>._, A<Action<OfferSubscription>>._))
+                .Invokes((Guid _, Action<OfferSubscription> modify) =>
+                {
+                    modify.Invoke(offerSubscription);
+                });
+        }
+
         A.CallTo(() => _offerSubscriptionsRepository.GetOfferDetailsAndCheckUser(
                 A<Guid>.That.Matches(x => x == _validSubscriptionId),
                 A<string>.That.Matches(x => x == _iamUserId),
