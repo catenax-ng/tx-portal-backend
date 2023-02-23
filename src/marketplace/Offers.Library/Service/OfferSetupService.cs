@@ -116,19 +116,21 @@ public class OfferSetupService : IOfferSetupService
         });
 
         var userRolesRepository = _portalRepositories.GetInstance<IUserRolesRepository>();
+        var technicalUserClientId = $"{offerDetails.OfferName}-{offerDetails.CompanyName}";
         ClientInfoData? clientInfoData = null;
-        TechnicalUserInfoData? technicalUserInfoData = null;
-        if (offerDetails.IsTechnicalUserNeeded)
+        if (offerTypeId == OfferTypeId.APP)
         {
             var (clientId, iamClientId) = await CreateClient(data, userRolesRepository, offerDetails);
             clientInfoData = new ClientInfoData(clientId);
+            technicalUserClientId = clientId;
+            CreateAppInstance(data, offerDetails, iamClientId);
+        }
 
-            if (offerTypeId == OfferTypeId.APP)
-            {
-                CreateAppInstance(data, offerDetails, iamClientId);
-            }
-
-            var (technicalClientId, serviceAccountData, serviceAccountId) = await CreateTechnicalUser(data, serviceAccountRoles, userRolesRepository, offerDetails, clientId).ConfigureAwait(false);
+        TechnicalUserInfoData? technicalUserInfoData = null;
+        if (offerDetails.IsTechnicalUserNeeded)
+        {
+            var (technicalClientId, serviceAccountData, serviceAccountId) = await CreateTechnicalUser(data, serviceAccountRoles, userRolesRepository, offerDetails, technicalUserClientId)
+                .ConfigureAwait(false);
             technicalUserInfoData = new TechnicalUserInfoData(serviceAccountId, serviceAccountData.AuthData.Secret, technicalClientId);
         }
 
