@@ -108,7 +108,7 @@ public class OfferSetupServiceTests
             .Returns(new HttpClient(httpMessageHandlerMock));
 
         // Act
-        async Task Action() => await _sut.CallThirdPartyAutoSetupOfferAsync(_fixture.Create<OfferThirdPartyAutoSetupData>(), AccessToken, "https://www.superservice.com").ConfigureAwait(false);
+        async Task Action() => await _sut.AutoSetupOfferSubscription(_fixture.Create<OfferThirdPartyAutoSetupData>(), AccessToken, "https://www.superservice.com").ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ServiceException>(Action);
@@ -124,7 +124,7 @@ public class OfferSetupServiceTests
             .Returns(new HttpClient(httpMessageHandlerMock));
 
         // Act
-        async Task Action() => await _sut.CallThirdPartyAutoSetupOfferAsync(_fixture.Create<OfferThirdPartyAutoSetupData>(), AccessToken, "https://www.superservice.com").ConfigureAwait(false);
+        async Task Action() => await _sut.AutoSetupOfferSubscription(_fixture.Create<OfferThirdPartyAutoSetupData>(), AccessToken, "https://www.superservice.com").ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ServiceException>(Action);
@@ -140,7 +140,7 @@ public class OfferSetupServiceTests
             .Returns(new HttpClient(httpMessageHandlerMock));
 
         // Act
-        async Task Action() => await _sut.CallThirdPartyAutoSetupOfferAsync(_fixture.Create<OfferThirdPartyAutoSetupData>(), AccessToken, "https://www.superservice.com").ConfigureAwait(false);
+        async Task Action() => await _sut.AutoSetupOfferSubscription(_fixture.Create<OfferThirdPartyAutoSetupData>(), AccessToken, "https://www.superservice.com").ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ServiceException>(Action);
@@ -211,7 +211,7 @@ public class OfferSetupServiceTests
         var data = new OfferAutoSetupData(_pendingSubscriptionId, "https://new-url.com/");
 
         // Act
-        var result = await _sut.AutoSetupServiceAsync(data, serviceAccountRoles, companyAdminRoles, _iamUserId, offerTypeId, "https://base-address.com").ConfigureAwait(false);
+        var result = await _sut.AutoSetupOfferAsync(data, serviceAccountRoles, companyAdminRoles, _iamUserId, offerTypeId, "https://base-address.com").ConfigureAwait(false);
         
         // Assert
         result.Should().NotBeNull();
@@ -263,7 +263,7 @@ public class OfferSetupServiceTests
         var data = new OfferAutoSetupData(_pendingSubscriptionId, "https://new-url.com/");
 
         // Act
-        var result = await _sut.AutoSetupServiceAsync(data, serviceAccountRoles, companyAdminRoles, _iamUserIdWithoutMail, OfferTypeId.SERVICE, "https://base-address.com").ConfigureAwait(false);
+        var result = await _sut.AutoSetupOfferAsync(data, serviceAccountRoles, companyAdminRoles, _iamUserIdWithoutMail, OfferTypeId.SERVICE, "https://base-address.com").ConfigureAwait(false);
         
         // Assert
         result.Should().NotBeNull();
@@ -281,7 +281,7 @@ public class OfferSetupServiceTests
         var data = new OfferAutoSetupData(Guid.NewGuid(), "https://new-url.com/");
 
         // Act
-        async Task Action() => await _sut.AutoSetupServiceAsync(data, new Dictionary<string, IEnumerable<string>>(), new Dictionary<string, IEnumerable<string>>(), _iamUserId, OfferTypeId.SERVICE, "https://base-address.com");
+        async Task Action() => await _sut.AutoSetupOfferAsync(data, new Dictionary<string, IEnumerable<string>>(), new Dictionary<string, IEnumerable<string>>(), _iamUserId, OfferTypeId.SERVICE, "https://base-address.com");
         
         // Assert
         var ex = await Assert.ThrowsAsync<NotFoundException>(Action);
@@ -298,7 +298,7 @@ public class OfferSetupServiceTests
         var data = new OfferAutoSetupData(_validSubscriptionId, "https://new-url.com/");
 
         // Act
-        async Task Action() => await _sut.AutoSetupServiceAsync(data, new Dictionary<string, IEnumerable<string>>(), new Dictionary<string, IEnumerable<string>>(), _iamUserId, OfferTypeId.SERVICE, "https://base-address.com");
+        async Task Action() => await _sut.AutoSetupOfferAsync(data, new Dictionary<string, IEnumerable<string>>(), new Dictionary<string, IEnumerable<string>>(), _iamUserId, OfferTypeId.SERVICE, "https://base-address.com");
         
         // Assert
         var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Action);
@@ -315,7 +315,7 @@ public class OfferSetupServiceTests
         var data = new OfferAutoSetupData(_pendingSubscriptionId, "https://new-url.com/");
 
         // Act
-        async Task Action() => await _sut.AutoSetupServiceAsync(data, new Dictionary<string, IEnumerable<string>>(), new Dictionary<string, IEnumerable<string>>(), Guid.NewGuid().ToString(), OfferTypeId.SERVICE, "https://base-address.com");
+        async Task Action() => await _sut.AutoSetupOfferAsync(data, new Dictionary<string, IEnumerable<string>>(), new Dictionary<string, IEnumerable<string>>(), Guid.NewGuid().ToString(), OfferTypeId.SERVICE, "https://base-address.com");
         
         // Assert
         var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Action);

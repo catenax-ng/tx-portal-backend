@@ -334,9 +334,9 @@ public interface IOfferRepository
     /// <summary>
     /// Gets InReview Offer Data for App by ID
     /// </summary>
-    /// <param name="appId"></param>
-    /// <param name ="iamUserId"></param>
-    Task<InReviewOfferData?> GetinReviewAppDataByIdAsync(Guid Id, OfferTypeId offerTypeId);
+    /// <param name="id"></param>
+    /// <param name ="offerTypeId"></param>
+    Task<InReviewOfferData?> GetInReviewAppDataByIdAsync(Guid id, OfferTypeId offerTypeId);
 
     /// <summary>
     /// Gets Offer Descriptions Data for Apps

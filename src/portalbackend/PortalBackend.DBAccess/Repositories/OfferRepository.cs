@@ -500,10 +500,10 @@ public class OfferRepository : IOfferRepository
             privacyPolicy => new OfferAssignedPrivacyPolicy(appId, privacyPolicy));
     
     ///<inheritdoc/>
-    public Task<InReviewOfferData?> GetinReviewAppDataByIdAsync(Guid Id, OfferTypeId offerTypeId) =>
+    public Task<InReviewOfferData?> GetInReviewAppDataByIdAsync(Guid id, OfferTypeId offerTypeId) =>
         _context.Offers.AsNoTracking()
             .AsSplitQuery()
-            .Where(offer => offer.Id == Id && offer.OfferTypeId == offerTypeId && offer.OfferStatusId == OfferStatusId.IN_REVIEW)
+            .Where(offer => offer.Id == id && offer.OfferTypeId == offerTypeId && offer.OfferStatusId == OfferStatusId.IN_REVIEW)
             .Select(offer =>  
                 new InReviewOfferData(
                     offer.Id,

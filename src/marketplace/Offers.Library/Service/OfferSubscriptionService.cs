@@ -72,7 +72,7 @@ public class OfferSubscriptionService : IOfferSubscriptionService
 
         CreateConsentsForSubscription(offerSubscriptionId, offerAgreementConsentData, companyInformation.CompanyId, companyUserId);
         
-        var autoSetupResult = await ExecuteThirdPartyAutoSetupAsync(offerId, accessToken, offerProviderDetails, companyInformation, userEmail, offerSubscriptionId).ConfigureAwait(false);
+        var autoSetupResult = await AutoSetupOfferSubscription(offerId, accessToken, offerProviderDetails, companyInformation, userEmail, offerSubscriptionId).ConfigureAwait(false);
         var notificationContent = JsonSerializer.Serialize(new
         {
             AppName = offerProviderDetails.OfferName,
@@ -191,7 +191,7 @@ public class OfferSubscriptionService : IOfferSubscriptionService
         }
     }
 
-    private async Task<string?> ExecuteThirdPartyAutoSetupAsync(
+    private async Task<string?> AutoSetupOfferSubscription(
         Guid offerId, 
         string accessToken,
         OfferProviderDetailsData offerProviderDetails, 
@@ -214,7 +214,7 @@ public class OfferSubscriptionService : IOfferSubscriptionService
                     offerId)
             );
             await _offerSetupService
-                .CallThirdPartyAutoSetupOfferAsync(autoSetupData, accessToken, offerProviderDetails.AutoSetupUrl)
+                .AutoSetupOfferSubscription(autoSetupData, accessToken, offerProviderDetails.AutoSetupUrl)
                 .ConfigureAwait(false);
         }
         catch (Exception e)
