@@ -24,7 +24,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migrations
 {
-    public partial class CPLP1834AddRemoveDocumentTypeS : Migration
+    public partial class CPLP1834AddRemoveDocumentTypes : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
