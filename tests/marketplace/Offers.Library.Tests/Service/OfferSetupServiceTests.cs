@@ -220,7 +220,6 @@ public class OfferSetupServiceTests
             result.TechnicalUserInfo.Should().NotBeNull();
             result.TechnicalUserInfo!.TechnicalUserId.Should().Be(_technicalUserId);
             result.TechnicalUserInfo.TechnicalUserSecret.Should().Be("katze!1234");
-            clients.Should().ContainSingle();
         }
         else
         {
@@ -238,6 +237,7 @@ public class OfferSetupServiceTests
         {
             appInstances.Should().ContainSingle();
             appSubscriptionDetails.Should().ContainSingle();
+            clients.Should().ContainSingle();
         }
 
         notifications.Should().HaveCount(1);
