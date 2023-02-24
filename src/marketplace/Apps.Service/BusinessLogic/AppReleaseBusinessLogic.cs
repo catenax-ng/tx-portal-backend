@@ -516,6 +516,35 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         _portalRepositories.GetInstance<IOfferRepository>().RemoveOfferAssignedDocument(offer.OfferId, documentId);
         _portalRepositories.GetInstance<IDocumentRepository>().RemoveDocument(documentId);
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
-      
+    }
+    
+    /// <inheritdoc />
+    public async Task DeleteAppAsync(Guid appId, string iamUserId)
+    {
+        var appUserRole = await _portalRepositories.GetInstance<IOfferRepository>().GetAppUntrackedAsync(appId, iamUserId, OfferStatusId.CREATED).ConfigureAwait(false);
+        if (appUserRole == default)
+        {
+            throw new NotFoundException($"App {appId} does not exist");
+        }
+        if (!appUserRole!.IsProviderCompanyUser)
+        {
+            throw new ForbiddenException($"user {iamUserId} is not a member of the providercompany of app {appId}");
+        }
+        if (!appUserRole.OfferStatus)
+        {
+            throw new ControllerArgumentException($"AppId must be in Created State");
+        }
+
+        _portalRepositories.GetInstance<IOfferRepository>().RemoveOfferAssignedLicenses(appUserRole.OfferLicenseIds.Select(licenseId => (appId, licenseId)));
+        _portalRepositories.GetInstance<IOfferRepository>().RemoveOfferAssignedUseCases(appUserRole.UseCaseIds.Select(useCaseId => (appId, useCaseId)));
+        _portalRepositories.GetInstance<IOfferRepository>().RemoveOfferAssignedPrivacyPolicies(appUserRole.PolicyIds.Select(policyId => (appId, policyId)));
+        _portalRepositories.GetInstance<IOfferRepository>().RemoveOfferAssignedDocuments(appUserRole.DocumentIds.Select(documentId => (appId, documentId)));
+        _portalRepositories.GetInstance<IOfferRepository>().RemoveAppLanguages(appUserRole.LanguageCodes.Select(language => (appId, language)));
+        _portalRepositories.GetInstance<IOfferRepository>().RemoveOfferTags(appUserRole.OfferTags.Select(offerTag => (appId, offerTag)));
+        _portalRepositories.GetInstance<IOfferRepository>().RemoveOfferDescriptions(appUserRole.AppDescriptions.Select(appDescription => (appId, appDescription.languageCode, appDescription.longDescription, appDescription.shortDescription)));
+        _portalRepositories.GetInstance<IDocumentRepository>().RemoveDocuments(appUserRole.DocumentIds);
+        _portalRepositories.GetInstance<IOfferRepository>().RemoveOffer(appId);
+        await _portalRepositories.SaveAsync().ConfigureAwait(false);
+       
     }
 }

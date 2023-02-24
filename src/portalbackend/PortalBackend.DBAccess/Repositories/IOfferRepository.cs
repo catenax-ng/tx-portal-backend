@@ -362,4 +362,54 @@ public interface IOfferRepository
     /// <param name="offerId"></param>
     /// <param name="documentId"></param>
     void RemoveOfferAssignedDocument(Guid offerId, Guid documentId);
+    
+    /// Verify that user is linked to the appId ,offerstatus is in created state
+    /// </summary>
+    /// <param name="offerId"></param>
+    /// <param name="userId"></param>
+    /// <param name="offerStatusId"></param>
+    /// <returns></returns>
+    Task<AppDeleteData?> GetAppUntrackedAsync(Guid offerId, string userId, OfferStatusId offerStatusId);
+    
+    /// <summary>
+    /// Delete Offer Assigned Licenses
+    /// </summary>
+    /// <param name="offerLicenseIds"></param>
+    void RemoveOfferAssignedLicenses(IEnumerable<(Guid offerId, Guid licenseId)> offerLicenseIds);
+
+    /// <summary>
+    /// Delete Offer Assigned Use Cases
+    /// </summary>
+    /// <param name="UseCaseIds"></param>
+    void RemoveOfferAssignedUseCases(IEnumerable<(Guid offerId, Guid useCaseId)> UseCaseIds);
+
+    /// <summary>
+    /// Delete Offer Assigned Privacy Policies
+    /// </summary>
+    /// <param name="PrivacyPolicyIds"></param>
+    void RemoveOfferAssignedPrivacyPolicies(IEnumerable<(Guid offerId, PrivacyPolicyId PolicyId)> PrivacyPolicyIds);
+
+    /// <summary>
+    /// Delete Offer Assigned Documents
+    /// </summary>
+    /// <param name="documentIds"></param>
+    void RemoveOfferAssignedDocuments(IEnumerable<(Guid offerId, Guid documentId)> documentIds);
+
+    /// <summary>
+    /// Delete Offer Tags
+    /// </summary>
+    /// <param name="offerTags"></param>
+    void RemoveOfferTags(IEnumerable<(Guid offerId, string name)> offerTags);
+
+    /// <summary>
+    /// Delete Offer Description
+    /// </summary>
+    /// <param name="offerDescriptions"></param>
+     void RemoveOfferDescriptions(IEnumerable<(Guid offerId, string languageShortName, string descriptionLong, string descriptionShort)> offerDescriptions);
+
+     /// <summary>
+     /// Delete Offer
+     /// </summary>
+     /// <param name="OfferId"></param>
+     void RemoveOffer(Guid OfferId);
 }
