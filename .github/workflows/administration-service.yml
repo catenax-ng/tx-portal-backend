@@ -37,7 +37,7 @@ on:
       - 'docker/Dockerfile-administration-service'
 
     branches:
-      - 'main'
+      - 'dev'
   workflow_dispatch:
 
 env:
