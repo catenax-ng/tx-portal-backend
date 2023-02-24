@@ -570,4 +570,8 @@ public class OfferRepository : IOfferRepository
                 offer.Documents.Where(doc => doc.DocumentTypeId == DocumentTypeId.APP_LEADIMAGE)
                     .Select(doc => new DocumentStatusData(doc.Id, doc.DocumentStatusId))))
             .SingleOrDefaultAsync();
+
+    /// <inheritdoc />
+    public void RemoveOfferAssignedDocument(Guid offerId, Guid documentId) => 
+        _context.OfferAssignedDocuments.Remove(new OfferAssignedDocument(offerId, documentId));
 }

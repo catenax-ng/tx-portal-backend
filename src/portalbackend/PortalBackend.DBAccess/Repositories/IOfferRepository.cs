@@ -364,4 +364,11 @@ public interface IOfferRepository
     /// <param name="offerTypeId"></param>
     /// <returns></returns>
     Task<(bool IsStatusActive, Guid CompanyUserId, IEnumerable<DocumentStatusData> documentStatusDatas)> GetOfferAssignedAppLeadImageDocumentsByIdAsync(Guid offerId, string iamUserId, OfferTypeId offerTypeId);
+
+    /// <summary>
+    /// Delete the OfferAssignedDocument 
+    /// </summary>
+    /// <param name="offerId"></param>
+    /// <param name="documentId"></param>
+    void RemoveOfferAssignedDocument(Guid offerId, Guid documentId);
 }
