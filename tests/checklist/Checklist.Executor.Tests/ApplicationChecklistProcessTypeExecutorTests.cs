@@ -248,17 +248,38 @@ public class ApplicationChecklistProcessTypeExecutorTests
     [Fact]
     public async Task ExecuteProcessStep_InvalidChecklist_Throws()
     {
-        // Arrange
-        var processStepTypeId = _fixture.Create<ProcessStepTypeId>();
-        var processStepTypeIds = _fixture.CreateMany<ProcessStepTypeId>();
+        // Arrange initialize
+        var checklist = Enumerable.Empty<(ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId)>();
 
-        var Act = () => _executor.ExecuteProcessStep(processStepTypeId, processStepTypeIds, CancellationToken.None);
+        var processId = Guid.NewGuid();
+        var applicationId = Guid.NewGuid();
+
+        A.CallTo(() => _checklistRepository.GetChecklistData(processId))
+            .Returns((true, applicationId, CompanyApplicationStatusId.SUBMITTED, checklist));
+
+        A.CallTo(() => _checklistCreationService.CreateMissingChecklistItems(A<Guid>._,A<IEnumerable<ApplicationChecklistEntryTypeId>>._))
+            .Returns(Enumerable.Empty<(ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId)>());
+
+        // Act initialize
+        var initializationResult =await _executor.InitializeProcess(processId, _fixture.CreateMany<ProcessStepTypeId>()).ConfigureAwait(false);
+
+        // Assert initialize
+        initializationResult.Should().NotBeNull();
+        initializationResult.Modified.Should().BeFalse();
+        initializationResult.ScheduleStepTypeIds.Should().BeNull();
+
+        // Arrange execute
+        var executeProcessStepTypeId = ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH;
+        var executeProcessStepTypeIds = _fixture.CreateMany<ProcessStepTypeId>();
+
+        var Act = () => _executor.ExecuteProcessStep(executeProcessStepTypeId, executeProcessStepTypeIds, CancellationToken.None);
+
 
         // Act
         var result = await Assert.ThrowsAsync<UnexpectedConditionException>(Act).ConfigureAwait(false);
 
         // Assert
-        result.Message.Should().Be("applicationId or checklist should never be null or empty here");
+        result.Message.Should().Be($"checklist should always contain an entry for {ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER} here");
     }
 
     [Fact]
@@ -284,7 +305,6 @@ public class ApplicationChecklistProcessTypeExecutorTests
         initializationResult.ScheduleStepTypeIds.Should().BeNull();
 
         // Arrange execute
-
         var executeProcessStepTypeId = ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH;
         var executeProcessStepTypeIds = _fixture.CreateMany<ProcessStepTypeId>();
         var followupStepTypeIds = _fixture.CreateMany<ProcessStepTypeId>();
@@ -650,6 +670,44 @@ public class ApplicationChecklistProcessTypeExecutorTests
             .MustNotHaveHappened();
 
         executionResult.Message.Should().Be(error.Message);
+    }
+
+    #endregion
+
+    #region GetProcessTypeId
+
+    [Fact]
+    public void GetProcessTypeId_ReturnsExpected()
+    {
+        // Act
+        var result = _executor.GetProcessTypeId();
+
+        // Assert
+        result.Should().Be(ProcessTypeId.APPLICATION_CHECKLIST);
+    }
+
+    #endregion
+
+    #region IsExecutableStepTypeId
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void IsExecutableProcessStep_ReturnsExpected(bool checklistHanderReturnValue)
+    {
+        // Arrange
+        var processStepTypeId = _fixture.Create<ProcessStepTypeId>();
+        A.CallTo(() => _checklistHandlerService.IsExecutableProcessStep(A<ProcessStepTypeId>._))
+            .Returns(checklistHanderReturnValue);
+
+        // Act
+        var result = _executor.IsExecutableStepTypeId(processStepTypeId);
+
+        // Assert
+        A.CallTo(() => _checklistHandlerService.IsExecutableProcessStep(processStepTypeId))
+            .MustHaveHappenedOnceExactly();
+        
+        result.Should().Be(checklistHanderReturnValue);
     }
 
     #endregion

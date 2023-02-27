@@ -91,7 +91,7 @@ public class ProcessExecutor : IProcessExecutor
 
     private bool ScheduleProcessStepTypeIds(IEnumerable<ProcessStepTypeId>? scheduleStepTypeIds, ProcessContext context)
     {
-        if (scheduleStepTypeIds == null)
+        if (scheduleStepTypeIds == null || !scheduleStepTypeIds.Any())
         {
             return false;
         }
@@ -114,14 +114,14 @@ public class ProcessExecutor : IProcessExecutor
 
     private bool SkipProcessStepTypeIds(IEnumerable<ProcessStepTypeId>? skipStepTypeIds, ProcessContext context)
     {
-        if (skipStepTypeIds == null)
+        if (skipStepTypeIds == null || !skipStepTypeIds.Any())
         {
             return false;
         }
         var modified = false;
-        foreach (var stepTypeId in skipStepTypeIds)
+        foreach (var skipStepTypeId in skipStepTypeIds)
         {
-            modified |= SetProcessStepStatus(stepTypeId, ProcessStepStatusId.SKIPPED, context);
+            modified |= SetProcessStepStatus(skipStepTypeId, ProcessStepStatusId.SKIPPED, context);
         }
         return modified;
     }
@@ -137,6 +137,12 @@ public class ProcessExecutor : IProcessExecutor
         {
             _processStepRepository.AttachAndModifyProcessStep(stepId, null, step => { step.ProcessStepStatusId = isFirst ? stepStatusId : ProcessStepStatusId.DUPLICATE; });
             isFirst = false;
+        }
+        if (context.Executor.IsExecutableStepTypeId(stepTypeId) && context.ExecutableStepTypeIds.Contains(stepTypeId))
+        {
+            var remainingExecutableStepTypeIds = context.ExecutableStepTypeIds.Where(executableStepTypeId => executableStepTypeId != stepTypeId).ToList();
+            context.ExecutableStepTypeIds.Clear();
+            remainingExecutableStepTypeIds.ForEach(stepTypeId => context.ExecutableStepTypeIds.Enqueue(stepTypeId));
         }
         return true;
     }
