@@ -29,8 +29,10 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 public static class PortalRepositoriesStartupServiceExtensions
 {
     public static IServiceCollection AddPortalRepositories(this IServiceCollection services, IConfiguration configuration) =>
-        services.AddScoped<IPortalRepositories, PortalRepositories>()
+        services.AddTransient<IPortalRepositories, PortalRepositories>()
             .AddDbContext<PortalDbContext>(o => o
-                .UseNpgsql(configuration.GetConnectionString("PortalDB"))
-                .UsePostgreSqlTriggers());
+                    .UseNpgsql(configuration.GetConnectionString("PortalDB"))
+                    .UsePostgreSqlTriggers(),
+                ServiceLifetime.Transient,
+                ServiceLifetime.Transient);
 }

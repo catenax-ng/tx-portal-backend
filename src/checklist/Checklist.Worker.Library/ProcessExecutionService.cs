@@ -56,8 +56,8 @@ public class ProcessExecutionService
         var outerLoopRepositories = outerLoopScope.ServiceProvider.GetRequiredService<IPortalRepositories>();
 
         using var processServiceScope = outerLoopScope.ServiceProvider.CreateScope();
-        var processExecutor = processServiceScope.ServiceProvider.GetRequiredService<IProcessExecutor>();
         var executorRepositories = processServiceScope.ServiceProvider.GetRequiredService<IPortalRepositories>();
+        var processExecutor = processServiceScope.ServiceProvider.GetRequiredService<IProcessExecutor>();
 
         if (!stoppingToken.IsCancellationRequested)
         {
