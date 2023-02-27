@@ -60,7 +60,7 @@ public class ServiceAccountCreation : IServiceAccountCreation
 
         var userRoleData = await _portalRepositories.GetInstance<IUserRolesRepository>()
             .GetUserRoleDataUntrackedAsync(userRoleIds).ToListAsync().ConfigureAwait(false);
-        if (userRoleData.Count != userRoleIds.Count())
+         if (userRoleData.Count != userRoleIds.Count())
         {
             var missingRoleIds = userRoleIds
                 .Where(userRoleId => userRoleData.All(userRole => userRole.UserRoleId != userRoleId))
@@ -73,10 +73,11 @@ public class ServiceAccountCreation : IServiceAccountCreation
         }
 
         var (clientId, id) = await _provisioningManager.GetNextServiceAccountClientIdWithIdAsync().ConfigureAwait(false);
+        var enhancedName = enhanceTechnicalUserName ? $"{name}{id}" : name;
         var serviceAccountData = await _provisioningManager.SetupCentralServiceAccountClientAsync(
             clientId,
             new ClientConfigRolesData(
-                enhanceTechnicalUserName ? $"{name}{id}" : name,
+                enhancedName,
                 description,
                 iamClientAuthMethod,
                 userRoleData
@@ -95,7 +96,7 @@ public class ServiceAccountCreation : IServiceAccountCreation
         var serviceAccount = serviceAccountsRepository.CreateCompanyServiceAccount(
             companyId,
             CompanyServiceAccountStatusId.ACTIVE,
-            name,
+            enhancedName,
             description,
             companyServiceAccountTypeId,
             setOptionalParameter);
