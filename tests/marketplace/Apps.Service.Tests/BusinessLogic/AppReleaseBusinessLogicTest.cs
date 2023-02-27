@@ -897,6 +897,99 @@ public class AppReleaseBusinessLogicTest
 
     #endregion
 
+    #region DeleteApp
+    
+    [Fact]
+    public async Task DeleteAppAsync_ReturnsExpectedResult()
+    {
+        //Arrange
+        var appId = _fixture.Create<Guid>();
+        var docId = _fixture.Create<Guid>();
+        var offerLicenseId = _fixture.Create<Guid>();
+        var useCaseId = _fixture.Create<Guid>();
+        var privacyPolicyId = _fixture.Create<PrivacyPolicyId>();
+        var offerDescriptionData = new OfferDescriptionData(_fixture.Create<string>(), _fixture.Create<string>(), _fixture.Create<string>());
+        var appDeleteData = new AppDeleteData(true, true, new[] { offerLicenseId }, new[] { useCaseId }, new[] { privacyPolicyId }, new[] { docId }, new[] { _fixture.Create<string>() }, new[] { _fixture.Create<string>() }, new[] { offerDescriptionData });
+        
+        A.CallTo(() => _offerRepository.GetAppUntrackedAsync(appId, IamUserId, OfferStatusId.CREATED))
+            .Returns(appDeleteData);
+
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, _options, _offerService, _notificationService);
+
+        //Act
+        await sut.DeleteAppAsync(appId, IamUserId).ConfigureAwait(false);
+
+        // Assert 
+        A.CallTo(() => _offerRepository.GetAppUntrackedAsync(appId, IamUserId, OfferStatusId.CREATED))
+            .MustHaveHappenedOnceExactly();
+        A.CallTo(() => _offerRepository.RemoveOfferAssignedLicenses(A<IEnumerable<(Guid, Guid)>>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _offerRepository.RemoveOfferAssignedUseCases(A<IEnumerable<(Guid, Guid)>>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _offerRepository.RemoveOfferAssignedPrivacyPolicies(A<IEnumerable<(Guid, PrivacyPolicyId)>>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _offerRepository.RemoveOfferAssignedDocuments(A<IEnumerable<(Guid, Guid)>>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _offerRepository.RemoveAppLanguages(A<IEnumerable<(Guid, string)>>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _offerRepository.RemoveOfferTags(A<IEnumerable<(Guid, string)>>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _offerRepository.RemoveOfferDescriptions(A<IEnumerable<(Guid, string, string, string)>>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _documentRepository.RemoveDocuments(A<IEnumerable<Guid>>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _offerRepository.RemoveOffer(appId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
+    }
+    
+    [Fact]
+    public async Task DeleteAppAsync_WithNoProviderCompanyUser_ThrowsForbiddenException()
+    {
+        //Arrange
+        //Arrange
+        var appId = _fixture.Create<Guid>();
+        var docId = _fixture.Create<Guid>();
+        var offerLicenseId = _fixture.Create<Guid>();
+        var useCaseId = _fixture.Create<Guid>();
+        var privacyPolicyId = _fixture.Create<PrivacyPolicyId>();
+        var offerDescriptionData = new OfferDescriptionData(_fixture.Create<string>(), _fixture.Create<string>(), _fixture.Create<string>());
+        var appDeleteData = new AppDeleteData(true, false, new[] { offerLicenseId }, new[] { useCaseId }, new[] { privacyPolicyId }, new[] { docId }, new[] { _fixture.Create<string>() }, new[] { _fixture.Create<string>() }, new[] { offerDescriptionData });
+        
+        A.CallTo(() => _offerRepository.GetAppUntrackedAsync(appId, IamUserId, OfferStatusId.CREATED))
+            .Returns(appDeleteData);
+
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, _options, _offerService, _notificationService);
+
+        //Act
+        async Task Act() =>  await sut.DeleteAppAsync(appId, IamUserId).ConfigureAwait(false);
+
+        // Assert 
+        // Assert
+        var ex = await Assert.ThrowsAsync<ForbiddenException>(Act);
+        ex.Message.Should().Be($"user {IamUserId} is not a member of the providercompany of app {appId}");
+    }
+
+    [Fact]
+    public async Task DeleteAppAsync_WithInvalidOfferStatus_ThrowsControllerArgumentException()
+    {
+        //Arrange
+        //Arrange
+        var appId = _fixture.Create<Guid>();
+        var docId = _fixture.Create<Guid>();
+        var offerLicenseId = _fixture.Create<Guid>();
+        var useCaseId = _fixture.Create<Guid>();
+        var privacyPolicyId = _fixture.Create<PrivacyPolicyId>();
+        var offerDescriptionData = new OfferDescriptionData(_fixture.Create<string>(), _fixture.Create<string>(), _fixture.Create<string>());
+        var appDeleteData = new AppDeleteData(false, true, new[] { offerLicenseId }, new[] { useCaseId }, new[] { privacyPolicyId }, new[] { docId }, new[] { _fixture.Create<string>() }, new[] { _fixture.Create<string>() }, new[] { offerDescriptionData });
+        
+        A.CallTo(() => _offerRepository.GetAppUntrackedAsync(appId, IamUserId, OfferStatusId.CREATED))
+            .Returns(appDeleteData);
+
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, _options, _offerService, _notificationService);
+
+        //Act
+        async Task Act() =>  await sut.DeleteAppAsync(appId, IamUserId).ConfigureAwait(false);
+
+        // Assert 
+        // Assert
+        var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Act);
+        ex.Message.Should().Be($"AppId must be in Created State");
+    }
+
+    #endregion 
+
     #region Setup
 
     private void SetupUpdateApp()
