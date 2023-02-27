@@ -52,6 +52,7 @@ public class ServiceAccountCreation : IServiceAccountCreation
         Guid companyId,
         IEnumerable<string> bpns,
         CompanyServiceAccountTypeId companyServiceAccountTypeId,
+        bool enhanceTechnicalUserName,
         Action<CompanyServiceAccount>? setOptionalParameter = null)
     {
         var (name, description, iamClientAuthMethod, userRoleIds) = creationData;
@@ -71,11 +72,11 @@ public class ServiceAccountCreation : IServiceAccountCreation
             }
         }
 
-        var clientId = await _provisioningManager.GetNextServiceAccountClientIdAsync().ConfigureAwait(false);
+        var (clientId, id) = await _provisioningManager.GetNextServiceAccountClientIdWithIdAsync().ConfigureAwait(false);
         var serviceAccountData = await _provisioningManager.SetupCentralServiceAccountClientAsync(
             clientId,
             new ClientConfigRolesData(
-                name,
+                enhanceTechnicalUserName ? $"{name}{id}" : name,
                 description,
                 iamClientAuthMethod,
                 userRoleData

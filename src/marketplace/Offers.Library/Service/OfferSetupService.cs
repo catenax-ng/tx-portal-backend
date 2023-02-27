@@ -129,7 +129,7 @@ public class OfferSetupService : IOfferSetupService
         TechnicalUserInfoData? technicalUserInfoData = null;
         if (offerDetails.IsTechnicalUserNeeded)
         {
-            var (technicalClientId, serviceAccountData, serviceAccountId) = await CreateTechnicalUser(data, serviceAccountRoles, userRolesRepository, offerDetails, technicalUserClientId)
+            var (technicalClientId, serviceAccountData, serviceAccountId) = await CreateTechnicalUser(data, serviceAccountRoles, userRolesRepository, offerDetails, technicalUserClientId, offerTypeId == OfferTypeId.APP)
                 .ConfigureAwait(false);
             technicalUserInfoData = new TechnicalUserInfoData(serviceAccountId, serviceAccountData.AuthData.Secret, technicalClientId);
         }
@@ -201,7 +201,8 @@ public class OfferSetupService : IOfferSetupService
         IDictionary<string, IEnumerable<string>> serviceAccountRoles,
         IUserRolesRepository userRolesRepository,
         OfferSubscriptionTransferData offerDetails,
-        string clientId)
+        string technicalUserName,
+        bool enhanceTechnicalUserName)
     {
         var serviceAccountUserRoles = await userRolesRepository
             .GetUserRoleDataUntrackedAsync(serviceAccountRoles)
@@ -210,7 +211,7 @@ public class OfferSetupService : IOfferSetupService
 
         var description = $"Technical User for app {offerDetails.OfferName} - {string.Join(",", serviceAccountUserRoles.Select(x => x.UserRoleText))}";
         var serviceAccountCreationData = new ServiceAccountCreationInfo(
-            clientId,
+            technicalUserName,
             description,
             IamClientAuthMethod.SECRET,
             serviceAccountUserRoles.Select(x => x.UserRoleId));
@@ -220,6 +221,7 @@ public class OfferSetupService : IOfferSetupService
                 offerDetails.CompanyId,
                 offerDetails.Bpn == null ? Enumerable.Empty<string>() : Enumerable.Repeat(offerDetails.Bpn, 1),
                 CompanyServiceAccountTypeId.MANAGED,
+                enhanceTechnicalUserName,
                 sa => { sa.OfferSubscriptionId = data.RequestId; })
             .ConfigureAwait(false);
         return (technicalClientId, serviceAccountData, serviceAccountId);
