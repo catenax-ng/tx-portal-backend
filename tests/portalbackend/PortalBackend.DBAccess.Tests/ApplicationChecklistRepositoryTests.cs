@@ -18,16 +18,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using AutoFixture;
-using AutoFixture.AutoFakeItEasy;
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Tests.Setup;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
-using Xunit;
 using Xunit.Extensions.AssemblyFixture;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Tests;
@@ -117,52 +113,26 @@ public class ApplicationChecklistRepositoryTests : IAssemblyFixture<TestDbFixtur
 
     #endregion
     
-    #region GetChecklistDataAsync
+    #region GetChecklistData
 
     [Fact]
-    public async Task GetChecklistDataAsync_WithValidApplicationId_ReturnsExpected()
+    public async Task GetChecklistData_ReturnsExpected()
     {
         // Arrange
+        var processId = new Guid("1f9a3232-9772-4ecb-8f50-c16e97772dfe");
         var sut = await CreateSut().ConfigureAwait(false);
 
         // Act
-        var checklistData = await sut.GetChecklistDataAsync(ApplicationWithExistingChecklistId).ToListAsync().ConfigureAwait(false);
+        var result = await sut.GetChecklistData(processId).ConfigureAwait(false);
 
         // Assert
-        checklistData.Should().HaveCount(6);
+        result.Should().NotBeNull()
+            .And.BeOfType<(bool IsValidProcessId, Guid ApplicationId, CompanyApplicationStatusId ApplicationStatusId, IEnumerable<(ApplicationChecklistEntryTypeId EntryTypeId, ApplicationChecklistEntryStatusId EntryStatusId)> Checklist)>()
+            .And.Match<(bool IsValidProcessId, Guid ApplicationId, CompanyApplicationStatusId ApplicationStatusId, IEnumerable<(ApplicationChecklistEntryTypeId EntryTypeId, ApplicationChecklistEntryStatusId EntryStatusId)> Checklist)>(
+                x => x.IsValidProcessId && x.ApplicationId == new Guid("4f0146c6-32aa-4bb1-b844-df7e8babdcb6") && x.ApplicationStatusId == CompanyApplicationStatusId.SUBMITTED && x.Checklist.Count() == 6
+            );
     }
 
-    [Fact]
-    public async Task GetChecklistDataAsync_WithNotExistingApplicationId_ReturnsEmptyDictionary()
-    {
-        // Arrange
-        var sut = await CreateSut().ConfigureAwait(false);
-
-        // Act
-        var checklistData = await sut.GetChecklistDataAsync(Guid.NewGuid()).ToListAsync().ConfigureAwait(false);
-
-        // Assert
-        checklistData.Should().HaveCount(0);
-    }
-
-    #endregion
-
-    #region GetChecklistProcessStepData 
-
-    [Fact]
-    public async Task GetChecklistProcessStepData_ReturnsExpected()
-    {
-        // Arrange
-        var sut = await CreateSut().ConfigureAwait(false);
-
-        // Act
-        var checklistData = await sut.GetAllChecklistProcessStepData().ToListAsync().ConfigureAwait(false);
-
-        // Assert
-        checklistData.Should().HaveCount(1);
-        checklistData.First().Checklist.Should().HaveCount(6);
-    }
-    
     #endregion
 
     #region GetChecklistProcessStepData

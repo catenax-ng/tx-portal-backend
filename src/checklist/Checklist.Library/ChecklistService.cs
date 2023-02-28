@@ -124,7 +124,7 @@ public sealed class ChecklistService : IChecklistService
         }
     }
 
-    public static Task<(Action<ApplicationChecklistEntry>?, IEnumerable<ProcessStepTypeId>?, bool)> HandleServiceErrorAsync(Exception exception, ProcessStepTypeId manualProcessTriggerStep)
+    public Task<(Action<ApplicationChecklistEntry>?, IEnumerable<ProcessStepTypeId>?, bool)> HandleServiceErrorAsync(Exception exception, ProcessStepTypeId manualProcessTriggerStep)
     {
         return Task.FromResult<(Action<ApplicationChecklistEntry>?, IEnumerable<ProcessStepTypeId>?, bool)>(
             exception is not HttpRequestException ?

@@ -580,7 +580,7 @@ public class ChecklistServiceTests
         var ex = new ServiceException("Test error");
 
         // Act
-        var result = await ChecklistService.HandleServiceErrorAsync(ex, ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE).ConfigureAwait(false);
+        var result = await _service.HandleServiceErrorAsync(ex, ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
@@ -601,7 +601,7 @@ public class ChecklistServiceTests
         var ex = new HttpRequestException("Test error");
 
         // Act
-        var result = await ChecklistService.HandleServiceErrorAsync(ex, ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE).ConfigureAwait(false);
+        var result = await _service.HandleServiceErrorAsync(ex, ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
