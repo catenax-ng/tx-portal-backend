@@ -50,8 +50,8 @@ public class ProcessExecutor : IProcessExecutor
 
         var allSteps = await _processStepRepository
             .GetProcessStepData(processId)
-            .PreSortedGroupBy(x => x.ProcessStepTypeId, x => x.ProcessStepId)
-            .ToDictionaryAsync(g => g.Key, g => g.AsEnumerable(), cancellationToken)
+            .GroupBy(x => x.ProcessStepTypeId, x => x.ProcessStepId)
+            .ToDictionaryAsync(g => g.Key, g => g.ToEnumerable(), cancellationToken)
             .ConfigureAwait(false);
 
         var context = new ProcessContext(

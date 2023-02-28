@@ -52,17 +52,17 @@ public class ProcessExecutionService
     /// <param name="stoppingToken">Cancellation Token</param>
     public async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        using var outerLoopScope = _serviceScopeFactory.CreateScope();
-        var outerLoopRepositories = outerLoopScope.ServiceProvider.GetRequiredService<IPortalRepositories>();
-
-        using var processServiceScope = outerLoopScope.ServiceProvider.CreateScope();
-        var executorRepositories = processServiceScope.ServiceProvider.GetRequiredService<IPortalRepositories>();
-        var processExecutor = processServiceScope.ServiceProvider.GetRequiredService<IProcessExecutor>();
-
         if (!stoppingToken.IsCancellationRequested)
         {
             try
             {
+                using var processServiceScope = _serviceScopeFactory.CreateScope();
+                var executorRepositories = processServiceScope.ServiceProvider.GetRequiredService<IPortalRepositories>();
+                var processExecutor = processServiceScope.ServiceProvider.GetRequiredService<IProcessExecutor>();
+
+                using var outerLoopScope = _serviceScopeFactory.CreateScope();
+                var outerLoopRepositories = outerLoopScope.ServiceProvider.GetRequiredService<IPortalRepositories>();
+
                 var activeProcesses = outerLoopRepositories.GetInstance<IProcessStepRepository>().GetActiveProcesses(processExecutor.GetRegisteredProcessTypeIds());
                 await foreach (var (processId, processTypeId) in activeProcesses.WithCancellation(stoppingToken).ConfigureAwait(false))
                 {
@@ -72,9 +72,10 @@ public class ProcessExecutionService
                         {
                             await executorRepositories.SaveAsync().ConfigureAwait(false);
                         }
+
                         executorRepositories.Clear();
                     }
-                    _logger.LogInformation("finished processing process {processId} type {processType}",processId,processTypeId);
+                    _logger.LogInformation("finished processing process {processId} type {processType}", processId, processTypeId);
                 }
             }
             catch (Exception ex)
