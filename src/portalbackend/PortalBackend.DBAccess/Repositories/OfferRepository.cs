@@ -572,7 +572,7 @@ public class OfferRepository : IOfferRepository
                 offer.OfferLicenses.Select(offerlicense =>offerlicense.Id),
                 offer.UseCases.Select(uc => uc.Id),
                 offer.OfferAssignedPrivacyPolicies.Select(pp=>pp.PrivacyPolicyId),
-                offer.Documents.Select(doc=>doc.Id),
+                offer.Documents.Where(doc=>doc.DocumentStatusId != DocumentStatusId.LOCKED).Select(doc=>doc.Id),
                 offer.SupportedLanguages.Select(sl => sl.ShortName),
                 offer.Tags.Select(offerTag=>offerTag.Name),
                 offer.OfferDescriptions.Select(description => new OfferDescriptionData(description.LanguageShortName, description.DescriptionLong, description.DescriptionShort))

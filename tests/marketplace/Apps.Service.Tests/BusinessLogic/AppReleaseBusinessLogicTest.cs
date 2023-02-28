@@ -929,6 +929,7 @@ public class AppReleaseBusinessLogicTest
         A.CallTo(() => _offerRepository.RemoveAppLanguages(A<IEnumerable<(Guid, string)>>._)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _offerRepository.RemoveOfferTags(A<IEnumerable<(Guid, string)>>._)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _offerRepository.RemoveOfferDescriptions(A<IEnumerable<(Guid, string, string, string)>>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _documentRepository.RemoveDocuments(A<IEnumerable<Guid>>._)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _offerRepository.RemoveOffer(appId)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
     }

@@ -538,6 +538,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         _portalRepositories.GetInstance<IOfferRepository>().RemoveOfferAssignedLicenses(appData.OfferLicenseIds.Select(licenseId => (appId, licenseId)));
         _portalRepositories.GetInstance<IOfferRepository>().RemoveOfferAssignedUseCases(appData.UseCaseIds.Select(useCaseId => (appId, useCaseId)));
         _portalRepositories.GetInstance<IOfferRepository>().RemoveOfferAssignedPrivacyPolicies(appData.PolicyIds.Select(policyId => (appId, policyId)));
+        _portalRepositories.GetInstance<IDocumentRepository>().RemoveDocuments(appData.DocumentIds);
         _portalRepositories.GetInstance<IOfferRepository>().RemoveOfferAssignedDocuments(appData.DocumentIds.Select(documentId => (appId, documentId)));
         _portalRepositories.GetInstance<IOfferRepository>().RemoveAppLanguages(appData.LanguageCodes.Select(language => (appId, language)));
         _portalRepositories.GetInstance<IOfferRepository>().RemoveOfferTags(appData.OfferTags.Select(offerTag => (appId, offerTag)));
