@@ -149,13 +149,14 @@ public class ApplicationRepository : IApplicationRepository
             .SingleOrDefaultAsync();
 
     /// <inheritdoc />
-    public Task<(Guid companyId, string? businessPartnerNumber)> GetCompanyAndApplicationDetailsForApprovalAsync(Guid applicationId) =>
+    public Task<(Guid companyId, string? businessPartnerNumber, IEnumerable<string> iamIdpAliasse)> GetCompanyAndApplicationDetailsForApprovalAsync(Guid applicationId) =>
         _dbContext.CompanyApplications.Where(companyApplication =>
                 companyApplication.Id == applicationId &&
                 companyApplication.ApplicationStatusId == CompanyApplicationStatusId.SUBMITTED)
-            .Select(ca => new ValueTuple<Guid, string?>(
+            .Select(ca => new ValueTuple<Guid, string?, IEnumerable<string>>(
                 ca.CompanyId,
-                ca.Company!.BusinessPartnerNumber))
+                ca.Company!.BusinessPartnerNumber,
+                ca.Company.IdentityProviders.Select(x => x.IamIdentityProvider!.IamIdpAlias)))
             .SingleOrDefaultAsync();
 
     /// <inheritdoc />
