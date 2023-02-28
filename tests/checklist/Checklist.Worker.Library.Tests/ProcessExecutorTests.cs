@@ -88,18 +88,18 @@ public class ProcessExecutorTests
     }
 
     [Theory]
-    [InlineData(ProcessStepStatusId.DONE, true)]
-    [InlineData(ProcessStepStatusId.TODO, false)]
-    public async Task ExecuteProcess_WithInitialSteps_ReturnsExpected(ProcessStepStatusId stepStatusId, bool modified)
+    [InlineData(ProcessStepStatusId.DONE)]
+    [InlineData(ProcessStepStatusId.TODO)]
+    public async Task ExecuteProcess_WithInitialSteps_ReturnsExpected(ProcessStepStatusId stepStatusId)
     {
         // Arrange
         var processId = Guid.NewGuid();
         var processStepTypeId = _fixture.Create<ProcessStepTypeId>();
-        var processStepData = _fixture.CreateMany<Guid>(1).Select(id => (id, processStepTypeId)).ToImmutableArray();
+        var processStepData = (Id: Guid.NewGuid(), processStepTypeId);
         var initialStepTypeIds = Enum.GetValues<ProcessStepTypeId>().Where(x => x != processStepTypeId).Take(3).ToImmutableArray();
 
         A.CallTo(() => _processStepRepository.GetProcessStepData(processId))
-            .Returns(processStepData.ToAsyncEnumerable());
+            .Returns(new [] { processStepData }.ToAsyncEnumerable());
 
         A.CallTo(() => _processTypeExecutor.IsExecutableStepTypeId(A<ProcessStepTypeId>._))
             .Returns(true);
@@ -134,39 +134,50 @@ public class ProcessExecutorTests
         var result = await _sut.ExecuteProcess(processId, ProcessTypeId.APPLICATION_CHECKLIST, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
-        result.Should().HaveCount(initialStepTypeIds.Length + 2).And.ContainInOrder(new [] { true, modified }.Concat(Enumerable.Repeat<bool>(modified, initialStepTypeIds.Length)));
+        result.Should().HaveCount(initialStepTypeIds.Length + 2)
+            .And.ContainInOrder(
+                stepStatusId == ProcessStepStatusId.DONE
+                    ? new [] { true, true, true, true }
+                    : new [] { true, false, false, false });
 
-        if (modified)
+        A.CallTo(() => _processStepRepository.CreateProcessStepRange(processId, A<IEnumerable<ProcessStepTypeId>>.That.IsSameSequenceAs(initialStepTypeIds)))
+            .MustHaveHappenedOnceExactly();
+
+        createdProcessSteps
+            .Should().NotBeNull()
+            .And.HaveSameCount(initialStepTypeIds)
+            .And.Satisfy(
+                x => x.ProcessStepTypeId == initialStepTypeIds[0] && x.ProcessStepStatusId == ProcessStepStatusId.TODO,
+                x => x.ProcessStepTypeId == initialStepTypeIds[1] && x.ProcessStepStatusId == ProcessStepStatusId.TODO,
+                x => x.ProcessStepTypeId == initialStepTypeIds[2] && x.ProcessStepStatusId == ProcessStepStatusId.TODO);
+
+        if (stepStatusId == ProcessStepStatusId.DONE)
         {
             A.CallTo(() => _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._))
                 .MustHaveHappened(initialStepTypeIds.Length + 1, Times.Exactly);
-            modifiedProcessSteps.Should().HaveCount(initialStepTypeIds.Length + 1);
-            modifiedProcessSteps.First().Should().Match((ProcessStep step) =>
-                step.Id == processStepData.First().id && step.ProcessStepStatusId == stepStatusId
-            );
-            modifiedProcessSteps.Skip(1).Should().AllSatisfy((ProcessStep processStep) =>
-            {
-                processStep.ProcessStepStatusId.Should().Be(ProcessStepStatusId.DONE);
-            });
+            modifiedProcessSteps
+                .Should().HaveCount(initialStepTypeIds.Length + 1)
+                .And.Satisfy(
+                    x => x.Id == processStepData.Id && x.ProcessStepStatusId == stepStatusId,
+                    x => x.Id == createdProcessSteps!.ElementAt(0).Id && x.ProcessStepStatusId == stepStatusId,
+                    x => x.Id == createdProcessSteps!.ElementAt(1).Id && x.ProcessStepStatusId == stepStatusId,
+                    x => x.Id == createdProcessSteps!.ElementAt(2).Id && x.ProcessStepStatusId == stepStatusId);
         }
         else
         {
             A.CallTo(() => _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._))
                 .MustNotHaveHappened();
         }
-
-        A.CallTo(() => _processStepRepository.CreateProcessStepRange(processId, A<IEnumerable<ProcessStepTypeId>>.That.IsSameSequenceAs(initialStepTypeIds)))
-            .MustHaveHappenedOnceExactly();
     }
 
     [Theory]
-    [InlineData(ProcessStepStatusId.DONE, true)]
-    [InlineData(ProcessStepStatusId.TODO, false)]
-    public async Task ExecuteProcess_NoScheduleOrSkippedSteps_ReturnsExpected(ProcessStepStatusId stepStatusId, bool modified)
+    [InlineData(ProcessStepStatusId.DONE)]
+    [InlineData(ProcessStepStatusId.TODO)]
+    public async Task ExecuteProcess_NoScheduleOrSkippedSteps_ReturnsExpected(ProcessStepStatusId stepStatusId)
     {
         // Arrange
         var processId = Guid.NewGuid();
-        var processStepData = _fixture.CreateMany<ProcessStepTypeId>().OrderBy(x => x).Select(stepTypeId => (Guid.NewGuid(),stepTypeId)).ToImmutableArray();
+        var processStepData = _fixture.CreateMany<ProcessStepTypeId>(3).OrderBy(x => x).Select(stepTypeId => (Id: Guid.NewGuid(), StepTypeId: stepTypeId)).ToImmutableArray();
 
         A.CallTo(() => _processStepRepository.GetProcessStepData(processId))
             .Returns(processStepData.ToAsyncEnumerable());
@@ -195,27 +206,31 @@ public class ProcessExecutorTests
         var result = await _sut.ExecuteProcess(processId, ProcessTypeId.APPLICATION_CHECKLIST, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
-        result.Should().HaveCount(processStepData.Length + 1).And.ContainInOrder(new [] { false }.Concat(Enumerable.Repeat<bool>(modified, processStepData.Length)));
+        result.Should().HaveCount(processStepData.Length + 1)
+            .And.ContainInOrder(stepStatusId == ProcessStepStatusId.DONE
+                ? new [] { false, true, true, true }
+                : new [] { false, false, false, false });
 
-        if (modified)
+        A.CallTo(() => _processStepRepository.CreateProcessStepRange(A<Guid>._, A<IEnumerable<ProcessStepTypeId>>._))
+            .MustNotHaveHappened();
+
+        if (stepStatusId == ProcessStepStatusId.DONE)
         {
             A.CallTo(() => _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._))
                 .MustHaveHappened(processStepData.Length, Times.Exactly);
-            modifiedProcessSteps.Should().HaveSameCount(processStepData);
-            modifiedProcessSteps.Zip(processStepData).Should().AllSatisfy(((ProcessStep ProcessStep,(Guid ProcessStepId,ProcessStepTypeId) StepData) x) =>
-            {
-                x.ProcessStep.Id.Should().Be(x.StepData.ProcessStepId);
-                x.ProcessStep.ProcessStepStatusId.Should().Be(stepStatusId);
-            });
+
+            modifiedProcessSteps
+                .Should().HaveSameCount(processStepData)
+                .And.Satisfy(
+                    x => x.Id == processStepData[0].Id && x.ProcessStepStatusId == stepStatusId,
+                    x => x.Id == processStepData[1].Id && x.ProcessStepStatusId == stepStatusId,
+                    x => x.Id == processStepData[2].Id && x.ProcessStepStatusId == stepStatusId);             
         }
         else
         {
             A.CallTo(() => _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._))
                 .MustNotHaveHappened();
         }
-
-        A.CallTo(() => _processStepRepository.CreateProcessStepRange(A<Guid>._, A<IEnumerable<ProcessStepTypeId>>._))
-            .MustNotHaveHappened();
     }
 
     [Fact]
@@ -243,22 +258,22 @@ public class ProcessExecutorTests
         A.CallTo(() => _processTypeExecutor.ExecuteProcessStep(A<ProcessStepTypeId>._,A<IEnumerable<ProcessStepTypeId>>._,A<CancellationToken>._))
             .MustNotHaveHappened();
 
-        A.CallTo(() => _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._))
+        A.CallTo(() => _processStepRepository.CreateProcessStepRange(A<Guid>._, A<IEnumerable<ProcessStepTypeId>>._))
             .MustNotHaveHappened();
 
-        A.CallTo(() => _processStepRepository.CreateProcessStepRange(A<Guid>._, A<IEnumerable<ProcessStepTypeId>>._))
+        A.CallTo(() => _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._))
             .MustNotHaveHappened();
     }
 
     [Theory]
-    [InlineData(ProcessStepStatusId.DONE, true)]
-    [InlineData(ProcessStepStatusId.TODO, false)]
-    public async Task ExecuteProcess_NoScheduleOrSkippedSteps_SingleStepTypeWithDuplicates_ReturnsExpected(ProcessStepStatusId stepStatusId, bool modified)
+    [InlineData(ProcessStepStatusId.DONE)]
+    [InlineData(ProcessStepStatusId.TODO)]
+    public async Task ExecuteProcess_NoScheduleOrSkippedSteps_SingleStepTypeWithDuplicates_ReturnsExpected(ProcessStepStatusId stepStatusId)
     {
         // Arrange
         var processId = Guid.NewGuid();
-        var processStepTypeId = _fixture.Create<ProcessStepTypeId>();
-        var processStepData = _fixture.CreateMany<Guid>().Select(x => (x, processStepTypeId)).ToImmutableArray();
+        var stepTypeId = _fixture.Create<ProcessStepTypeId>();
+        var processStepData = _fixture.CreateMany<Guid>(3).Select(x => (Id: x, StepTypeId: stepTypeId)).ToImmutableArray();
 
         A.CallTo(() => _processStepRepository.GetProcessStepData(processId))
             .Returns(processStepData.ToAsyncEnumerable());
@@ -287,24 +302,28 @@ public class ProcessExecutorTests
         var result = await _sut.ExecuteProcess(processId, ProcessTypeId.APPLICATION_CHECKLIST, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
-        result.Should().HaveCount(2).And.ContainInOrder(new [] { false, modified });
+        result.Should().HaveCount(2).And.ContainInOrder(new [] { false, stepStatusId == ProcessStepStatusId.DONE });
 
         A.CallTo(() => _processTypeExecutor.ExecuteProcessStep(A<ProcessStepTypeId>._,A<IEnumerable<ProcessStepTypeId>>._,A<CancellationToken>._))
             .MustHaveHappenedOnceExactly();
 
-        if (modified)
+        A.CallTo(() => _processStepRepository.CreateProcessStepRange(A<Guid>._, A<IEnumerable<ProcessStepTypeId>>._))
+            .MustNotHaveHappened();
+
+        if (stepStatusId == ProcessStepStatusId.DONE)
         {
             A.CallTo(() => _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._))
                 .MustHaveHappened(processStepData.Length, Times.Exactly);
-            modifiedProcessSteps.Should().HaveSameCount(processStepData);
-            modifiedProcessSteps.Zip(processStepData).First().Should().Match(((ProcessStep ProcessStep,(Guid ProcessStepId,ProcessStepTypeId) StepData) x) =>
-                x.ProcessStep.Id == x.StepData.ProcessStepId && x.ProcessStep.ProcessStepStatusId == stepStatusId
-            );
-            modifiedProcessSteps.Zip(processStepData).Skip(1).Should().AllSatisfy(((ProcessStep ProcessStep,(Guid ProcessStepId,ProcessStepTypeId) StepData) x) =>
-            {
-                x.ProcessStep.Id.Should().Be(x.StepData.ProcessStepId);
-                x.ProcessStep.ProcessStepStatusId.Should().Be(ProcessStepStatusId.DUPLICATE);
-            });
+            modifiedProcessSteps
+                .Should().HaveSameCount(processStepData)
+                .And.Satisfy(
+                    x => x.Id == processStepData[0].Id,
+                    x => x.Id == processStepData[1].Id,
+                    x => x.Id == processStepData[2].Id)
+                .And.Satisfy(
+                    x => x.ProcessStepStatusId == stepStatusId,
+                    x => x.ProcessStepStatusId == ProcessStepStatusId.DUPLICATE,
+                    x => x.ProcessStepStatusId == ProcessStepStatusId.DUPLICATE);
         }
         else
         {
@@ -312,23 +331,20 @@ public class ProcessExecutorTests
                 .MustNotHaveHappened();
         }
 
-        A.CallTo(() => _processStepRepository.CreateProcessStepRange(A<Guid>._, A<IEnumerable<ProcessStepTypeId>>._))
-            .MustNotHaveHappened();
     }
 
     [Theory]
-    [InlineData(ProcessStepStatusId.DONE, true)]
-    [InlineData(ProcessStepStatusId.TODO, false)]
-    public async Task ExecuteProcess_WithScheduledSteps_ReturnsExpected(ProcessStepStatusId stepStatusId, bool modified)
+    [InlineData(ProcessStepStatusId.DONE)]
+    [InlineData(ProcessStepStatusId.TODO)]
+    public async Task ExecuteProcess_WithScheduledSteps_ReturnsExpected(ProcessStepStatusId stepStatusId)
     {
         // Arrange
         var processId = Guid.NewGuid();
-        var processStepTypeId = _fixture.Create<ProcessStepTypeId>();
-        var processStepData = _fixture.CreateMany<Guid>(1).Select(id => (id, processStepTypeId)).ToImmutableArray();
-        var scheduleStepTypeIds = Enum.GetValues<ProcessStepTypeId>().Where(x => x != processStepTypeId).Take(3).ToImmutableArray();
+        var processStepData = (Id: Guid.NewGuid(), StepTypeId: _fixture.Create<ProcessStepTypeId>());
+        var scheduleStepTypeIds = Enum.GetValues<ProcessStepTypeId>().Where(x => x != processStepData.StepTypeId).Take(3).ToImmutableArray();
 
         A.CallTo(() => _processStepRepository.GetProcessStepData(processId))
-            .Returns(processStepData.ToAsyncEnumerable());
+            .Returns(new [] { processStepData }.ToAsyncEnumerable());
 
         A.CallTo(() => _processTypeExecutor.IsExecutableStepTypeId(A<ProcessStepTypeId>._))
             .Returns(true);
@@ -336,10 +352,10 @@ public class ProcessExecutorTests
         A.CallTo(() => _processTypeExecutor.InitializeProcess(processId, A<IEnumerable<ProcessStepTypeId>>._))
             .Returns(new IProcessTypeExecutor.InitializationResult(false, null));
 
-        A.CallTo(() => _processTypeExecutor.ExecuteProcessStep(processStepTypeId,A<IEnumerable<ProcessStepTypeId>>._,A<CancellationToken>._))
+        A.CallTo(() => _processTypeExecutor.ExecuteProcessStep(processStepData.StepTypeId,A<IEnumerable<ProcessStepTypeId>>._,A<CancellationToken>._))
             .Returns(new IProcessTypeExecutor.StepExecutionResult(false, stepStatusId, scheduleStepTypeIds, null));
 
-        A.CallTo(() => _processTypeExecutor.ExecuteProcessStep(A<ProcessStepTypeId>.That.Not.IsEqualTo(processStepTypeId),A<IEnumerable<ProcessStepTypeId>>._,A<CancellationToken>._))
+        A.CallTo(() => _processTypeExecutor.ExecuteProcessStep(A<ProcessStepTypeId>.That.Not.IsEqualTo(processStepData.StepTypeId),A<IEnumerable<ProcessStepTypeId>>._,A<CancellationToken>._))
             .Returns(new IProcessTypeExecutor.StepExecutionResult(false, stepStatusId, null, null));
 
         IEnumerable<ProcessStep>? createdProcessSteps = null;;
@@ -366,47 +382,59 @@ public class ProcessExecutorTests
         var result = await _sut.ExecuteProcess(processId, ProcessTypeId.APPLICATION_CHECKLIST, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
-        result.Should().HaveCount(scheduleStepTypeIds.Length + 2).And.ContainInOrder(new [] { false, true }.Concat(Enumerable.Repeat<bool>(modified, scheduleStepTypeIds.Length)));
+        result.
+            Should().HaveCount(scheduleStepTypeIds.Length + 2)
+            .And.ContainInOrder(
+                stepStatusId == ProcessStepStatusId.DONE
+                    ? new [] { false, true, true, true, true }
+                    : new [] { false, true, false, false, false });
 
         A.CallTo(() => _processTypeExecutor.ExecuteProcessStep(A<ProcessStepTypeId>._,A<IEnumerable<ProcessStepTypeId>>._,A<CancellationToken>._))
             .MustHaveHappened(scheduleStepTypeIds.Length + 1, Times.Exactly);
 
-        if (modified)
+        A.CallTo(() => _processStepRepository.CreateProcessStepRange(processId, A<IEnumerable<ProcessStepTypeId>>.That.IsSameSequenceAs(scheduleStepTypeIds)))
+            .MustHaveHappenedOnceExactly();
+
+        createdProcessSteps
+            .Should().NotBeNull()
+            .And.HaveSameCount(scheduleStepTypeIds)
+            .And.Satisfy(
+                x => x.ProcessStepTypeId == scheduleStepTypeIds[0] && x.ProcessStepStatusId == ProcessStepStatusId.TODO,
+                x => x.ProcessStepTypeId == scheduleStepTypeIds[1] && x.ProcessStepStatusId == ProcessStepStatusId.TODO,
+                x => x.ProcessStepTypeId == scheduleStepTypeIds[2] && x.ProcessStepStatusId == ProcessStepStatusId.TODO);
+
+        if (stepStatusId == ProcessStepStatusId.DONE)
         {
             A.CallTo(() => _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._))
                 .MustHaveHappened(scheduleStepTypeIds.Length + 1, Times.Exactly);
-            modifiedProcessSteps.Should().HaveCount(scheduleStepTypeIds.Length + 1);
-            modifiedProcessSteps.First().Should().Match((ProcessStep step) =>
-                step.Id == processStepData.First().id && step.ProcessStepStatusId == stepStatusId
-            );
-            modifiedProcessSteps.Skip(1).Should().AllSatisfy((ProcessStep processStep) =>
-            {
-                processStep.ProcessStepStatusId.Should().Be(ProcessStepStatusId.DONE);
-            });
+            modifiedProcessSteps
+                .Should().HaveCount(scheduleStepTypeIds.Length + 1)
+                .And.Satisfy(
+                    x => x.Id == processStepData.Id && x.ProcessStepStatusId == ProcessStepStatusId.DONE,
+                    x => x.Id == createdProcessSteps!.ElementAt(0).Id && x.ProcessStepStatusId == ProcessStepStatusId.DONE,
+                    x => x.Id == createdProcessSteps!.ElementAt(1).Id && x.ProcessStepStatusId == ProcessStepStatusId.DONE,
+                    x => x.Id == createdProcessSteps!.ElementAt(2).Id && x.ProcessStepStatusId == ProcessStepStatusId.DONE);
         }
         else
         {
             A.CallTo(() => _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._))
                 .MustNotHaveHappened();
         }
-
-        A.CallTo(() => _processStepRepository.CreateProcessStepRange(processId, A<IEnumerable<ProcessStepTypeId>>.That.IsSameSequenceAs(scheduleStepTypeIds)))
-            .MustHaveHappenedOnceExactly();
     }
 
     [Theory]
-    [InlineData(ProcessStepStatusId.DONE, true)]
-    [InlineData(ProcessStepStatusId.TODO, false)]
-    public async Task ExecuteProcess_WithDuplicateScheduledSteps_ReturnsExpected(ProcessStepStatusId stepStatusId, bool modified)
+    [InlineData(ProcessStepStatusId.DONE)]
+    [InlineData(ProcessStepStatusId.TODO)]
+    public async Task ExecuteProcess_WithDuplicateScheduledSteps_ReturnsExpected(ProcessStepStatusId stepStatusId)
     {
         // Arrange
         var processId = Guid.NewGuid();
-        var processStepTypeId = _fixture.Create<ProcessStepTypeId>();
-        var processStepData = _fixture.CreateMany<Guid>(1).Select(id => (id, processStepTypeId)).ToImmutableArray();
-        var scheduleStepTypeIds = new [] { processStepTypeId, processStepTypeId };
+        var stepTypeId = _fixture.Create<ProcessStepTypeId>();
+        var processStepData = (Id: Guid.NewGuid(), StepTypeId: stepTypeId );
+        var scheduleStepTypeIds = Enumerable.Repeat(stepTypeId, 3);
 
         A.CallTo(() => _processStepRepository.GetProcessStepData(processId))
-            .Returns(processStepData.ToAsyncEnumerable());
+            .Returns(new [] { processStepData }.ToAsyncEnumerable());
 
         A.CallTo(() => _processTypeExecutor.IsExecutableStepTypeId(A<ProcessStepTypeId>._))
             .Returns(true);
@@ -414,7 +442,7 @@ public class ProcessExecutorTests
         A.CallTo(() => _processTypeExecutor.InitializeProcess(processId, A<IEnumerable<ProcessStepTypeId>>._))
             .Returns(new IProcessTypeExecutor.InitializationResult(false, null));
 
-        A.CallTo(() => _processTypeExecutor.ExecuteProcessStep(processStepTypeId,A<IEnumerable<ProcessStepTypeId>>._,A<CancellationToken>._))
+        A.CallTo(() => _processTypeExecutor.ExecuteProcessStep(stepTypeId,A<IEnumerable<ProcessStepTypeId>>._,A<CancellationToken>._))
             .Returns(new IProcessTypeExecutor.StepExecutionResult(false, stepStatusId, scheduleStepTypeIds, null))
             .Once()
             .Then
@@ -444,25 +472,29 @@ public class ProcessExecutorTests
         var result = await _sut.ExecuteProcess(processId, ProcessTypeId.APPLICATION_CHECKLIST, CancellationToken.None).ToListAsync().ConfigureAwait(false);
 
         // Assert
-        if (modified)
+        if (stepStatusId == ProcessStepStatusId.DONE)
         {
             result.Should().HaveCount(3).And.ContainInOrder(new [] { false, true, true });
+
+            A.CallTo(() => _processStepRepository.CreateProcessStepRange(processId, A<IEnumerable<ProcessStepTypeId>>._))
+                .MustHaveHappenedOnceExactly();
+
+            createdProcessSteps
+                .Should().NotBeNull()
+                .And.HaveCount(1)
+                .And.Satisfy(
+                    x => x.ProcessStepTypeId == stepTypeId && x.ProcessStepStatusId == ProcessStepStatusId.TODO);
 
             A.CallTo(() => _processTypeExecutor.ExecuteProcessStep(A<ProcessStepTypeId>._,A<IEnumerable<ProcessStepTypeId>>._,A<CancellationToken>._))
                 .MustHaveHappened(2, Times.Exactly);
             A.CallTo(() => _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._))
                 .MustHaveHappened(2, Times.Exactly);
 
-            modifiedProcessSteps.Should().HaveCount(2);
-            modifiedProcessSteps.First().Should().Match((ProcessStep step) =>
-                step.Id == processStepData.First().id && step.ProcessStepStatusId == stepStatusId
-            );
-            modifiedProcessSteps.Skip(1).Should().AllSatisfy((ProcessStep processStep) =>
-            {
-                processStep.ProcessStepStatusId.Should().Be(ProcessStepStatusId.DONE);
-            });
-            A.CallTo(() => _processStepRepository.CreateProcessStepRange(processId, A<IEnumerable<ProcessStepTypeId>>._))
-                .MustHaveHappenedOnceExactly();
+            modifiedProcessSteps
+                .Should().HaveCount(2)
+                .And.Satisfy(
+                    x => x.Id == processStepData.Id && x.ProcessStepStatusId == ProcessStepStatusId.DONE,
+                    x => x.Id == createdProcessSteps!.ElementAt(0).Id && x.ProcessStepStatusId == ProcessStepStatusId.DONE);
         }
         else
         {
@@ -474,14 +506,14 @@ public class ProcessExecutorTests
     }
 
     [Theory]
-    [InlineData(ProcessStepStatusId.DONE, 1)]
-    [InlineData(ProcessStepStatusId.TODO, 0)]
-    public async Task ExecuteProcess_WithSkippedSteps_ReturnsExpected(ProcessStepStatusId stepStatusId, int modifyCount)
+    [InlineData(ProcessStepStatusId.DONE)]
+    [InlineData(ProcessStepStatusId.TODO)]
+    public async Task ExecuteProcess_WithSkippedSteps_ReturnsExpected(ProcessStepStatusId stepStatusId)
     {
         // Arrange
         var processId = Guid.NewGuid();
-        var processStepData = _fixture.CreateMany<ProcessStepTypeId>().OrderBy(x => x).Select(stepTypeId => (Guid.NewGuid(),stepTypeId)).ToImmutableArray();
-        var skipStepTypeIds = processStepData.Skip(1).Select(x => x.stepTypeId).ToImmutableArray();
+        var processStepData = _fixture.CreateMany<ProcessStepTypeId>(3).Select(stepTypeId => (Id: Guid.NewGuid(), StepTypeId: stepTypeId)).ToImmutableArray();
+        var skipStepTypeIds = processStepData.Skip(1).Select(x => x.StepTypeId).ToImmutableArray();
 
         A.CallTo(() => _processStepRepository.GetProcessStepData(processId))
             .Returns(processStepData.ToAsyncEnumerable());
@@ -515,24 +547,30 @@ public class ProcessExecutorTests
         A.CallTo(() => _processTypeExecutor.ExecuteProcessStep(A<ProcessStepTypeId>._,A<IEnumerable<ProcessStepTypeId>>._,A<CancellationToken>._))
             .MustHaveHappenedOnceExactly();
 
-        A.CallTo(() => _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._))
-            .MustHaveHappened(skipStepTypeIds.Length + modifyCount, Times.Exactly);
-        modifiedProcessSteps.Should().HaveCount(skipStepTypeIds.Length + modifyCount);
-    
-        if (modifyCount > 0)
-        {
-            modifiedProcessSteps.Zip(processStepData).First().Should().Match(((ProcessStep ProcessStep,(Guid ProcessStepId,ProcessStepTypeId) StepData) x) =>
-                x.ProcessStep.Id == x.StepData.ProcessStepId && x.ProcessStep.ProcessStepStatusId == stepStatusId
-            );
-        }
-        modifiedProcessSteps.Skip(modifyCount).Zip(processStepData.Skip(1)).Should().AllSatisfy(((ProcessStep ProcessStep,(Guid ProcessStepId,ProcessStepTypeId) StepData) x) =>
-        {
-            x.ProcessStep.Id.Should().Be(x.StepData.ProcessStepId);
-            x.ProcessStep.ProcessStepStatusId.Should().Be(ProcessStepStatusId.SKIPPED);
-        });
-
         A.CallTo(() => _processStepRepository.CreateProcessStepRange(A<Guid>._, A<IEnumerable<ProcessStepTypeId>>._))
             .MustNotHaveHappened();
+
+        if (stepStatusId == ProcessStepStatusId.DONE)
+        {
+            A.CallTo(() => _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._))
+                .MustHaveHappened(skipStepTypeIds.Length + 1, Times.Exactly);
+            modifiedProcessSteps
+                .Should().HaveCount(skipStepTypeIds.Length + 1)
+                .And.Satisfy(
+                    x => x.Id == processStepData[0].Id && x.ProcessStepStatusId == ProcessStepStatusId.DONE,
+                    x => x.Id == processStepData[1].Id && x.ProcessStepStatusId == ProcessStepStatusId.SKIPPED,
+                    x => x.Id == processStepData[2].Id && x.ProcessStepStatusId == ProcessStepStatusId.SKIPPED);
+        }
+        else
+        {
+            A.CallTo(() => _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._))
+                .MustHaveHappened(skipStepTypeIds.Length, Times.Exactly);
+            modifiedProcessSteps
+                .Should().HaveCount(skipStepTypeIds.Length)
+                .And.Satisfy(
+                    x => x.Id == processStepData[1].Id && x.ProcessStepStatusId == ProcessStepStatusId.SKIPPED,
+                    x => x.Id == processStepData[2].Id && x.ProcessStepStatusId == ProcessStepStatusId.SKIPPED);
+        }
     }
 
     [Fact]
@@ -540,7 +578,7 @@ public class ProcessExecutorTests
     {
         // Arrange
         var processId = Guid.NewGuid();
-        var processStepData = _fixture.CreateMany<ProcessStepTypeId>().OrderBy(x => x).Select(stepTypeId => (Guid.NewGuid(),stepTypeId)).ToImmutableArray();
+        var processStepData = _fixture.CreateMany<ProcessStepTypeId>(3).Select(stepTypeId => (Id: Guid.NewGuid(), StepTypeId: stepTypeId)).ToImmutableArray();
         var error = _fixture.Create<TestException>();
 
         A.CallTo(() => _processStepRepository.GetProcessStepData(processId))
@@ -575,18 +613,18 @@ public class ProcessExecutorTests
         A.CallTo(() => _processTypeExecutor.ExecuteProcessStep(A<ProcessStepTypeId>._,A<IEnumerable<ProcessStepTypeId>>._,A<CancellationToken>._))
             .MustHaveHappened(processStepData.Length, Times.Exactly);
 
-        A.CallTo(() => _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._))
-            .MustHaveHappened(processStepData.Length, Times.Exactly);
-        modifiedProcessSteps.Should().HaveCount(processStepData.Length);
-    
-        modifiedProcessSteps.Zip(processStepData).Should().AllSatisfy(((ProcessStep ProcessStep,(Guid ProcessStepId,ProcessStepTypeId) StepData) x) =>
-        {
-            x.ProcessStep.Id.Should().Be(x.StepData.ProcessStepId);
-            x.ProcessStep.ProcessStepStatusId.Should().Be(ProcessStepStatusId.FAILED);
-        });
-
         A.CallTo(() => _processStepRepository.CreateProcessStepRange(A<Guid>._, A<IEnumerable<ProcessStepTypeId>>._))
             .MustNotHaveHappened();
+
+        A.CallTo(() => _processStepRepository.AttachAndModifyProcessStep(A<Guid>._, A<Action<ProcessStep>>._, A<Action<ProcessStep>>._))
+            .MustHaveHappened(processStepData.Length, Times.Exactly);
+
+        modifiedProcessSteps
+            .Should().HaveCount(processStepData.Length)
+            .And.Satisfy(
+                x => x.Id == processStepData[0].Id && x.ProcessStepStatusId == ProcessStepStatusId.FAILED,
+                x => x.Id == processStepData[1].Id && x.ProcessStepStatusId == ProcessStepStatusId.FAILED,
+                x => x.Id == processStepData[2].Id && x.ProcessStepStatusId == ProcessStepStatusId.FAILED);
     }
 
     [Fact]

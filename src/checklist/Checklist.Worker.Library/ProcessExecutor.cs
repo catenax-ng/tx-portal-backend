@@ -57,7 +57,7 @@ public class ProcessExecutor : IProcessExecutor
         var context = new ProcessContext(
             processId,
             allSteps,
-            new Queue<ProcessStepTypeId>(allSteps.Keys.Where(x => executor.IsExecutableStepTypeId(x))),
+            new ProcessStepTypeSet(allSteps.Keys.Where(x => executor.IsExecutableStepTypeId(x))),
             executor);
 
         var (modified, initialStepTypeIds) = await executor.InitializeProcess(processId, context.AllSteps.Keys).ConfigureAwait(false);
@@ -66,7 +66,7 @@ public class ProcessExecutor : IProcessExecutor
 
         yield return modified;
 
-        while (context.ExecutableStepTypeIds.TryDequeue(out var stepTypeId))
+        while (context.ExecutableStepTypeIds.TryGetNext(out var stepTypeId))
         {
             ProcessStepStatusId resultStepStatusId;
             IEnumerable<ProcessStepTypeId>? scheduleStepTypeIds;
@@ -106,7 +106,7 @@ public class ProcessExecutor : IProcessExecutor
             context.AllSteps.Add(newStep.ProcessStepTypeId, new [] { newStep.Id });
             if (context.Executor.IsExecutableStepTypeId(newStep.ProcessStepTypeId))
             {
-                context.ExecutableStepTypeIds.Enqueue(newStep.ProcessStepTypeId);
+                context.ExecutableStepTypeIds.Add(newStep.ProcessStepTypeId);
             }
         }
         return true;
@@ -138,11 +138,9 @@ public class ProcessExecutor : IProcessExecutor
             _processStepRepository.AttachAndModifyProcessStep(stepId, null, step => { step.ProcessStepStatusId = isFirst ? stepStatusId : ProcessStepStatusId.DUPLICATE; });
             isFirst = false;
         }
-        if (context.Executor.IsExecutableStepTypeId(stepTypeId) && context.ExecutableStepTypeIds.Contains(stepTypeId))
+        if (context.Executor.IsExecutableStepTypeId(stepTypeId))
         {
-            var remainingExecutableStepTypeIds = context.ExecutableStepTypeIds.Where(executableStepTypeId => executableStepTypeId != stepTypeId).ToList();
-            context.ExecutableStepTypeIds.Clear();
-            remainingExecutableStepTypeIds.ForEach(stepTypeId => context.ExecutableStepTypeIds.Enqueue(stepTypeId));
+            context.ExecutableStepTypeIds.Remove(stepTypeId);
         }
         return true;
     }
@@ -150,7 +148,33 @@ public class ProcessExecutor : IProcessExecutor
     private sealed record ProcessContext(
         Guid ProcessId,
         IDictionary<ProcessStepTypeId,IEnumerable<Guid>> AllSteps,
-        Queue<ProcessStepTypeId> ExecutableStepTypeIds,
+        ProcessStepTypeSet ExecutableStepTypeIds,
         IProcessTypeExecutor Executor
     );
+
+    private sealed class ProcessStepTypeSet
+    {
+        private readonly HashSet<ProcessStepTypeId> _items;
+
+        public ProcessStepTypeSet(IEnumerable<ProcessStepTypeId> items){
+            _items = new HashSet<ProcessStepTypeId>(items);
+        }
+
+        public bool TryGetNext(out ProcessStepTypeId item)
+        {
+            var enumerator = _items.GetEnumerator();
+            if (!enumerator.MoveNext())
+            {
+                item = default;
+                return false;
+            }
+            item = enumerator.Current;
+            _items.Remove(item);
+            return true;
+        }
+
+        public void Add(ProcessStepTypeId item) => _items.Add(item);
+
+        public void Remove(ProcessStepTypeId item) => _items.Remove(item);
+    }
 }

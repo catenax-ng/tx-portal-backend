@@ -52,37 +52,34 @@ public class ProcessExecutionService
     /// <param name="stoppingToken">Cancellation Token</param>
     public async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        if (!stoppingToken.IsCancellationRequested)
+        try
         {
-            try
+            using var processServiceScope = _serviceScopeFactory.CreateScope();
+            var executorRepositories = processServiceScope.ServiceProvider.GetRequiredService<IPortalRepositories>();
+            var processExecutor = processServiceScope.ServiceProvider.GetRequiredService<IProcessExecutor>();
+
+            using var outerLoopScope = _serviceScopeFactory.CreateScope();
+            var outerLoopRepositories = outerLoopScope.ServiceProvider.GetRequiredService<IPortalRepositories>();
+
+            var activeProcesses = outerLoopRepositories.GetInstance<IProcessStepRepository>().GetActiveProcesses(processExecutor.GetRegisteredProcessTypeIds());
+            await foreach (var (processId, processTypeId) in activeProcesses.WithCancellation(stoppingToken).ConfigureAwait(false))
             {
-                using var processServiceScope = _serviceScopeFactory.CreateScope();
-                var executorRepositories = processServiceScope.ServiceProvider.GetRequiredService<IPortalRepositories>();
-                var processExecutor = processServiceScope.ServiceProvider.GetRequiredService<IProcessExecutor>();
-
-                using var outerLoopScope = _serviceScopeFactory.CreateScope();
-                var outerLoopRepositories = outerLoopScope.ServiceProvider.GetRequiredService<IPortalRepositories>();
-
-                var activeProcesses = outerLoopRepositories.GetInstance<IProcessStepRepository>().GetActiveProcesses(processExecutor.GetRegisteredProcessTypeIds());
-                await foreach (var (processId, processTypeId) in activeProcesses.WithCancellation(stoppingToken).ConfigureAwait(false))
+                await foreach (var modified in processExecutor.ExecuteProcess(processId, processTypeId, stoppingToken).WithCancellation(stoppingToken).ConfigureAwait(false))
                 {
-                    await foreach (var modified in processExecutor.ExecuteProcess(processId, processTypeId, stoppingToken).WithCancellation(stoppingToken).ConfigureAwait(false))
+                    if (modified)
                     {
-                        if (modified)
-                        {
-                            await executorRepositories.SaveAsync().ConfigureAwait(false);
-                        }
-
-                        executorRepositories.Clear();
+                        await executorRepositories.SaveAsync().ConfigureAwait(false);
                     }
-                    _logger.LogInformation("finished processing process {processId} type {processType}", processId, processTypeId);
+
+                    executorRepositories.Clear();
                 }
+                _logger.LogInformation("finished processing process {processId} type {processType}", processId, processTypeId);
             }
-            catch (Exception ex)
-            {
-                Environment.ExitCode = 1;
-                _logger.LogError("processing failed with following Exception {ExceptionMessage}", ex.Message);
-            }
+        }
+        catch (Exception ex)
+        {
+            Environment.ExitCode = 1;
+            _logger.LogError("processing failed with following Exception {ExceptionMessage}", ex.Message);
         }
     }
 }
