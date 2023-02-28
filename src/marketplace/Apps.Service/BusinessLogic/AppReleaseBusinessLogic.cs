@@ -130,24 +130,8 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         {
             throw new ForbiddenException($"user {iamUserId} is not a member of the providercompany of app {appId}");
         }
-        var roleData = CreateUserRolesWithDescriptions(appId, userRoles);
+        var roleData = AppExtensions.CreateUserRolesWithDescriptions(_portalRepositories.GetInstance<IUserRolesRepository>(), appId, userRoles);
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
-        return roleData;
-    }
-
-    private IEnumerable<AppRoleData>CreateUserRolesWithDescriptions(Guid appId, IEnumerable<AppUserRole> appAssignedDesc)
-    {
-        var userRolesRepository = _portalRepositories.GetInstance<IUserRolesRepository>();
-        var roleData = new List<AppRoleData>();
-        foreach (var indexItem in appAssignedDesc)
-        {
-            var appRole = userRolesRepository.CreateAppUserRole(appId, indexItem.role);
-            roleData.Add(new AppRoleData(appRole.Id, indexItem.role));
-            foreach (var item in indexItem.descriptions)
-            {
-                userRolesRepository.CreateAppUserRoleDescription(appRole.Id, item.languageCode.ToLower(), item.description);
-            }
-        }
         return roleData;
     }
 
@@ -463,7 +447,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         _portalRepositories.GetInstance<IDocumentRepository>().RemoveDocument(documentId);
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
-    
+
     /// <inheritdoc />
     public async Task DeleteAppAsync(Guid appId, string iamUserId)
     {

@@ -1,5 +1,6 @@
 ﻿using Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 
 namespace Apps.Service.Extensions;
 
@@ -27,4 +28,26 @@ public static class AppExtensions
         }
     }
 
+    /// <summary>
+    /// Creates the user roles with their descriptions
+    /// </summary>
+    /// <remarks>Doesn't save the changes</remarks>
+    /// <param name="userRolesRepository">repository</param>
+    /// <param name="appId">id of the app to create the roles for</param>
+    /// <param name="userRoles">the user roles to add</param>
+    /// <returns>returns the created appRoleData</returns>
+    public static IEnumerable<AppRoleData> CreateUserRolesWithDescriptions(IUserRolesRepository userRolesRepository, Guid appId, IEnumerable<AppUserRole> userRoles)
+    {
+        var roleData = new List<AppRoleData>();
+        foreach (var userRole in userRoles)
+        {
+            var appRole = userRolesRepository.CreateAppUserRole(appId, userRole.role);
+            roleData.Add(new AppRoleData(appRole.Id, userRole.role));
+            foreach (var item in userRole.descriptions)
+            {
+                userRolesRepository.CreateAppUserRoleDescription(appRole.Id, item.languageCode.ToLower(), item.description);
+            }
+        }
+        return roleData;
+    }
 }

@@ -31,6 +31,9 @@ using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.BusinessLogic;
 
+/// <summary>
+/// Implementation of <see cref="IAppChangeBusinessLogic"/>.
+/// </summary>
 public class AppChangeBusinessLogic : IAppChangeBusinessLogic
 {
     private readonly IPortalRepositories _portalRepositories;
@@ -41,10 +44,10 @@ public class AppChangeBusinessLogic : IAppChangeBusinessLogic
     /// <summary>
     /// Constructor.
     /// </summary>
-    /// <param name="portalRepositories"></param>
-    /// <param name="notificationService"></param>
+    /// <param name="portalRepositories">access to the repositories</param>
+    /// <param name="notificationService">the notification service</param>
     /// <param name="provisioningManager">The provisioning manager</param>
-    /// <param name="settings"></param>
+    /// <param name="settings">Settings for the app change bl</param>
     public AppChangeBusinessLogic(IPortalRepositories portalRepositories, INotificationService notificationService, IProvisioningManager provisioningManager, IOptions<AppsSettings> settings)
     {
         _portalRepositories = portalRepositories;
@@ -78,7 +81,7 @@ public class AppChangeBusinessLogic : IAppChangeBusinessLogic
             throw new ConflictException($"App {appId} providing company is not yet set.");
         }
 
-        var roleData = CreateUserRolesWithDescriptions(appId, userRoles);
+        var roleData = AppExtensions.CreateUserRolesWithDescriptions(_portalRepositories.GetInstance<IUserRolesRepository>(), appId, userRoles);
         foreach (var clientId in result.ClientClientIds)
         {
             await _provisioningManager.AddRolesToClientAsync(clientId, userRoles.Select(x => x.role)).ConfigureAwait(false);
@@ -93,22 +96,6 @@ public class AppChangeBusinessLogic : IAppChangeBusinessLogic
         var content = _settings.ActiveAppNotificationTypeIds.Select(typeId => new ValueTuple<string?, NotificationTypeId>(serializeNotificationContent, typeId));
         await _notificationService.CreateNotifications(_settings.ActiveAppCompanyAdminRoles, result.CompanyUserId, content, result.ProviderCompanyId.Value).ConfigureAwait(false);
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
-        return roleData;
-    }
-
-    private IEnumerable<AppRoleData> CreateUserRolesWithDescriptions(Guid appId, IEnumerable<AppUserRole> appAssignedDesc)
-    {
-        var userRolesRepository = _portalRepositories.GetInstance<IUserRolesRepository>();
-        var roleData = new List<AppRoleData>();
-        foreach (var indexItem in appAssignedDesc)
-        {
-            var appRole = userRolesRepository.CreateAppUserRole(appId, indexItem.role);
-            roleData.Add(new AppRoleData(appRole.Id, indexItem.role));
-            foreach (var item in indexItem.descriptions)
-            {
-                userRolesRepository.CreateAppUserRoleDescription(appRole.Id, item.languageCode.ToLower(), item.description);
-            }
-        }
         return roleData;
     }
 }
