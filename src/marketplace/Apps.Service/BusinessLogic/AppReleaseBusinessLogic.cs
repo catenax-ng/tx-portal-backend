@@ -542,7 +542,6 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         _portalRepositories.GetInstance<IOfferRepository>().RemoveAppLanguages(appData.LanguageCodes.Select(language => (appId, language)));
         _portalRepositories.GetInstance<IOfferRepository>().RemoveOfferTags(appData.OfferTags.Select(offerTag => (appId, offerTag)));
         _portalRepositories.GetInstance<IOfferRepository>().RemoveOfferDescriptions(appData.AppDescriptions.Select(appDescription => (appId, appDescription.languageCode, appDescription.longDescription, appDescription.shortDescription)));
-        _portalRepositories.GetInstance<IDocumentRepository>().RemoveDocuments(appData.DocumentIds);
         _portalRepositories.GetInstance<IOfferRepository>().RemoveOffer(appId);
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
        
