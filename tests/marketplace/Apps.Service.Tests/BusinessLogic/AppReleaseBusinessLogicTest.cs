@@ -26,7 +26,6 @@ using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
-using Org.Eclipse.TractusX.Portal.Backend.Notifications.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Service;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
@@ -51,7 +50,6 @@ public class AppReleaseBusinessLogicTest
     private readonly CompanyUser _companyUser;
     private readonly IamUser _iamUser;
     private readonly IOfferService _offerService;
-    private readonly INotificationService _notificationService;
     private readonly Guid _notExistingAppId = Guid.NewGuid();
     private readonly Guid _activeAppId = Guid.NewGuid();
     private readonly Guid _differentCompanyAppId = Guid.NewGuid();
@@ -76,7 +74,6 @@ public class AppReleaseBusinessLogicTest
         _documentRepository = A.Fake<IDocumentRepository>();
         _languageRepository = A.Fake<ILanguageRepository>();
         _offerService = A.Fake<IOfferService>();
-        _notificationService = A.Fake<INotificationService>();
         _options = A.Fake<IOptions<AppsSettings>>();
         _companyUser = _fixture.Build<CompanyUser>()
             .Without(u => u.IamUser)
@@ -124,8 +121,9 @@ public class AppReleaseBusinessLogicTest
         var appUserRoles = new AppUserRole[] {
             new("IT Admin",appUserRoleDescription)
         };
-        A.CallTo(() => _offerRepository.IsProviderCompanyUserAsync(A<Guid>.That.IsEqualTo(appId), A<string>.That.IsEqualTo(iamUserId), A<OfferTypeId>.That.IsEqualTo(OfferTypeId.APP))).Returns((true,true));
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, _options, null!, null!);
+        A.CallTo(() => _offerRepository.IsProviderCompanyUserAsync(A<Guid>.That.IsEqualTo(appId), A<string>.That.IsEqualTo(iamUserId), A<OfferTypeId>.That.IsEqualTo(OfferTypeId.APP)))
+            .Returns((true,true));
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, _options, null!);
 
         // Act
         var result = await sut.AddAppUserRoleAsync(appId, appUserRoles, iamUserId).ConfigureAwait(false);
@@ -156,7 +154,7 @@ public class AppReleaseBusinessLogicTest
                 PrivacyPolicyId.COMPANY_DATA  
             });
         var settings = new AppsSettings();
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService);
      
         // Act
         async Task Act() => await sut.AddAppAsync(data, _iamUser.UserEntityId).ConfigureAwait(false);
@@ -175,7 +173,7 @@ public class AppReleaseBusinessLogicTest
                 PrivacyPolicyId.COMPANY_DATA  
             });
         var settings = new AppsSettings();
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService);
      
         // Act
         async Task Act() => await sut.AddAppAsync(data, _iamUser.UserEntityId).ConfigureAwait(false);
@@ -194,7 +192,7 @@ public class AppReleaseBusinessLogicTest
                 PrivacyPolicyId.COMPANY_DATA   
             });
         var settings = new AppsSettings();
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService);
      
         // Act
         await sut.AddAppAsync(data, _iamUser.UserEntityId).ConfigureAwait(false);
@@ -225,7 +223,7 @@ public class AppReleaseBusinessLogicTest
                 PrivacyPolicyId.COMPANY_DATA   
             });
         var settings = new AppsSettings();
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService);
      
         // Act
         await sut.AddAppAsync(data, _iamUser.UserEntityId).ConfigureAwait(false);
@@ -261,7 +259,7 @@ public class AppReleaseBusinessLogicTest
                 PrivacyPolicyId.COMPANY_DATA   
             });
         var settings = new AppsSettings();
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService);
      
         // Act
         async Task Act() => await sut.UpdateAppReleaseAsync(_notExistingAppId, data, _iamUser.UserEntityId).ConfigureAwait(false);
@@ -281,7 +279,7 @@ public class AppReleaseBusinessLogicTest
                 PrivacyPolicyId.COMPANY_DATA  
             });
         var settings = new AppsSettings();
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService);
      
         // Act
         async Task Act() => await sut.UpdateAppReleaseAsync(_activeAppId, data, _iamUser.UserEntityId).ConfigureAwait(false);
@@ -301,7 +299,7 @@ public class AppReleaseBusinessLogicTest
                 PrivacyPolicyId.COMPANY_DATA  
             });
         var settings = new AppsSettings();
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService);
      
         // Act
         async Task Act() => await sut.UpdateAppReleaseAsync(_differentCompanyAppId, data, _iamUser.UserEntityId).ConfigureAwait(false);
@@ -321,7 +319,7 @@ public class AppReleaseBusinessLogicTest
                 PrivacyPolicyId.COMPANY_DATA  
             });
         var settings = new AppsSettings();
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService);
         
         // Act
         async Task Act() => await sut.UpdateAppReleaseAsync(_existingAppId, data, _iamUser.UserEntityId).ConfigureAwait(false);
@@ -353,7 +351,7 @@ public class AppReleaseBusinessLogicTest
                 PrivacyPolicyId.COMPANY_DATA  
             });
         var settings = new AppsSettings();
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService);
         
         // Act
         await sut.UpdateAppReleaseAsync(_existingAppId, data, _iamUser.UserEntityId).ConfigureAwait(false);
@@ -389,7 +387,7 @@ public class AppReleaseBusinessLogicTest
             DocumentTypeIds = new[] { DocumentTypeId.APP_CONTRACT }
         };
 
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService);
 
         // Act
         await sut.CreateAppDocumentAsync(appId, DocumentTypeId.APP_CONTRACT, file, _iamUser.UserEntityId, CancellationToken.None).ConfigureAwait(false);
@@ -400,106 +398,13 @@ public class AppReleaseBusinessLogicTest
     
     #endregion
 
-    #region  AddActiveAppUserRole
-
-    [Fact]
-    public async Task AddActiveAppUserRoleAsync_ExecutesSuccessfully()
-    {
-        //Arrange
-        var appId = _fixture.Create<Guid>();
-        var companyId = _fixture.Create<Guid>();
-        var appName = _fixture.Create<string>();
-
-        var appUserRoleDescription = new AppUserRoleDescription[] {
-            new("de","this is test1"),
-            new("en","this is test2"),
-        };
-        var appAssignedRoleDesc = new AppUserRole[] { new("Legal Admin", appUserRoleDescription) };
-       
-        A.CallTo(() => _portalRepositories.GetInstance<IOfferRepository>().GetOfferNameProviderCompanyUserAsync(appId, _iamUser.UserEntityId, OfferTypeId.APP))
-            .ReturnsLazily(() => (true, appName, _companyUser.Id, companyId));
-
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(_settings), _offerService, _notificationService);
-
-        //Act
-        var result = await sut.AddActiveAppUserRoleAsync(appId, appAssignedRoleDesc, _iamUser.UserEntityId).ConfigureAwait(false);
-
-        //Assert
-        A.CallTo(() => _portalRepositories.GetInstance<IOfferRepository>().GetOfferNameProviderCompanyUserAsync(appId, _iamUser.UserEntityId, OfferTypeId.APP)).MustHaveHappened();
-        foreach(var item in appAssignedRoleDesc)
-        {
-            A.CallTo(() => _userRolesRepository.CreateAppUserRole(A<Guid>._, A<string>.That.IsEqualTo(item.role))).MustHaveHappened();
-            foreach (var indexItem in item.descriptions)
-            {
-                A.CallTo(() => _userRolesRepository.CreateAppUserRoleDescription(A<Guid>._, A<string>.That.IsEqualTo(indexItem.languageCode), A<string>.That.IsEqualTo(indexItem.description))).MustHaveHappened();
-            }
-        }
-        A.CallTo(() => _notificationService.CreateNotifications(A<IDictionary<string, IEnumerable<string>>>._, A<Guid>._, A<IEnumerable<(string? content, NotificationTypeId notificationTypeId)>>._, A<Guid>._)).MustHaveHappened();
-        Assert.NotNull(result);
-        Assert.IsAssignableFrom<IEnumerable<AppRoleData>>(result);
-    }
-
-    [Fact]
-    public async Task AddActiveAppUserRoleAsync_WithCompanyUserIdNotSet_ThrowsForbiddenException()
-    {
-        //Arrange
-        var appId = _fixture.Create<Guid>();
-        var appName = _fixture.Create<string>();
-
-        var appUserRoleDescription = new AppUserRoleDescription[] {
-            new("de","this is test1"),
-            new("en","this is test2"),
-        };
-        var appAssignedRoleDesc = new AppUserRole[] { new("Legal Admin", appUserRoleDescription) };
-       
-        A.CallTo(() => _portalRepositories.GetInstance<IOfferRepository>().GetOfferNameProviderCompanyUserAsync(appId, _iamUser.UserEntityId, OfferTypeId.APP))
-            .ReturnsLazily(() => (true, appName, Guid.Empty, null));
-
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(_settings), _offerService, _notificationService);
-
-        //Act
-        async Task Act() => await sut.AddActiveAppUserRoleAsync(appId, appAssignedRoleDesc, _iamUser.UserEntityId).ConfigureAwait(false);
-
-        //Assert
-        var ex = await Assert.ThrowsAsync<ForbiddenException>(Act);
-        ex.Message.Should().Be($"user {_iamUser.UserEntityId} is not a member of the providercompany of app {appId}");
-    }
-
-    [Fact]
-    public async Task AddActiveAppUserRoleAsync_WithProviderCompanyNotSet_ThrowsConflictException()
-    {
-        //Arrange
-        var appId = _fixture.Create<Guid>();
-        var appName = "app name";
-
-        var appUserRoleDescription = new AppUserRoleDescription[] {
-            new("de","this is test1"),
-            new("en","this is test2"),
-        };
-        var appAssignedRoleDesc = new AppUserRole[] { new("Legal Admin", appUserRoleDescription) };
-       
-        A.CallTo(() => _portalRepositories.GetInstance<IOfferRepository>().GetOfferNameProviderCompanyUserAsync(appId, _iamUser.UserEntityId, OfferTypeId.APP))
-            .ReturnsLazily(() => (true, appName, _companyUser.Id, null));
-
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(_settings), _offerService, _notificationService);
-
-        //Act
-        async Task Act() => await sut.AddActiveAppUserRoleAsync(appId, appAssignedRoleDesc, _iamUser.UserEntityId).ConfigureAwait(false);
-
-        //Assert
-        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
-        ex.Message.Should().Be($"App {appId} providing company is not yet set.");
-    }
-
-    #endregion
-
     #region SubmitAppReleaseRequestAsync
 
     [Fact]
     public async Task SubmitAppReleaseRequestAsync_CallsOfferService()
     {
         // Arrange
-        var sut = new AppReleaseBusinessLogic(null!, _options, _offerService, null!);
+        var sut = new AppReleaseBusinessLogic(null!, _options, _offerService);
 
         // Act
         await sut.SubmitAppReleaseRequestAsync(_existingAppId, _iamUser.UserEntityId).ConfigureAwait(false);
@@ -523,7 +428,7 @@ public class AppReleaseBusinessLogicTest
     public async Task SubmitOfferConsentAsync_WithEmptyAppId_ThrowsControllerArgumentException()
     {
         // Arrange
-        var sut = new AppReleaseBusinessLogic(null!, _options, _offerService, null!);
+        var sut = new AppReleaseBusinessLogic(null!, _options, _offerService);
 
         // Act
         async Task Act() => await sut.SubmitOfferConsentAsync(Guid.Empty, _fixture.Create<OfferAgreementConsent>(), _iamUser.UserEntityId).ConfigureAwait(false);
@@ -538,7 +443,7 @@ public class AppReleaseBusinessLogicTest
     {
         // Arrange
         var data = _fixture.Create<OfferAgreementConsent>();
-        var sut = new AppReleaseBusinessLogic(null!, _options, _offerService, null!);
+        var sut = new AppReleaseBusinessLogic(null!, _options, _offerService);
 
         // Act
         await sut.SubmitOfferConsentAsync(_existingAppId, data, _iamUser.UserEntityId).ConfigureAwait(false);
@@ -566,7 +471,7 @@ public class AppReleaseBusinessLogicTest
         var paginationResult = (int skip, int take) => Task.FromResult(new Pagination.Source<InReviewAppData>(5, InReviewData.Skip(skip).Take(take)));
         A.CallTo(() => _offerRepository.GetAllInReviewStatusAppsAsync(A<IEnumerable<OfferStatusId>>._,A<OfferSorting>._))
             .Returns(paginationResult);
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(_settings), _offerService, _notificationService);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(_settings), _offerService);
 
         // Act
         var result = await sut.GetAllInReviewStatusAppsAsync(0, 5, OfferSorting.DateAsc, null).ConfigureAwait(false);
@@ -595,7 +500,7 @@ public class AppReleaseBusinessLogicTest
         var paginationResult = (int skip, int take) => Task.FromResult(new Pagination.Source<InReviewAppData>(5, InReviewData.Skip(skip).Take(take)));
         A.CallTo(() => _offerRepository.GetAllInReviewStatusAppsAsync(A<IEnumerable<OfferStatusId>>._,A<OfferSorting>._))
             .Returns(paginationResult);
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(_settings), _offerService, _notificationService);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(_settings), _offerService);
 
         // Act
         var result = await sut.GetAllInReviewStatusAppsAsync(0, 5, OfferSorting.DateAsc, OfferStatusIdFilter.InReview).ConfigureAwait(false);
@@ -625,7 +530,7 @@ public class AppReleaseBusinessLogicTest
             ServiceManagerRoles = _fixture.Create<Dictionary<string, IEnumerable<string>>>(),
             BasePortalAddress = "test"
         };
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(_settings), _offerService, _notificationService);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(_settings), _offerService);
      
         // Act
         await sut.DeclineAppRequestAsync(appId, IamUserId, data).ConfigureAwait(false);
@@ -651,7 +556,7 @@ public class AppReleaseBusinessLogicTest
         A.CallTo(() => _documentRepository.GetAppDocumentsAsync(ValidDocumentId, IamUserId, settings.DeleteDocumentTypeIds, OfferTypeId.APP))
             .ReturnsLazily(() => (new [] { new ValueTuple<OfferStatusId, Guid, bool>(OfferStatusId.CREATED, appId, true) }, true, DocumentStatusId.PENDING, true));
 
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService);
 
         //Act
         await sut.DeleteAppDocumentsAsync(ValidDocumentId, IamUserId).ConfigureAwait(false);
@@ -675,7 +580,7 @@ public class AppReleaseBusinessLogicTest
         A.CallTo(() => _documentRepository.GetAppDocumentsAsync(ValidDocumentId, IamUserId, settings.DeleteDocumentTypeIds, OfferTypeId.APP))
             .ReturnsLazily(() => new ValueTuple<IEnumerable<(OfferStatusId OfferStatusId, Guid OfferId, bool IsOfferType)>, bool, DocumentStatusId, bool>());
 
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService);
 
         //Act
         async Task Act() => await sut.DeleteAppDocumentsAsync(ValidDocumentId, IamUserId).ConfigureAwait(false);
@@ -697,7 +602,7 @@ public class AppReleaseBusinessLogicTest
         A.CallTo(() => _documentRepository.GetAppDocumentsAsync(ValidDocumentId, IamUserId, settings.DeleteDocumentTypeIds, OfferTypeId.APP))
             .ReturnsLazily(() => (new [] { new ValueTuple<OfferStatusId, Guid, bool>() }, true, DocumentStatusId.PENDING, true));
 
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService);
 
         //Act
         async Task Act() => await sut.DeleteAppDocumentsAsync(ValidDocumentId, IamUserId).ConfigureAwait(false);
@@ -727,7 +632,7 @@ public class AppReleaseBusinessLogicTest
                 DocumentStatusId.PENDING, 
                 true));
 
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService);
 
         //Act
         async Task Act() => await sut.DeleteAppDocumentsAsync(ValidDocumentId, IamUserId).ConfigureAwait(false);
@@ -750,7 +655,7 @@ public class AppReleaseBusinessLogicTest
         A.CallTo(() => _documentRepository.GetAppDocumentsAsync(ValidDocumentId, IamUserId, settings.DeleteDocumentTypeIds, OfferTypeId.APP))
             .ReturnsLazily(() => (new [] { new ValueTuple<OfferStatusId, Guid, bool>(OfferStatusId.CREATED, appId, false) }, true, DocumentStatusId.PENDING, true));
 
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService);
 
         //Act
         async Task Act() => await sut.DeleteAppDocumentsAsync(ValidDocumentId, IamUserId).ConfigureAwait(false);
@@ -773,7 +678,7 @@ public class AppReleaseBusinessLogicTest
         A.CallTo(() => _documentRepository.GetAppDocumentsAsync(ValidDocumentId, IamUserId, settings.DeleteDocumentTypeIds, OfferTypeId.APP))
             .ReturnsLazily(() => (new [] { new ValueTuple<OfferStatusId, Guid, bool>(OfferStatusId.CREATED, appId, true) }, true, DocumentStatusId.PENDING, false));
 
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService);
 
         //Act
         async Task Act() => await sut.DeleteAppDocumentsAsync(ValidDocumentId, IamUserId).ConfigureAwait(false);
@@ -796,7 +701,7 @@ public class AppReleaseBusinessLogicTest
         A.CallTo(() => _documentRepository.GetAppDocumentsAsync(ValidDocumentId, IamUserId, settings.DeleteDocumentTypeIds, OfferTypeId.APP))
             .ReturnsLazily(() => (new [] { new ValueTuple<OfferStatusId, Guid, bool>(OfferStatusId.ACTIVE, appId, true) }, true, DocumentStatusId.PENDING, true));
 
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService);
 
         //Act
         async Task Act() => await sut.DeleteAppDocumentsAsync(ValidDocumentId, IamUserId).ConfigureAwait(false);
@@ -819,7 +724,7 @@ public class AppReleaseBusinessLogicTest
         A.CallTo(() => _documentRepository.GetAppDocumentsAsync(ValidDocumentId, IamUserId, settings.DeleteDocumentTypeIds, OfferTypeId.APP))
             .ReturnsLazily(() => (new [] { new ValueTuple<OfferStatusId, Guid, bool>(OfferStatusId.CREATED, appId, true) }, false, DocumentStatusId.PENDING, true));
 
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService);
 
         //Act
         async Task Act() => await sut.DeleteAppDocumentsAsync(ValidDocumentId, IamUserId).ConfigureAwait(false);
@@ -842,7 +747,7 @@ public class AppReleaseBusinessLogicTest
         A.CallTo(() => _documentRepository.GetAppDocumentsAsync(ValidDocumentId, IamUserId, settings.DeleteDocumentTypeIds, OfferTypeId.APP))
             .ReturnsLazily(() => (new [] { new ValueTuple<OfferStatusId, Guid, bool>(OfferStatusId.CREATED, appId, true) }, true, DocumentStatusId.LOCKED, true));
 
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService, _notificationService);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService);
 
         //Act
         async Task Act() => await sut.DeleteAppDocumentsAsync(ValidDocumentId, IamUserId).ConfigureAwait(false);
@@ -858,7 +763,7 @@ public class AppReleaseBusinessLogicTest
     #region GetInReviewAppDetailsById
 
     [Fact]
-    public async Task GetinReviewAppDetailsByIdAsync_CallsExpected()
+    public async Task GetInReviewAppDetailsByIdAsync_CallsExpected()
     {
         // Arrange
         var appId = _fixture.Create<Guid>();
@@ -866,7 +771,7 @@ public class AppReleaseBusinessLogicTest
         A.CallTo(() => _offerRepository.GetInReviewAppDataByIdAsync(appId,OfferTypeId.APP))
             .ReturnsLazily(() => data);
 
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, _options, _offerService, null!);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, _options, _offerService);
 
         // Act
         var result = await sut.GetInReviewAppDetailsByIdAsync(appId).ConfigureAwait(false);
@@ -878,14 +783,14 @@ public class AppReleaseBusinessLogicTest
     }
 
     [Fact]
-    public async Task GetinReviewAppDetailsByIdAsync_ThrowsNotFoundException()
+    public async Task GetInReviewAppDetailsByIdAsync_ThrowsNotFoundException()
     {
         // Arrange
         var appId = _fixture.Create<Guid>();
         A.CallTo(() => _offerRepository.GetInReviewAppDataByIdAsync(appId,OfferTypeId.APP))
             .ReturnsLazily(() => (InReviewOfferData?)null);
 
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, _options, _offerService, null!);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, _options, _offerService);
 
         //Act
         async Task Act() => await sut.GetInReviewAppDetailsByIdAsync(appId).ConfigureAwait(false);
@@ -1000,5 +905,4 @@ public class AppReleaseBusinessLogicTest
     }
 
     #endregion
-
 }

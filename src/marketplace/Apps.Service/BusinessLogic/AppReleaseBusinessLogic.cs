@@ -18,6 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Apps.Service.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
@@ -25,12 +26,10 @@ using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Service;
-using Org.Eclipse.TractusX.Portal.Backend.Notifications.Library;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
-using System.Text.Json;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.BusinessLogic;
 
@@ -42,7 +41,6 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
     private readonly IPortalRepositories _portalRepositories;
     private readonly AppsSettings _settings;
     private readonly IOfferService _offerService;
-    private readonly INotificationService _notificationService;
 
     /// <summary>
     /// Constructor.
@@ -50,13 +48,11 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
     /// <param name="portalRepositories"></param>
     /// <param name="settings"></param>
     /// <param name="offerService"></param>
-    /// <param name="notificationService"></param>
-    public AppReleaseBusinessLogic(IPortalRepositories portalRepositories, IOptions<AppsSettings> settings, IOfferService offerService, INotificationService notificationService)
+    public AppReleaseBusinessLogic(IPortalRepositories portalRepositories, IOptions<AppsSettings> settings, IOfferService offerService)
     {
         _portalRepositories = portalRepositories;
         _settings = settings.Value;
         _offerService = offerService;
-        _notificationService = notificationService;
     }
     
     /// <inheritdoc/>
@@ -117,13 +113,13 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         await _offerService.UploadDocumentAsync(appId, documentTypeId, document, iamUserId, offerTypeId, _settings.DocumentTypeIds, _settings.ContentTypeSettings, cancellationToken).ConfigureAwait(false);
     
     /// <inheritdoc/>
-    public Task<IEnumerable<AppRoleData>> AddAppUserRoleAsync(Guid appId, IEnumerable<AppUserRole> appAssignedDesc, string iamUserId)
+    public Task<IEnumerable<AppRoleData>> AddAppUserRoleAsync(Guid appId, IEnumerable<AppUserRole> userRoles, string iamUserId)
     {
-        ValidateAppUserRole(appId, appAssignedDesc);
-        return InsertAppUserRoleAsync(appId, appAssignedDesc, iamUserId);
+        AppExtensions.ValidateAppUserRole(appId, userRoles);
+        return InsertAppUserRoleAsync(appId, userRoles, iamUserId);
     }
 
-    private async Task<IEnumerable<AppRoleData>> InsertAppUserRoleAsync(Guid appId, IEnumerable<AppUserRole> appAssignedDesc, string iamUserId)
+    private async Task<IEnumerable<AppRoleData>> InsertAppUserRoleAsync(Guid appId, IEnumerable<AppUserRole> userRoles, string iamUserId)
     {
         var result = await _portalRepositories.GetInstance<IOfferRepository>().IsProviderCompanyUserAsync(appId, iamUserId, OfferTypeId.APP).ConfigureAwait(false);
         if (result == default)
@@ -134,59 +130,9 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         {
             throw new ForbiddenException($"user {iamUserId} is not a member of the providercompany of app {appId}");
         }
-        var roleData = CreateUserRolesWithDescriptions(appId, appAssignedDesc);
+        var roleData = CreateUserRolesWithDescriptions(appId, userRoles);
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
         return roleData;
-    }
-
-    /// <inheritdoc/>
-    public Task<IEnumerable<AppRoleData>> AddActiveAppUserRoleAsync(Guid appId, IEnumerable<AppUserRole> appUserRolesDescription, string iamUserId)
-    {
-        ValidateAppUserRole(appId, appUserRolesDescription);
-        return InsertActiveAppUserRoleAsync(appId, appUserRolesDescription, iamUserId);
-    }
-
-    private async Task<IEnumerable<AppRoleData>> InsertActiveAppUserRoleAsync(Guid appId, IEnumerable<AppUserRole> appAssignedDesc, string iamUserId)
-    {
-        var result = await _portalRepositories.GetInstance<IOfferRepository>().GetOfferNameProviderCompanyUserAsync(appId, iamUserId, OfferTypeId.APP).ConfigureAwait(false);
-        if (result == default)
-        {
-            throw new NotFoundException($"app {appId} does not exist");
-        }
-        if (result.CompanyUserId == Guid.Empty)
-        {
-            throw new ForbiddenException($"user {iamUserId} is not a member of the providercompany of app {appId}");
-        }
-
-        if (result.ProviderCompanyId == null)
-        {
-            throw new ConflictException($"App {appId} providing company is not yet set.");
-        }
-
-        var roleData = CreateUserRolesWithDescriptions(appId, appAssignedDesc);
-        var notificationContent = new
-        {
-            AppName = result.AppName,
-            Roles = roleData.Select(x => x.roleName)
-        };
-        var serializeNotificationContent = JsonSerializer.Serialize(notificationContent);
-        var content = _settings.ActiveAppNotificationTypeIds.Select(typeId => new ValueTuple<string?, NotificationTypeId>(serializeNotificationContent, typeId));
-        await _notificationService.CreateNotifications(_settings.ActiveAppCompanyAdminRoles, result.CompanyUserId, content, result.ProviderCompanyId.Value).ConfigureAwait(false);
-        await _portalRepositories.SaveAsync().ConfigureAwait(false);
-        return roleData;
-    }
-
-    private static void ValidateAppUserRole(Guid appId, IEnumerable<AppUserRole> appUserRolesDescription)
-    {
-        if (appId == Guid.Empty)
-        {
-            throw new ControllerArgumentException($"AppId must not be empty");
-        }
-        var descriptions = appUserRolesDescription.SelectMany(x => x.descriptions).Where(item => !string.IsNullOrWhiteSpace(item.languageCode)).Distinct();
-        if (!descriptions.Any())
-        {
-            throw new ControllerArgumentException($"Language Code must not be empty");
-        }
     }
 
     private IEnumerable<AppRoleData>CreateUserRolesWithDescriptions(Guid appId, IEnumerable<AppUserRole> appAssignedDesc)
@@ -199,7 +145,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
             roleData.Add(new AppRoleData(appRole.Id, indexItem.role));
             foreach (var item in indexItem.descriptions)
             {
-                userRolesRepository.CreateAppUserRoleDescription(appRole.Id, item.languageCode, item.description);
+                userRolesRepository.CreateAppUserRoleDescription(appRole.Id, item.languageCode.ToLower(), item.description);
             }
         }
         return roleData;
