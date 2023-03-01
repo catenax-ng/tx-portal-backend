@@ -141,7 +141,7 @@ public class RegistrationController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<NoContentResult> ApproveApplication([FromRoute] Guid applicationId)
     {
-        await _logic.SetRegistrationVerification(applicationId, true).ConfigureAwait(false);
+        await _logic.ApproveRegistrationVerification(applicationId).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -164,7 +164,7 @@ public class RegistrationController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<NoContentResult> DeclineApplication([FromRoute] Guid applicationId, [FromBody] RegistrationDeclineData data)
     {
-        await _logic.SetRegistrationVerification(applicationId, false, data.Comment).ConfigureAwait(false);
+        await _logic.DeclineRegistrationVerification(applicationId, data.Comment).ConfigureAwait(false);
         return NoContent();
     }
 

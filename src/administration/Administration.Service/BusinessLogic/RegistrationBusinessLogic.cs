@@ -348,25 +348,13 @@ public sealed class RegistrationBusinessLogic : IRegistrationBusinessLogic
     }
 
     /// <inheritdoc />
-    Task IRegistrationBusinessLogic.SetRegistrationVerification(Guid applicationId, bool approve, string? comment)
+    public async Task ApproveRegistrationVerification(Guid applicationId)
     {
-        if (!approve && string.IsNullOrWhiteSpace(comment))
-        {
-            throw new ControllerArgumentException("Application is denied but no comment set.");
-        }
-        return SetRegistrationVerificationInternal(applicationId, approve, comment); 
-    }
-
-    private async Task SetRegistrationVerificationInternal(Guid applicationId, bool approve, string? comment)
-    {
-        var checklistEntryStatusIds = approve ? 
-            new [] { ApplicationChecklistEntryStatusId.TO_DO } : 
-            new [] { ApplicationChecklistEntryStatusId.TO_DO, ApplicationChecklistEntryStatusId.FAILED, ApplicationChecklistEntryStatusId.DONE };
         var context = await _checklistService
             .VerifyChecklistEntryAndProcessSteps(
                 applicationId,
                 ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION,
-                checklistEntryStatusIds,
+                new [] { ApplicationChecklistEntryStatusId.TO_DO },
                 ProcessStepTypeId.VERIFY_REGISTRATION,
                 new [] { ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER },
                 new [] { ProcessStepTypeId.CREATE_IDENTITY_WALLET })
@@ -378,34 +366,51 @@ public sealed class RegistrationBusinessLogic : IRegistrationBusinessLogic
             context,
             entry =>
             {
-                entry.ApplicationChecklistEntryStatusId = approve
-                    ? ApplicationChecklistEntryStatusId.DONE
-                    : ApplicationChecklistEntryStatusId.FAILED;
-                entry.Comment = comment;
+                entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE;
             },
-            approve && businessPartnerSuccess
+            businessPartnerSuccess
                 ? new [] { ProcessStepTypeId.CREATE_IDENTITY_WALLET }
                 : null);
 
-        if (!approve)
-        {
-            await DeclinePartnerRequestInternal(applicationId).ConfigureAwait(false);
-        }
-
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
-        await PostRegistrationCancelEmailAsync(applicationId, comment, !approve).ConfigureAwait(false);
     }
 
-    private async Task DeclinePartnerRequestInternal(Guid applicationId)
+    public async Task DeclineRegistrationVerification(Guid applicationId, string comment)
     {
-        var applicationRepository = _portalRepositories.GetInstance<IApplicationRepository>();
-        var companyId = await applicationRepository.GetCompanyIdForSubmittedApplication(applicationId).ConfigureAwait(false);
-        if (companyId == Guid.Empty)
+        const ProcessStepTypeId processStepTypeId = ProcessStepTypeId.VERIFY_REGISTRATION;
+        const ApplicationChecklistEntryTypeId entryTypeId = ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION;
+        var entryStatusIds = new []{ ApplicationChecklistEntryStatusId.TO_DO, ApplicationChecklistEntryStatusId.DONE };
+        var processStepStatusIds = new []{ ProcessStepStatusId.TODO, ProcessStepStatusId.DONE };
+        var result = await _portalRepositories.GetInstance<IApplicationChecklistRepository>()
+            .GetDeclineRegistrationVerificationData(applicationId, entryTypeId, processStepTypeId, processStepStatusIds).ConfigureAwait(false);
+
+        if (result == default)
         {
-            throw new ArgumentException($"CompanyApplication {applicationId} is not in status SUBMITTED", nameof(applicationId));
+            throw new NotFoundException($"application {applicationId} does not exist");
         }
-        
-        applicationRepository.AttachAndModifyCompanyApplication(applicationId, application =>
+
+        var (checklistData, companyId) = result;
+        checklistData.ValidateChecklistData(applicationId, entryTypeId, entryStatusIds, processStepStatusIds);
+
+        var processSteps = checklistData!.ProcessSteps;
+        var processStep = processSteps.Any(x => x.ProcessStepStatusId == ProcessStepStatusId.TODO)
+            ? processSteps.SingleOrDefault(x => x.ProcessStepStatusId == ProcessStepStatusId.TODO)
+            : processSteps.FirstOrDefault(x => x.ProcessStepStatusId == ProcessStepStatusId.DONE);
+        if (processStep is null)
+        {
+            throw new ConflictException($"application {applicationId} checklist entry {entryTypeId}, process step {processStepTypeId} is not eligible to run");
+        }
+
+        _checklistService.FinalizeChecklistEntryAndProcessSteps(
+            checklistData.CreateManualChecklistProcessStepData(applicationId, entryTypeId, processStep),
+            entry =>
+            {
+                entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.FAILED;
+                entry.Comment = comment;
+            },
+            null);
+
+        _portalRepositories.GetInstance<IApplicationRepository>().AttachAndModifyCompanyApplication(applicationId, application =>
         {
             application.ApplicationStatusId = CompanyApplicationStatusId.DECLINED;
             application.DateLastChanged = DateTimeOffset.UtcNow;
@@ -414,15 +419,12 @@ public sealed class RegistrationBusinessLogic : IRegistrationBusinessLogic
         {
             company.CompanyStatusId = CompanyStatusId.REJECTED;
         });
+        await _portalRepositories.SaveAsync().ConfigureAwait(false);
+        await PostRegistrationCancelEmailAsync(applicationId, comment).ConfigureAwait(false);
     }
 
-    private async Task PostRegistrationCancelEmailAsync(Guid applicationId, string? comment, bool sendMail)
+    private async Task PostRegistrationCancelEmailAsync(Guid applicationId, string comment)
     {
-        if (!sendMail)
-        {
-            return;
-        }
-
         var userRoleIds = await _portalRepositories.GetInstance<IUserRolesRepository>()
             .GetUserRoleIdsUntrackedAsync(_settings.PartnerUserInitialRoles).ToListAsync().ConfigureAwait(false);
 

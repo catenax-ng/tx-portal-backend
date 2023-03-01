@@ -24,6 +24,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using System.Collections.Immutable;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.Tests;
 
@@ -77,12 +78,13 @@ public class ChecklistServiceTests
             .ReturnsLazily((Guid appId, IEnumerable<ApplicationChecklistEntryTypeId> entryTypes, IEnumerable<ProcessStepTypeId> processStepTypes) => {
                 checklistData = entryTypes.Zip(ProduceEntryStatusIds(entryStatusIds), (typeId, statusId) => (typeId,statusId)).ToImmutableArray();
                 processSteps = processStepTypes.Select(typeId => new ProcessStep(Guid.NewGuid(), typeId, ProcessStepStatusId.TODO, processId, DateTimeOffset.UtcNow)).ToImmutableArray();
-                return (
-                    applicationId == appId,
+                return applicationId == appId ?
+                    new VerifyChecklistData(
                     true,
                     processId,
                     checklistData,
-                    processSteps);
+                    processSteps) :
+                    null;
             });
 
         // Act
@@ -117,7 +119,7 @@ public class ChecklistServiceTests
 
         // (bool IsValidApplicationId, bool IsSubmitted, Guid? ProcessId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)
         A.CallTo(() => _applicationChecklistRepository.GetChecklistProcessStepData(A<Guid>._, A<IEnumerable<ApplicationChecklistEntryTypeId>>._, A<IEnumerable<ProcessStepTypeId>>._))
-            .Returns((true, true, null, null, null));
+            .Returns(new VerifyChecklistData(true, null, null, null));
 
         var Act = () => _service.VerifyChecklistEntryAndProcessSteps(applicationId, entryTypeId, entryStatusIds, processStepTypeId, entryTypeIds, processStepTypeIds);
 
@@ -141,7 +143,7 @@ public class ChecklistServiceTests
 
         // (bool IsValidApplicationId, bool IsSubmitted, Guid? ProcessId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)
         A.CallTo(() => _applicationChecklistRepository.GetChecklistProcessStepData(A<Guid>._, A<IEnumerable<ApplicationChecklistEntryTypeId>>._, A<IEnumerable<ProcessStepTypeId>>._))
-            .Returns((false, false, null, null, null));
+            .Returns((VerifyChecklistData?)null);
 
         var Act = () => _service.VerifyChecklistEntryAndProcessSteps(applicationId, entryTypeId, entryStatusIds, processStepTypeId, entryTypeIds, processStepTypeIds);
 
@@ -166,7 +168,7 @@ public class ChecklistServiceTests
 
         // (bool IsValidApplicationId, bool IsSubmitted, Guid? ProcessId, IEnumerable<(ApplicationChecklistEntryTypeId TypeId, ApplicationChecklistEntryStatusId StatusId)
         A.CallTo(() => _applicationChecklistRepository.GetChecklistProcessStepData(A<Guid>._, A<IEnumerable<ApplicationChecklistEntryTypeId>>._, A<IEnumerable<ProcessStepTypeId>>._))
-            .Returns((true, false, processId, null, null));
+            .Returns(new VerifyChecklistData(false, processId, null, null));
 
         var Act = () => _service.VerifyChecklistEntryAndProcessSteps(applicationId, entryTypeId, entryStatusIds, processStepTypeId, entryTypeIds, processStepTypeIds);
 
@@ -193,7 +195,7 @@ public class ChecklistServiceTests
         var processSteps = new ProcessStep [] { new (Guid.NewGuid(), processStepTypeId, ProcessStepStatusId.TODO, processId, DateTimeOffset.UtcNow) };
 
         A.CallTo(() => _applicationChecklistRepository.GetChecklistProcessStepData(A<Guid>._, A<IEnumerable<ApplicationChecklistEntryTypeId>>._, A<IEnumerable<ProcessStepTypeId>>._))
-            .Returns((true, true, processId, entryData, processSteps));
+            .Returns(new VerifyChecklistData(true, processId, entryData, processSteps));
 
         var Act = () => _service.VerifyChecklistEntryAndProcessSteps(applicationId, entryTypeId, entryStatusIds, processStepTypeId, entryTypeIds, processStepTypeIds);
 
@@ -217,7 +219,7 @@ public class ChecklistServiceTests
         IEnumerable<ProcessStepTypeId>? processStepTypeIds = null;
 
         A.CallTo(() => _applicationChecklistRepository.GetChecklistProcessStepData(A<Guid>._, A<IEnumerable<ApplicationChecklistEntryTypeId>>._, A<IEnumerable<ProcessStepTypeId>>._))
-            .Returns((true, true, processId, null, null));
+            .Returns(new VerifyChecklistData(true, processId, null, null));
 
         var Act = () => _service.VerifyChecklistEntryAndProcessSteps(applicationId, entryTypeId, entryStatusIds, processStepTypeId, entryTypeIds, processStepTypeIds);
 
@@ -244,7 +246,7 @@ public class ChecklistServiceTests
         var processSteps = new ProcessStep [] { new (Guid.NewGuid(), processStepTypeId, ProcessStepStatusId.TODO, processId, DateTimeOffset.UtcNow) };
 
         A.CallTo(() => _applicationChecklistRepository.GetChecklistProcessStepData(A<Guid>._, A<IEnumerable<ApplicationChecklistEntryTypeId>>._, A<IEnumerable<ProcessStepTypeId>>._))
-            .Returns((true, true, processId, entryData, processSteps));
+            .Returns(new VerifyChecklistData(true, processId, entryData, processSteps));
 
         var Act = () => _service.VerifyChecklistEntryAndProcessSteps(applicationId, entryTypeId, entryStatusIds, processStepTypeId, entryTypeIds, processStepTypeIds);
 
@@ -271,7 +273,7 @@ public class ChecklistServiceTests
         var processSteps = new ProcessStep [] { new (Guid.NewGuid(), Enum.GetValues<ProcessStepTypeId>().Except( new [] { processStepTypeId } ).First(), ProcessStepStatusId.TODO, processId, DateTimeOffset.UtcNow) };
 
         A.CallTo(() => _applicationChecklistRepository.GetChecklistProcessStepData(A<Guid>._, A<IEnumerable<ApplicationChecklistEntryTypeId>>._, A<IEnumerable<ProcessStepTypeId>>._))
-            .Returns((true, true, processId, entryData, processSteps));
+            .Returns(new VerifyChecklistData(true, processId, entryData, processSteps));
 
         var Act = () => _service.VerifyChecklistEntryAndProcessSteps(applicationId, entryTypeId, entryStatusIds, processStepTypeId, entryTypeIds, processStepTypeIds);
 
@@ -298,7 +300,7 @@ public class ChecklistServiceTests
         var processSteps = new ProcessStep [] { new (Guid.NewGuid(), processStepTypeId, ProcessStepStatusId.SKIPPED, processId, DateTimeOffset.UtcNow) };
 
         A.CallTo(() => _applicationChecklistRepository.GetChecklistProcessStepData(A<Guid>._, A<IEnumerable<ApplicationChecklistEntryTypeId>>._, A<IEnumerable<ProcessStepTypeId>>._))
-            .Returns((true, true, processId, entryData, processSteps));
+            .Returns(new VerifyChecklistData(true, processId, entryData, processSteps));
 
         var Act = () => _service.VerifyChecklistEntryAndProcessSteps(applicationId, entryTypeId, entryStatusIds, processStepTypeId, entryTypeIds, processStepTypeIds);
 
