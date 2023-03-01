@@ -160,7 +160,8 @@ public class ApplicationChecklistRepositoryTests : IAssemblyFixture<TestDbFixtur
             ).ConfigureAwait(false);
 
         // Assert
-        result.IsSubmitted.Should().BeTrue();
+        result.Should().NotBeNull();
+        result!.IsSubmitted.Should().BeTrue();
         result.Checklist.Should().HaveCount(5).And.Contain(new [] {
             ( ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE ),
             ( ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER, ApplicationChecklistEntryStatusId.DONE ),

@@ -392,10 +392,10 @@ public sealed class RegistrationBusinessLogic : IRegistrationBusinessLogic
         var (checklistData, companyId) = result;
         checklistData.ValidateChecklistData(applicationId, entryTypeId, entryStatusIds, processStepStatusIds);
 
-        var processSteps = checklistData!.ProcessSteps;
-        var processStep = processSteps.Any(x => x.ProcessStepStatusId == ProcessStepStatusId.TODO)
-            ? processSteps.SingleOrDefault(x => x.ProcessStepStatusId == ProcessStepStatusId.TODO)
-            : processSteps.FirstOrDefault(x => x.ProcessStepStatusId == ProcessStepStatusId.DONE);
+        var processSteps = checklistData.ProcessSteps;
+        var processStep = processSteps!.Any(x => x.ProcessStepStatusId == ProcessStepStatusId.TODO)
+            ? processSteps!.SingleOrDefault(x => x.ProcessStepStatusId == ProcessStepStatusId.TODO)
+            : processSteps!.FirstOrDefault(x => x.ProcessStepStatusId == ProcessStepStatusId.DONE);
         if (processStep is null)
         {
             throw new ConflictException($"application {applicationId} checklist entry {entryTypeId}, process step {processStepTypeId} is not eligible to run");
