@@ -120,6 +120,7 @@ public class CustodianBusinessLogicTests
         result.Item1.Should().BeNull();
         result.Item2.Should().BeNull();
         result.Item3.Should().BeFalse();
+        result.Item4.Should().BeNull();
         A.CallTo(() =>  _custodianService.CreateWalletAsync(A<string>._, A<string>._, A<CancellationToken>._)).MustNotHaveHappened();
     }
 
@@ -234,8 +235,10 @@ public class CustodianBusinessLogicTests
         // Assert
         result.Should().NotBe(default);
 
-        var (action, stepTypeIds, modified) = result;
+        var (action, stepTypeIds, modified, stepsToSkip) = result;
 
+        stepsToSkip.Should().BeNull();
+        
         modified.Should().BeTrue();
 
         stepTypeIds.Should().NotBeNull();

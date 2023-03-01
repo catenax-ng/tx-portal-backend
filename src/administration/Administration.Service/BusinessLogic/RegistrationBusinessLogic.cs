@@ -234,7 +234,7 @@ public sealed class RegistrationBusinessLogic : IRegistrationBusinessLogic
                 new [] { ApplicationChecklistEntryStatusId.TO_DO, ApplicationChecklistEntryStatusId.IN_PROGRESS, ApplicationChecklistEntryStatusId.FAILED },
                 ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_MANUAL,
                 entryTypeIds: new [] { ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION },
-                processStepTypeIds: new [] { ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL, ProcessStepTypeId.CREATE_IDENTITY_WALLET })
+                processStepTypeIds: new [] { ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH, ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL, ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PULL, ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PUSH, ProcessStepTypeId.CREATE_IDENTITY_WALLET })
             .ConfigureAwait(false);
 
         _portalRepositories.GetInstance<ICompanyRepository>().AttachAndModifyCompany(applicationCompanyData.CompanyId, null, 
@@ -242,7 +242,7 @@ public sealed class RegistrationBusinessLogic : IRegistrationBusinessLogic
 
         var registrationValidationFailed = context.Checklist[ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION] == ApplicationChecklistEntryStatusId.FAILED;
 
-        _checklistService.SkipProcessSteps(context, new [] { ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL });
+        _checklistService.SkipProcessSteps(context, new [] { ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PUSH, ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL, ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PULL, ProcessStepTypeId.RETRIGGER_BUSINESS_PARTNER_NUMBER_PUSH });
 
         _checklistService.FinalizeChecklistEntryAndProcessSteps(
             context,
@@ -359,11 +359,14 @@ public sealed class RegistrationBusinessLogic : IRegistrationBusinessLogic
 
     private async Task SetRegistrationVerificationInternal(Guid applicationId, bool approve, string? comment)
     {
+        var checklistEntryStatusIds = approve ? 
+            new [] { ApplicationChecklistEntryStatusId.TO_DO } : 
+            new [] { ApplicationChecklistEntryStatusId.TO_DO, ApplicationChecklistEntryStatusId.FAILED, ApplicationChecklistEntryStatusId.DONE };
         var context = await _checklistService
             .VerifyChecklistEntryAndProcessSteps(
                 applicationId,
                 ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION,
-                new [] { ApplicationChecklistEntryStatusId.TO_DO },
+                checklistEntryStatusIds,
                 ProcessStepTypeId.VERIFY_REGISTRATION,
                 new [] { ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER },
                 new [] { ProcessStepTypeId.CREATE_IDENTITY_WALLET })

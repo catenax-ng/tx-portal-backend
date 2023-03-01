@@ -32,7 +32,7 @@ public interface IBpdmBusinessLogic
     /// <param name="context">The context</param>
     /// <param name="cancellationToken">Cancellation Token</param>
     /// <returns>Returns <c>true</c> if the service call was successful, otherwise <c>false</c></returns>
-    Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)> PushLegalEntity(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken);
+    Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool,IEnumerable<ProcessStepTypeId>?)> PushLegalEntity(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken);
 
-    Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)> HandlePullLegalEntity(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken);    
+    Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool,IEnumerable<ProcessStepTypeId>?)> HandlePullLegalEntity(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken);    
 }

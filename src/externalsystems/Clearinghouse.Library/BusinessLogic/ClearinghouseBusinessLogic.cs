@@ -52,7 +52,7 @@ public class ClearinghouseBusinessLogic : IClearinghouseBusinessLogic
         _settings = options.Value;
     }
 
-    public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)> HandleClearinghouse(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
+    public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool,IEnumerable<ProcessStepTypeId>?)> HandleClearinghouse(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
     {
         if (context.ProcessStepTypeId is not ProcessStepTypeId.START_CLEARING_HOUSE and not ProcessStepTypeId.START_OVERRIDE_CLEARING_HOUSE)
         {
@@ -70,7 +70,8 @@ public class ClearinghouseBusinessLogic : IClearinghouseBusinessLogic
         return (
             entry => entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.IN_PROGRESS,
             new [] { ProcessStepTypeId.END_CLEARING_HOUSE },
-            true);
+            true,
+            null);
     }
 
     private async Task TriggerCompanyDataPost(Guid applicationId, string decentralizedIdentifier, bool overwrite, CancellationToken cancellationToken)

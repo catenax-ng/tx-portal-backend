@@ -41,5 +41,5 @@ public interface ICustodianBusinessLogic
     /// <param name="context">Context for the identity wallet creation.</param>
     /// <param name="cancellationToken">CancellationToken</param>
     /// <returns>Returns the checklist data</returns>
-    Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)> CreateIdentityWalletAsync(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken);
+    Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool,IEnumerable<ProcessStepTypeId>?)> CreateIdentityWalletAsync(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken);
 }

@@ -39,7 +39,7 @@ public class BpdmBusinessLogic : IBpdmBusinessLogic
         _bpdmService = bpdmService;
     }
 
-    public async Task<(Action<ApplicationChecklistEntry>?, IEnumerable<ProcessStepTypeId>?, bool)> PushLegalEntity(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
+    public async Task<(Action<ApplicationChecklistEntry>?, IEnumerable<ProcessStepTypeId>?, bool, IEnumerable<ProcessStepTypeId>?)> PushLegalEntity(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
     {
         var result = await _portalRepositories.GetInstance<IApplicationRepository>().GetBpdmDataForApplicationAsync(context.ApplicationId).ConfigureAwait(false);
 
@@ -91,10 +91,11 @@ public class BpdmBusinessLogic : IBpdmBusinessLogic
         return (
             entry => entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.IN_PROGRESS,
             new [] { ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL },
-            true);
+            true,
+            null);
     }
 
-    public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)> HandlePullLegalEntity(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
+    public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool,IEnumerable<ProcessStepTypeId>?)> HandlePullLegalEntity(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
     {
         var result = await _portalRepositories.GetInstance<IApplicationRepository>().GetBpdmDataForApplicationAsync(context.ApplicationId).ConfigureAwait(false);
         
@@ -109,7 +110,7 @@ public class BpdmBusinessLogic : IBpdmBusinessLogic
 
         if (string.IsNullOrEmpty(legalEntity.Bpn))
         {
-            return (null,null,false);
+            return (null,null,false,null);
         }
 
         // TODO: clarify whether it should be an error if businessPartnerNumber has been set locally while bpdm-answer was outstanding
@@ -133,6 +134,7 @@ public class BpdmBusinessLogic : IBpdmBusinessLogic
             registrationValidationFailed
                 ? null
                 : new [] { ProcessStepTypeId.CREATE_IDENTITY_WALLET },
-            true);
+            true,
+            new [] { ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_MANUAL });
     }
 }

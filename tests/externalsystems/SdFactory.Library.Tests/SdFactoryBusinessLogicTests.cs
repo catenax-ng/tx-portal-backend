@@ -137,6 +137,7 @@ public class SdFactoryBusinessLogicTests
         entry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.IN_PROGRESS);
         result.Item2.Should().ContainSingle().And.Match(x => x.Single() == ProcessStepTypeId.FINISH_SELF_DESCRIPTION_LP);
         result.Item3.Should().BeTrue();
+        result.Item4.Should().BeNull();
     }
 
     [Fact]

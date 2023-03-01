@@ -302,6 +302,7 @@ public class BpdmBusinessLogicTests
         result.Item1.Should().BeNull();
         result.Item2.Should().BeNull();
         result.Item3.Should().BeFalse();
+        result.Item4.Should().BeNull();
     }
 
     [Fact]
@@ -332,6 +333,7 @@ public class BpdmBusinessLogicTests
         checklistEntry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.DONE);
         result.Item2.Should().ContainSingle().And.Subject.Single().Should().Be(ProcessStepTypeId.CREATE_IDENTITY_WALLET);
         result.Item3.Should().BeTrue();
+        result.Item4.Should().ContainSingle(x => x == ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_MANUAL);
     }
 
     [Fact]
@@ -362,6 +364,7 @@ public class BpdmBusinessLogicTests
         checklistEntry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.DONE);
         result.Item2.Should().BeNull();
         result.Item3.Should().BeTrue();
+        result.Item4.Should().ContainSingle(x => x == ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_MANUAL);
     }
 
     #endregion

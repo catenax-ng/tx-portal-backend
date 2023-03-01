@@ -61,11 +61,11 @@ public class ApplicationActivationService : IApplicationActivationService
         _settings = options.Value;
     }
 
-    public Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)> HandleApplicationActivation(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
+    public Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool,IEnumerable<ProcessStepTypeId>?)> HandleApplicationActivation(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
     {
         if (!InProcessingTime())
         {
-            return Task.FromResult<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)>((null,null,false));
+            return Task.FromResult<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool,IEnumerable<ProcessStepTypeId>?)>((null,null,false, null));
         }
         var prerequisiteEntries = context.Checklist.Where(entry => entry.Key != ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION);
         if (prerequisiteEntries.Any(entry => entry.Value != ApplicationChecklistEntryStatusId.DONE))
@@ -75,7 +75,7 @@ public class ApplicationActivationService : IApplicationActivationService
         return HandleApplicationActivationInternal(context);
     }
 
-    private async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)> HandleApplicationActivationInternal(IChecklistService.WorkerChecklistProcessStepData context)
+    private async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool,IEnumerable<ProcessStepTypeId>?)> HandleApplicationActivationInternal(IChecklistService.WorkerChecklistProcessStepData context)
     {
         var applicationRepository = _portalRepositories.GetInstance<IApplicationRepository>();
         var result = await applicationRepository.GetCompanyAndApplicationDetailsForApprovalAsync(context.ApplicationId).ConfigureAwait(false);
@@ -124,7 +124,7 @@ public class ApplicationActivationService : IApplicationActivationService
                 throw new UnexpectedConditionException($"inconsistent data, roles not assigned in keycloak: {string.Join(", ", unassignedClientRoles.Select(clientRoles => $"client: {clientRoles.client}, roles: [{string.Join(", ", clientRoles.roles)}]"))}");
             }
         }
-        return (entry => entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE, null, true);
+        return (entry => entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE, null, true, null);
     }
 
     private bool InProcessingTime()

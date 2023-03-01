@@ -209,6 +209,7 @@ public class ClearinghouseBusinessLogicTests
         result.Item2.Should().HaveCount(1);
         result.Item2.Should().Contain(expectedProcessTypeId);
         result.Item3.Should().BeTrue();
+        result.Item4.Should().BeNull();
     }
 
     #endregion

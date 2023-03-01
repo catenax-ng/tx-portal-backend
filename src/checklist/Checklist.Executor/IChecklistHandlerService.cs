@@ -37,7 +37,7 @@ public interface IChecklistHandlerService
     /// <param name="ErrorFunc">the function to be executed in case ProcessFunc threw an application-exception (optional)</param>
     record ProcessStepExecution(
         ApplicationChecklistEntryTypeId EntryTypeId,
-        Func<IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)>> ProcessFunc,
+        Func<IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool,IEnumerable<ProcessStepTypeId>?)>> ProcessFunc,
         Func<Exception,IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)>>? ErrorFunc
     );
 

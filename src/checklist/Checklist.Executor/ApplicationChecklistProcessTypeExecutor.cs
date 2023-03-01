@@ -109,9 +109,10 @@ public class ApplicationChecklistProcessTypeExecutor : IProcessTypeExecutor
         IEnumerable<ProcessStepTypeId>? nextStepTypeIds;
         ProcessStepStatusId stepStatusId;
         bool modified;
+        IEnumerable<ProcessStepTypeId>? stepsToSkip = null;
         try
         {
-            (modifyChecklistEntry, nextStepTypeIds, modified) = await execution.ProcessFunc(stepData, cancellationToken).ConfigureAwait(false);
+            (modifyChecklistEntry, nextStepTypeIds, modified, stepsToSkip) = await execution.ProcessFunc(stepData, cancellationToken).ConfigureAwait(false);
             stepStatusId = ProcessStepStatusId.DONE;
         }
         catch (Exception ex) when (ex is not SystemException)
@@ -133,7 +134,7 @@ public class ApplicationChecklistProcessTypeExecutor : IProcessTypeExecutor
             execution.EntryTypeId,
             modifyChecklistEntry);
 
-        return new IProcessTypeExecutor.StepExecutionResult(modified, stepStatusId, nextStepTypeIds, null);
+        return new IProcessTypeExecutor.StepExecutionResult(modified, stepStatusId, nextStepTypeIds, stepsToSkip);
     }
 
     private bool ProcessChecklistEntry(

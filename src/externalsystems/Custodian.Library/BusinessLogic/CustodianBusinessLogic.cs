@@ -55,11 +55,11 @@ public class CustodianBusinessLogic : ICustodianBusinessLogic
         return walletData;
     }
 
-    public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)> CreateIdentityWalletAsync(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
+    public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool,IEnumerable<ProcessStepTypeId>?)> CreateIdentityWalletAsync(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
     {
         if (context.Checklist[ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER] == ApplicationChecklistEntryStatusId.FAILED || context.Checklist[ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION] == ApplicationChecklistEntryStatusId.FAILED)
         {
-            return (null,null,true);
+            return (null,null,true, null);
         }
         if (context.Checklist[ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER] == ApplicationChecklistEntryStatusId.DONE && context.Checklist[ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION] == ApplicationChecklistEntryStatusId.DONE)
         {
@@ -71,9 +71,10 @@ public class CustodianBusinessLogic : ICustodianBusinessLogic
                         checklist.Comment = message;
                     },
                     new [] { ProcessStepTypeId.START_CLEARING_HOUSE },
-                    true);
+                    true,
+                    null);
         }
-        return (null,null,false);
+        return (null,null,false, null);
     }
 
     private async Task<string> CreateWalletInternal(Guid applicationId, CancellationToken cancellationToken)

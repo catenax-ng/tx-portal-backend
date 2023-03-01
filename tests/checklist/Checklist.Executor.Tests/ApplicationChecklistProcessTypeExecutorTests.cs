@@ -38,8 +38,8 @@ public class ApplicationChecklistProcessTypeExecutorTests
     private readonly IChecklistCreationService _checklistCreationService;
     private readonly IChecklistHandlerService.ProcessStepExecution _firstExecution;
     private readonly IChecklistHandlerService.ProcessStepExecution _secondExecution;
-    private readonly Func<IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)>> _firstProcessFunc;
-    private readonly Func<IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)>> _secondProcessFunc;
+    private readonly Func<IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool,IEnumerable<ProcessStepTypeId>?)>> _firstProcessFunc;
+    private readonly Func<IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool,IEnumerable<ProcessStepTypeId>?)>> _secondProcessFunc;
     private readonly Func<Exception,IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)>> _errorFunc;
     private readonly IMockLogger<ApplicationChecklistProcessTypeExecutor> _mockLogger;
     private readonly ILogger<ApplicationChecklistProcessTypeExecutor> _logger;
@@ -60,11 +60,11 @@ public class ApplicationChecklistProcessTypeExecutorTests
         _checklistHandlerService = A.Fake<IChecklistHandlerService>();
         _checklistCreationService = A.Fake<IChecklistCreationService>();
 
-        _firstProcessFunc = A.Fake<Func<IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)>>>();
+        _firstProcessFunc = A.Fake<Func<IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool,IEnumerable<ProcessStepTypeId>?)>>>();
         _errorFunc = A.Fake<Func<Exception,IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)>>>();
         _firstExecution = new IChecklistHandlerService.ProcessStepExecution(ApplicationChecklistEntryTypeId.BUSINESS_PARTNER_NUMBER,_firstProcessFunc,_errorFunc);
 
-        _secondProcessFunc = A.Fake<Func<IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool)>>>();
+        _secondProcessFunc = A.Fake<Func<IChecklistService.WorkerChecklistProcessStepData,CancellationToken,Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool,IEnumerable<ProcessStepTypeId>?)>>>();
         _secondExecution = new IChecklistHandlerService.ProcessStepExecution(ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION,_secondProcessFunc,null);
 
         _mockLogger = A.Fake<IMockLogger<ApplicationChecklistProcessTypeExecutor>>();
@@ -313,7 +313,8 @@ public class ApplicationChecklistProcessTypeExecutorTests
             .Returns((
                 (ApplicationChecklistEntry entry) => { entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.IN_PROGRESS; },
                 followupStepTypeIds,
-                true));
+                true,
+                null));
 
         ApplicationChecklistEntry? checklistEntry = null;
 

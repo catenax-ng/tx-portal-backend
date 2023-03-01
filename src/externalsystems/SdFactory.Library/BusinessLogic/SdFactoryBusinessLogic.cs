@@ -53,7 +53,7 @@ public class SdFactoryBusinessLogic : ISdFactoryBusinessLogic
         _sdFactoryService.RegisterConnectorAsync(connectorId, selfDescriptionDocumentUrl, businessPartnerNumber, cancellationToken);
 
     /// <inheritdoc />
-    public async Task<(Action<ApplicationChecklistEntry>?, IEnumerable<ProcessStepTypeId>?, bool)> StartSelfDescriptionRegistration(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
+    public async Task<(Action<ApplicationChecklistEntry>?, IEnumerable<ProcessStepTypeId>?, bool, IEnumerable<ProcessStepTypeId>?)> StartSelfDescriptionRegistration(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
     {
         await RegisterSelfDescriptionInternalAsync(context.ApplicationId, cancellationToken)
             .ConfigureAwait(false);
@@ -61,7 +61,8 @@ public class SdFactoryBusinessLogic : ISdFactoryBusinessLogic
         return (
             entry => entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.IN_PROGRESS,
             new [] { ProcessStepTypeId.FINISH_SELF_DESCRIPTION_LP },
-            true
+            true,
+            null
         );
     }
 
