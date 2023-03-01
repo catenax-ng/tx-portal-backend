@@ -116,19 +116,18 @@ public class OfferSetupService : IOfferSetupService
         });
 
         var userRolesRepository = _portalRepositories.GetInstance<IUserRolesRepository>();
-        var technicalUserClientId = $"{offerDetails.OfferName}-{offerDetails.CompanyName}";
         ClientInfoData? clientInfoData = null;
         if (offerTypeId == OfferTypeId.APP)
         {
             var (clientId, iamClientId) = await CreateClient(data, userRolesRepository, offerDetails);
             clientInfoData = new ClientInfoData(clientId);
-            technicalUserClientId = clientId;
             CreateAppInstance(data, offerDetails, iamClientId);
         }
 
         TechnicalUserInfoData? technicalUserInfoData = null;
         if (offerDetails.IsTechnicalUserNeeded)
         {
+            var technicalUserClientId = clientInfoData?.ClientId ?? $"{offerDetails.OfferName}-{offerDetails.CompanyName}";
             var (technicalClientId, serviceAccountData, serviceAccountId) = await CreateTechnicalUser(data, serviceAccountRoles, userRolesRepository, offerDetails, technicalUserClientId, offerTypeId == OfferTypeId.APP)
                 .ConfigureAwait(false);
             technicalUserInfoData = new TechnicalUserInfoData(serviceAccountId, serviceAccountData.AuthData.Secret, technicalClientId);
@@ -160,14 +159,12 @@ public class OfferSetupService : IOfferSetupService
 
         if (offerDetails.Status is not OfferSubscriptionStatusId.PENDING)
         {
-            throw new ControllerArgumentException("Status of the offer subscription must be pending",
-                nameof(offerDetails.Status));
+            throw new ConflictException("Status of the offer subscription must be pending");
         }
 
         if (offerDetails.CompanyUserId == Guid.Empty && offerDetails.TechnicalUserId == Guid.Empty)
         {
-            throw new ControllerArgumentException("Only the providing company can setup the service",
-                nameof(offerDetails.CompanyUserId));
+            throw new ForbiddenException("Only the providing company can setup the service");
         }
 
         return offerDetails;

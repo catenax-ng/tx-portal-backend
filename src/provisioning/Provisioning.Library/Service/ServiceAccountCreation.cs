@@ -60,7 +60,7 @@ public class ServiceAccountCreation : IServiceAccountCreation
 
         var userRoleData = await _portalRepositories.GetInstance<IUserRolesRepository>()
             .GetUserRoleDataUntrackedAsync(userRoleIds).ToListAsync().ConfigureAwait(false);
-         if (userRoleData.Count != userRoleIds.Count())
+        if (userRoleData.Count != userRoleIds.Count())
         {
             var missingRoleIds = userRoleIds
                 .Where(userRoleId => userRoleData.All(userRole => userRole.UserRoleId != userRoleId))
