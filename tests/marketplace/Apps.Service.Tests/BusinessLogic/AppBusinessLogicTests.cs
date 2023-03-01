@@ -771,6 +771,25 @@ public class AppBusinessLogicTests
             .MustNotHaveHappened();
 
     }
+
+    [Fact]
+    public async Task GetCompanySubscribedAppSubscriptionStatusesForUserAsync_ReturnsExpectedCount()
+    {
+        // Arrange
+        var iamUserId = _fixture.Create<string>();
+        var data = _fixture.CreateMany<AppWithSubscriptionStatus>(5);
+        A.CallTo(() => _offerSubscriptionRepository.GetOwnCompanySubscribedAppSubscriptionStatusesUntrackedAsync(iamUserId))
+            .Returns(data.ToAsyncEnumerable());
+
+        
+        var sut = new AppsBusinessLogic(_portalRepositories, A.Fake<IOfferSubscriptionService>(), A.Fake<IOfferService>(), _fixture.Create<IOptions<AppsSettings>>(), A.Fake<MailingService>());
+
+        // Act
+        var result = await sut.GetCompanySubscribedAppSubscriptionStatusesForUserAsync(iamUserId).ToListAsync().ConfigureAwait(false);
+
+        // Assert
+        result.Should().HaveCount(5);
+    }
     
     #endregion
 
