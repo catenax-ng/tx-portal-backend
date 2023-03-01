@@ -24,8 +24,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
-        <RootNamespace>Org.Eclipse.TractusX.Portal.Backend.Checklist.Worker.Tests</RootNamespace>
-        <AssemblyName>Org.Eclipse.TractusX.Portal.Backend.Checklist.Worker.Tests</AssemblyName>
+        <RootNamespace>Org.Eclipse.TractusX.Portal.Backend.Checklist.Executor.Tests</RootNamespace>
+        <AssemblyName>Org.Eclipse.TractusX.Portal.Backend.Checklist.Executor.Tests</AssemblyName>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="AutoFixture.AutoFakeItEasy" Version="4.17.0" />
