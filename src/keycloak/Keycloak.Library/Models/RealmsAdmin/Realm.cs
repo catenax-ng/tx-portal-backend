@@ -127,6 +127,8 @@ public class Realm
     public IEnumerable<string> OtpSupportedApplications { get; set; }
     [JsonProperty("browserSecurityHeaders")]
     public BrowserSecurityHeaders BrowserSecurityHeaders { get; set; }
+    [JsonProperty("loginTheme")]
+    public string loginTheme { get; set; }
     [JsonProperty("smtpServer")]
     public SmtpServer SmtpServer { get; set; }
     [JsonProperty("eventsEnabled")]
