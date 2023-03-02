@@ -369,47 +369,47 @@ public interface IOfferRepository
     /// <param name="userId"></param>
     /// <param name="offerStatusId"></param>
     /// <returns></returns>
-    Task<AppDeleteData?> GetAppUntrackedAsync(Guid offerId, string userId, OfferStatusId offerStatusId);
+    Task<(bool IsValidApp,bool IsOfferType,bool IsOfferStatus,bool IsProviderCompanyUser,AppDeleteData? DeleteData)> GetAppDeleteDataAsync(Guid offerId, OfferTypeId offerTypeId, string userId, OfferStatusId offerStatusId);
     
     /// <summary>
     /// Delete Offer Assigned Licenses
     /// </summary>
     /// <param name="offerLicenseIds"></param>
-    void RemoveOfferAssignedLicenses(IEnumerable<(Guid offerId, Guid licenseId)> offerLicenseIds);
+    void RemoveOfferAssignedLicenses(IEnumerable<(Guid OfferId, Guid LicenseId)> offerLicenseIds);
 
     /// <summary>
     /// Delete Offer Assigned Use Cases
     /// </summary>
-    /// <param name="UseCaseIds"></param>
-    void RemoveOfferAssignedUseCases(IEnumerable<(Guid offerId, Guid useCaseId)> UseCaseIds);
+    /// <param name="offerUseCaseIds"></param>
+    void RemoveOfferAssignedUseCases(IEnumerable<(Guid OfferId, Guid UseCaseId)> offerUseCaseIds);
 
     /// <summary>
     /// Delete Offer Assigned Privacy Policies
     /// </summary>
-    /// <param name="PrivacyPolicyIds"></param>
-    void RemoveOfferAssignedPrivacyPolicies(IEnumerable<(Guid offerId, PrivacyPolicyId PolicyId)> PrivacyPolicyIds);
+    /// <param name="offerPrivacyPolicyIds"></param>
+    void RemoveOfferAssignedPrivacyPolicies(IEnumerable<(Guid OfferId, PrivacyPolicyId PrivacyPolicyId)> offerPrivacyPolicyIds);
 
     /// <summary>
     /// Delete Offer Assigned Documents
     /// </summary>
-    /// <param name="documentIds"></param>
-    void RemoveOfferAssignedDocuments(IEnumerable<(Guid offerId, Guid documentId)> documentIds);
+    /// <param name="offerDocumentIds"></param>
+    void RemoveOfferAssignedDocuments(IEnumerable<(Guid OfferId, Guid DocumentId)> offerDocumentIds);
 
     /// <summary>
     /// Delete Offer Tags
     /// </summary>
-    /// <param name="offerTags"></param>
-    void RemoveOfferTags(IEnumerable<(Guid offerId, string name)> offerTags);
+    /// <param name="offerTagNames"></param>
+    void RemoveOfferTags(IEnumerable<(Guid OfferId, string TagName)> offerTagNames);
 
     /// <summary>
     /// Delete Offer Description
     /// </summary>
-    /// <param name="offerDescriptions"></param>
-     void RemoveOfferDescriptions(IEnumerable<(Guid offerId, string languageShortName, string descriptionLong, string descriptionShort)> offerDescriptions);
+    /// <param name="offerLanguageShortNames"></param>
+     void RemoveOfferDescriptions(IEnumerable<(Guid OfferId, string LanguageShortName)> offerLanguageShortNames);
 
      /// <summary>
      /// Delete Offer
      /// </summary>
-     /// <param name="OfferId"></param>
-     void RemoveOffer(Guid OfferId);
+     /// <param name="offerIds"></param>
+     void RemoveOffer(Guid offerId);
 }

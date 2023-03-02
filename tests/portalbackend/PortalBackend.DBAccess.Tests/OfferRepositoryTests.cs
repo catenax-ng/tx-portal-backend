@@ -921,9 +921,9 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         // Arrange
         var (sut, dbContext) = await CreateSutWithContext().ConfigureAwait(false);
 
-        IEnumerable<(Guid, string, string, string)> offerDescriptionData = new[] { (new Guid("5cf74ef8-e0b7-4984-a872-474828beb5d2"), "de","This is only a test text","This is only a test text") };
+        IEnumerable<(Guid,string)> offerDescriptionLanguages = new[] { (new Guid("5cf74ef8-e0b7-4984-a872-474828beb5d2"), "de") };
         // Act
-        sut.RemoveOfferDescriptions(offerDescriptionData);
+        sut.RemoveOfferDescriptions(offerDescriptionLanguages);
 
         // Assert
         var changeTracker = dbContext.ChangeTracker;
@@ -954,24 +954,40 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         changedEntity.State.Should().Be(EntityState.Deleted);
     }
     
-    [Fact]
-    public async Task GetAppUntrackedAsync_ReturnsExpectedResult()
+    [Theory]
+    [InlineData("a16e73b9-5277-4b69-9f8d-3b227495dfeb", OfferTypeId.APP, "502dabcf-01c7-47d9-a88e-0be4279097b5", OfferStatusId.ACTIVE, true, true, true, true, true)]
+    [InlineData("deadbeef-dead-beef-dead-beefdeadbeef", OfferTypeId.APP, "502dabcf-01c7-47d9-a88e-0be4279097b5", OfferStatusId.ACTIVE, false, false, false, false, false)]
+    [InlineData("a16e73b9-5277-4b69-9f8d-3b227495dfeb", OfferTypeId.SERVICE, "502dabcf-01c7-47d9-a88e-0be4279097b5", OfferStatusId.ACTIVE, true, false, true, true, false)]
+    [InlineData("a16e73b9-5277-4b69-9f8d-3b227495dfeb", OfferTypeId.APP, "no-valid-user", OfferStatusId.ACTIVE, true, true, true, false, false)]
+    [InlineData("a16e73b9-5277-4b69-9f8d-3b227495dfeb", OfferTypeId.APP, "502dabcf-01c7-47d9-a88e-0be4279097b5", OfferStatusId.CREATED, true, true, false, true, false)]
+    public async Task GetAppUntrackedAsync_ReturnsExpectedResult(Guid offerId, OfferTypeId offerTypeId, string iamUserId, OfferStatusId offerStatusId, bool isValidApp, bool isOfferType, bool isOfferStatus, bool isCompanyUser, bool hasData)
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
 
-        // Act
-        var offerDetail = await sut.GetAppUntrackedAsync(new Guid("a16e73b9-5277-4b69-9f8d-3b227495dfeb"), "3d8142f1-860b-48aa-8c2b-1ccb18699f65", OfferStatusId.CREATED).ConfigureAwait(false);
+        // Act 
+        var result = await sut.GetAppDeleteDataAsync(offerId, offerTypeId, iamUserId, offerStatusId).ConfigureAwait(false);
 
         // Assert
-        offerDetail.Should().NotBeNull();
-        offerDetail!.DocumentIds.Should().NotBeNull();
-        offerDetail!.OfferLicenseIds.Should().NotBeNull();
-        offerDetail!.UseCaseIds.Should().NotBeNull();
-        offerDetail!.PolicyIds.Should().NotBeNull();
-        offerDetail!.LanguageCodes.Should().NotBeNull();
-        offerDetail!.OfferTags.Should().NotBeNull();
-        offerDetail!.AppDescriptions.Should().NotBeNull();
+        result.IsValidApp.Should().Be(isValidApp);
+        result.IsOfferType.Should().Be(isOfferType);
+        result.IsOfferStatus.Should().Be(isOfferStatus);
+        result.IsProviderCompanyUser.Should().Be(isCompanyUser);
+        if (hasData)
+        {
+            result.DeleteData.Should().NotBeNull();
+            result.DeleteData!.DocumentIdStatus.Should().NotBeEmpty();
+            result.DeleteData.OfferLicenseIds.Should().NotBeEmpty();
+            result.DeleteData.UseCaseIds.Should().NotBeEmpty();
+            result.DeleteData.PolicyIds.Should().BeEmpty();
+            result.DeleteData.LanguageCodes.Should().NotBeEmpty();
+            result.DeleteData.TagNames.Should().NotBeEmpty();
+            result.DeleteData.DescriptionLanguageShortNames.Should().NotBeEmpty();
+        }
+        else
+        {
+            result.DeleteData.Should().BeNull();
+        }
     }
 
     #region Setup

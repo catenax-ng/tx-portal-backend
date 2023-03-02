@@ -22,4 +22,12 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 
-public record AppDeleteData(bool OfferStatus, bool IsProviderCompanyUser, IEnumerable<Guid> OfferLicenseIds, IEnumerable<Guid> UseCaseIds, IEnumerable<PrivacyPolicyId> PolicyIds, IEnumerable<Guid> DocumentIds, IEnumerable<string> LanguageCodes, IEnumerable<string> OfferTags, IEnumerable<OfferDescriptionData> AppDescriptions);
+public record AppDeleteData(
+    IEnumerable<Guid> OfferLicenseIds,
+    IEnumerable<Guid> UseCaseIds,
+    IEnumerable<PrivacyPolicyId> PolicyIds,
+    IEnumerable<(Guid DocumentId,DocumentStatusId DocumentStatusId)> DocumentIdStatus,
+    IEnumerable<string> LanguageCodes,
+    IEnumerable<string> TagNames,
+    IEnumerable<string> DescriptionLanguageShortNames
+);
