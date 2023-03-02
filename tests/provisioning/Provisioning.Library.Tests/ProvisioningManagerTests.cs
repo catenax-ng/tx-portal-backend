@@ -137,4 +137,49 @@ public class ProvisioningManagerTests
             .WithVerb(HttpMethod.Post)
             .Times(2);
     }
+
+    [Fact]
+    public async Task UpdateSharedIdentityProviderAsync_CallsExpected()
+    {
+        // Arrange
+        const string id = "123";
+        using var httpTest = new HttpTest();
+        httpTest.WithAuthorization(CentralRealm)
+            .WithGetIdentityProviderAsync(ValidClientName, new IdentityProvider { DisplayName = "test", Config = new Config() })
+            .WithGetClientsAsync("master", new []{new Client{ Id = id ,ClientId = "savalid" }})
+            .WithGetClientSecretAsync(id, new Credentials { Value = "super-secret" })
+            .WithGetRealmAsync(ValidClientName, new Realm { DisplayName = "test", LoginTheme = "test" });
+        
+        // Act
+        await _sut.UpdateSharedIdentityProviderAsync(ValidClientName, "displayName").ConfigureAwait(false);
+        
+        // Arrange
+        httpTest.ShouldHaveCalled($"{SharedUrl}/auth/admin/realms/{ValidClientName}")
+            .WithVerb(HttpMethod.Put)
+            .Times(1);
+        httpTest.ShouldHaveCalled($"{CentralUrl}/auth/admin/realms/test/identity-provider/instances/{ValidClientName}")
+            .WithVerb(HttpMethod.Put)
+            .Times(1);
+    }
+    
+    [Fact]
+    public async Task UpdateSharedRealmTheme_CallsExpected()
+    {
+        // Arrange
+        const string id = "123";
+        using var httpTest = new HttpTest();
+        httpTest.WithAuthorization(CentralRealm)
+            .WithGetIdentityProviderAsync(ValidClientName, new IdentityProvider { DisplayName = "test", Config = new Config() })
+            .WithGetClientsAsync("master", new []{new Client{ Id = id ,ClientId = "savalid" }})
+            .WithGetClientSecretAsync(id, new Credentials { Value = "super-secret" })
+            .WithGetRealmAsync(ValidClientName, new Realm { DisplayName = "test", LoginTheme = "test" });
+        
+        // Act
+        await _sut.UpdateSharedRealmTheme(ValidClientName, "new-theme").ConfigureAwait(false);
+        
+        // Arrange
+        httpTest.ShouldHaveCalled($"{SharedUrl}/auth/admin/realms/{ValidClientName}")
+            .WithVerb(HttpMethod.Put)
+            .Times(1);
+    }
 }

@@ -1,8 +1,10 @@
 ﻿using Flurl.Http.Testing;
-using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Library.Models.IdentityProviders;
+using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Library.Models.Clients;
 using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Library.Models.OpenIDConfiguration;
+using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Library.Models.RealmsAdmin;
 using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Library.Models.Roles;
 using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Library.Models.Users;
+using IdentityProvider = Org.Eclipse.TractusX.Portal.Backend.Keycloak.Library.Models.IdentityProviders.IdentityProvider;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Tests.FlurlSetup;
 
@@ -61,6 +63,22 @@ public static class FlurlSetupExtensions
         testClient.ForCallsTo($"*/admin/realms/*/identity-provider/instances/{alias}")
             .WithVerb(HttpMethod.Get)
             .RespondWithJson(idp);
+        return testClient;
+    }
+    
+    public static HttpTest WithGetClientsAsync(this HttpTest testClient, string alias, IEnumerable<Client> clients)
+    {
+        testClient.ForCallsTo($"*/admin/realms/{alias}/clients")
+            .WithVerb(HttpMethod.Get)
+            .RespondWithJson(clients);
+        return testClient;
+    }
+
+    public static HttpTest WithGetRealmAsync(this HttpTest testClient, string alias, Realm realm)
+    {
+        testClient.ForCallsTo($"*/admin/realms/{alias}")
+            .WithVerb(HttpMethod.Get)
+            .RespondWithJson(realm);
         return testClient;
     }
 }
