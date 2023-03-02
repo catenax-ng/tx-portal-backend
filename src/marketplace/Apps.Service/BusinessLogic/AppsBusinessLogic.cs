@@ -400,6 +400,8 @@ public class AppsBusinessLogic : IAppsBusinessLogic
                     A => { A.DocumentStatusId = DocumentStatusId.INACTIVE; }
                 );
             }
+            await _portalRepositories.SaveAsync().ConfigureAwait(false);
+            _portalRepositories.Clear();
         }
         var documentName = document.FileName;
         using var sha512Hash = SHA512.Create();
@@ -418,6 +420,11 @@ public class AppsBusinessLogic : IAppsBusinessLogic
             x.DocumentStatusId = DocumentStatusId.LOCKED;
         });
         _portalRepositories.GetInstance<IOfferRepository>().CreateOfferAssignedDocument(appId, doc.Id);
+        foreach(var docId in result.documentStatusDatas)
+        {
+            offerRepository.RemoveOfferAssignedDocument(appId, docId.DocumentId);
+            documentRepository.RemoveDocument(docId.DocumentId);
+        }
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
 }
