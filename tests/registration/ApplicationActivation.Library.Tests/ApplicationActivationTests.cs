@@ -229,7 +229,7 @@ public class ApplicationActivationTests
             new List<ProcessStepTypeId>());
 
         //Act
-        await _sut.HandleApplicationActivation(context, CancellationToken.None).ConfigureAwait(false);
+        var result = await _sut.HandleApplicationActivation(context, CancellationToken.None).ConfigureAwait(false);
 
         //Assert
         A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsForApprovalAsync(Id)).MustHaveHappenedOnceExactly();
@@ -249,6 +249,12 @@ public class ApplicationActivationTests
         _notifications.Should().HaveCount(5);
         companyApplication.ApplicationStatusId.Should().Be(CompanyApplicationStatusId.CONFIRMED);
         company.CompanyStatusId.Should().Be(CompanyStatusId.ACTIVE);
+        var entry = new ApplicationChecklistEntry(Guid.NewGuid(), ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, ApplicationChecklistEntryStatusId.TO_DO, default);
+        result.Item1!.Invoke(entry);
+        entry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.DONE);
+        result.Item2.Should().BeNull();
+        result.Item3.Should().BeTrue();
+        result.Item4.Should().HaveCount(Enum.GetValues<ProcessStepTypeId>().Length - 1);
     }
 
     [Fact]
@@ -298,7 +304,7 @@ public class ApplicationActivationTests
             new List<ProcessStepTypeId>());
 
         //Act
-        await _sut.HandleApplicationActivation(context, CancellationToken.None).ConfigureAwait(false);
+        var result = await _sut.HandleApplicationActivation(context, CancellationToken.None).ConfigureAwait(false);
 
         //Assert
         A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsForApprovalAsync(Id)).MustHaveHappenedOnceExactly();
@@ -319,6 +325,12 @@ public class ApplicationActivationTests
         _notifications.Should().HaveCount(5);
         companyApplication.ApplicationStatusId.Should().Be(CompanyApplicationStatusId.CONFIRMED);
         company.CompanyStatusId.Should().Be(CompanyStatusId.ACTIVE);
+        var entry = new ApplicationChecklistEntry(Guid.NewGuid(), ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, ApplicationChecklistEntryStatusId.TO_DO, default);
+        result.Item1!.Invoke(entry);
+        entry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.DONE);
+        result.Item2.Should().BeNull();
+        result.Item3.Should().BeTrue();
+        result.Item4.Should().HaveCount(Enum.GetValues<ProcessStepTypeId>().Length - 1);
     }
 
     [Fact]

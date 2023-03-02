@@ -124,7 +124,7 @@ public class ApplicationActivationService : IApplicationActivationService
                 throw new UnexpectedConditionException($"inconsistent data, roles not assigned in keycloak: {string.Join(", ", unassignedClientRoles.Select(clientRoles => $"client: {clientRoles.client}, roles: [{string.Join(", ", clientRoles.roles)}]"))}");
             }
         }
-        return (entry => entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE, null, true, null);
+        return (entry => entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE, null, true, Enum.GetValues<ProcessStepTypeId>().Except(new [] { ProcessStepTypeId.ACTIVATE_APPLICATION }));
     }
 
     private bool InProcessingTime()
