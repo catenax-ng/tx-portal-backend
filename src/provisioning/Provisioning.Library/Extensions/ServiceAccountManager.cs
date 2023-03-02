@@ -27,12 +27,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
 
 public partial class ProvisioningManager
 {
-    public async Task<(string clientId, string id)> GetNextServiceAccountClientIdWithIdAsync()
-    {
-        var id = await _ProvisioningDBAccess!.GetNextClientSequenceAsync().ConfigureAwait(false);
-        return ($"{_Settings.ServiceAccountClientPrefix}{id}", id.ToString());
-    }
-
     public async Task<ServiceAccountData> SetupCentralServiceAccountClientAsync(string clientId, ClientConfigRolesData config)
     {
         var internalClientId = await CreateServiceAccountClient(_CentralIdp, _Settings.CentralRealm, clientId, config.Name, config.IamClientAuthMethod);

@@ -25,7 +25,7 @@ using System.Web;
 
 public static class UrlHelper
 {
-    private static readonly string[] ValidUriSchemes = new [] { "http", "https" };
+    private static readonly string[] ValidUriSchemes = { "http", "https" };
 
     public static void EnsureValidHttpUrl(this string url, Func<string>? getUrlParameterName)
     {
@@ -55,11 +55,11 @@ public static class UrlHelper
 
     public static string AppendToPathEncoded(this string path, string parameter)
     {
-        return string.Format("{0}/{1}", path.Trim('/'), HttpUtility.UrlEncode(parameter));
+        return $"{path.Trim('/')}/{HttpUtility.UrlEncode(parameter)}";
     }
 
     public static string AppendToPath(this string path, string parameter)
     {
-        return string.Format("{0}/{1}", path.Trim('/'), parameter);
+        return $"{path.Trim('/')}/{parameter}";
     }
 }

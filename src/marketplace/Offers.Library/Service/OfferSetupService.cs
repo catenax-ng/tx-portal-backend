@@ -18,7 +18,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Microsoft.AspNetCore.Mvc.Routing;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.HttpClientExtensions;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.IO;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Mailing.SendMail;
 using Org.Eclipse.TractusX.Portal.Backend.Notifications.Library;
@@ -74,34 +77,9 @@ public class OfferSetupService : IOfferSetupService
     {
         var httpClient = _httpClientFactory.CreateClient(nameof(OfferSetupService));
         httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-
-        try
-        {
-            var response = await httpClient.PostAsJsonAsync(autoSetupUrl, autoSetupData).ConfigureAwait(false);
-            if (!response.IsSuccessStatusCode)
-            {
-                var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                throw new ServiceException(
-                    response.ReasonPhrase ?? $"Request failed with StatusCode: {response.StatusCode} and Message: {responseContent}",
-                    response.StatusCode);
-            }
-        }
-        catch (InvalidOperationException e)
-        {
-            throw new ServiceException("The requestUri must be an absolute URI or BaseAddress must be set.", e);
-        }
-        catch (HttpRequestException e)
-        {
-            throw new ServiceException("The request failed due to an underlying issue such as network connectivity, DNS failure, server certificate validation or timeout.", e);
-        }
-        catch (TaskCanceledException e)
-        {
-            throw new ServiceException("The request failed due to timeout.", e);
-        }
-        catch (Exception e)
-        {
-            throw new ServiceException("Request failed", e);
-        }
+        await httpClient.PostAsJsonAsync(autoSetupUrl, autoSetupData)
+            .CatchingIntoServiceExceptionFor("autosetup-offer-subscription")
+            .ConfigureAwait(false);
     }
     
     public async Task<OfferAutoSetupResponseData> AutoSetupOfferAsync(OfferAutoSetupData data, IDictionary<string,IEnumerable<string>> serviceAccountRoles, IDictionary<string,IEnumerable<string>> itAdminRoles, string iamUserId, OfferTypeId offerTypeId, string basePortalAddress)
@@ -173,7 +151,8 @@ public class OfferSetupService : IOfferSetupService
     private async Task<(string clientId, Guid iamClientId)> CreateClient(OfferAutoSetupData data, IUserRolesRepository userRolesRepository, OfferSubscriptionTransferData offerDetails)
     {
         var userRoles = await userRolesRepository.GetUserRolesForOfferIdAsync(offerDetails.OfferId).ConfigureAwait(false);
-        var redirectUrl = data.OfferUrl.EndsWith("/") ? $"{data.OfferUrl}*" : $"{data.OfferUrl}/*";
+        data.OfferUrl.EnsureValidHttpUrl(() => nameof(data.OfferUrl));
+        var redirectUrl = data.OfferUrl.AppendToPathEncoded("*");
 
         var clientId = await _provisioningManager.SetupClientAsync(redirectUrl, data.OfferUrl, userRoles)
             .ConfigureAwait(false);

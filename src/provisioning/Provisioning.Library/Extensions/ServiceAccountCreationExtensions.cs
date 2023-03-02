@@ -1,4 +1,4 @@
-/********************************************************************************
+﻿/********************************************************************************
  * Copyright (c) 2021, 2023 BMW Group AG
  * Copyright (c) 2021, 2023 Contributors to the Eclipse Foundation
  *
@@ -18,29 +18,24 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Models;
+using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Service;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
+namespace Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
 
-public class ServiceDetail
+public static class ServiceAccountCreationExtensions
 {
-    private ServiceDetail() {}
-
-    public ServiceDetail(Guid serviceId, ServiceTypeId serviceTypeId, bool technicalUserNeeded)
+    public static IServiceCollection AddServiceAccountCreation(this IServiceCollection services, IConfigurationSection section)
     {
-        ServiceId = serviceId;
-        ServiceTypeId = serviceTypeId;
-        TechnicalUserNeeded = technicalUserNeeded;
+        services.AddOptions<ServiceAccountCreationSettings>()
+            .Bind(section)
+            .ValidateOnStart();
+
+        services
+            .AddTransient<IServiceAccountCreation, ServiceAccountCreation>();
+
+        return services;
     }
-
-    public Guid ServiceId { get; private set; }
-
-    public ServiceTypeId ServiceTypeId { get; private set; }
-
-    public bool TechnicalUserNeeded { get; set; }
-
-    // Navigation properties
-    public virtual Offer? Service { get; private set; }
-
-    public virtual ServiceType? ServiceType { get; private set; }
 }

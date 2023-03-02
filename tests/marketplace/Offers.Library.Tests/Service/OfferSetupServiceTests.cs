@@ -112,7 +112,7 @@ public class OfferSetupServiceTests
 
         // Assert
         var ex = await Assert.ThrowsAsync<ServiceException>(Action);
-        ex.Message.Should().Be("Request failed");
+        ex.Message.Should().Be("call to external system autosetup-offer-subscription failed with statuscode 400");
     }
 
     [Fact]
@@ -128,7 +128,7 @@ public class OfferSetupServiceTests
 
         // Assert
         var ex = await Assert.ThrowsAsync<ServiceException>(Action);
-        ex.Message.Should().Be("The request failed due to an underlying issue such as network connectivity, DNS failure, server certificate validation or timeout.");
+        ex.Message.Should().Be("call to external system autosetup-offer-subscription failed");
     }
 
     [Fact]
@@ -144,7 +144,7 @@ public class OfferSetupServiceTests
 
         // Assert
         var ex = await Assert.ThrowsAsync<ServiceException>(Action);
-        ex.Message.Should().Be("The request failed due to timeout.");
+        ex.Message.Should().Be("call to external system autosetup-offer-subscription failed due to timeout");
     }
 
     #endregion

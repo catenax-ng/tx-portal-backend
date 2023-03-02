@@ -1,4 +1,4 @@
-/********************************************************************************
+﻿/********************************************************************************
  * Copyright (c) 2021, 2023 BMW Group AG
  * Copyright (c) 2021, 2023 Contributors to the Eclipse Foundation
  *
@@ -18,29 +18,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using System.ComponentModel.DataAnnotations;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
+namespace Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Models;
 
-public class ServiceDetail
+public class ServiceAccountCreationSettings
 {
-    private ServiceDetail() {}
-
-    public ServiceDetail(Guid serviceId, ServiceTypeId serviceTypeId, bool technicalUserNeeded)
-    {
-        ServiceId = serviceId;
-        ServiceTypeId = serviceTypeId;
-        TechnicalUserNeeded = technicalUserNeeded;
-    }
-
-    public Guid ServiceId { get; private set; }
-
-    public ServiceTypeId ServiceTypeId { get; private set; }
-
-    public bool TechnicalUserNeeded { get; set; }
-
-    // Navigation properties
-    public virtual Offer? Service { get; private set; }
-
-    public virtual ServiceType? ServiceType { get; private set; }
+    [Required(AllowEmptyStrings = false)]
+    public string ServiceAccountClientPrefix { get; set; } = null!;
 }

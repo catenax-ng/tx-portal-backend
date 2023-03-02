@@ -18,29 +18,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
-
-namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
-
-public class ServiceDetail
-{
-    private ServiceDetail() {}
-
-    public ServiceDetail(Guid serviceId, ServiceTypeId serviceTypeId, bool technicalUserNeeded)
-    {
-        ServiceId = serviceId;
-        ServiceTypeId = serviceTypeId;
-        TechnicalUserNeeded = technicalUserNeeded;
-    }
-
-    public Guid ServiceId { get; private set; }
-
-    public ServiceTypeId ServiceTypeId { get; private set; }
-
-    public bool TechnicalUserNeeded { get; set; }
-
-    // Navigation properties
-    public virtual Offer? Service { get; private set; }
-
-    public virtual ServiceType? ServiceType { get; private set; }
-}
+global using AutoFixture;
+global using AutoFixture.AutoFakeItEasy;
+global using FakeItEasy;
+global using FluentAssertions;
+global using Xunit;

@@ -18,12 +18,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using Org.Eclipse.TractusX.Portal.Backend.Provisioning.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Service;
@@ -44,6 +46,7 @@ public class ServiceAccountCreationTests
 
     private readonly IProvisioningManager _provisioningManager;
     private readonly IPortalRepositories _portalRepositories;
+    private readonly IProvisioningDBAccess _provisioningDbAccess;
     private readonly ServiceAccountCreation _sut;
 
     public ServiceAccountCreationTests()
@@ -58,11 +61,17 @@ public class ServiceAccountCreationTests
 
         _provisioningManager = A.Fake<IProvisioningManager>();
         _portalRepositories = A.Fake<IPortalRepositories>();
+        _provisioningDbAccess = A.Fake<IProvisioningDBAccess>();
+
+        var settings = new ServiceAccountCreationSettings
+        {
+            ServiceAccountClientPrefix = "sa"
+        };
         
         A.CallTo(() => _portalRepositories.GetInstance<IServiceAccountRepository>()).Returns(_serviceAccountRepository);
         A.CallTo(() => _portalRepositories.GetInstance<IUserRolesRepository>()).Returns(_userRolesRepository);
         
-        _sut = new ServiceAccountCreation(_provisioningManager, _portalRepositories);
+        _sut = new ServiceAccountCreation(_provisioningManager, _portalRepositories, _provisioningDbAccess, Options.Create(settings));
     }
 
     [Fact]
@@ -141,8 +150,9 @@ public class ServiceAccountCreationTests
 
     private void Setup()
     {
-        A.CallTo(() => _provisioningManager.GetNextServiceAccountClientIdWithIdAsync())
-            .ReturnsLazily(() => new ValueTuple<string, string>("sa1", "1"));
+        A.CallTo(() => _provisioningDbAccess.GetNextClientSequenceAsync())
+            .ReturnsLazily(() => 1);
+
         A.CallTo(() => _provisioningManager.SetupCentralServiceAccountClientAsync(A<string>._, A<ClientConfigRolesData>._))
             .ReturnsLazily(() => new ServiceAccountData("internal-sa1", _iamUserId, new ClientAuthData(IamClientAuthMethod.SECRET)));
 
