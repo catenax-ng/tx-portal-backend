@@ -377,32 +377,26 @@ public sealed class RegistrationBusinessLogic : IRegistrationBusinessLogic
 
     public async Task DeclineRegistrationVerification(Guid applicationId, string comment)
     {
-        const ProcessStepTypeId processStepTypeId = ProcessStepTypeId.VERIFY_REGISTRATION;
-        const ApplicationChecklistEntryTypeId entryTypeId = ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION;
-        var entryStatusIds = new []{ ApplicationChecklistEntryStatusId.TO_DO, ApplicationChecklistEntryStatusId.DONE };
-        var processStepStatusIds = new []{ ProcessStepStatusId.TODO, ProcessStepStatusId.DONE };
-        var result = await _portalRepositories.GetInstance<IApplicationChecklistRepository>()
-            .GetDeclineRegistrationVerificationData(applicationId, entryTypeId, processStepTypeId, processStepStatusIds).ConfigureAwait(false);
-
-        if (result == default)
+        var companyId = await _portalRepositories.GetInstance<IApplicationRepository>().GetCompanyIdForSubmittedApplication(applicationId).ConfigureAwait(false);
+        if (companyId == Guid.Empty)
         {
-            throw new NotFoundException($"application {applicationId} does not exist");
+            throw new ArgumentException($"CompanyApplication {applicationId} is not in status SUBMITTED", nameof(applicationId));
         }
 
-        var (checklistData, companyId) = result;
-        checklistData.ValidateChecklistData(applicationId, entryTypeId, entryStatusIds, processStepStatusIds);
+        var context = await _checklistService
+            .VerifyChecklistEntryAndProcessSteps(
+                applicationId,
+                ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION,
+                new [] { ApplicationChecklistEntryStatusId.TO_DO, ApplicationChecklistEntryStatusId.DONE },
+                ProcessStepTypeId.DECLINE_APPLICATION,
+                null,
+                new [] { ProcessStepTypeId.VERIFY_REGISTRATION, })
+            .ConfigureAwait(false);
 
-        var processSteps = checklistData.ProcessSteps;
-        var processStep = processSteps!.Any(x => x.ProcessStepStatusId == ProcessStepStatusId.TODO)
-            ? processSteps!.SingleOrDefault(x => x.ProcessStepStatusId == ProcessStepStatusId.TODO)
-            : processSteps!.FirstOrDefault(x => x.ProcessStepStatusId == ProcessStepStatusId.DONE);
-        if (processStep is null)
-        {
-            throw new ConflictException($"application {applicationId} checklist entry {entryTypeId}, process step {processStepTypeId} is not eligible to run");
-        }
+        _checklistService.SkipProcessSteps(context, new [] { ProcessStepTypeId.VERIFY_REGISTRATION });
 
         _checklistService.FinalizeChecklistEntryAndProcessSteps(
-            checklistData.CreateManualChecklistProcessStepData(applicationId, entryTypeId, processStep),
+            context,
             entry =>
             {
                 entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.FAILED;
@@ -419,6 +413,7 @@ public sealed class RegistrationBusinessLogic : IRegistrationBusinessLogic
         {
             company.CompanyStatusId = CompanyStatusId.REJECTED;
         });
+
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
         await PostRegistrationCancelEmailAsync(applicationId, comment).ConfigureAwait(false);
     }

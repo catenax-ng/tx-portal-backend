@@ -470,6 +470,10 @@ public class RegistrationBusinessLogicTest
         entry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.FAILED);
         company.CompanyStatusId.Should().Be(CompanyStatusId.REJECTED);
         application.ApplicationStatusId.Should().Be(CompanyApplicationStatusId.DECLINED);
+        A.CallTo(() => _checklistService.SkipProcessSteps(
+                A<IChecklistService.ManualChecklistProcessStepData>._,
+                A<IEnumerable<ProcessStepTypeId>>.That.Matches(x => x.Single() == ProcessStepTypeId.VERIFY_REGISTRATION)))
+            .MustHaveHappenedOnceExactly();
     }
 
     #endregion
@@ -805,21 +809,27 @@ public class RegistrationBusinessLogicTest
             {
                 action.Invoke(applicationChecklistEntry);
             });
-
-        var processId = Guid.NewGuid();
-        var verifyChecklistData = new VerifyChecklistData(
-            true,
-            processId,
-            new[] 
-            { 
-                new ValueTuple<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>(ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, checklistStatusId)
-            },
-            new[]
+        
+        A.CallTo(() => _checklistService.VerifyChecklistEntryAndProcessSteps(IdWithoutBpn, ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, A<IEnumerable<ApplicationChecklistEntryStatusId>>._, A<ProcessStepTypeId>._, A<IEnumerable<ApplicationChecklistEntryTypeId>?>._, A<IEnumerable<ProcessStepTypeId>?>._))
+            .ReturnsLazily(() => new IChecklistService.ManualChecklistProcessStepData(IdWithoutBpn, Guid.NewGuid(), Guid.NewGuid(), ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
             {
-                new ProcessStep(Guid.NewGuid(), ProcessStepTypeId.VERIFY_REGISTRATION, processStepStatusId, processId, DateTimeOffset.UtcNow)
+                { ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.TO_DO }
+            }.ToImmutableDictionary(), new List<ProcessStep>()));
+        A.CallTo(() => _checklistService.VerifyChecklistEntryAndProcessSteps(IdWithBpn, ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, A<IEnumerable<ApplicationChecklistEntryStatusId>>._, A<ProcessStepTypeId>._, A<IEnumerable<ApplicationChecklistEntryTypeId>?>._, A<IEnumerable<ProcessStepTypeId>?>._))
+            .ReturnsLazily(() => new IChecklistService.ManualChecklistProcessStepData(IdWithoutBpn, Guid.NewGuid(), Guid.NewGuid(), ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, new Dictionary<ApplicationChecklistEntryTypeId, ApplicationChecklistEntryStatusId>
+            {
+                { ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ApplicationChecklistEntryStatusId.DONE }
+            }.ToImmutableDictionary(), new List<ProcessStep>()));
+
+        A.CallTo(() => _applicationRepository.GetCompanyIdForSubmittedApplication(IdWithBpn))
+            .ReturnsLazily(() => CompanyId);
+        
+        
+        A.CallTo(() => _checklistService.FinalizeChecklistEntryAndProcessSteps(A<IChecklistService.ManualChecklistProcessStepData>._, A<Action<ApplicationChecklistEntry>>._, A<IEnumerable<ProcessStepTypeId>?>._))
+            .Invokes((IChecklistService.ManualChecklistProcessStepData _, Action<ApplicationChecklistEntry> action, IEnumerable<ProcessStepTypeId>? _) =>
+            {
+                action.Invoke(applicationChecklistEntry);
             });
-        A.CallTo(() => _applicationChecklistRepository.GetDeclineRegistrationVerificationData(IdWithBpn, ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION, ProcessStepTypeId.VERIFY_REGISTRATION, A<IEnumerable<ProcessStepStatusId>>._))
-            .ReturnsLazily(() => new ValueTuple<VerifyChecklistData, Guid>(verifyChecklistData, CompanyId));
 
         A.CallTo(() => _applicationRepository.AttachAndModifyCompanyApplication(A<Guid>._, A<Action<CompanyApplication>>._))
             .Invokes((Guid _, Action<CompanyApplication> modify) =>
@@ -831,9 +841,6 @@ public class RegistrationBusinessLogicTest
             {
                 modify.Invoke(company);
             });
-
-        A.CallTo(() => _applicationRepository.GetCompanyIdForSubmittedApplication(IdWithBpn))
-            .ReturnsLazily(() => CompanyId);
     }
 
     #endregion

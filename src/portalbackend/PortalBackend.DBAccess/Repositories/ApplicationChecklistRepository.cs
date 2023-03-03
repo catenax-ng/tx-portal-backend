@@ -101,36 +101,4 @@ public class ApplicationChecklistRepository : IApplicationChecklistRepository
                             step.ProcessStepStatusId == ProcessStepStatusId.TODO)
                     : null))
             .SingleOrDefaultAsync();
-
-    /// <inheritdoc />
-    public Task<(VerifyChecklistData checklistData, Guid companyId)> GetDeclineRegistrationVerificationData(
-        Guid applicationId,
-        ApplicationChecklistEntryTypeId entryTypeId,
-        ProcessStepTypeId processStepTypeId,
-        IEnumerable<ProcessStepStatusId> processStepStatusIds) =>
-        _portalDbContext.CompanyApplications
-            .AsNoTracking()
-            .AsSplitQuery()
-            .Where(application => application.Id == applicationId)
-            .Select(application => new {
-                Application = application,
-                IsSubmitted = application.ApplicationStatusId == CompanyApplicationStatusId.SUBMITTED
-            })
-            .Select(x => new ValueTuple<VerifyChecklistData, Guid>(
-                new VerifyChecklistData(
-                    x.IsSubmitted,
-                    x.Application.ChecklistProcessId,
-                    x.IsSubmitted
-                        ? x.Application.ApplicationChecklistEntries
-                            .Where(entry => entry.ApplicationChecklistEntryTypeId == entryTypeId)
-                            .Select(entry => new ValueTuple<ApplicationChecklistEntryTypeId,ApplicationChecklistEntryStatusId>(entry.ApplicationChecklistEntryTypeId, entry.ApplicationChecklistEntryStatusId))
-                        : null,
-                    x.IsSubmitted
-                        ? x.Application.ChecklistProcess!.ProcessSteps
-                            .Where(step =>
-                                step.ProcessStepTypeId == processStepTypeId && 
-                                processStepStatusIds.Contains(step.ProcessStepStatusId))
-                        : null),
-                x.Application.CompanyId))
-            .SingleOrDefaultAsync();
 }
