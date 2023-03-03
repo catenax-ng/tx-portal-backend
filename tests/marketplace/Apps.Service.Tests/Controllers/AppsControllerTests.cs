@@ -386,14 +386,14 @@ public class AppsControllerTests
         var documentId = _fixture.Create<Guid>();
         var content = _fixture.Create<byte[]>();
         var fileName = _fixture.Create<string>();
-        
-        A.CallTo(() => _logic.GetAppImageDocumentContentAsync(A<Guid>._ , A<Guid>._, A<CancellationToken>._))
-            .ReturnsLazily(() => (content,"application/pdf",fileName));
+
+        A.CallTo(() => _logic.GetAppImageDocumentContentAsync(A<Guid>._, A<Guid>._, A<CancellationToken>._))
+            .ReturnsLazily(() => (content, "application/pdf", fileName));
 
         //Act
-        var result = await this._controller.GetAppImageDocumentContentAsync(appId,documentId,CancellationToken.None).ConfigureAwait(false);
+        var result = await this._controller.GetAppImageDocumentContentAsync(appId, documentId, CancellationToken.None).ConfigureAwait(false);
 
         //Assert
-        A.CallTo(() => _logic.GetAppImageDocumentContentAsync(A<Guid>._ , A<Guid>._, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _logic.GetAppImageDocumentContentAsync(A<Guid>._, A<Guid>._, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
     }
 }
