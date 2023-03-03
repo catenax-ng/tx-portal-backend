@@ -780,9 +780,8 @@ public class AppBusinessLogicTests
         var data = _fixture.CreateMany<AppWithSubscriptionStatus>(5);
         A.CallTo(() => _offerSubscriptionRepository.GetOwnCompanySubscribedAppSubscriptionStatusesUntrackedAsync(iamUserId))
             .Returns(data.ToAsyncEnumerable());
-
         
-        var sut = new AppsBusinessLogic(_portalRepositories, A.Fake<IOfferSubscriptionService>(), A.Fake<IOfferService>(), _fixture.Create<IOptions<AppsSettings>>(), A.Fake<MailingService>());
+        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!,  null!, _fixture.Create<IOptions<AppsSettings>>(), null!);
 
         // Act
         var result = await sut.GetCompanySubscribedAppSubscriptionStatusesForUserAsync(iamUserId).ToListAsync().ConfigureAwait(false);
