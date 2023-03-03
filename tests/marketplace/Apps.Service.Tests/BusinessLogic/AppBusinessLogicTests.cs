@@ -938,6 +938,26 @@ public class AppBusinessLogicTests
         result.Message.Should().Be($"user {iamUserId} is not a member of the providercompany of Apps {appId}");
     }
 
+    [Fact]
+    public async Task CreateOfferAssignedAppLeadImageDocumentById_ThrowsNotFoundException()
+    {
+        // Arrange
+        var appId = _fixture.Create<Guid>();
+        var iamUserId = _fixture.Create<Guid>().ToString();
+        var file = FormFileHelper.GetFormFile("Test Image", "TestImage.jpeg", "image/jpeg");
+
+        A.CallTo(() => _offerRepository.GetOfferAssignedAppLeadImageDocumentsByIdAsync(appId, iamUserId, OfferTypeId.APP))
+            .ReturnsLazily(() => new ValueTuple<bool,Guid,IEnumerable<DocumentStatusData>>());
+
+        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), null!);
+
+        // Act
+        var Act = () => sut.CreatOfferAssignedAppLeadImageDocumentByIdAsync(appId, iamUserId, file, CancellationToken.None);
+
+        // Assert
+        var result = await Assert.ThrowsAsync<NotFoundException>(Act).ConfigureAwait(false);
+        result.Message.Should().Be($"App {appId} does not exist.");
+    }
     #endregion
 
     private (CompanyUser, IamUser) CreateTestUserPair()

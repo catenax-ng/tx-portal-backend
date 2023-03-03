@@ -393,9 +393,13 @@ public class AppsBusinessLogic : IAppsBusinessLogic
         var offerRepository = _portalRepositories.GetInstance<IOfferRepository>();
         var result = await offerRepository.GetOfferAssignedAppLeadImageDocumentsByIdAsync(appId, iamUserId, OfferTypeId.APP).ConfigureAwait(false);
 
+        if(result == default)
+        {
+            throw new NotFoundException($"App {appId} does not exist.");
+        }
         if (!result.IsStatusActive)
         {
-            throw new ConflictException($"offerStatus is in Incorrect State");
+            throw new ConflictException("offerStatus is in Incorrect State");
         }
         var companyUserId = result.CompanyUserId;
         if (companyUserId == Guid.Empty)
@@ -409,8 +413,8 @@ public class AppsBusinessLogic : IAppsBusinessLogic
             foreach(var documentData in result.documentStatusDatas)
             {
                 documentRepository.AttachAndModifyDocument(documentData.DocumentId,
-                    A => { A.DocumentStatusId = documentData.StatusId; },
-                    A => { A.DocumentStatusId = DocumentStatusId.INACTIVE; }
+                    a => { a.DocumentStatusId = documentData.StatusId; },
+                    a => { a.DocumentStatusId = DocumentStatusId.INACTIVE; }
                 );
             }
             await _portalRepositories.SaveAsync().ConfigureAwait(false);
@@ -421,7 +425,7 @@ public class AppsBusinessLogic : IAppsBusinessLogic
         using var ms = new MemoryStream((int)document.Length);
 
         await document.CopyToAsync(ms, cancellationToken).ConfigureAwait(false);
-        var hash = sha512Hash.ComputeHash(ms);
+        var hash = await sha512Hash.ComputeHashAsync(ms);
         var documentContent = ms.GetBuffer();
         if (ms.Length != document.Length || documentContent.Length != document.Length)
         {
@@ -434,10 +438,10 @@ public class AppsBusinessLogic : IAppsBusinessLogic
         });
         _portalRepositories.GetInstance<IOfferRepository>().CreateOfferAssignedDocument(appId, doc.Id);
 
-        foreach(var docID in result.documentStatusDatas)
+        foreach(var docId in result.documentStatusDatas.Select(x => x.DocumentId))
         {
-            offerRepository.RemoveOfferAssignedDocument(appId, docID.DocumentId);
-            documentRepository.RemoveDocument(docID.DocumentId);
+            offerRepository.RemoveOfferAssignedDocument(appId, docId);
+            documentRepository.RemoveDocument(docId);
         }
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
