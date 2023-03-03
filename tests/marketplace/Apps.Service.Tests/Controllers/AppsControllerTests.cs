@@ -413,6 +413,5 @@ public class AppsControllerTests
         // Assert
         A.CallTo(() => _logic.CreatOfferAssignedAppLeadImageDocumentByIdAsync(appId, IamUserId, file, CancellationToken.None)).MustHaveHappenedOnceExactly();
         result.Should().BeOfType<NoContentResult>();
-        
     }
 }
