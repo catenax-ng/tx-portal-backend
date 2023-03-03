@@ -365,7 +365,7 @@ public class ApplicationActivationTests
             new List<ProcessStepTypeId>());
 
         A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsForApprovalAsync(applicationId))
-            .ReturnsLazily(() => new ValueTuple<Guid, string?, IEnumerable<string>>());
+            .Returns(((Guid,string?,IEnumerable<string>))default);
 
         //Act
         async Task Action() => await _sut.HandleApplicationActivation(context, CancellationToken.None).ConfigureAwait(false);
@@ -615,14 +615,14 @@ public class ApplicationActivationTests
         };
 
         A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsForApprovalAsync(A<Guid>.That.Matches(x => x == Id)))
-            .ReturnsLazily(() => new ValueTuple<Guid, string?, IEnumerable<string>>(company.Id, company.BusinessPartnerNumber!, new []{ IdpAlias }));
+            .Returns((company.Id, company.BusinessPartnerNumber, new []{ IdpAlias }));
         A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsForApprovalAsync(A<Guid>.That.Matches(x => x == IdWithoutBpn)))
-            .ReturnsLazily(() => new ValueTuple<Guid, string?, IEnumerable<string>>(IdWithoutBpn, null, Enumerable.Empty<string>()));
+            .Returns((IdWithoutBpn, null, Enumerable.Empty<string>()));
 
         A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsForCreateWalletAsync(A<Guid>.That.Matches(x => x == Id)))
-            .ReturnsLazily(() => new ValueTuple<Guid, string, string?>(company.Id, company.Name, company.BusinessPartnerNumber!));
+            .Returns((company.Id, company.Name, company.BusinessPartnerNumber));
         A.CallTo(() => _applicationRepository.GetCompanyAndApplicationDetailsForCreateWalletAsync(A<Guid>.That.Matches(x => x == IdWithoutBpn)))
-            .ReturnsLazily(() => new ValueTuple<Guid, string, string?>(IdWithoutBpn, company.Name, null));
+            .Returns((IdWithoutBpn, company.Name, null));
 
         var welcomeEmailData = new List<WelcomeEmailData>();
         welcomeEmailData.AddRange(new WelcomeEmailData[]

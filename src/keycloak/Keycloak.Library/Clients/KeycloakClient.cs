@@ -44,7 +44,7 @@ public partial class KeycloakClient
         var response = await InternalCreateClientAsync(realm, client).ConfigureAwait(false);
 
         var locationPathAndQuery = response.ResponseMessage.Headers.Location?.PathAndQuery;
-        return locationPathAndQuery?[(locationPathAndQuery.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
+        return locationPathAndQuery?.Substring(locationPathAndQuery.LastIndexOf("/", StringComparison.Ordinal) + 1);
     }
 
     private async Task<IFlurlResponse> InternalCreateClientAsync(string realm, Client client) =>
