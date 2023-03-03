@@ -50,13 +50,13 @@ public class CompanyDataBusinessLogic : ICompanyDataBusinessLogic
     }
 
     /// <inheritdoc/>
-    public IAsyncEnumerable<CompanyRoleConsentDatas?> GetCompanyRoleAndConsentAgreementDetailsAsync(string iamUserId)
+    public IAsyncEnumerable<CompanyRoleConsentDatas> GetCompanyRoleAndConsentAgreementDetailsAsync(string iamUserId)
     {
         var result =  _portalRepositories.GetInstance<ICompanyRepository>().GetCompanyRoleAndConsentAgreementDetailsAsync(iamUserId);
         if (result == default)
         {
             throw new ConflictException($"user {iamUserId} is not associated with any company or Incorrect Status");
         }
-        return result;
+        return result!;
     }
 }

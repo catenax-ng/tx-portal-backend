@@ -26,5 +26,5 @@ public interface ICompanyDataBusinessLogic
 {
     Task<CompanyAddressDetailData> GetOwnCompanyDetailsAsync(string iamUserId);
 
-    IAsyncEnumerable<CompanyRoleConsentDatas?> GetCompanyRoleAndConsentAgreementDetailsAsync(string iamUserId);
+    IAsyncEnumerable<CompanyRoleConsentDatas> GetCompanyRoleAndConsentAgreementDetailsAsync(string iamUserId);
 }

@@ -99,7 +99,7 @@ public class CompanyDataBusinessLogicTests
         var sut = new CompanyDataBusinessLogic(_portalRepositories);
 
         // Act
-        var result = sut.GetCompanyRoleAndConsentAgreementDetailsAsync(IamUserId).ConfigureAwait(false);
+        var result = await sut.GetCompanyRoleAndConsentAgreementDetailsAsync(IamUserId).ToListAsync().ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
@@ -116,11 +116,12 @@ public class CompanyDataBusinessLogicTests
         var sut = new CompanyDataBusinessLogic(_portalRepositories);
 
         // Act
-        async Task Act() => sut.GetCompanyRoleAndConsentAgreementDetailsAsync(IamUserId).ConfigureAwait(false);
+        async Task Act() => await sut.GetCompanyRoleAndConsentAgreementDetailsAsync(IamUserId).ToListAsync().ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
         ex.Message.Should().Be($"user {IamUserId} is not associated with any company or Incorrect Status");
     }
+
     #endregion
 }
