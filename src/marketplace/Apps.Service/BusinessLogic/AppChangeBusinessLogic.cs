@@ -84,13 +84,13 @@ public class AppChangeBusinessLogic : IAppChangeBusinessLogic
         var roleData = AppExtensions.CreateUserRolesWithDescriptions(_portalRepositories.GetInstance<IUserRolesRepository>(), appId, userRoles);
         foreach (var clientId in result.ClientClientIds)
         {
-            await _provisioningManager.AddRolesToClientAsync(clientId, userRoles.Select(x => x.role)).ConfigureAwait(false);
+            await _provisioningManager.AddRolesToClientAsync(clientId, userRoles.Select(x => x.Role)).ConfigureAwait(false);
         }
 
         var notificationContent = new
         {
             AppName = result.AppName,
-            Roles = roleData.Select(x => x.roleName)
+            Roles = roleData.Select(x => x.RoleName)
         };
         var serializeNotificationContent = JsonSerializer.Serialize(notificationContent);
         var content = _settings.ActiveAppNotificationTypeIds.Select(typeId => new ValueTuple<string?, NotificationTypeId>(serializeNotificationContent, typeId));

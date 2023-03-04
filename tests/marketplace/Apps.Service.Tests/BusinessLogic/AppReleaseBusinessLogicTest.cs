@@ -34,6 +34,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared;
+using System.Collections.Immutable;
 using Xunit;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.BusinessLogic.Tests;
@@ -104,7 +105,7 @@ public class AppReleaseBusinessLogicTest
         A.CallTo(() => _portalRepositories.GetInstance<IOfferRepository>()).Returns(_offerRepository);
         A.CallTo(() => _portalRepositories.GetInstance<IUserRepository>()).Returns(_userRepository);
         A.CallTo(() => _portalRepositories.GetInstance<IUserRolesRepository>()).Returns(_userRolesRepository);
-         A.CallTo(() => _portalRepositories.GetInstance<IDocumentRepository>()).Returns(_documentRepository);
+        A.CallTo(() => _portalRepositories.GetInstance<IDocumentRepository>()).Returns(_documentRepository);
     }
 
     [Fact]
@@ -113,16 +114,28 @@ public class AppReleaseBusinessLogicTest
         // Arrange
         var appId = _fixture.Create<Guid>();
         var iamUserId = _fixture.Create<string>();
-        var appUserRoleDescription = new AppUserRoleDescription[] {
-            new("en","this is test1"),
-            new("de","this is test2"),
-            new("fr","this is test3")
-        };
-        var appUserRoles = new AppUserRole[] {
-            new("IT Admin",appUserRoleDescription)
-        };
+        var appUserRoles = _fixture.CreateMany<string>(3).Select(role => new AppUserRole(role, _fixture.CreateMany<AppUserRoleDescription>(2).ToImmutableArray())).ToImmutableArray();        
+
         A.CallTo(() => _offerRepository.IsProviderCompanyUserAsync(A<Guid>.That.IsEqualTo(appId), A<string>.That.IsEqualTo(iamUserId), A<OfferTypeId>.That.IsEqualTo(OfferTypeId.APP)))
             .Returns((true,true));
+
+        IEnumerable<UserRole>? userRoles = null;
+        A.CallTo(() => _userRolesRepository.CreateAppUserRoles(A<IEnumerable<(Guid,string)>>._))
+            .ReturnsLazily((IEnumerable<(Guid AppId, string Role)> appRoles) =>
+            {
+                userRoles = appRoles.Select(x => new UserRole(Guid.NewGuid(), x.Role, x.AppId)).ToImmutableArray();
+                return userRoles;
+            });
+
+        var userRoleDescriptions = new List<IEnumerable<UserRoleDescription>>();
+        A.CallTo(() => _userRolesRepository.CreateAppUserRoleDescriptions(A<IEnumerable<(Guid,string,string)>>._))
+            .ReturnsLazily((IEnumerable<(Guid RoleId, string LanguageCode, string Description)> roleLanguageDescriptions) =>
+            {
+                var createdUserRoleDescriptions = roleLanguageDescriptions.Select(x => new UserRoleDescription(x.RoleId, x.LanguageCode, x.Description)).ToImmutableArray();
+                userRoleDescriptions.Add(createdUserRoleDescriptions);
+                return createdUserRoleDescriptions;
+            });
+
         var sut = new AppReleaseBusinessLogic(_portalRepositories, _options, null!);
 
         // Act
@@ -130,17 +143,44 @@ public class AppReleaseBusinessLogicTest
 
         // Assert
         A.CallTo(() => _offerRepository.IsProviderCompanyUserAsync(A<Guid>._, A<string>._, A<OfferTypeId>._)).MustHaveHappened();
-        foreach(var appRole in appUserRoles)
-        {
-            A.CallTo(() => _userRolesRepository.CreateAppUserRole(A<Guid>._, A<string>.That.IsEqualTo(appRole.role))).MustHaveHappened();
-            foreach(var item in appRole.descriptions)
+        
+        A.CallTo(() => _userRolesRepository.CreateAppUserRoles(A<IEnumerable<(Guid,string)>>._)).MustHaveHappenedOnceExactly();
+        userRoles.Should().NotBeNull()
+            .And.HaveSameCount(appUserRoles)
+            .And.AllSatisfy(x =>
             {
-                A.CallTo(() => _userRolesRepository.CreateAppUserRoleDescription(A<Guid>._, A<string>.That.IsEqualTo(item.languageCode), A<string>.That.IsEqualTo(item.description))).MustHaveHappened();
-            }
-        }
+                x.Id.Should().NotBeEmpty();
+                x.OfferId.Should().Be(appId);
+            })
+            .And.Satisfy(
+                x => x.UserRoleText == appUserRoles[0].Role,
+                x => x.UserRoleText == appUserRoles[1].Role,
+                x => x.UserRoleText == appUserRoles[2].Role
+            );
+
+        A.CallTo(() => _userRolesRepository.CreateAppUserRoleDescriptions(A<IEnumerable<(Guid,string,string)>>._)).MustHaveHappened(appUserRoles.Length, Times.Exactly);
+        userRoleDescriptions.Should()
+            .HaveSameCount(appUserRoles)
+            .And.SatisfyRespectively(
+                x => x.Should().HaveCount(2).And.Satisfy(
+                    x => x.UserRoleId == userRoles!.ElementAt(0).Id && x.LanguageShortName == appUserRoles[0].Descriptions.ElementAt(0).LanguageCode && x.Description == appUserRoles[0].Descriptions.ElementAt(0).Description,
+                    x => x.UserRoleId == userRoles!.ElementAt(0).Id && x.LanguageShortName == appUserRoles[0].Descriptions.ElementAt(1).LanguageCode && x.Description == appUserRoles[0].Descriptions.ElementAt(1).Description),
+                x => x.Should().HaveCount(2).And.Satisfy(
+                    x => x.UserRoleId == userRoles!.ElementAt(1).Id && x.LanguageShortName == appUserRoles[1].Descriptions.ElementAt(0).LanguageCode && x.Description == appUserRoles[1].Descriptions.ElementAt(0).Description,
+                    x => x.UserRoleId == userRoles!.ElementAt(1).Id && x.LanguageShortName == appUserRoles[1].Descriptions.ElementAt(1).LanguageCode && x.Description == appUserRoles[1].Descriptions.ElementAt(1).Description),
+                x => x.Should().HaveCount(2).And.Satisfy(
+                    x => x.UserRoleId == userRoles!.ElementAt(2).Id && x.LanguageShortName == appUserRoles[2].Descriptions.ElementAt(0).LanguageCode && x.Description == appUserRoles[2].Descriptions.ElementAt(0).Description,
+                    x => x.UserRoleId == userRoles!.ElementAt(2).Id && x.LanguageShortName == appUserRoles[2].Descriptions.ElementAt(1).LanguageCode && x.Description == appUserRoles[2].Descriptions.ElementAt(1).Description));
 
         Assert.NotNull(result);
         Assert.IsAssignableFrom<IEnumerable<AppRoleData>>(result);
+        result.Should().NotBeNull()
+            .And.HaveSameCount(appUserRoles)
+            .And.Satisfy(
+                x => x.RoleId == userRoles!.ElementAt(0).Id && x.RoleName == appUserRoles[0].Role,
+                x => x.RoleId == userRoles!.ElementAt(1).Id && x.RoleName == appUserRoles[1].Role,
+                x => x.RoleId == userRoles!.ElementAt(2).Id && x.RoleName == appUserRoles[2].Role
+            );
     }
 
     #region AddAppAsync

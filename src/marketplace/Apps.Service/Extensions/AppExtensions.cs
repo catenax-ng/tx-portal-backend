@@ -1,6 +1,7 @@
 ﻿using Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.Extensions;
 
@@ -21,7 +22,7 @@ public static class AppExtensions
         {
             throw new ControllerArgumentException("AppId must not be empty");
         }
-        var descriptions = appUserRolesDescription.SelectMany(x => x.descriptions).Where(item => !string.IsNullOrWhiteSpace(item.languageCode)).Distinct();
+        var descriptions = appUserRolesDescription.SelectMany(x => x.Descriptions).Where(item => !string.IsNullOrWhiteSpace(item.LanguageCode)).Distinct();
         if (!descriptions.Any())
         {
             throw new ControllerArgumentException("Language Code must not be empty");
@@ -36,18 +37,13 @@ public static class AppExtensions
     /// <param name="appId">id of the app to create the roles for</param>
     /// <param name="userRoles">the user roles to add</param>
     /// <returns>returns the created appRoleData</returns>
-    public static IEnumerable<AppRoleData> CreateUserRolesWithDescriptions(IUserRolesRepository userRolesRepository, Guid appId, IEnumerable<AppUserRole> userRoles)
-    {
-        var roleData = new List<AppRoleData>();
-        foreach (var userRole in userRoles)
-        {
-            var appRole = userRolesRepository.CreateAppUserRole(appId, userRole.role);
-            roleData.Add(new AppRoleData(appRole.Id, userRole.role));
-            foreach (var item in userRole.descriptions)
-            {
-                userRolesRepository.CreateAppUserRoleDescription(appRole.Id, item.languageCode.ToLower(), item.description);
-            }
-        }
-        return roleData;
-    }
+    public static IEnumerable<AppRoleData> CreateUserRolesWithDescriptions(IUserRolesRepository userRolesRepository, Guid appId, IEnumerable<AppUserRole> userRoles) =>
+        userRoles.Zip(
+            userRolesRepository.CreateAppUserRoles(userRoles.Select(x => (appId, x.Role))),
+            (AppUserRole appUserRole, UserRole userRole) =>
+                {
+                    userRolesRepository.CreateAppUserRoleDescriptions(appUserRole.Descriptions.Select(appUserRoleDescription => (userRole.Id, appUserRoleDescription.LanguageCode, appUserRoleDescription.Description)));
+                    return new AppRoleData(userRole.Id, appUserRole.Role);
+                })
+            .ToList();
 }
