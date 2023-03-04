@@ -814,7 +814,7 @@ public class AppReleaseBusinessLogicTest
         A.CallTo(() => _offerRepository.GetAppDeleteDataAsync(appId, OfferTypeId.APP, IamUserId, OfferStatusId.CREATED))
             .Returns((true,true,true,true,appDeleteData));
 
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, _options, _offerService, _notificationService);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, _options, _offerService);
 
         //Act
         await sut.DeleteAppAsync(appId, IamUserId).ConfigureAwait(false);
@@ -851,7 +851,7 @@ public class AppReleaseBusinessLogicTest
         A.CallTo(() => _offerRepository.GetAppDeleteDataAsync(appId, OfferTypeId.APP, IamUserId, OfferStatusId.CREATED))
             .Returns((true, true, true, false, appDeleteData));
 
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, _options, _offerService, _notificationService);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, _options, _offerService);
 
         //Act
         async Task Act() =>  await sut.DeleteAppAsync(appId, IamUserId).ConfigureAwait(false);
@@ -872,7 +872,7 @@ public class AppReleaseBusinessLogicTest
         A.CallTo(() => _offerRepository.GetAppDeleteDataAsync(appId, OfferTypeId.APP, IamUserId, OfferStatusId.CREATED))
             .Returns((true, true, false, true, appDeleteData));
 
-        var sut = new AppReleaseBusinessLogic(_portalRepositories, _options, _offerService, _notificationService);
+        var sut = new AppReleaseBusinessLogic(_portalRepositories, _options, _offerService);
 
         //Act
         async Task Act() =>  await sut.DeleteAppAsync(appId, IamUserId).ConfigureAwait(false);

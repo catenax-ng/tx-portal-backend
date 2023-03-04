@@ -2,7 +2,7 @@
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 
-namespace Apps.Service.Extensions;
+namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.Extensions;
 
 /// <summary>
 /// Extension methods for the apps
