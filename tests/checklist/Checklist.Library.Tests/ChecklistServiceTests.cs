@@ -20,11 +20,11 @@
 
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using System.Collections.Immutable;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library.Tests;
 
@@ -586,13 +586,13 @@ public class ChecklistServiceTests
 
         // Assert
         result.Should().NotBeNull();
-        result.Item1.Should().NotBeNull();
-        result.Item1?.Invoke(entity);
+        result.ModifyChecklistEntry.Should().NotBeNull();
+        result.ModifyChecklistEntry!.Invoke(entity);
         entity.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.FAILED);
         entity.Comment.Should().Be("Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling.ServiceException: Test error");
-        result.Item2.Should().NotBeNull();
-        result.Item2.Should().ContainSingle().And.Match(x => x.Single() == ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE);
-        result.Item3.Should().BeTrue();
+        result.ScheduleStepTypeIds.Should().NotBeNull();
+        result.ScheduleStepTypeIds.Should().ContainSingle().And.Match(x => x.Single() == ProcessStepTypeId.RETRIGGER_CLEARING_HOUSE);
+        result.Modified.Should().BeTrue();
     }
 
     [Fact]
@@ -607,12 +607,12 @@ public class ChecklistServiceTests
 
         // Assert
         result.Should().NotBeNull();
-        result.Item1.Should().NotBeNull();
-        result.Item1?.Invoke(entity);
+        result.ModifyChecklistEntry.Should().NotBeNull();
+        result.ModifyChecklistEntry!.Invoke(entity);
         entity.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.TO_DO);
         entity.Comment.Should().Be("System.Net.Http.HttpRequestException: Test error");
-        result.Item2.Should().BeNull();
-        result.Item3.Should().BeTrue();
+        result.ScheduleStepTypeIds.Should().BeNull();
+        result.Modified.Should().BeTrue();
     }
 
     #endregion

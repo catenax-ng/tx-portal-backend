@@ -24,7 +24,6 @@ using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Bpdm.Library.BusinessLogic;
 
@@ -39,7 +38,7 @@ public class BpdmBusinessLogic : IBpdmBusinessLogic
         _bpdmService = bpdmService;
     }
 
-    public async Task<(Action<ApplicationChecklistEntry>?, IEnumerable<ProcessStepTypeId>?, bool, IEnumerable<ProcessStepTypeId>?)> PushLegalEntity(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
+    public async Task<IChecklistService.WorkerChecklistProcessStepExecutionResult> PushLegalEntity(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
     {
         var result = await _portalRepositories.GetInstance<IApplicationRepository>().GetBpdmDataForApplicationAsync(context.ApplicationId).ConfigureAwait(false);
 
@@ -88,14 +87,14 @@ public class BpdmBusinessLogic : IBpdmBusinessLogic
 
         await _bpdmService.PutInputLegalEntity(bpdmTransferData, cancellationToken).ConfigureAwait(false);
 
-        return (
+        return new IChecklistService.WorkerChecklistProcessStepExecutionResult(
             entry => entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.IN_PROGRESS,
             new [] { ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_PULL },
-            true,
-            null);
+            null,
+            true);
     }
 
-    public async Task<(Action<ApplicationChecklistEntry>?,IEnumerable<ProcessStepTypeId>?,bool,IEnumerable<ProcessStepTypeId>?)> HandlePullLegalEntity(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
+    public async Task<IChecklistService.WorkerChecklistProcessStepExecutionResult> HandlePullLegalEntity(IChecklistService.WorkerChecklistProcessStepData context, CancellationToken cancellationToken)
     {
         var result = await _portalRepositories.GetInstance<IApplicationRepository>().GetBpdmDataForApplicationAsync(context.ApplicationId).ConfigureAwait(false);
         
@@ -110,7 +109,7 @@ public class BpdmBusinessLogic : IBpdmBusinessLogic
 
         if (string.IsNullOrEmpty(legalEntity.Bpn))
         {
-            return (null,null,false,null);
+            return new IChecklistService.WorkerChecklistProcessStepExecutionResult(null,null,null,false);
         }
 
         // TODO: clarify whether it should be an error if businessPartnerNumber has been set locally while bpdm-answer was outstanding
@@ -129,12 +128,12 @@ public class BpdmBusinessLogic : IBpdmBusinessLogic
 
         var registrationValidationFailed = context.Checklist[ApplicationChecklistEntryTypeId.REGISTRATION_VERIFICATION] == ApplicationChecklistEntryStatusId.FAILED;
 
-        return (
+        return new IChecklistService.WorkerChecklistProcessStepExecutionResult(
             entry => entry.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.DONE,
             registrationValidationFailed
                 ? null
                 : new [] { ProcessStepTypeId.CREATE_IDENTITY_WALLET },
-            true,
-            new [] { ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_MANUAL });
+            new [] { ProcessStepTypeId.CREATE_BUSINESS_PARTNER_NUMBER_MANUAL },
+            true);
     }
 }

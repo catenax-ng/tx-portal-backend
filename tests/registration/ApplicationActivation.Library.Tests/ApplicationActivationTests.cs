@@ -18,7 +18,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using System.Collections.Immutable;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.ApplicationActivation.Library.DependencyInjection;
 using Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
@@ -32,6 +31,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
+using System.Collections.Immutable;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.ApplicationActivation.Library.Tests;
 
@@ -250,11 +250,11 @@ public class ApplicationActivationTests
         companyApplication.ApplicationStatusId.Should().Be(CompanyApplicationStatusId.CONFIRMED);
         company.CompanyStatusId.Should().Be(CompanyStatusId.ACTIVE);
         var entry = new ApplicationChecklistEntry(Guid.NewGuid(), ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, ApplicationChecklistEntryStatusId.TO_DO, default);
-        result.Item1!.Invoke(entry);
+        result.ModifyChecklistEntry!.Invoke(entry);
         entry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.DONE);
-        result.Item2.Should().BeNull();
-        result.Item3.Should().BeTrue();
-        result.Item4.Should().HaveCount(Enum.GetValues<ProcessStepTypeId>().Length - 1);
+        result.ScheduleStepTypeIds.Should().BeNull();
+        result.SkipStepTypeIds.Should().HaveCount(Enum.GetValues<ProcessStepTypeId>().Length - 1);
+        result.Modified.Should().BeTrue();
     }
 
     [Fact]
@@ -326,11 +326,11 @@ public class ApplicationActivationTests
         companyApplication.ApplicationStatusId.Should().Be(CompanyApplicationStatusId.CONFIRMED);
         company.CompanyStatusId.Should().Be(CompanyStatusId.ACTIVE);
         var entry = new ApplicationChecklistEntry(Guid.NewGuid(), ApplicationChecklistEntryTypeId.APPLICATION_ACTIVATION, ApplicationChecklistEntryStatusId.TO_DO, default);
-        result.Item1!.Invoke(entry);
+        result.ModifyChecklistEntry!.Invoke(entry);
         entry.ApplicationChecklistEntryStatusId.Should().Be(ApplicationChecklistEntryStatusId.DONE);
-        result.Item2.Should().BeNull();
-        result.Item3.Should().BeTrue();
-        result.Item4.Should().HaveCount(Enum.GetValues<ProcessStepTypeId>().Length - 1);
+        result.ScheduleStepTypeIds.Should().BeNull();
+        result.SkipStepTypeIds.Should().HaveCount(Enum.GetValues<ProcessStepTypeId>().Length - 1);
+        result.Modified.Should().BeTrue();
     }
 
     [Fact]

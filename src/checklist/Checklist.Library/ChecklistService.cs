@@ -23,8 +23,6 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
-using System.Collections.Immutable;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Checklist.Library;
 
@@ -101,21 +99,25 @@ public sealed class ChecklistService : IChecklistService
         }
     }
 
-    public Task<(Action<ApplicationChecklistEntry>?, IEnumerable<ProcessStepTypeId>?, bool)> HandleServiceErrorAsync(Exception exception, ProcessStepTypeId manualProcessTriggerStep)
+    public Task<IChecklistService.WorkerChecklistProcessStepExecutionResult> HandleServiceErrorAsync(Exception exception, ProcessStepTypeId manualProcessTriggerStep)
     {
-        return Task.FromResult<(Action<ApplicationChecklistEntry>?, IEnumerable<ProcessStepTypeId>?, bool)>(
+        return Task.FromResult(
             exception is not HttpRequestException ?
-                (item =>
+                new IChecklistService.WorkerChecklistProcessStepExecutionResult(
+                    item =>
                     {
                         item.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.FAILED;
                         item.Comment = exception.ToString();
                     },
                     new [] { manualProcessTriggerStep },
+                    null,
                     true) :
-                (item =>
+                new IChecklistService.WorkerChecklistProcessStepExecutionResult(
+                    item =>
                     {
                         item.Comment = exception.ToString();
                     },
+                    null,
                     null,
                     true));
     }

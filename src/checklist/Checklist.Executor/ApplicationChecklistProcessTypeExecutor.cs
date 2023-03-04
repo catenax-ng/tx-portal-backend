@@ -107,12 +107,12 @@ public class ApplicationChecklistProcessTypeExecutor : IProcessTypeExecutor
 
         Action<ApplicationChecklistEntry>? modifyChecklistEntry;
         IEnumerable<ProcessStepTypeId>? nextStepTypeIds;
+        IEnumerable<ProcessStepTypeId>? stepsToSkip;
         ProcessStepStatusId stepStatusId;
         bool modified;
-        IEnumerable<ProcessStepTypeId>? stepsToSkip = null;
         try
         {
-            (modifyChecklistEntry, nextStepTypeIds, modified, stepsToSkip) = await execution.ProcessFunc(stepData, cancellationToken).ConfigureAwait(false);
+            (modifyChecklistEntry, nextStepTypeIds, stepsToSkip, modified) = await execution.ProcessFunc(stepData, cancellationToken).ConfigureAwait(false);
             stepStatusId = ProcessStepStatusId.DONE;
         }
         catch (Exception ex) when (ex is not SystemException)
@@ -121,11 +121,12 @@ public class ApplicationChecklistProcessTypeExecutor : IProcessTypeExecutor
             {
                 (stepStatusId, modifyChecklistEntry) = ProcessError(ex);
                 nextStepTypeIds = null;
+                stepsToSkip = null;
                 modified = true;
             }
             else
             {
-                (modifyChecklistEntry, nextStepTypeIds, modified) = await execution.ErrorFunc(ex, stepData, cancellationToken).ConfigureAwait(false);
+                (modifyChecklistEntry, nextStepTypeIds, stepsToSkip, modified) = await execution.ErrorFunc(ex, stepData, cancellationToken).ConfigureAwait(false);
                 stepStatusId = ProcessStepStatusId.FAILED;
             }
         }
