@@ -65,6 +65,10 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_ADMINISTRATION }}
 
+      - name: Convert image name to lowercase
+        run: |
+          echo IMAGE_NAME_ADMINISTRATION=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
@@ -101,6 +105,10 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_CHECKLIST_WORKER }}
+
+      - name: Convert image name to lowercase
+        run: |
+          echo IMAGE_NAME_CHECKLIST_WORKER=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
@@ -139,6 +147,10 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_REGISTRATION }}
 
+      - name: Convert image name to lowercase
+        run: |
+          echo IMAGE_NAME_REGISTRATION=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV  
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
@@ -175,6 +187,10 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PROVISIONING }}
+
+      - name: Convert image name to lowercase
+        run: |
+          echo IMAGE_NAME_PROVISIONING=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
@@ -213,6 +229,10 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_MARKETPLACE_APP }}
 
+      - name: Convert image name to lowercase
+        run: |
+          echo IMAGE_NAME_MARKETPLACE_APP=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
@@ -249,6 +269,10 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PORTAL_MIGRATIONS }}
+
+      - name: Convert image name to lowercase
+        run: |
+          echo IMAGE_NAME_PORTAL_MIGRATIONS=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
@@ -287,6 +311,10 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_MAINTENANCE }}
 
+      - name: Convert image name to lowercase
+        run: |
+          echo IMAGE_NAME_MAINTENANCE=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
@@ -323,6 +351,10 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_NOTIFICATION }}
+
+      - name: Convert image name to lowercase
+        run: |
+          echo IMAGE_NAME_NOTIFICATION=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
@@ -361,6 +393,10 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_SERVICES }}
 
+      - name: Convert image name to lowercase
+        run: |
+          echo IMAGE_NAME_SERVICES=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
@@ -397,6 +433,10 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PROVISIONING_MIGRATIONS }}
+
+      - name: Convert image name to lowercase
+        run: |
+          echo IMAGE_NAME_PROVISIONING_MIGRATIONS=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
