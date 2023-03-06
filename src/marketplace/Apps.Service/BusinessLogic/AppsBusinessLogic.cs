@@ -399,33 +399,21 @@ public class AppsBusinessLogic : IAppsBusinessLogic
         }
         if (!result.IsStatusActive)
         {
-            throw new ConflictException("offerStatus is in Incorrect State");
+            throw new ConflictException("offerStatus is in incorrect State");
         }
         var companyUserId = result.CompanyUserId;
         if (companyUserId == Guid.Empty)
         {
-            throw new ForbiddenException($"user {iamUserId} is not a member of the providercompany of Apps {appId}");
+            throw new ForbiddenException($"user {iamUserId} is not a member of the provider company of App {appId}");
         }
 
         var documentRepository = _portalRepositories.GetInstance<IDocumentRepository>();
-        if(result.documentStatusDatas.Any())
-        {
-            foreach(var documentData in result.documentStatusDatas)
-            {
-                documentRepository.AttachAndModifyDocument(documentData.DocumentId,
-                    a => { a.DocumentStatusId = documentData.StatusId; },
-                    a => { a.DocumentStatusId = DocumentStatusId.INACTIVE; }
-                );
-            }
-            await _portalRepositories.SaveAsync().ConfigureAwait(false);
-            _portalRepositories.Clear();
-        }
         var documentName = document.FileName;
         using var sha512Hash = SHA512.Create();
         using var ms = new MemoryStream((int)document.Length);
 
         await document.CopyToAsync(ms, cancellationToken).ConfigureAwait(false);
-        var hash = await sha512Hash.ComputeHashAsync(ms);
+        var hash = await sha512Hash.ComputeHashAsync(ms, cancellationToken);
         var documentContent = ms.GetBuffer();
         if (ms.Length != document.Length || documentContent.Length != document.Length)
         {

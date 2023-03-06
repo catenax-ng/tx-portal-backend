@@ -826,22 +826,14 @@ public class AppBusinessLogicTests
         var appId = _fixture.Create<Guid>();
         var iamUserId = _fixture.Create<Guid>().ToString();
         var documentId = _fixture.Create<Guid>();
-        var documentStatusDatas = _fixture.CreateMany<DocumentStatusData>(2);
+        var documentStatusData = _fixture.CreateMany<DocumentStatusData>(2);
         var companyUserId =  _fixture.Create<Guid>();
         var file = FormFileHelper.GetFormFile("Test Image", "TestImage.jpeg", "image/jpeg");
         var documents = new List<Document>();
         var offerAssignedDocuments = new List<OfferAssignedDocument>();
 
         A.CallTo(() => _offerRepository.GetOfferAssignedAppLeadImageDocumentsByIdAsync(appId, iamUserId, OfferTypeId.APP))
-            .ReturnsLazily(() => (true, companyUserId, documentStatusDatas));
-
-        A.CallTo(() => _documentRepository.AttachAndModifyDocument(A<Guid>._,A<Action<Document>>._, A<Action<Document>>._))
-            .Invokes((Guid DocId, Action<Document>? initialize, Action<Document> modify)
-                => {
-                        var document = new Document(DocId, null!, null!, null!, default, default, default);
-                        initialize?.Invoke(document);
-                        modify(document);
-                    });
+            .ReturnsLazily(() => (true, companyUserId, documentStatusData));
 
         A.CallTo(() => _documentRepository.CreateDocument(A<string>._, A<byte[]>._, A<byte[]>._, A<DocumentTypeId>._,A<Action<Document>?>._))
             .Invokes((string documentName, byte[] documentContent, byte[] hash, DocumentTypeId documentType, Action<Document>? setupOptionalFields) =>
@@ -864,13 +856,11 @@ public class AppBusinessLogicTests
         await sut.CreatOfferAssignedAppLeadImageDocumentByIdAsync(appId, iamUserId, file, CancellationToken.None);
 
         // Assert
-        A.CallTo(() => _documentRepository.AttachAndModifyDocument(A<Guid>._,A<Action<Document>>._, A<Action<Document>>._)).MustHaveHappenedTwiceExactly();
         A.CallTo(() => _documentRepository.CreateDocument(A<string>._, A<byte[]>._, A<byte[]>._, A<DocumentTypeId>._,A<Action<Document>?>._)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _offerRepository.CreateOfferAssignedDocument(A<Guid>._, A<Guid>._)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _offerRepository.RemoveOfferAssignedDocument(A<Guid>._,A<Guid>._)).MustHaveHappenedTwiceExactly();
         A.CallTo(() => _documentRepository.RemoveDocument(A<Guid>._)).MustHaveHappenedTwiceExactly();
-        A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedTwiceExactly();
-        A.CallTo(() => _portalRepositories.Clear()).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
         documents.Should().HaveCount(1);
         offerAssignedDocuments.Should().HaveCount(1);
     }
@@ -913,7 +903,7 @@ public class AppBusinessLogicTests
 
         // Assert
         var result = await Assert.ThrowsAsync<ConflictException>(Act).ConfigureAwait(false);
-        result.Message.Should().Be($"offerStatus is in Incorrect State");
+        result.Message.Should().Be("offerStatus is in incorrect State");
     }
 
     [Fact]
@@ -931,11 +921,11 @@ public class AppBusinessLogicTests
         var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), null!);
 
         // Act
-        var Act = () => sut.CreatOfferAssignedAppLeadImageDocumentByIdAsync(appId, iamUserId, file, CancellationToken.None);
+        async Task Act() => await sut.CreatOfferAssignedAppLeadImageDocumentByIdAsync(appId, iamUserId, file, CancellationToken.None);
 
         // Assert
         var result = await Assert.ThrowsAsync<ForbiddenException>(Act).ConfigureAwait(false);
-        result.Message.Should().Be($"user {iamUserId} is not a member of the providercompany of Apps {appId}");
+        result.Message.Should().Be($"user {iamUserId} is not a member of the provider company of App {appId}");
     }
 
     [Fact]
@@ -952,7 +942,7 @@ public class AppBusinessLogicTests
         var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), null!);
 
         // Act
-        var Act = () => sut.CreatOfferAssignedAppLeadImageDocumentByIdAsync(appId, iamUserId, file, CancellationToken.None);
+        async Task Act() => await sut.CreatOfferAssignedAppLeadImageDocumentByIdAsync(appId, iamUserId, file, CancellationToken.None);
 
         // Assert
         var result = await Assert.ThrowsAsync<NotFoundException>(Act).ConfigureAwait(false);
