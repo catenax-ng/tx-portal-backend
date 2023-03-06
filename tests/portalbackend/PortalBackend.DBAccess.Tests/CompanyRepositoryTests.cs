@@ -453,12 +453,12 @@ public class CompanyRepositoryTests : IAssemblyFixture<TestDbFixture>
 
         result.Should().NotBeNull();
         var data = await result.FirstAsync();
-        var companyRole = data!.companyRoles;
-        var isActiveCompanyRole = data.companyRolesActive;
-        var agreement = data.agreements.First();
+        var companyRole = data!.CompanyRoles;
+        var isActiveCompanyRole = data.CompanyRolesActive;
+        var agreement = data.Agreements.First();
         companyRole.Should().Be("ACTIVE_PARTICIPANT");
         isActiveCompanyRole.Should().BeTrue();
-        agreement.agreementId.Should().Be(new Guid("aa0a0000-7fbc-1f2f-817f-bce0502c1090"));
+        agreement.AgreementId.Should().Be(new Guid("aa0a0000-7fbc-1f2f-817f-bce0502c1090"));
     }
 
     #endregion

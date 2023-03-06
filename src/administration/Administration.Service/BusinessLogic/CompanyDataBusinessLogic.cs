@@ -50,7 +50,7 @@ public class CompanyDataBusinessLogic : ICompanyDataBusinessLogic
     }
 
     /// <inheritdoc/>
-    public IAsyncEnumerable<CompanyRoleConsentDatas> GetCompanyRoleAndConsentAgreementDetailsAsync(string iamUserId)
+    public IAsyncEnumerable<CompanyRoleConsentData> GetCompanyRoleAndConsentAgreementDetailsAsync(string iamUserId)
     {
         var result =  _portalRepositories.GetInstance<ICompanyRepository>().GetCompanyRoleAndConsentAgreementDetailsAsync(iamUserId);
         if (result == default)

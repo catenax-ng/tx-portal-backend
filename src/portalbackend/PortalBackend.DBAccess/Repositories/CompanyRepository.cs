@@ -184,16 +184,16 @@ public class CompanyRepository : ICompanyRepository
             .SingleOrDefaultAsync();
 
     /// <inheritdoc />
-    public IAsyncEnumerable<CompanyRoleConsentDatas?> GetCompanyRoleAndConsentAgreementDetailsAsync(string iamUserId) =>
+    public IAsyncEnumerable<CompanyRoleConsentData> GetCompanyRoleAndConsentAgreementDetailsAsync(string iamUserId) =>
         _context.Companies
         .AsSplitQuery()
         .Where(company => company.CompanyUsers.Any(user => user.IamUser!.UserEntityId == iamUserId) && company.CompanyStatusId == CompanyStatusId.ACTIVE)
         .SelectMany(company => company.CompanyRoles, (company, companyRole) => new { CompanyId = company.Id, CompanyRole = companyRole})
-        .Select(company => new CompanyRoleConsentDatas(
+        .Select(company => new CompanyRoleConsentData(
             company.CompanyRole.Label,
             company.CompanyRole.CompanyRoleRegistrationData!.IsRegistrationRole,
             company.CompanyRole.AgreementAssignedCompanyRoles.Where(c => c.Agreement!.IssuerCompanyId == company.CompanyId)
-                .Select(aacr => new ConsentAggrementDatas(
+                .Select(aacr => new ConsentAgreementData(
                     aacr.Agreement!.Id,
                     aacr.Agreement!.Name,
                     aacr.Agreement.Consents.Where(c => c.CompanyId == company.CompanyId).Select(x => x.ConsentStatusId).SingleOrDefault()))))

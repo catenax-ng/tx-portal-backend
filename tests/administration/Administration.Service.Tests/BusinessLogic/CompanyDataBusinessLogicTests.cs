@@ -92,7 +92,7 @@ public class CompanyDataBusinessLogicTests
     public async Task GetCompanyRoleAndConsentAgreementDetails_CallsExpected()
     {
         // Arrange
-        var companyRoleConsentDatas = _fixture.CreateMany<CompanyRoleConsentDatas>(2).ToAsyncEnumerable();
+        var companyRoleConsentDatas = _fixture.CreateMany<CompanyRoleConsentData>(2).ToAsyncEnumerable();
         A.CallTo(() => _companyRepository.GetCompanyRoleAndConsentAgreementDetailsAsync(IamUserId))
             .ReturnsLazily(() => companyRoleConsentDatas);
 

@@ -58,7 +58,7 @@ public class CompanyDataControllerTests
     public async Task GetCompanyRoleAndConsentAgreementDetailsAsync_ReturnsExpectedResult()
     {
         // Arrange
-        var companyRoleConsentDatas = _fixture.CreateMany<CompanyRoleConsentDatas>(2).ToAsyncEnumerable();
+        var companyRoleConsentDatas = _fixture.CreateMany<CompanyRoleConsentData>(2).ToAsyncEnumerable();
         A.CallTo(() => _logic.GetCompanyRoleAndConsentAgreementDetailsAsync(IamUserId))
             .ReturnsLazily(() => companyRoleConsentDatas);
         
