@@ -404,10 +404,10 @@ public class AppBusinessLogicTests
 
     #endregion
 
-    #region GetAppImageDocumentContentAsync
+    #region GetAppDocumentContentAsync
 
     [Fact]
-    public async Task GetAppImageDocumentContentAsync_ReturnsExpectedresult()
+    public async Task GetAppDocumentContentAsync_ReturnsExpectedresult()
     {
         // Arrange
         var appId = _fixture.Create<Guid>();
@@ -424,7 +424,7 @@ public class AppBusinessLogicTests
         var sut = new AppsBusinessLogic(_portalRepositories, null!, _offerService, null!, Options.Create(settings), null!);
 
         // Act
-        var result = await sut.GetAppImageDocumentContentAsync(appId, documentId, CancellationToken.None).ConfigureAwait(false);
+        var result = await sut.GetAppDocumentContentAsync(appId, documentId, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         result.Content.Should().BeSameAs(data);
@@ -433,7 +433,7 @@ public class AppBusinessLogicTests
     }
 
     [Fact]
-    public async Task GetAppImageDocumentContentAsync_InvalidFileName_ThrowsUnsupportedMediatypeException()
+    public async Task GetAppDocumentContentAsync_InvalidFileName_ThrowsUnsupportedMediatypeException()
     {
         // Arrange
         var appId = _fixture.Create<Guid>();
@@ -450,7 +450,7 @@ public class AppBusinessLogicTests
         var sut = new AppsBusinessLogic(_portalRepositories, null!, _offerService, null!, Options.Create(settings), null!);
 
         // Act
-        var Act = () => sut.GetAppImageDocumentContentAsync(appId, documentId, CancellationToken.None);
+        var Act = () => sut.GetAppDocumentContentAsync(appId, documentId, CancellationToken.None);
 
         // Assert
         await Assert.ThrowsAsync<UnsupportedMediaTypeException>(Act).ConfigureAwait(false);
@@ -459,7 +459,7 @@ public class AppBusinessLogicTests
     }
 
     [Fact]
-    public async Task GetAppImageDocumentContentAsync_ForDocumentIdNotExist_ThrowsNotFoundException()
+    public async Task GetAppDocumentContentAsync_ForDocumentIdNotExist_ThrowsArgumentException()
     {
         // Arrange
         var appId = _fixture.Create<Guid>();
@@ -476,7 +476,7 @@ public class AppBusinessLogicTests
         var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(settings), null!);
 
         // Act
-        async Task Act() => await sut.GetAppImageDocumentContentAsync(appId, documentId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await sut.GetAppDocumentContentAsync(appId, documentId, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
@@ -484,7 +484,7 @@ public class AppBusinessLogicTests
     }
 
     [Fact]
-    public async Task GetAppImageDocumentContentAsync_WithInvalidDocumentType_ThrowsArgumentException()
+    public async Task GetAppDocumentContentAsync_WithInvalidDocumentType_ThrowsArgumentException()
     {
         // Arrange
         var appId = _fixture.Create<Guid>();
@@ -501,7 +501,7 @@ public class AppBusinessLogicTests
         var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(settings), null!);
 
         // Act
-        async Task Act() => await sut.GetAppImageDocumentContentAsync(appId, documentId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await sut.GetAppDocumentContentAsync(appId, documentId, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Act);
@@ -509,7 +509,7 @@ public class AppBusinessLogicTests
     }
 
     [Fact]
-    public async Task GetAppImageDocumentContentAsync_WithInvalidOfferType_ThrowsArgumentException()
+    public async Task GetAppDocumentContentAsync_WithInvalidOfferType_ThrowsArgumentException()
     {
         // Arrange
         var appId = _fixture.Create<Guid>();
@@ -526,7 +526,7 @@ public class AppBusinessLogicTests
         var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(settings), null!);
 
         // Act
-        async Task Act() => await sut.GetAppImageDocumentContentAsync(appId, documentId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await sut.GetAppDocumentContentAsync(appId, documentId, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Act);
@@ -534,7 +534,7 @@ public class AppBusinessLogicTests
     }
 
     [Fact]
-    public async Task GetAppImageDocumentContentAsync_WithOfferNotLinkToDocument_ThrowsArgumentException()
+    public async Task GetAppDocumentContentAsync_WithOfferNotLinkToDocument_ThrowsArgumentException()
     {
         // Arrange
         var appId = _fixture.Create<Guid>();
@@ -551,7 +551,7 @@ public class AppBusinessLogicTests
         var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(settings), null!);
 
         // Act
-        async Task Act() => await sut.GetAppImageDocumentContentAsync(appId, documentId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await sut.GetAppDocumentContentAsync(appId, documentId, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Act);
@@ -559,7 +559,7 @@ public class AppBusinessLogicTests
     }
 
     [Fact]
-    public async Task GetAppImageDocumentContentAsync_WithInvalidStatus_ThrowsConflictException()
+    public async Task GetAppDocumentContentAsync_WithInvalidStatus_ThrowsConflictException()
     {
         // Arrange
         var appId = _fixture.Create<Guid>();
@@ -576,7 +576,7 @@ public class AppBusinessLogicTests
         var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(settings), null!);
 
         // Act
-        async Task Act() => await sut.GetAppImageDocumentContentAsync(appId, documentId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await sut.GetAppDocumentContentAsync(appId, documentId, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -601,7 +601,7 @@ public class AppBusinessLogicTests
         var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(settings), null!);
 
         // Act
-        async Task Act() => await sut.GetAppImageDocumentContentAsync(appId, documentId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await sut.GetAppDocumentContentAsync(appId, documentId, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<UnexpectedConditionException>(Act);
