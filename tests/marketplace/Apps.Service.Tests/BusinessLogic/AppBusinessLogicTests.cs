@@ -418,7 +418,7 @@ public class AppBusinessLogicTests
         {
             AppImageDocumentTypeIds = _fixture.Create<IEnumerable<DocumentTypeId>>(),
         };
-        A.CallTo(() => _documentRepository.GetOfferImageDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
+        A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
             .Returns((true, true, true, false, data, true, fileName));
 
         var sut = new AppsBusinessLogic(_portalRepositories, null!, _offerService, null!, Options.Create(settings), null!);
@@ -429,7 +429,7 @@ public class AppBusinessLogicTests
         // Assert
         result.Content.Should().BeSameAs(data);
         result.ContentType.Should().Be("image/jpeg");
-        A.CallTo(() => _documentRepository.GetOfferImageDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._)).MustHaveHappened();
+        A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._)).MustHaveHappened();
     }
 
     [Fact]
@@ -444,7 +444,7 @@ public class AppBusinessLogicTests
         {
             AppImageDocumentTypeIds = _fixture.Create<IEnumerable<DocumentTypeId>>(),
         };
-        A.CallTo(() => _documentRepository.GetOfferImageDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
+        A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
             .Returns((true, true, true, false, data, true, fileName));
 
         var sut = new AppsBusinessLogic(_portalRepositories, null!, _offerService, null!, Options.Create(settings), null!);
@@ -455,7 +455,7 @@ public class AppBusinessLogicTests
         // Assert
         await Assert.ThrowsAsync<UnsupportedMediaTypeException>(Act).ConfigureAwait(false);
 
-        A.CallTo(() => _documentRepository.GetOfferImageDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._)).MustHaveHappened();
+        A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._)).MustHaveHappened();
     }
 
     [Fact]
@@ -470,7 +470,7 @@ public class AppBusinessLogicTests
         {
             AppImageDocumentTypeIds = _fixture.Create<IEnumerable<DocumentTypeId>>(),
         };
-        A.CallTo(() => _documentRepository.GetOfferImageDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
+        A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
             .Returns((true, true, true, false, null, false,fileName));
 
         var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(settings), null!);
@@ -495,7 +495,7 @@ public class AppBusinessLogicTests
         {
             AppImageDocumentTypeIds = _fixture.Create<IEnumerable<DocumentTypeId>>(),
         };
-        A.CallTo(() => _documentRepository.GetOfferImageDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
+        A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
             .Returns((false, true, true, false, null, true, fileName));
 
         var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(settings), null!);
@@ -520,7 +520,7 @@ public class AppBusinessLogicTests
         {
             AppImageDocumentTypeIds = _fixture.Create<IEnumerable<DocumentTypeId>>(),
         };
-        A.CallTo(() => _documentRepository.GetOfferImageDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
+        A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
             .Returns((true, true, false, false, null, true, fileName));
 
         var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(settings), null!);
@@ -545,7 +545,7 @@ public class AppBusinessLogicTests
         {
             AppImageDocumentTypeIds = _fixture.Create<IEnumerable<DocumentTypeId>>(),
         };
-        A.CallTo(() => _documentRepository.GetOfferImageDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
+        A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
             .Returns((true, false, true, false, null, true, fileName));
 
         var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(settings), null!);
@@ -570,7 +570,7 @@ public class AppBusinessLogicTests
         {
             AppImageDocumentTypeIds = _fixture.Create<IEnumerable<DocumentTypeId>>(),
         };
-        A.CallTo(() => _documentRepository.GetOfferImageDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
+        A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
             .Returns((true, true, true, true, null, true, fileName));
 
         var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(settings), null!);
@@ -595,7 +595,7 @@ public class AppBusinessLogicTests
         {
             AppImageDocumentTypeIds = _fixture.Create<IEnumerable<DocumentTypeId>>(),
         };
-        A.CallTo(() => _documentRepository.GetOfferImageDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
+        A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
             .Returns((true, true, true, false, null, true, fileName));
 
         var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(settings), null!);
