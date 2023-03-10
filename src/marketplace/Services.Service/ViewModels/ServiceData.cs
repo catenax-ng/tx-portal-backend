@@ -26,7 +26,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Services.Service.ViewModels;
 /// <summary>
 /// View model of an application's detailed data specific for service.
 /// </summary>
-/// <param name="ServiceId">ID of the service.</param>
+/// <param name="Id">ID of the service.</param>
 /// <param name="Title">Title or name of the service.</param>
 /// <param name="ServiceTypes">Collection of the assigned serviceTypeIds</param>
 /// <param name="Provider">Provider of the service.</param>
@@ -36,12 +36,12 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Services.Service.ViewModels;
 /// <param name="ContactEmail">Contact Email of the service.</param>
 /// <param name="ContactNumber">Contact Number of the service. </param>
 public record ServiceData(
-    Guid ServiceId, 
-    string? Title, 
+    Guid Id,
+    string? Title,
     IEnumerable<ServiceTypeId> ServiceTypes,
-    string Provider, 
-    IEnumerable<LocalizedDescription> Descriptions, 
-    IDictionary<DocumentTypeId, IEnumerable<DocumentData>> Documents, 
+    string Provider,
+    IEnumerable<LocalizedDescription> Descriptions,
+    IDictionary<DocumentTypeId, IEnumerable<DocumentData>> Documents,
     string ProviderUri,
     string? ContactEmail,
     string? ContactNumber);

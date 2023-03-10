@@ -53,7 +53,7 @@ public class ServiceReleaseBusinessLogic : IServiceReleaseBusinessLogic
 
     public IAsyncEnumerable<AgreementDocumentData> GetServiceAgreementDataAsync()=>
         _offerService.GetOfferTypeAgreementsAsync(OfferTypeId.SERVICE);
-    
+
     /// <inheritdoc />
     public async Task<ServiceData> GetServiceDetailsByIdAsync(Guid serviceId)
     {
@@ -72,12 +72,12 @@ public class ServiceReleaseBusinessLogic : IServiceReleaseBusinessLogic
             result.Title ?? Constants.ErrorString,
             result.ServiceTypeIds,
             result.Provider,
-            result.Descriptions.Select(x=>new LocalizedDescription(x.languageCode,x.longDescription,x.shortDescription)),
+            result.Descriptions.Select(x => new LocalizedDescription(x.languageCode, x.longDescription, x.shortDescription)),
             result.Documents.GroupBy(d => d.documentTypeId).ToDictionary(g => g.Key, g => g.Select(d => new DocumentData(d.documentId, d.documentName))),
             result.ProviderUri ?? Constants.ErrorString,
             result.ContactEmail,
             result.ContactNumber
-           
+
         );
     }
 }

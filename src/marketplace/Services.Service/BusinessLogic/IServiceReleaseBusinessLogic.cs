@@ -33,9 +33,9 @@ public interface IServiceReleaseBusinessLogic
     /// </summary>
     /// <returns></returns>
     IAsyncEnumerable<AgreementDocumentData> GetServiceAgreementDataAsync();
-    
+
     /// <summary>
-    /// 
+    /// Retrieve Service Details by Id
     /// </summary>
     /// <param name="serviceId"></param>
     /// <returns></returns>

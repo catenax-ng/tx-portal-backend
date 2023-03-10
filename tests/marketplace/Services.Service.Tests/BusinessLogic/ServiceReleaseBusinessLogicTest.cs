@@ -28,6 +28,8 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Services.Service.BusinessLogic;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
+using Org.Eclipse.TractusX.Portal.Backend.Services.Service.ViewModels;
 using Xunit;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Services.Service.Tests.BusinessLogic;
@@ -74,6 +76,60 @@ public class ServiceReleaseBusinessLogicTest
         A.CallTo(() => offerService.GetOfferTypeAgreementsAsync(A<OfferTypeId>._))
             .MustHaveHappenedOnceExactly();
         result.Should().HaveCount(5);
+    }
+
+    [Fact]
+    public async Task GetServiceDetailsByIdAsync_ReturnsExpectedResult()
+    {
+        //Arrange
+        var data = _fixture.Build<ServiceDetailsData>()
+                           .With(x=>x.OfferStatusId, OfferStatusId.IN_REVIEW)
+                           .With(x=>x.Title, "ServiceTest")
+                           .With(x=>x.Provider, "TestProvider")
+                           .With(x=>x.ProviderUri, "TestProviderUri")
+                           .With(x=>x.ContactEmail, "test@gmail.com")
+                           .With(x=>x.ContactNumber, "6754321786")
+                           .With(x=>x.ServiceTypeIds, new []{ServiceTypeId.CONSULTANCE_SERVICE,ServiceTypeId.DATASPACE_SERVICE})
+                           .Create();
+        var serviceId = _fixture.Create<Guid>();
+       
+        A.CallTo(() => _offerRepository.GetServiceDetailsByIdAsync(serviceId))
+            .Returns(data);
+
+        //Act
+        var sut = _fixture.Create<ServiceReleaseBusinessLogic>();
+        var result = await sut.GetServiceDetailsByIdAsync(serviceId).ConfigureAwait(false);
+        
+        // Assert 
+        A.CallTo(() => _offerRepository.GetServiceDetailsByIdAsync(A<Guid>._))
+            .MustHaveHappenedOnceExactly();
+        result.Should().BeOfType<ServiceData>();
+        result.Title.Should().Be("ServiceTest");
+        result.Provider.Should().Be("TestProvider");
+        result.ProviderUri.Should().Be("TestProviderUri");
+        result.ContactEmail.Should().Be("test@gmail.com");
+        result.ContactNumber.Should().Be("6754321786");
+    }
+
+    [Fact]
+    public async Task GetServiceDetailsByIdAsync_WithInvalidOfferStatus_ThrowsException()
+    {
+        // Arrange
+        var data = _fixture.Build<ServiceDetailsData>()
+                            .With(x=>x.OfferStatusId, OfferStatusId.CREATED)
+                            .Create();
+        var serviceId = _fixture.Create<Guid>();
+       
+        A.CallTo(() => _offerRepository.GetServiceDetailsByIdAsync(serviceId))
+            .Returns(data);
+        var sut = _fixture.Create<ServiceReleaseBusinessLogic>();
+
+        // Act
+        async Task Act() => await sut.GetServiceDetailsByIdAsync(serviceId).ConfigureAwait(false);
+
+        // Assert
+        var error = await Assert.ThrowsAsync<ConflictException>(Act).ConfigureAwait(false);
+        error.Message.Should().Be($"serviceId {serviceId} is incorrect status");
     }
 
     private void SetupRepositories()
