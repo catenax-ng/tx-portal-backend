@@ -57,6 +57,7 @@ public class OfferServiceTests
     private readonly IamUser _iamUser;
     private readonly IDocumentRepository _documentRepository;
     private readonly OfferService _sut;
+    private readonly IOfferSetupService _offerSetupService;
 
     public OfferServiceTests()
     {
@@ -85,8 +86,9 @@ public class OfferServiceTests
             .With(u => u.CompanyUser, _companyUser)
             .Create();
         _documentRepository = A.Fake<IDocumentRepository>();
+        _offerSetupService = A.Fake<IOfferSetupService>();
 
-        _sut = new OfferService(_portalRepositories, _notificationService, _mailingService);
+        _sut = new OfferService(_portalRepositories, _notificationService, _mailingService, _offerSetupService);
 
         SetupRepositories();
         SetupServices();
@@ -648,13 +650,11 @@ public class OfferServiceTests
             .With(x => x.DocumentTypeIds, new [] { DocumentTypeId.CONFORMITY_APPROVAL_BUSINESS_APPS })
             .Create();
         var submitAppDocumentTypeIds = new [] { DocumentTypeId.APP_IMAGE,DocumentTypeId.APP_LEADIMAGE,DocumentTypeId.CONFORMITY_APPROVAL_BUSINESS_APPS };
-        var userId = _fixture.Create<Guid>();
         A.CallTo(() => _offerRepository.GetOfferReleaseDataByIdAsync(A<Guid>._,A<OfferTypeId>._)).Returns(data);
         A.CallTo(() => _userRepository.GetCompanyUserIdForIamUserUntrackedAsync(A<string>._)).Returns(Guid.Empty);
-        var sut = new OfferService(_portalRepositories, null!, null!);
 
         // Act
-        async Task Act() => await sut.SubmitOfferAsync(Guid.NewGuid(), _iamUserId, _fixture.Create<OfferTypeId>(), _fixture.CreateMany<NotificationTypeId>(1), _fixture.Create<IDictionary<string, IEnumerable<string>>>(),  new [] { DocumentTypeId.APP_IMAGE,DocumentTypeId.APP_LEADIMAGE,DocumentTypeId.CONFORMITY_APPROVAL_BUSINESS_APPS }).ConfigureAwait(false);
+        async Task Act() => await _sut.SubmitOfferAsync(Guid.NewGuid(), _iamUserId, _fixture.Create<OfferTypeId>(), _fixture.CreateMany<NotificationTypeId>(1), _fixture.Create<IDictionary<string, IEnumerable<string>>>(),  new [] { DocumentTypeId.APP_IMAGE,DocumentTypeId.APP_LEADIMAGE,DocumentTypeId.CONFORMITY_APPROVAL_BUSINESS_APPS }).ConfigureAwait(false);
 
         // Assert
         var result = await Assert.ThrowsAsync<ConflictException>(Act).ConfigureAwait(false);
@@ -704,9 +704,9 @@ public class OfferServiceTests
         A.CallTo(() => _offerRepository.GetOfferReleaseDataByIdAsync(offerId, offerType)).ReturnsLazily(() => data);
         A.CallTo(() => _userRepository.GetCompanyUserIdForIamUserUntrackedAsync(A<string>._)).ReturnsLazily(() => userId);
         A.CallTo(() => _documentRepository.AttachAndModifyDocument(A<Guid>._,A<Action<Document>>._, A<Action<Document>>._))
-            .Invokes((Guid DocId, Action<Document>? initialize, Action<Document> modify)
+            .Invokes((Guid docId, Action<Document>? initialize, Action<Document> modify)
                 => {
-                        var document = new Document(DocId, null!, null!, null!, default, default, default, default);
+                        var document = new Document(docId, null!, null!, null!, default, default, default, default);
                         initialize?.Invoke(document);
                         modify(document);
                     });
@@ -733,8 +733,10 @@ public class OfferServiceTests
 
     #region ApproveOfferRequest
 
-    [Fact]
-    public async Task ApproveOfferRequestAsync_ExecutesSuccessfully()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ApproveOfferRequestAsync_ExecutesSuccessfully(bool isSingleInstance)
     {
         //Arrange
         var offer = _fixture.Build<Offer>().With(o => o.OfferStatusId, OfferStatusId.IN_REVIEW).Create();
@@ -743,7 +745,7 @@ public class OfferServiceTests
         var iamUserId = _fixture.Create<string>();
        
         A.CallTo(() => _offerRepository.GetOfferStatusDataByIdAsync(offer.Id, OfferTypeId.APP))
-            .ReturnsLazily(() => (true, offer.Name, companyId));
+            .ReturnsLazily(() => (true, offer.Name, companyId, isSingleInstance));
         A.CallTo(() => _userRepository.GetCompanyUserIdForIamUserUntrackedAsync(iamUserId))
             .ReturnsLazily(() => (requesterId));
         A.CallTo(() => _offerRepository.AttachAndModifyOffer(offer.Id, A<Action<Offer>>._, A<Action<Offer>?>._))
@@ -761,9 +763,17 @@ public class OfferServiceTests
         {
             { "catenax-portal", new [] { "Sales Manager" } }
         };
+        var serviceAccountRoles = new Dictionary<string, IEnumerable<string>>()
+        {
+            {"sa", new []{"test"}}
+        };
+        var itAdminRoles = new Dictionary<string, IEnumerable<string>>()
+        {
+            {"it", new[] {"test"}}
+        };
 
         //Act
-        await _sut.ApproveOfferRequestAsync(offer.Id, iamUserId, OfferTypeId.APP, approveAppNotificationTypeIds, approveAppUserRoles).ConfigureAwait(false);
+        await _sut.ApproveOfferRequestAsync(offer.Id, iamUserId, OfferTypeId.APP, approveAppNotificationTypeIds, approveAppUserRoles, serviceAccountRoles, itAdminRoles).ConfigureAwait(false);
 
         //Assert
         A.CallTo(() => _offerRepository.GetOfferStatusDataByIdAsync(offer.Id, OfferTypeId.APP)).MustHaveHappened();
@@ -772,7 +782,16 @@ public class OfferServiceTests
         A.CallTo(() => _notificationService.CreateNotifications(A<IDictionary<string, IEnumerable<string>>>._, A<Guid>._, A<IEnumerable<(string? content, NotificationTypeId notificationTypeId)>>._, A<Guid>._)).MustHaveHappened();
         offer.OfferStatusId.Should().Be(OfferStatusId.ACTIVE);
         offer.DateReleased.Should().NotBeNull();
-        A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
+        if (isSingleInstance)
+        {
+            A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly(); A.CallTo(() => _offerSetupService.CreateSingleInstanceAppAsync(offer.Id, A<Guid>._, serviceAccountRoles, itAdminRoles))
+                .MustHaveHappenedOnceExactly();    
+        }
+        else
+        {
+            A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly(); A.CallTo(() => _offerSetupService.CreateSingleInstanceAppAsync(offer.Id, A<Guid>._, serviceAccountRoles, itAdminRoles))
+                .MustNotHaveHappened();
+        }
     }
 
     [Fact]
@@ -784,7 +803,7 @@ public class OfferServiceTests
         var companyId = _fixture.Create<Guid>();
 
         A.CallTo(() => _offerRepository.GetOfferStatusDataByIdAsync(offerId, OfferTypeId.APP))
-            .ReturnsLazily(() => (true, null, companyId));
+            .ReturnsLazily(() => (true, null, companyId, false));
 
         var approveAppNotificationTypeIds = new []
         {
@@ -794,9 +813,17 @@ public class OfferServiceTests
         {
             { "catenax-portal", new [] { "Sales Manager" } }
         };
+        var serviceAccountRoles = new Dictionary<string, IEnumerable<string>>()
+        {
+            {"sa", new []{"test"}}
+        };
+        var itAdminRoles = new Dictionary<string, IEnumerable<string>>()
+        {
+            {"it", new[] {"test"}}
+        };
 
         //Act
-        Task Act() => _sut.ApproveOfferRequestAsync(offerId, iamUserId, OfferTypeId.APP, approveAppNotificationTypeIds, approveAppUserRoles);
+        Task Act() => _sut.ApproveOfferRequestAsync(offerId, iamUserId, OfferTypeId.APP, approveAppNotificationTypeIds, approveAppUserRoles, serviceAccountRoles, itAdminRoles);
 
         //Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act).ConfigureAwait(false);
@@ -812,7 +839,7 @@ public class OfferServiceTests
         var iamUserId = _fixture.Create<string>();
 
         A.CallTo(() => _offerRepository.GetOfferStatusDataByIdAsync(offerId, OfferTypeId.APP))
-            .ReturnsLazily(() => (true, "The name", null));
+            .ReturnsLazily(() => (true, "The name", null, false));
 
         var approveAppNotificationTypeIds = new []
         {
@@ -822,9 +849,17 @@ public class OfferServiceTests
         {
             { "catenax-portal", new [] { "Sales Manager" } }
         };
+        var serviceAccountRoles = new Dictionary<string, IEnumerable<string>>()
+        {
+            {"sa", new []{"test"}}
+        };
+        var itAdminRoles = new Dictionary<string, IEnumerable<string>>()
+        {
+            {"it", new[] {"test"}}
+        };
 
         //Act
-        Task Act() => _sut.ApproveOfferRequestAsync(offerId, iamUserId, OfferTypeId.APP, approveAppNotificationTypeIds, approveAppUserRoles);
+        Task Act() => _sut.ApproveOfferRequestAsync(offerId, iamUserId, OfferTypeId.APP, approveAppNotificationTypeIds, approveAppUserRoles, serviceAccountRoles, itAdminRoles);
 
         //Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act).ConfigureAwait(false);
@@ -844,10 +879,8 @@ public class OfferServiceTests
         var notExistingOffer = _fixture.Create<Guid>();
         A.CallTo(() => _offerRepository.GetOfferReleaseDataByIdAsync(notExistingOffer, offerType)).ReturnsLazily(() => (OfferReleaseData?)null);
 
-        var sut = new OfferService(_portalRepositories, null!, null!);
-
         // Act
-        async Task Act() => await sut.SubmitServiceAsync(notExistingOffer, _iamUserId, offerType, new [] { NotificationTypeId.APP_SUBSCRIPTION_REQUEST }, _fixture.Create<IDictionary<string, IEnumerable<string>>>()).ConfigureAwait(false);
+        async Task Act() => await _sut.SubmitServiceAsync(notExistingOffer, _iamUserId, offerType, new [] { NotificationTypeId.APP_SUBSCRIPTION_REQUEST }, _fixture.Create<IDictionary<string, IEnumerable<string>>>()).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<NotFoundException>(Act).ConfigureAwait(false);
@@ -866,10 +899,8 @@ public class OfferServiceTests
         A.CallTo(() => _offerRepository.GetOfferReleaseDataByIdAsync(A<Guid>._,A<OfferTypeId>._)).Returns(new OfferReleaseData(name, providerCompanyId == null ? null : new Guid(providerCompanyId), _fixture.Create<string>(), isDescriptionLongNotSet, isDescriptionShortNotSet, hasUserRoles, documentStatusData, new [] { DocumentTypeId.CONFORMITY_APPROVAL_BUSINESS_APPS }));
         A.CallTo(() => _userRepository.GetCompanyUserIdForIamUserUntrackedAsync(A<string>._)).Returns(Guid.NewGuid());
 
-        var sut = new OfferService(_portalRepositories, null!, null!);
-
         // Act
-        async Task Act() => await sut.SubmitServiceAsync(Guid.NewGuid(), _iamUserId, _fixture.Create<OfferTypeId>(), _fixture.CreateMany<NotificationTypeId>(1), _fixture.Create<IDictionary<string, IEnumerable<string>>>()).ConfigureAwait(false);
+        async Task Act() => await _sut.SubmitServiceAsync(Guid.NewGuid(), _iamUserId, _fixture.Create<OfferTypeId>(), _fixture.CreateMany<NotificationTypeId>(1), _fixture.Create<IDictionary<string, IEnumerable<string>>>()).ConfigureAwait(false);
 
         // Assert
         var result = await Assert.ThrowsAsync<ConflictException>(Act).ConfigureAwait(false);
@@ -885,13 +916,11 @@ public class OfferServiceTests
             .With(x => x.IsDescriptionShortNotSet, false)
             .With(x => x.DocumentTypeIds, new [] { DocumentTypeId.CONFORMITY_APPROVAL_BUSINESS_APPS })
             .Create();
-        var userId = _fixture.Create<Guid>();
         A.CallTo(() => _offerRepository.GetOfferReleaseDataByIdAsync(A<Guid>._,A<OfferTypeId>._)).Returns(data);
         A.CallTo(() => _userRepository.GetCompanyUserIdForIamUserUntrackedAsync(A<string>._)).Returns(Guid.Empty);
-        var sut = new OfferService(_portalRepositories, null!, null!);
 
         // Act
-        async Task Act() => await sut.SubmitServiceAsync(Guid.NewGuid(), _iamUserId, _fixture.Create<OfferTypeId>(), _fixture.CreateMany<NotificationTypeId>(1), _fixture.Create<IDictionary<string, IEnumerable<string>>>()).ConfigureAwait(false);
+        async Task Act() => await _sut.SubmitServiceAsync(Guid.NewGuid(), _iamUserId, _fixture.Create<OfferTypeId>(), _fixture.CreateMany<NotificationTypeId>(1), _fixture.Create<IDictionary<string, IEnumerable<string>>>()).ConfigureAwait(false);
 
         // Assert
         var result = await Assert.ThrowsAsync<ConflictException>(Act).ConfigureAwait(false);
@@ -917,9 +946,9 @@ public class OfferServiceTests
         A.CallTo(() => _offerRepository.GetOfferReleaseDataByIdAsync(offerId, offerType)).ReturnsLazily(() => data);
         A.CallTo(() => _userRepository.GetCompanyUserIdForIamUserUntrackedAsync(A<string>._)).ReturnsLazily(() => userId);
         A.CallTo(() => _documentRepository.AttachAndModifyDocument(A<Guid>._,A<Action<Document>>._, A<Action<Document>>._))
-            .Invokes((Guid DocId, Action<Document>? initialize, Action<Document> modify)
+            .Invokes((Guid docId, Action<Document>? initialize, Action<Document> modify)
                 => {
-                        var document = new Document(DocId, null!, null!, null!, default, default, default, default);
+                        var document = new Document(docId, null!, null!, null!, default, default, default, default);
                         initialize?.Invoke(document);
                         modify(document);
                     });

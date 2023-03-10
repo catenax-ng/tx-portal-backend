@@ -168,10 +168,11 @@ public class OfferSetupServiceTests
         var appInstances = new List<AppInstance>();
         var appSubscriptionDetails = new List<AppSubscriptionDetail>();
         var notifications = new List<Notification>();
-        A.CallTo(() => _clientRepository.CreateClient(A<string>._))
-            .Invokes((string clientName) =>
+        A.CallTo(() => _clientRepository.CreateClient(A<string>._, A<Action<IamClient>?>._))
+            .Invokes((string clientName, Action<IamClient> setOptionalParameter) =>
             {
-                var client = new IamClient(clientId, clientName!);
+                var client = new IamClient(clientId, clientName);
+                setOptionalParameter.Invoke(client);
                 clients.Add(client);
             })
             .Returns(new IamClient(clientId, "cl1"));
@@ -328,7 +329,7 @@ public class OfferSetupServiceTests
 
     private void SetupServices()
     {
-        A.CallTo(() => _provisioningManager.SetupClientAsync(A<string>._, A<string>._, A<IEnumerable<string>?>._))
+        A.CallTo(() => _provisioningManager.SetupClientAsync(A<string>._, A<string>._, A<IEnumerable<string>?>._, A<bool>._))
             .ReturnsLazily(() => "cl1");
         
         A.CallTo(() => _serviceAccountCreation.CreateServiceAccountAsync(A<ServiceAccountCreationInfo>._, A<Guid>._, A<IEnumerable<string>>.That.Matches(x => x.Any(y => y == "CAXSDUMMYCATENAZZ")), CompanyServiceAccountTypeId.MANAGED, A<bool>._, A<Action<CompanyServiceAccount>?>._))
@@ -365,21 +366,21 @@ public class OfferSetupServiceTests
                 A<OfferTypeId>._))
             .ReturnsLazily(() => new OfferSubscriptionTransferData(OfferSubscriptionStatusId.ACTIVE, _companyUser.Id, Guid.Empty,
                 _companyUser.Company!.Name, _companyUser.CompanyId, _companyUser.Id, _existingServiceId, "Test Service",
-                Bpn, "user@email.com", "Tony", "Gilbert", technicalUserRequired));
+                Bpn, "user@email.com", "Tony", "Gilbert", technicalUserRequired, false));
         A.CallTo(() => _offerSubscriptionsRepository.GetOfferDetailsAndCheckUser(
                 A<Guid>.That.Matches(x => x == _pendingSubscriptionId),
                 A<string>.That.Matches(x => x == _iamUserIdWithoutMail),
                 A<OfferTypeId>._))
             .ReturnsLazily(() => new OfferSubscriptionTransferData(OfferSubscriptionStatusId.PENDING, _companyUser.Id, Guid.Empty,
                 _companyUser.Company!.Name, _companyUser.CompanyId, _companyUser.Id, _existingServiceId, "Test Service",
-                Bpn, null, null, null, technicalUserRequired));
+                Bpn, null, null, null, technicalUserRequired, false));
         A.CallTo(() => _offerSubscriptionsRepository.GetOfferDetailsAndCheckUser(
                 A<Guid>.That.Matches(x => x == _pendingSubscriptionId),
                 A<string>.That.Matches(x => x == _iamUserId),
                 A<OfferTypeId>._))
             .ReturnsLazily(() => new OfferSubscriptionTransferData(OfferSubscriptionStatusId.PENDING, _companyUser.Id, Guid.Empty,
                 string.Empty, _companyUser.CompanyId, _companyUser.Id, _existingServiceId, "Test Service",
-                Bpn, "user@email.com", "Tony", "Gilbert", technicalUserRequired));
+                Bpn, "user@email.com", "Tony", "Gilbert", technicalUserRequired, false));
         A.CallTo(() => _offerSubscriptionsRepository.GetOfferDetailsAndCheckUser(
                 A<Guid>.That.Not.Matches(x => x == _pendingSubscriptionId || x == _validSubscriptionId),
                 A<string>.That.Matches(x => x == _iamUserId),
@@ -391,7 +392,7 @@ public class OfferSetupServiceTests
                 A<OfferTypeId>._))
             .ReturnsLazily(() =>new OfferSubscriptionTransferData(OfferSubscriptionStatusId.PENDING, Guid.Empty, Guid.Empty,
                 string.Empty, _companyUser.CompanyId, _companyUser.Id, _existingServiceId, "Test Service",
-                Bpn, null, null, null, technicalUserRequired));
+                Bpn, null, null, null, technicalUserRequired, false));
 
     }
 

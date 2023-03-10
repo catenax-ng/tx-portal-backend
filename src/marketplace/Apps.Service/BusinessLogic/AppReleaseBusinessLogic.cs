@@ -41,6 +41,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
     private readonly IPortalRepositories _portalRepositories;
     private readonly AppsSettings _settings;
     private readonly IOfferService _offerService;
+    private readonly IOfferSetupService _offerSetupService;
 
     /// <summary>
     /// Constructor.
@@ -48,11 +49,13 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
     /// <param name="portalRepositories"></param>
     /// <param name="settings"></param>
     /// <param name="offerService"></param>
-    public AppReleaseBusinessLogic(IPortalRepositories portalRepositories, IOptions<AppsSettings> settings, IOfferService offerService)
+    /// <param name="offerSetupService"></param>
+    public AppReleaseBusinessLogic(IPortalRepositories portalRepositories, IOptions<AppsSettings> settings, IOfferService offerService, IOfferSetupService offerSetupService)
     {
         _portalRepositories = portalRepositories;
         _settings = settings.Value;
         _offerService = offerService;
+        _offerSetupService = offerSetupService;
     }
     
     /// <inheritdoc/>
@@ -377,7 +380,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
     
     /// <inheritdoc/>
     public Task ApproveAppRequestAsync(Guid appId, string iamUserId) =>
-        _offerService.ApproveOfferRequestAsync(appId, iamUserId, OfferTypeId.APP, _settings.ApproveAppNotificationTypeIds, (_settings.ApproveAppUserRoles));
+        _offerService.ApproveOfferRequestAsync(appId, iamUserId, OfferTypeId.APP, _settings.ApproveAppNotificationTypeIds, _settings.ApproveAppUserRoles, _settings.ServiceAccountRoles, _settings.ITAdminRoles);
     
     private IEnumerable<OfferStatusId> GetOfferStatusIds(OfferStatusIdFilter? offerStatusIdFilter)
     {
@@ -514,6 +517,67 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         _portalRepositories.GetInstance<IOfferRepository>().RemoveOfferTags(appData.TagNames.Select(tagName => (appId, tagName)));
         _portalRepositories.GetInstance<IOfferRepository>().RemoveOfferDescriptions(appData.DescriptionLanguageShortNames.Select(languageShortName => (appId, languageShortName)));
         _portalRepositories.GetInstance<IOfferRepository>().RemoveOffer(appId);
+        await _portalRepositories.SaveAsync().ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public Task SetInstanceType(Guid appId, AppInstanceSetupData data, string iamUserId) =>
+        data.IsSingleInstance switch
+        {
+            true when string.IsNullOrWhiteSpace(data.InstanceUrl) => 
+                throw new ControllerArgumentException("InstanceUrl must be set for a single instance app", nameof(data.InstanceUrl)),
+            false when !string.IsNullOrWhiteSpace(data.InstanceUrl) => 
+                throw new ControllerArgumentException("Multi instance app must not have a instance url set", nameof(data.InstanceUrl)),
+            _ => SetInstanceTypeInternal(appId, data, iamUserId)
+        };
+
+    private async Task SetInstanceTypeInternal(Guid appId, AppInstanceSetupData data, string iamUserId)
+    {
+        var result = await _portalRepositories.GetInstance<IOfferRepository>()
+            .GetOfferWithSetupDataById(appId, iamUserId, OfferTypeId.APP)
+            .ConfigureAwait(false);
+        if (result == default)
+            throw new NotFoundException($"App {appId} does not exist.");
+
+        if (!result.IsUserOfProvidingCompany)
+            throw new ForbiddenException($"User {iamUserId} is not a user of the provider company");
+
+        if (result.OfferStatus is not (OfferStatusId.CREATED or OfferStatusId.IN_REVIEW))
+            throw new ConflictException($"App {appId} is not in Status {OfferStatusId.CREATED} or {OfferStatusId.IN_REVIEW}");
+
+        if (result.SetupTransferData == null)
+        {
+            _portalRepositories.GetInstance<IOfferRepository>().CreateAppInstanceSetup(appId, data.IsSingleInstance,
+                entity =>
+                {
+                    entity.InstanceUrl = data.InstanceUrl;
+                });
+        }
+        else
+        {
+            var existingData = result.SetupTransferData;
+            _portalRepositories.GetInstance<IOfferRepository>().AttachAndModifyAppInstanceSetup(
+                existingData.Id,
+                appId,
+                entity =>
+                {
+                    entity.InstanceUrl = data.InstanceUrl;
+                    entity.IsSingleInstance = data.IsSingleInstance;
+                },
+                entity =>
+                {
+                    entity.InstanceUrl = existingData.InstanceUrl;
+                    entity.IsSingleInstance = existingData.IsSingleInstance;
+                });
+        }
+
+        if (data.IsSingleInstance)
+        {
+            await _offerSetupService
+                .SetupSingleInstance(appId, iamUserId)
+                .ConfigureAwait(false);
+        }
+
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
 }

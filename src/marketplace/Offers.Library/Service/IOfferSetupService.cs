@@ -49,4 +49,23 @@ public interface IOfferSetupService
     /// <param name="basePortalAddress">Address of the portal</param>
     /// <returns>Returns the response data</returns>
     Task<OfferAutoSetupResponseData> AutoSetupOfferAsync(OfferAutoSetupData data, IDictionary<string,IEnumerable<string>> serviceAccountRoles, IDictionary<string,IEnumerable<string>> itAdminRoles, string iamUserId, OfferTypeId offerTypeId, string basePortalAddress);
+
+    /// <summary>
+    /// Setup a single instance app
+    /// </summary>
+    /// <param name="offerId">id of the offer</param>
+    /// <param name="instanceUrl">Url for the offer instance</param>
+    Task SetupSingleInstance(Guid offerId, string instanceUrl);
+
+    /// <summary>
+    /// Setup a single instance app
+    /// </summary>
+    /// <param name="offerId">id of the offer</param>
+    /// <param name="companyUserId">id of the company user</param>
+    /// <param name="serviceAccountRoles">the service account roles</param>
+    /// <param name="itAdminRoles">the it admin roles</param>
+    Task<string> CreateSingleInstanceAppAsync(Guid offerId,
+        Guid companyUserId,
+        IDictionary<string, IEnumerable<string>> serviceAccountRoles,
+        IDictionary<string, IEnumerable<string>> itAdminRoles);
 }

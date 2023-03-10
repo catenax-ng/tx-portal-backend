@@ -22,6 +22,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using PortalBackend.DBAccess.Models;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 
@@ -296,7 +297,7 @@ public interface IOfferRepository
     /// <param name="appId"></param>
     /// <param name="offerTypeId"></param>
     /// <returns></returns>
-    Task<(bool IsStatusInReview, string? OfferName, Guid? ProviderCompanyId)> GetOfferStatusDataByIdAsync(Guid appId, OfferTypeId offerTypeId);
+    Task<(bool IsStatusInReview, string? OfferName, Guid? ProviderCompanyId, bool IsSingleInstance)> GetOfferStatusDataByIdAsync(Guid appId, OfferTypeId offerTypeId);
 
     /// <summary>
     /// Gets the data needed for declining an offer
@@ -448,4 +449,38 @@ public interface IOfferRepository
     /// <param name="offerName"></param>
     /// <param name="languageShortName"></param>
     Func<int,int,Task<Pagination.Source<InReviewServiceData>?>> GetAllInReviewStatusServiceAsync(IEnumerable<OfferStatusId> offerStatusIds, OfferTypeId offerTypeId, OfferSorting? sorting, string? offerName, string? languageShortName);
+
+    /// Gets the data for the app including the instance type information
+    /// </summary>
+    /// <param name="appId"></param>
+    /// <param name="iamUserId"></param>
+    /// <param name="offerTypeId"></param>
+    /// <returns></returns>
+    Task<(OfferStatusId OfferStatus, bool IsUserOfProvidingCompany, AppInstanceSetupTransferData? SetupTransferData)> GetOfferWithSetupDataById(Guid appId, string iamUserId, OfferTypeId offerTypeId);
+
+    /// <summary>
+    /// Creates a new instance of <see cref="AppInstanceSetup"/>
+    /// </summary>
+    /// <param name="appId">id of the app</param>
+    /// <param name="isSingleInstance">defines whether the app is a single instance</param>
+    /// <param name="setOptionalParameter">Action to set optional parameters for the app instance setup</param>
+    /// <returns>The created entity</returns>
+    AppInstanceSetup CreateAppInstanceSetup(Guid appId, bool isSingleInstance, Action<AppInstanceSetup>? setOptionalParameter);
+
+    /// <summary>
+    /// Updates the <see cref="AppInstanceSetup"/>
+    /// </summary>
+    /// <param name="appInstanceSetupId">Id of the appInstanceSetup that should be updated</param>
+    /// <param name="offerId">Id of the offer</param>
+    /// <param name="setOptionalParameters">Sets the values that should be updated</param>
+    /// <param name="initializeParameter">Initializes the parameters</param>
+    void AttachAndModifyAppInstanceSetup(Guid appInstanceSetupId, Guid offerId, Action<AppInstanceSetup> setOptionalParameters, Action<AppInstanceSetup>? initializeParameter = null);
+
+    /// <summary>
+    /// Gets the single instance offer data
+    /// </summary>
+    /// <param name="offerId">id of the offer</param>
+    /// <param name="offerTypeId">id of the offer type</param>
+    /// <returns>Returns the single instance offer data</returns>
+    Task<SingleInstanceOfferData?> GetSingleInstanceOfferData(Guid offerId, OfferTypeId offerTypeId);
 }

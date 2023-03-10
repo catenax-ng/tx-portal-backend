@@ -51,6 +51,7 @@ public class PortalDbContext : DbContext
     public virtual DbSet<AgreementAssignedOfferType> AgreementAssignedOfferTypes { get; set; } = default!;
     public virtual DbSet<AgreementCategory> AgreementCategories { get; set; } = default!;
     public virtual DbSet<AppInstance> AppInstances { get; set; } = default!;
+    public virtual DbSet<AppInstanceSetup> AppInstanceSetups { get; set; }
     public virtual DbSet<AppAssignedUseCase> AppAssignedUseCases { get; set; } = default!;
     public virtual DbSet<AppLanguage> AppLanguages { get; set; } = default!;
     public virtual DbSet<ApplicationChecklistEntry> ApplicationChecklist { get; set; } = default!;
@@ -391,6 +392,19 @@ public class PortalDbContext : DbContext
                 .WithMany(x => x.AppInstances)
                 .HasForeignKey(x => x.IamClientId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<AppInstanceSetup>(entity =>
+        {
+            entity.HasOne(x => x.App)
+                .WithOne(x => x.AppInstanceSetup)
+                .HasForeignKey<AppInstanceSetup>(x => x.AppId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+
+            entity.HasOne(x => x.ServiceAccount)
+                .WithOne(x => x.AppInstanceSetup)
+                .HasForeignKey<AppInstanceSetup>(x => x.ServiceAccountId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
         });
         
         modelBuilder.Entity<OfferDescription>(entity =>

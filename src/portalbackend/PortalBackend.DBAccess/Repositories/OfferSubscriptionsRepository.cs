@@ -147,7 +147,8 @@ public class OfferSubscriptionsRepository : IOfferSubscriptionsRepository
                     x.Requester!.Email,
                     x.Requester.Firstname,
                     x.Requester.Lastname,
-                    x.Offer.OfferTypeId == OfferTypeId.APP || x.Offer.ServiceDetails.Any(st => st.TechnicalUserNeeded)
+                    x.Offer.OfferTypeId == OfferTypeId.APP || x.Offer.ServiceDetails.Any(st => st.TechnicalUserNeeded),
+                    x.Offer.AppInstanceSetup != null && x.Offer.AppInstanceSetup.IsSingleInstance
             ))
             .SingleOrDefaultAsync();
 

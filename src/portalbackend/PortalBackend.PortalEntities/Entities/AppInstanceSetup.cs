@@ -18,30 +18,33 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Base;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
+namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 
-/// <inheritdoc />
-public class ClientRepository : IClientRepository
+public class AppInstanceSetup : IBaseEntity
 {
-    private readonly PortalDbContext _dbContext;
-
-    /// <summary>
-    /// Creates an instance of <see cref="ClientRepository"/>
-    /// </summary>
-    /// <param name="dbContext">Access to the database</param>
-    public ClientRepository(PortalDbContext dbContext)
+    private AppInstanceSetup()
     {
-        _dbContext = dbContext;
     }
 
-    /// <inheritdoc />
-    public IamClient CreateClient(string clientId, Action<IamClient>? setOptionalParameter)
+    public AppInstanceSetup(Guid id, Guid appId, bool isSingleInstance) : this()
     {
-        var entity = _dbContext.IamClients.Add(new IamClient(Guid.NewGuid(), clientId)).Entity;
-        setOptionalParameter?.Invoke(entity);
-        return entity;
+        Id = id;
+        AppId = appId;
+        IsSingleInstance = isSingleInstance;
     }
+
+    public Guid Id { get; set; }
+    public Guid AppId { get; set; }
+    public bool IsSingleInstance { get; set; }
+    
+    public string? InstanceUrl { get; set; }
+
+    public string? ServiceAccountId { get; set; }
+    
+    // Navigation properties
+    public virtual Offer? App { get; private set; }
+
+    public virtual IamServiceAccount? ServiceAccount { get; private set; }
 }

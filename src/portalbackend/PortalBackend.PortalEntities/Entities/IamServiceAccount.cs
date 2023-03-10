@@ -52,5 +52,7 @@ public class IamServiceAccount
     public Guid CompanyServiceAccountId { get; private set; }
 
     // Navigation properties
-    public virtual CompanyServiceAccount? CompanyServiceAccount { get; set; }
+    public virtual CompanyServiceAccount? CompanyServiceAccount { get; private set; }
+
+    public virtual AppInstanceSetup? AppInstanceSetup { get; private set; }
 }

@@ -18,30 +18,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
+namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
-
-/// <inheritdoc />
-public class ClientRepository : IClientRepository
-{
-    private readonly PortalDbContext _dbContext;
-
-    /// <summary>
-    /// Creates an instance of <see cref="ClientRepository"/>
-    /// </summary>
-    /// <param name="dbContext">Access to the database</param>
-    public ClientRepository(PortalDbContext dbContext)
-    {
-        _dbContext = dbContext;
-    }
-
-    /// <inheritdoc />
-    public IamClient CreateClient(string clientId, Action<IamClient>? setOptionalParameter)
-    {
-        var entity = _dbContext.IamClients.Add(new IamClient(Guid.NewGuid(), clientId)).Entity;
-        setOptionalParameter?.Invoke(entity);
-        return entity;
-    }
-}
+/// <summary>
+/// Request Model to set or update the app instance type and all related data.
+/// </summary>
+/// <param name="IsSingleInstance"><c>true</c> if the service is an single instance service, otherwise <c>false</c></param>
+/// <param name="InstanceUrl">Only required if <seealso cref="IsSingleInstance"/> is true</param>
+public record AppInstanceSetupData(
+    bool IsSingleInstance,
+    string? InstanceUrl);
