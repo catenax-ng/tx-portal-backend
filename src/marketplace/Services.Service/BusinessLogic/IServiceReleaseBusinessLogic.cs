@@ -19,6 +19,7 @@
  ********************************************************************************/
 
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
+using Org.Eclipse.TractusX.Portal.Backend.Services.Service.ViewModels;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Services.Service.BusinessLogic;
 
@@ -32,4 +33,11 @@ public interface IServiceReleaseBusinessLogic
     /// </summary>
     /// <returns></returns>
     IAsyncEnumerable<AgreementDocumentData> GetServiceAgreementDataAsync();
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="serviceId"></param>
+    /// <returns></returns>
+    Task<ServiceData> GetServiceDetailsByIdAsync(Guid serviceId);
 }

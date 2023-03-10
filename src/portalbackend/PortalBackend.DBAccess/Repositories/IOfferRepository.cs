@@ -421,4 +421,11 @@ public interface IOfferRepository
     /// <param name="offerTypeId"></param>
     /// <returns></returns>
     Task<(bool IsStatusActive, Guid CompanyUserId, IEnumerable<DocumentStatusData> documentStatusDatas)> GetOfferAssignedAppLeadImageDocumentsByIdAsync(Guid offerId, string iamUserId, OfferTypeId offerTypeId);
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="serviceId"></param>
+    /// <returns></returns>
+    Task<ServiceDetailsData?> GetServiceDetailsByIdAsync(Guid serviceId);
 }

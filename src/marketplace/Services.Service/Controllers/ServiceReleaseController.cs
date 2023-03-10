@@ -21,7 +21,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Services.Service.BusinessLogic;
-
+using Org.Eclipse.TractusX.Portal.Backend.Services.Service.ViewModels;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Services.Service.Controllers;
 
@@ -56,4 +57,21 @@ public class ServiceReleaseController : ControllerBase
     [ProducesResponseType(typeof(IAsyncEnumerable<AgreementDocumentData>), StatusCodes.Status200OK)]
     public IAsyncEnumerable<AgreementDocumentData> GetServiceAgreementDataAsync() =>
         _serviceReleaseBusinessLogic.GetServiceAgreementDataAsync();
+
+    /// <summary>
+    /// Retrieves app details for an app referenced by id.
+    /// </summary>
+    /// <param name="serviceId" example="D3B1ECA2-6148-4008-9E6C-C1C2AEA5C645">ID of the app to retrieve.</param>
+    /// <returns>AppDetailsViewModel for requested application.</returns>
+    /// <remarks>Example: GET: /api/apps/D3B1ECA2-6148-4008-9E6C-C1C2AEA5C645</remarks>
+    /// <response code="200">Returns the requested app details.</response>
+    /// <response code="404">App not found.</response>
+    [HttpGet]
+    [Route("inReview/{serviceId}", Name = nameof(GetServiceDetailsByIdAsync))]
+    [Authorize(Roles = "approve_service_release , decline_service_release")]
+    [ProducesResponseType(typeof(ServiceData), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
+    public Task<ServiceData> GetServiceDetailsByIdAsync([FromRoute] Guid serviceId) =>
+        _serviceReleaseBusinessLogic.GetServiceDetailsByIdAsync(serviceId);
 }

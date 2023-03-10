@@ -22,6 +22,11 @@ using Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Service;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
+using Org.Eclipse.TractusX.Portal.Backend.Services.Service.ViewModels;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
+using Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Models;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Services.Service.BusinessLogic;
 
@@ -48,4 +53,31 @@ public class ServiceReleaseBusinessLogic : IServiceReleaseBusinessLogic
 
     public IAsyncEnumerable<AgreementDocumentData> GetServiceAgreementDataAsync()=>
         _offerService.GetOfferTypeAgreementsAsync(OfferTypeId.SERVICE);
+    
+    /// <inheritdoc />
+    public async Task<ServiceData> GetServiceDetailsByIdAsync(Guid serviceId)
+    {
+        var result = await _portalRepositories.GetInstance<IOfferRepository>()
+            .GetServiceDetailsByIdAsync(serviceId).ConfigureAwait(false);
+        if (result == null)
+        {
+            throw new NotFoundException($"serviceId {serviceId} does not exist");
+        }
+        if (result.OfferStatusId != OfferStatusId.IN_REVIEW)
+        {
+            throw new ConflictException($"serviceId {serviceId} is incorrect status");
+        }
+        return new ServiceData(
+            result.Id,
+            result.Title ?? Constants.ErrorString,
+            result.ServiceTypeIds,
+            result.Provider,
+            result.Descriptions.Select(x=>new LocalizedDescription(x.languageCode,x.longDescription,x.shortDescription)),
+            result.Documents.GroupBy(d => d.documentTypeId).ToDictionary(g => g.Key, g => g.Select(d => new DocumentData(d.documentId, d.documentName))),
+            result.ProviderUri ?? Constants.ErrorString,
+            result.ContactEmail,
+            result.ContactNumber
+           
+        );
+    }
 }
