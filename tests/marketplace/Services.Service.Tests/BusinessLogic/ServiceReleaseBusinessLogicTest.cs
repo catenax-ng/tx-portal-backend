@@ -60,7 +60,12 @@ public class ServiceReleaseBusinessLogicTest
     public async Task GetServiceAgreementData_ReturnsExpectedResult()
     {
         //Arrange
-        var data = _fixture.CreateMany<AgreementDocumentData>(5).ToAsyncEnumerable();
+        var data = _fixture.Build<AgreementDocumentData>()
+                             .With(x=>x.AgreementId, new Guid("aa0a0000-7fbc-1f2f-817f-bce0502c1014"))
+                             .With(x=>x.AgreementName, "Terms & Conditions - Service Marketplace")
+                             .With(x=>x.DocumentId, new Guid("00000000-0000-0000-0000-000000000006"))
+                             .CreateMany(1)
+                             .ToAsyncEnumerable();
         var offerService = A.Fake<IOfferService>();
         _fixture.Inject(offerService);
         A.CallTo(() => offerService.GetOfferTypeAgreementsAsync(OfferTypeId.SERVICE))
@@ -73,7 +78,10 @@ public class ServiceReleaseBusinessLogicTest
         // Assert 
         A.CallTo(() => offerService.GetOfferTypeAgreementsAsync(A<OfferTypeId>._))
             .MustHaveHappenedOnceExactly();
-        result.Should().HaveCount(5);
+        result.Should().HaveCount(1);
+        result.FirstOrDefault()!.AgreementId.Should().Be(new Guid("aa0a0000-7fbc-1f2f-817f-bce0502c1014"));
+        result.FirstOrDefault()!.AgreementName.Should().Be("Terms & Conditions - Service Marketplace");
+        result.FirstOrDefault()!.DocumentId.Should().Be(new Guid("00000000-0000-0000-0000-000000000006"));
     }
 
     private void SetupRepositories()
