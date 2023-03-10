@@ -24,6 +24,7 @@ using FluentAssertions;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Services.Service.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Services.Service.Controllers;
+using Org.Eclipse.TractusX.Portal.Backend.Services.Service.ViewModels;
 using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared.Extensions;
 using Xunit;
 
@@ -58,5 +59,22 @@ public class ServiceReleaseControllerTest
         // Assert 
         A.CallTo(() => _logic.GetServiceAgreementDataAsync()).MustHaveHappenedOnceExactly();
         result.Should().HaveCount(5);
+    }
+
+    [Fact]
+    public async Task GetServiceDetailsByIdAsync_ReturnsExpectedResult()
+    {
+        //Arrange
+        var data = _fixture.Create<ServiceData>();
+        var serviceId = _fixture.Create<Guid>();
+        A.CallTo(() => _logic.GetServiceDetailsByIdAsync(serviceId))
+            .Returns(data);
+
+        //Act
+        var result = await this._controller.GetServiceDetailsByIdAsync(serviceId).ConfigureAwait(false);
+        
+        // Assert 
+        A.CallTo(() => _logic.GetServiceDetailsByIdAsync(serviceId)).MustHaveHappenedOnceExactly();
+        Assert.IsType<ServiceData>(result);
     }
 }

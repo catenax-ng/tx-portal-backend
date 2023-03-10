@@ -59,13 +59,14 @@ public class ServiceReleaseController : ControllerBase
         _serviceReleaseBusinessLogic.GetServiceAgreementDataAsync();
 
     /// <summary>
-    /// Retrieves app details for an app referenced by id.
+    /// Retrieves service details for an offer referenced by id.
     /// </summary>
-    /// <param name="serviceId" example="D3B1ECA2-6148-4008-9E6C-C1C2AEA5C645">ID of the app to retrieve.</param>
-    /// <returns>AppDetailsViewModel for requested application.</returns>
-    /// <remarks>Example: GET: /api/apps/D3B1ECA2-6148-4008-9E6C-C1C2AEA5C645</remarks>
-    /// <response code="200">Returns the requested app details.</response>
-    /// <response code="404">App not found.</response>
+    /// <param name="serviceId" example="D3B1ECA2-6148-4008-9E6C-C1C2AEA5C645">ID of the offer to retrieve.</param>
+    /// <returns>ServiceData for requested offer.</returns>
+    /// <remarks>Example: GET: /api/services/servicerelease/inReview/D3B1ECA2-6148-4008-9E6C-C1C2AEA5C645</remarks>
+    /// <response code="200">Returns the requested service details.</response>
+    /// <response code="404">service not found.</response>
+    /// <response code="409">service is inCorrect Status.</response>
     [HttpGet]
     [Route("inReview/{serviceId}", Name = nameof(GetServiceDetailsByIdAsync))]
     [Authorize(Roles = "approve_service_release , decline_service_release")]
