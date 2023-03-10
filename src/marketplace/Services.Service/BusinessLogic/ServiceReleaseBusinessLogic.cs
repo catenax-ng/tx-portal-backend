@@ -19,7 +19,6 @@
  ********************************************************************************/
 
 using Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Service;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 
@@ -30,19 +29,14 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Services.Service.BusinessLogic;
 /// </summary>
 public class ServiceReleaseBusinessLogic : IServiceReleaseBusinessLogic
 {
-    private readonly IPortalRepositories _portalRepositories;
     private readonly IOfferService _offerService;
 
     /// <summary>
     /// Constructor.
     /// </summary>
-    /// <param name="portalRepositories">Factory to access the repositories</param>
     /// <param name="offerService">Access to the offer service</param>
-    public ServiceReleaseBusinessLogic(
-        IPortalRepositories portalRepositories,
-        IOfferService offerService)
+    public ServiceReleaseBusinessLogic(IOfferService offerService)
     {
-        _portalRepositories = portalRepositories;
         _offerService = offerService;
     }
 
