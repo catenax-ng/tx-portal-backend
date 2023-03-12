@@ -45,6 +45,8 @@ public interface IProvisioningManager
     Task<ServiceAccountData> SetupCentralServiceAccountClientAsync(string clientId, ClientConfigRolesData config);
     Task UpdateCentralClientAsync(string internalClientId, ClientConfigData config);
     Task DeleteCentralClientAsync(string internalClientId);
+    Task UpdateClient(string internalClientId, string url, string redirectUrl);
+    Task EnableClient(string internalClientId);
     Task<ClientAuthData> GetCentralClientAuthDataAsync(string internalClientId);
     Task<ClientAuthData> ResetCentralClientAuthDataAsync(string internalClientId);
     Task AddBpnAttributetoUserAsync(string centralUserId, IEnumerable<string> bpns);

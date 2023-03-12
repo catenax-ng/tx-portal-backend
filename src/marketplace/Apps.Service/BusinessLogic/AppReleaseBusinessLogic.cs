@@ -23,6 +23,7 @@ using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Apps.Service.Extensions;
 using Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.IO;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Service;
@@ -30,6 +31,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using PortalBackend.DBAccess.Models;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.BusinessLogic;
 
@@ -520,16 +522,25 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
 
+    
     /// <inheritdoc />
-    public Task SetInstanceType(Guid appId, AppInstanceSetupData data, string iamUserId) =>
-        data.IsSingleInstance switch
+    public Task SetInstanceType(Guid appId, AppInstanceSetupData data, string iamUserId)
+    {
+        switch (data.IsSingleInstance)
         {
-            true when string.IsNullOrWhiteSpace(data.InstanceUrl) => 
-                throw new ControllerArgumentException("InstanceUrl must be set for a single instance app", nameof(data.InstanceUrl)),
-            false when !string.IsNullOrWhiteSpace(data.InstanceUrl) => 
-                throw new ControllerArgumentException("Multi instance app must not have a instance url set", nameof(data.InstanceUrl)),
-            _ => SetInstanceTypeInternal(appId, data, iamUserId)
-        };
+            case true when !string.IsNullOrWhiteSpace(data.InstanceUrl):
+                data.InstanceUrl!.EnsureValidHttpUrl(() => nameof(data.InstanceUrl));
+                break;
+            case true when string.IsNullOrWhiteSpace(data.InstanceUrl):
+                throw new ControllerArgumentException("InstanceUrl must be set for a single instance app",
+                    nameof(data.InstanceUrl));
+            case false when !string.IsNullOrWhiteSpace(data.InstanceUrl):
+                throw new ControllerArgumentException("Multi instance app must not have a instance url set",
+                    nameof(data.InstanceUrl));
+        }
+            
+        return SetInstanceTypeInternal(appId, data, iamUserId);
+    }
 
     private async Task SetInstanceTypeInternal(Guid appId, AppInstanceSetupData data, string iamUserId)
     {
@@ -545,42 +556,84 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         if (result.OfferStatus is not (OfferStatusId.CREATED or OfferStatusId.IN_REVIEW))
             throw new ConflictException($"App {appId} is not in Status {OfferStatusId.CREATED} or {OfferStatusId.IN_REVIEW}");
 
-        bool changed;
         if (result.SetupTransferData == null)
         {
-            changed = true;
             _portalRepositories.GetInstance<IOfferRepository>().CreateAppInstanceSetup(appId, data.IsSingleInstance,
                 entity =>
                 {
                     entity.InstanceUrl = data.InstanceUrl;
                 });
+            
+            if (data.IsSingleInstance)
+            {
+                await _offerSetupService
+                    .SetupSingleInstance(appId, data.InstanceUrl!)
+                    .ConfigureAwait(false);
+            }
         }
         else
         {
-            var existingData = result.SetupTransferData;
-            changed = existingData.IsSingleInstance != data.IsSingleInstance;
-            _portalRepositories.GetInstance<IOfferRepository>().AttachAndModifyAppInstanceSetup(
-                existingData.Id,
-                appId,
-                entity =>
-                {
-                    entity.InstanceUrl = data.InstanceUrl;
-                    entity.IsSingleInstance = data.IsSingleInstance;
-                },
-                entity =>
-                {
-                    entity.InstanceUrl = existingData.InstanceUrl;
-                    entity.IsSingleInstance = existingData.IsSingleInstance;
-                });
-        }
-
-        if (changed && data.IsSingleInstance)
-        {
-            await _offerSetupService
-                .SetupSingleInstance(appId, data.InstanceUrl!)
-                .ConfigureAwait(false);
+            await HandleAppInstanceUpdate(appId, data, result!).ConfigureAwait(false);
         }
 
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
+    }
+
+    private async Task HandleAppInstanceUpdate(
+        Guid appId,
+        AppInstanceSetupData data,
+        (OfferStatusId OfferStatus, bool IsUserOfProvidingCompany, AppInstanceSetupTransferData SetupTransferData, IEnumerable<(Guid AppInstanceId, Guid ClientId, string ClientClientId)> AppInstanceData) result)
+    {
+        var existingData = result.SetupTransferData;
+        var instanceTypeChanged = existingData.IsSingleInstance != data.IsSingleInstance;
+        _portalRepositories.GetInstance<IOfferRepository>().AttachAndModifyAppInstanceSetup(
+            existingData.Id,
+            appId,
+            entity =>
+            {
+                entity.InstanceUrl = data.InstanceUrl;
+                entity.IsSingleInstance = data.IsSingleInstance;
+            },
+            entity =>
+            {
+                entity.InstanceUrl = existingData.InstanceUrl;
+                entity.IsSingleInstance = existingData.IsSingleInstance;
+            });
+
+        (Guid AppInstanceId, Guid ClientId, string ClientClientId) appInstance;
+        switch (instanceTypeChanged)
+        {
+            case true when existingData.IsSingleInstance:
+            {
+                appInstance = GetAndValidateAppInstance(result);
+                await _offerSetupService
+                    .DeleteSingleInstance(appInstance.AppInstanceId, appInstance.ClientId, appInstance.ClientClientId)
+                    .ConfigureAwait(false);
+                break;
+            }
+            case true when data.IsSingleInstance:
+                await _offerSetupService
+                    .SetupSingleInstance(appId, data.InstanceUrl!)
+                    .ConfigureAwait(false);
+                break;
+            case false when data.IsSingleInstance && existingData.InstanceUrl != data.InstanceUrl:
+                appInstance = GetAndValidateAppInstance(result);
+                await _offerSetupService.UpdateSingleInstance(appInstance.ClientClientId, data.InstanceUrl!)
+                    .ConfigureAwait(false);
+                break;
+        }
+    }
+
+    private static (Guid AppInstanceId, Guid ClientId, string ClientClientId) GetAndValidateAppInstance(
+        (OfferStatusId OfferStatus, bool IsUserOfProvidingCompany, AppInstanceSetupTransferData SetupTransferData,
+            IEnumerable<(Guid AppInstanceId, Guid ClientId, string ClientClientId)> AppInstanceData) result)
+    {
+        if (result.AppInstanceData.Count() != 1)
+        {
+            throw new ConflictException("The must be at exactly one AppInstance");
+        }
+
+        var appInstance = result.AppInstanceData.Single();
+        return appInstance;
     }
 }

@@ -39,4 +39,8 @@ public class AppInstanceRepository : IAppInstanceRepository
     /// <inheritdoc />
     public AppInstance CreateAppInstance(Guid appId, Guid iamClientId) =>
         _portalDbContext.AppInstances.Add(new AppInstance(Guid.NewGuid(), appId, iamClientId)).Entity;
+
+    /// <inheritdoc />
+    public void RemoveAppInstance(Guid appInstanceId) =>
+        _portalDbContext.AppInstances.Remove(new AppInstance(appInstanceId, default, default));
 }

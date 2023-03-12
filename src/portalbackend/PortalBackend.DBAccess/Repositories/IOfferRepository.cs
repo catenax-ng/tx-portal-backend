@@ -452,20 +452,20 @@ public interface IOfferRepository
 
     /// Gets the data for the app including the instance type information
     /// </summary>
-    /// <param name="appId"></param>
+    /// <param name="offerId"></param>
     /// <param name="iamUserId"></param>
     /// <param name="offerTypeId"></param>
     /// <returns></returns>
-    Task<(OfferStatusId OfferStatus, bool IsUserOfProvidingCompany, AppInstanceSetupTransferData? SetupTransferData)> GetOfferWithSetupDataById(Guid appId, string iamUserId, OfferTypeId offerTypeId);
+    Task<(OfferStatusId OfferStatus, bool IsUserOfProvidingCompany, AppInstanceSetupTransferData? SetupTransferData, IEnumerable<(Guid AppInstanceId, Guid ClientId, string ClientClientId)> AppInstanceData)> GetOfferWithSetupDataById(Guid offerId, string iamUserId, OfferTypeId offerTypeId);
 
     /// <summary>
     /// Creates a new instance of <see cref="AppInstanceSetup"/>
     /// </summary>
-    /// <param name="offerId">id of the app</param>
+    /// <param name="appId">id of the app</param>
     /// <param name="isSingleInstance">defines whether the app is a single instance</param>
     /// <param name="setOptionalParameter">Action to set optional parameters for the app instance setup</param>
     /// <returns>The created entity</returns>
-    AppInstanceSetup CreateAppInstanceSetup(Guid offerId, bool isSingleInstance, Action<AppInstanceSetup>? setOptionalParameter);
+    AppInstanceSetup CreateAppInstanceSetup(Guid appId, bool isSingleInstance, Action<AppInstanceSetup>? setOptionalParameter);
 
     /// <summary>
     /// Updates the <see cref="AppInstanceSetup"/>

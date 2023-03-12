@@ -36,6 +36,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Service;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Flurl.Util;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Service;
    
@@ -93,8 +94,14 @@ public class OfferSetupService : IOfferSetupService
             subscription.LastEditorId = offerDetails.CompanyUserId;
         });
 
-        if (offerDetails.IsSingleInstance)
+        if (offerDetails.InstanceData.IsSingleInstance)
         {
+            _portalRepositories.GetInstance<IAppSubscriptionDetailRepository>()
+                .CreateAppSubscriptionDetail(data.RequestId, appSubscriptionDetail =>
+                {
+                    appSubscriptionDetail.AppInstanceId = offerDetails.AppInstanceIds.Single();
+                    appSubscriptionDetail.AppSubscriptionUrl = offerDetails.InstanceData.InstanceUrl;
+                });
             await CreateNotifications(itAdminRoles, offerTypeId, offerDetails);
             await _portalRepositories.SaveAsync().ConfigureAwait(false);
             return new OfferAutoSetupResponseData(null, null);
@@ -141,7 +148,16 @@ public class OfferSetupService : IOfferSetupService
         _portalRepositories.GetInstance<IAppInstanceRepository>().CreateAppInstance(offerId, iamClientId);
     }
 
-    public async Task<string> CreateSingleInstanceAppAsync(Guid offerId, IDictionary<string, IEnumerable<string>> serviceAccountRoles)
+    /// <inheritdoc />
+    public async Task DeleteSingleInstance(Guid appInstanceId, Guid clientId, string clientClientId)
+    {
+        await _provisioningManager.DeleteCentralClientAsync(clientClientId)
+            .ConfigureAwait(false);
+        _portalRepositories.GetInstance<IClientRepository>().RemoveClient(clientId);
+        _portalRepositories.GetInstance<IAppInstanceRepository>().RemoveAppInstance(appInstanceId);
+    }
+
+    public async Task<string> ActivateSingleInstanceAppAsync(Guid offerId, IDictionary<string, IEnumerable<string>> serviceAccountRoles)
     {
         var data = await _portalRepositories.GetInstance<IOfferRepository>().GetSingleInstanceOfferData(offerId, OfferTypeId.APP).ConfigureAwait(false);
         if (data == null)
@@ -149,7 +165,7 @@ public class OfferSetupService : IOfferSetupService
             throw new ConflictException($"App {offerId} does not exist.");
         }
 
-        if (string.IsNullOrWhiteSpace(data.ClientId))
+        if (string.IsNullOrWhiteSpace(data.InternalClientId))
         {
             throw new ConflictException("ClientId must not be null");
         }
@@ -159,8 +175,14 @@ public class OfferSetupService : IOfferSetupService
             throw new ConflictException("Instance must be set");
         }
 
+        await _provisioningManager.EnableClient(data.InternalClientId).ConfigureAwait(false);
+        _portalRepositories.GetInstance<IClientRepository>().AttachAndModifyClient(data.ClientId, client =>
+        {
+            client.Disabled = false;
+        });
+
         var technicalUserData = new CreateTechnicalUserData(data.CompanyId, data.OfferName, data.Bpn);
-        var (technicalClientId, _, _) = await CreateTechnicalUser(serviceAccountRoles, _portalRepositories.GetInstance<IUserRolesRepository>(), technicalUserData, data.ClientId, true, null)
+        var (technicalClientId, _, _) = await CreateTechnicalUser(serviceAccountRoles, _portalRepositories.GetInstance<IUserRolesRepository>(), technicalUserData, data.InternalClientId, true, null)
             .ConfigureAwait(false);
 
         _portalRepositories.GetInstance<IOfferRepository>().AttachAndModifyAppInstanceSetup(data.InstanceSetupId, offerId, a =>
@@ -170,6 +192,10 @@ public class OfferSetupService : IOfferSetupService
         
         return technicalClientId;
     }
+
+    /// <inheritdoc />
+    public Task UpdateSingleInstance(string clientClientId, string instanceUrl) =>
+        _provisioningManager.UpdateClient(clientClientId, instanceUrl, instanceUrl.AppendToPathEncoded("*"));
 
     private static async Task<OfferSubscriptionTransferData> GetAndValidateOfferDetails(Guid requestId, string iamUserId, OfferTypeId offerTypeId, IOfferSubscriptionsRepository offerSubscriptionsRepository)
     {
@@ -189,6 +215,11 @@ public class OfferSetupService : IOfferSetupService
         if (offerDetails.CompanyUserId == Guid.Empty && offerDetails.TechnicalUserId == Guid.Empty)
         {
             throw new ForbiddenException("Only the providing company can setup the service");
+        }
+
+        if (offerDetails.InstanceData.IsSingleInstance && offerDetails.AppInstanceIds.Count() != 1)
+        {
+            throw new ConflictException("There must only be one app instance for single instance apps");
         }
 
         return offerDetails;
@@ -268,7 +299,7 @@ public class OfferSetupService : IOfferSetupService
             (notificationContent, appSubscriptionActivation)
         };
 
-        if (!offerDetails.IsSingleInstance)
+        if (!offerDetails.InstanceData.IsSingleInstance)
         {
             notifications.Add((null, NotificationTypeId.TECHNICAL_USER_CREATION));
         }

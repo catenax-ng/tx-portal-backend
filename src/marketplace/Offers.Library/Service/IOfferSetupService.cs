@@ -58,10 +58,25 @@ public interface IOfferSetupService
     Task SetupSingleInstance(Guid offerId, string instanceUrl);
 
     /// <summary>
+    /// Deletes the client and the app instance
+    /// </summary>
+    /// <param name="appInstanceId">id of the app instance</param>
+    /// <param name="clientId">Id of the iamClient</param>
+    /// <param name="clientClientId">Id of the client</param>
+    Task DeleteSingleInstance(Guid appInstanceId, Guid clientId, string clientClientId);
+
+    /// <summary>
     /// Setup a single instance app
     /// </summary>
     /// <param name="offerId">id of the offer</param>
     /// <param name="serviceAccountRoles">the service account roles</param>
-    Task<string> CreateSingleInstanceAppAsync(Guid offerId,
+    Task<string> ActivateSingleInstanceAppAsync(Guid offerId,
         IDictionary<string, IEnumerable<string>> serviceAccountRoles);
+
+    /// <summary>
+    /// Updates the single instance
+    /// </summary>
+    /// <param name="clientClientId">internal client id</param>
+    /// <param name="instanceUrl">the new instance url</param>
+    Task UpdateSingleInstance(string clientClientId, string instanceUrl);
 }

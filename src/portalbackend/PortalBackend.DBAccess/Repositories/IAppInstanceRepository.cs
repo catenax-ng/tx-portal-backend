@@ -28,10 +28,16 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositorie
 public interface IAppInstanceRepository
 {
     /// <summary>
-    /// Add app Id and Document Id in App Assigned Document table 
+    /// Creates an app instance 
     /// </summary>
     /// <param name="appId">Id of the app</param>
     /// <param name="iamClientId">Id of the iam client</param>
     /// <returns>The created App Instance</returns>
     AppInstance CreateAppInstance(Guid appId, Guid iamClientId);
+    
+    /// <summary>
+    /// Removes the app instance
+    /// </summary>
+    /// <param name="appInstanceId">Id of the app instance</param>
+    void RemoveAppInstance(Guid appInstanceId);
 }

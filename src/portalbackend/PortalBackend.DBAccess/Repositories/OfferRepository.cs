@@ -51,13 +51,15 @@ public class OfferRepository : IOfferRepository
 
     ///<inheritdoc/>
     public Task<OfferProviderDetailsData?> GetOfferProviderDetailsAsync(Guid offerId, OfferTypeId offerTypeId) =>
-        _context.Offers.AsNoTracking().Where(o => o.Id == offerId && o.OfferTypeId == offerTypeId).Select(c => new OfferProviderDetailsData(
-            c.Name,
-            c.Provider,
-            c.ContactEmail,
-            c.SalesManagerId,
-            c.ProviderCompany!.ProviderCompanyDetail!.AutoSetupUrl,
-            c.AppInstanceSetup != null && c.AppInstanceSetup!.IsSingleInstance
+        _context.Offers.AsNoTracking()
+            .Where(o => o.Id == offerId && o.OfferTypeId == offerTypeId)
+            .Select(c => new OfferProviderDetailsData(
+                c.Name,
+                c.Provider,
+                c.ContactEmail,
+                c.SalesManagerId,
+                c.ProviderCompany!.ProviderCompanyDetail!.AutoSetupUrl,
+                c.AppInstanceSetup != null && c.AppInstanceSetup!.IsSingleInstance
         )).SingleOrDefaultAsync();
 
     /// <inheritdoc />
@@ -726,16 +728,17 @@ public class OfferRepository : IOfferRepository
             .SingleOrDefaultAsync();
 
     /// <inheritdoc />
-    public Task<(OfferStatusId OfferStatus, bool IsUserOfProvidingCompany, AppInstanceSetupTransferData? SetupTransferData)> GetOfferWithSetupDataById(Guid offerId, string iamUserId, OfferTypeId offerTypeId) =>
+    public Task<(OfferStatusId OfferStatus, bool IsUserOfProvidingCompany, AppInstanceSetupTransferData? SetupTransferData, IEnumerable<(Guid AppInstanceId, Guid ClientId, string ClientClientId)> AppInstanceData)> GetOfferWithSetupDataById(Guid offerId, string iamUserId, OfferTypeId offerTypeId) =>
         _context.Offers
             .AsNoTracking()
             .Where(x => x.OfferTypeId == offerTypeId && x.Id == offerId)
-            .Select(o => new ValueTuple<OfferStatusId, bool, AppInstanceSetupTransferData?>(
+            .Select(o => new ValueTuple<OfferStatusId, bool, AppInstanceSetupTransferData?, IEnumerable<(Guid, Guid, string)>>(
                 o.OfferStatusId,
                 o.ProviderCompany!.CompanyUsers.Any(cu => cu.IamUser!.UserEntityId == iamUserId),
                 o.AppInstanceSetup == null ? 
                     null : 
-                    new AppInstanceSetupTransferData(o.AppInstanceSetup!.AppId, o.AppInstanceSetup!.IsSingleInstance, o.AppInstanceSetup!.InstanceUrl)
+                    new AppInstanceSetupTransferData(o.AppInstanceSetup!.AppId, o.AppInstanceSetup!.IsSingleInstance, o.AppInstanceSetup!.InstanceUrl),
+                o.AppInstances.Select(x => new ValueTuple<Guid, Guid, string>(x.Id, x.IamClientId, x.IamClient!.ClientClientId))
             ))
             .SingleOrDefaultAsync();
 
@@ -761,15 +764,17 @@ public class OfferRepository : IOfferRepository
             .Select(o => new
             {
                 Company = o.ProviderCompany, OfferId = o.Id, OfferName = o.Name,
-                ClientId = o.AppInstances.Select(x => x.IamClient!.ClientClientId).SingleOrDefault(),
+                InternalClientId = o.AppInstances.Select(x => x.IamClient!.ClientClientId).SingleOrDefault(),
+                ClientId = o.AppInstances.Select(x => x.IamClientId).SingleOrDefault(),
                 InstanceSetupId = o.AppInstanceSetup == null ? Guid.Empty : o.AppInstanceSetup.Id,
             })
             .Select(x => new SingleInstanceOfferData(
                 x.Company!.Id,
                 x.OfferName,
                 x.Company.BusinessPartnerNumber,
-                x.ClientId,
-                x.InstanceSetupId
+                x.InternalClientId,
+                x.InstanceSetupId,
+                x.ClientId
             ))
             .SingleOrDefaultAsync();
 }

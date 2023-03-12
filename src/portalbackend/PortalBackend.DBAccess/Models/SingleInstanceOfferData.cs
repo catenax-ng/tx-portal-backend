@@ -4,5 +4,6 @@ public record SingleInstanceOfferData(
     Guid CompanyId,
     string? OfferName,
     string? Bpn,
-    string? ClientId,
-    Guid InstanceSetupId);
+    string? InternalClientId,
+    Guid InstanceSetupId,
+    Guid ClientId);

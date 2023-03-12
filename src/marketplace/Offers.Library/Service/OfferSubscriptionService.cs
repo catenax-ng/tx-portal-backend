@@ -152,8 +152,7 @@ public class OfferSubscriptionService : IOfferSubscriptionService
         return (companyInformation, companyUserId, userEmail);
     }
 
-    private static async Task<Guid> HandleAppSubscriptionAsync(
-        Guid offerId,
+    private static async Task<Guid> HandleAppSubscriptionAsync(Guid offerId,
         IOfferSubscriptionsRepository offerSubscriptionsRepository,
         CompanyInformationData companyInformation,
         Guid companyUserId)

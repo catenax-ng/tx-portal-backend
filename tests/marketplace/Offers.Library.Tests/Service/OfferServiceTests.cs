@@ -785,13 +785,13 @@ public class OfferServiceTests
         if (isSingleInstance)
         {
             A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
-            A.CallTo(() => _offerSetupService.CreateSingleInstanceAppAsync(offer.Id, serviceAccountRoles))
+            A.CallTo(() => _offerSetupService.ActivateSingleInstanceAppAsync(offer.Id, serviceAccountRoles))
                 .MustHaveHappenedOnceExactly();    
         }
         else
         {
             A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
-            A.CallTo(() => _offerSetupService.CreateSingleInstanceAppAsync(offer.Id, serviceAccountRoles))
+            A.CallTo(() => _offerSetupService.ActivateSingleInstanceAppAsync(offer.Id, serviceAccountRoles))
                 .MustNotHaveHappened();
         }
     }

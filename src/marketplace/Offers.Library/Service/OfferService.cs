@@ -472,7 +472,7 @@ public class OfferService : IOfferService
         string? technicalUserId = null;
         if (offerDetails.IsSingleInstance)
         {
-            technicalUserId = await _offerSetupService.CreateSingleInstanceAppAsync(offerId, serviceAccountRoles).ConfigureAwait(false);
+            technicalUserId = await _offerSetupService.ActivateSingleInstanceAppAsync(offerId, serviceAccountRoles).ConfigureAwait(false);
         }
 
         object notificationContent = offerTypeId switch

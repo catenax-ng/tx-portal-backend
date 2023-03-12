@@ -949,7 +949,7 @@ public class AppReleaseBusinessLogicTest
         var appId = Guid.NewGuid();
         var data = new AppInstanceSetupData(true, "https://test.de");
         A.CallTo(() => _offerRepository.GetOfferWithSetupDataById(appId, IamUserId, OfferTypeId.APP))
-            .ReturnsLazily(() => new ValueTuple<OfferStatusId, bool, AppInstanceSetupTransferData?>());
+            .ReturnsLazily(() => new ValueTuple<OfferStatusId, bool, AppInstanceSetupTransferData?, IEnumerable<(Guid, Guid, string)>>());
 
         //Act
         async Task Act() =>  await _sut.SetInstanceType(appId, data, IamUserId).ConfigureAwait(false);
@@ -966,7 +966,7 @@ public class AppReleaseBusinessLogicTest
         var appId = Guid.NewGuid();
         var data = new AppInstanceSetupData(true, "https://test.de");
         A.CallTo(() => _offerRepository.GetOfferWithSetupDataById(appId, IamUserId, OfferTypeId.APP))
-            .ReturnsLazily(() => new ValueTuple<OfferStatusId, bool, AppInstanceSetupTransferData?>(OfferStatusId.ACTIVE, false, null));
+            .ReturnsLazily(() => new ValueTuple<OfferStatusId, bool, AppInstanceSetupTransferData?, IEnumerable<(Guid, Guid, string)>>(OfferStatusId.ACTIVE, false, null, new List<(Guid, Guid, string)>()));
 
         //Act
         async Task Act() =>  await _sut.SetInstanceType(appId, data, IamUserId).ConfigureAwait(false);
@@ -983,7 +983,7 @@ public class AppReleaseBusinessLogicTest
         var appId = Guid.NewGuid();
         var data = new AppInstanceSetupData(true, "https://test.de");
         A.CallTo(() => _offerRepository.GetOfferWithSetupDataById(appId, IamUserId, OfferTypeId.APP))
-            .ReturnsLazily(() => new ValueTuple<OfferStatusId, bool, AppInstanceSetupTransferData?>(OfferStatusId.ACTIVE, true, null));
+            .ReturnsLazily(() => new ValueTuple<OfferStatusId, bool, AppInstanceSetupTransferData?, IEnumerable<(Guid, Guid, string)>>(OfferStatusId.ACTIVE, true, null, new List<(Guid, Guid, string)>()));
 
         //Act
         async Task Act() =>  await _sut.SetInstanceType(appId, data, IamUserId).ConfigureAwait(false);
@@ -1000,7 +1000,7 @@ public class AppReleaseBusinessLogicTest
         var appId = Guid.NewGuid();
         var data = new AppInstanceSetupData(true, "https://test.de");
         A.CallTo(() => _offerRepository.GetOfferWithSetupDataById(appId, IamUserId, OfferTypeId.APP))
-            .ReturnsLazily(() => new ValueTuple<OfferStatusId, bool, AppInstanceSetupTransferData?>(OfferStatusId.CREATED, true, null));
+            .ReturnsLazily(() => new ValueTuple<OfferStatusId, bool, AppInstanceSetupTransferData?, IEnumerable<(Guid, Guid, string)>>(OfferStatusId.CREATED, true, null, new List<(Guid, Guid, string)>()));
 
         //Act
         await _sut.SetInstanceType(appId, data, IamUserId).ConfigureAwait(false);
@@ -1011,16 +1011,36 @@ public class AppReleaseBusinessLogicTest
     }
 
     [Fact]
-    public async Task SetInstanceType_WithExistingEntry_UpdatesEntry()
+    public async Task SetInstanceType_FromSingleToMultiWithoutAppInstance_ThrowsConflictException()
     {
         //Arrange
         var appId = Guid.NewGuid();
         var instanceSetupId = Guid.NewGuid();
-        var instanceSetupData = new AppInstanceSetup(instanceSetupId, appId, false);
+        var data = new AppInstanceSetupData(false, null);
+        var instanceSetupTransferData = new AppInstanceSetupTransferData(instanceSetupId, true, null);
+        A.CallTo(() => _offerRepository.GetOfferWithSetupDataById(appId, IamUserId, OfferTypeId.APP))
+            .ReturnsLazily(() => new ValueTuple<OfferStatusId, bool, AppInstanceSetupTransferData?, IEnumerable<(Guid, Guid, string)>>(OfferStatusId.CREATED, true, instanceSetupTransferData, new List<(Guid, Guid, string)>()));
+
+        //Act
+        async Task Act() => await _sut.SetInstanceType(appId, data, IamUserId).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be("The must be at exactly one AppInstance");
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustNotHaveHappened();
+    }
+
+    [Fact]
+    public async Task SetInstanceType_WithExistingEntryButNoAppInstance_ThrowsConflictException()
+    {
+        //Arrange
+        var appId = Guid.NewGuid();
+        var instanceSetupId = Guid.NewGuid();
         var data = new AppInstanceSetupData(true, "https://test.de");
         var instanceSetupTransferData = new AppInstanceSetupTransferData(instanceSetupId, false, null);
+        var instanceSetupData = new AppInstanceSetup(instanceSetupId, appId, false);
         A.CallTo(() => _offerRepository.GetOfferWithSetupDataById(appId, IamUserId, OfferTypeId.APP))
-            .ReturnsLazily(() => new ValueTuple<OfferStatusId, bool, AppInstanceSetupTransferData?>(OfferStatusId.CREATED, true, instanceSetupTransferData));
+            .ReturnsLazily(() => new ValueTuple<OfferStatusId, bool, AppInstanceSetupTransferData?, IEnumerable<(Guid, Guid, string)>>(OfferStatusId.CREATED, true, instanceSetupTransferData, new List<(Guid, Guid, string)>()));
         A.CallTo(() => _offerRepository.AttachAndModifyAppInstanceSetup(instanceSetupId, appId, A<Action<AppInstanceSetup>>._, A<Action<AppInstanceSetup>>._))
             .Invokes((Guid _, Guid _, Action<AppInstanceSetup> setOptionalParameters,
                 Action<AppInstanceSetup>? initializeParameter) =>
@@ -1037,6 +1057,73 @@ public class AppReleaseBusinessLogicTest
         instanceSetupData.IsSingleInstance.Should().BeTrue();
         A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
         A.CallTo(() => _offerSetupService.SetupSingleInstance(appId, data.InstanceUrl!)).MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task SetInstanceType_WithExistingEntry_UpdatesEntry()
+    {
+        //Arrange
+        var appId = Guid.NewGuid();
+        var instanceSetupId = Guid.NewGuid();
+        var appInstanceData = new List<(Guid, Guid, string)>
+        {
+            (Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid().ToString())
+        };
+        var instanceSetupData = new AppInstanceSetup(instanceSetupId, appId, false);
+        var data = new AppInstanceSetupData(true, "https://test.de");
+        var instanceSetupTransferData = new AppInstanceSetupTransferData(instanceSetupId, false, null);
+        A.CallTo(() => _offerRepository.GetOfferWithSetupDataById(appId, IamUserId, OfferTypeId.APP))
+            .ReturnsLazily(() => new ValueTuple<OfferStatusId, bool, AppInstanceSetupTransferData?, IEnumerable<(Guid, Guid, string)>>(OfferStatusId.CREATED, true, instanceSetupTransferData, appInstanceData));
+        A.CallTo(() => _offerRepository.AttachAndModifyAppInstanceSetup(instanceSetupId, appId, A<Action<AppInstanceSetup>>._, A<Action<AppInstanceSetup>>._))
+            .Invokes((Guid _, Guid _, Action<AppInstanceSetup> setOptionalParameters,
+                Action<AppInstanceSetup>? initializeParameter) =>
+            {
+                initializeParameter?.Invoke(instanceSetupData);
+                setOptionalParameters.Invoke(instanceSetupData);
+            });
+
+        //Act
+        await _sut.SetInstanceType(appId, data, IamUserId).ConfigureAwait(false);
+
+        // Assert
+        instanceSetupData.InstanceUrl.Should().Be(data.InstanceUrl);
+        instanceSetupData.IsSingleInstance.Should().BeTrue();
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _offerSetupService.SetupSingleInstance(appId, data.InstanceUrl!)).MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task SetInstanceType_FromSingleToMulti_UpdatesEntry()
+    {
+        //Arrange
+        var appId = Guid.NewGuid();
+        var instanceSetupId = Guid.NewGuid();
+        var appInstanceData = new List<(Guid, Guid, string)>
+        {
+            (Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid().ToString())
+        };
+        var instanceSetupData = new AppInstanceSetup(instanceSetupId, appId, true);
+        var data = new AppInstanceSetupData(false, null);
+        var instanceSetupTransferData = new AppInstanceSetupTransferData(instanceSetupId, true, null);
+        A.CallTo(() => _offerRepository.GetOfferWithSetupDataById(appId, IamUserId, OfferTypeId.APP))
+            .ReturnsLazily(() => new ValueTuple<OfferStatusId, bool, AppInstanceSetupTransferData?, IEnumerable<(Guid, Guid, string)>>(OfferStatusId.CREATED, true, instanceSetupTransferData, appInstanceData));
+        A.CallTo(() => _offerRepository.AttachAndModifyAppInstanceSetup(instanceSetupId, appId, A<Action<AppInstanceSetup>>._, A<Action<AppInstanceSetup>>._))
+            .Invokes((Guid _, Guid _, Action<AppInstanceSetup> setOptionalParameters,
+                Action<AppInstanceSetup>? initializeParameter) =>
+            {
+                initializeParameter?.Invoke(instanceSetupData);
+                setOptionalParameters.Invoke(instanceSetupData);
+            });
+
+        //Act
+        await _sut.SetInstanceType(appId, data, IamUserId).ConfigureAwait(false);
+
+        // Assert
+        instanceSetupData.InstanceUrl.Should().BeNull();
+        instanceSetupData.IsSingleInstance.Should().BeFalse();
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _offerSetupService.DeleteSingleInstance(A<Guid>._, A<Guid>._, A<string>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _offerSetupService.SetupSingleInstance(appId, data.InstanceUrl!)).MustNotHaveHappened();
     }
 
     #endregion
