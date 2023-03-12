@@ -558,7 +558,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         else
         {
             var existingData = result.SetupTransferData;
-            changed = existingData.IsSingleInstance == data.IsSingleInstance;
+            changed = existingData.IsSingleInstance != data.IsSingleInstance;
             _portalRepositories.GetInstance<IOfferRepository>().AttachAndModifyAppInstanceSetup(
                 existingData.Id,
                 appId,
