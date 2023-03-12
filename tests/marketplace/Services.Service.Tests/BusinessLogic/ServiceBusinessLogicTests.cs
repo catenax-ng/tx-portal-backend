@@ -582,6 +582,8 @@ public class ServiceBusinessLogicTests
     }
     #endregion
     
+    #region GetCompanyProvidedServiceStatusDataAsync
+
     [Theory]
     [InlineData(ServiceStatusIdFilter.Active, new []{ OfferStatusId.ACTIVE })]
     [InlineData(ServiceStatusIdFilter.Inactive, new []{ OfferStatusId.INACTIVE })]
@@ -613,6 +615,28 @@ public class ServiceBusinessLogicTests
             .And.ContainInOrder(serviceDetailData.Skip(6).Take(3));
     }
 
+    #endregion
+
+    #region ApproveServiceRequestAsync
+
+    [Fact]
+    public async Task ApproveServiceRequestAsync_WithValid_CallsExpected()
+    {
+        // Arrange
+        var appId = Guid.NewGuid();
+        var sut = new ServiceBusinessLogic(_portalRepositories, _offerService, null!, null!, Options.Create(new ServiceSettings()));
+        
+        // Act
+        await sut.ApproveServiceRequestAsync(appId, _iamUser.UserEntityId).ConfigureAwait(false);
+        
+        // Assert
+        A.CallTo(() => _offerService.ApproveOfferRequestAsync(appId, _iamUser.UserEntityId, OfferTypeId.SERVICE,
+            A<IEnumerable<NotificationTypeId>>._, A<IDictionary<string, IEnumerable<string>>>._,
+            A<IDictionary<string, IEnumerable<string>>>._)).MustHaveHappenedOnceExactly();
+    }
+
+    #endregion
+    
     #region Setup
 
     private void SetupUpdateService()

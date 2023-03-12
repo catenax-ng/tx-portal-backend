@@ -61,11 +61,7 @@ public interface IOfferSetupService
     /// Setup a single instance app
     /// </summary>
     /// <param name="offerId">id of the offer</param>
-    /// <param name="companyUserId">id of the company user</param>
     /// <param name="serviceAccountRoles">the service account roles</param>
-    /// <param name="itAdminRoles">the it admin roles</param>
     Task<string> CreateSingleInstanceAppAsync(Guid offerId,
-        Guid companyUserId,
-        IDictionary<string, IEnumerable<string>> serviceAccountRoles,
-        IDictionary<string, IEnumerable<string>> itAdminRoles);
+        IDictionary<string, IEnumerable<string>> serviceAccountRoles);
 }

@@ -762,7 +762,7 @@ public class OfferRepository : IOfferRepository
             {
                 Company = o.ProviderCompany, OfferId = o.Id, OfferName = o.Name,
                 ClientId = o.AppInstances.Select(x => x.IamClient!.ClientClientId).SingleOrDefault(),
-                InstanceSetupId = o.AppInstanceSetup!.Id,
+                InstanceSetupId = o.AppInstanceSetup == null ? Guid.Empty : o.AppInstanceSetup.Id,
             })
             .Select(x => new SingleInstanceOfferData(
                 x.Company!.Id,

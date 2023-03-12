@@ -44,6 +44,10 @@ public class OfferSetupServiceTests
     private readonly Guid _existingServiceId = new("9aae7a3b-b188-4a42-b46b-fb2ea5f47661");
     private readonly Guid _validSubscriptionId = new("9aae7a3b-b188-4a42-b46b-fb2ea5f47662");
     private readonly Guid _pendingSubscriptionId = new("9aae7a3b-b188-4a42-b46b-fb2ea5f47663");
+    private readonly Guid _validOfferId = new("9aae7a3b-b188-4a42-b46b-fb2ea5f47664");
+    private readonly Guid _offerIdWithoutClient = new("9aae7a3b-b188-4a42-b46b-fb2ea5f47665");
+    private readonly Guid _offerIdWithInstanceNotSet = new("9aae7a3b-b188-4a42-b46b-fb2ea5f47667");
+    private readonly Guid _validInstanceSetupId = new("9aae7a3b-b188-4a42-b46b-fb2ea5f47666");
     private readonly Guid _technicalUserId = new("9aae7a3b-b188-4a42-b46b-fb2ea5f47999");
 
     private readonly CompanyUser _companyUser;
@@ -54,6 +58,7 @@ public class OfferSetupServiceTests
     private readonly IClientRepository _clientRepository;
     private readonly IAppSubscriptionDetailRepository _appSubscriptionDetailRepository;
     private readonly IOfferSubscriptionsRepository _offerSubscriptionsRepository;
+    private readonly IOfferRepository _offerRepository;
     private readonly INotificationRepository _notificationRepository;
     private readonly IPortalRepositories _portalRepositories;
     private readonly IProvisioningManager _provisioningManager;
@@ -81,6 +86,7 @@ public class OfferSetupServiceTests
         _appInstanceRepository = A.Fake<IAppInstanceRepository>();
         _clientRepository = A.Fake<IClientRepository>();
         _offerSubscriptionsRepository = A.Fake<IOfferSubscriptionsRepository>();
+        _offerRepository = A.Fake<IOfferRepository>();
         _provisioningManager = A.Fake<IProvisioningManager>();
         _notificationRepository = A.Fake<INotificationRepository>();
         _serviceAccountCreation = A.Fake<IServiceAccountCreation>();
@@ -93,6 +99,7 @@ public class OfferSetupServiceTests
         A.CallTo(() => _portalRepositories.GetInstance<IClientRepository>()).Returns(_clientRepository);
         A.CallTo(() => _portalRepositories.GetInstance<INotificationRepository>()).Returns(_notificationRepository);
         A.CallTo(() => _portalRepositories.GetInstance<IOfferSubscriptionsRepository>()).Returns(_offerSubscriptionsRepository);
+        A.CallTo(() => _portalRepositories.GetInstance<IOfferRepository>()).Returns(_offerRepository);
 
         _sut = new OfferSetupService(_portalRepositories, _provisioningManager, _serviceAccountCreation, _notificationService, _mailingService, _httpClientFactory);
     }
@@ -152,14 +159,15 @@ public class OfferSetupServiceTests
     #region AutoSetupServiceAsync
 
     [Theory]
-    [InlineData(OfferTypeId.APP, true)]
-    [InlineData(OfferTypeId.SERVICE, true)]
-    [InlineData(OfferTypeId.SERVICE, false)]
-    public async Task AutoSetup_WithValidData_ReturnsExpectedNotificationAndSecret(OfferTypeId offerTypeId, bool technicalUserRequired)
+    [InlineData(OfferTypeId.APP, true, true)]
+    [InlineData(OfferTypeId.APP, true, false)]
+    [InlineData(OfferTypeId.SERVICE, true, false)]
+    [InlineData(OfferTypeId.SERVICE, false, false)]
+    public async Task AutoSetup_WithValidData_ReturnsExpectedNotificationAndSecret(OfferTypeId offerTypeId, bool technicalUserRequired, bool isSingleInstance)
     {
         // Arrange
         var offerSubscription = new OfferSubscription(Guid.NewGuid(), Guid.Empty, Guid.Empty, OfferSubscriptionStatusId.PENDING, Guid.Empty, Guid.Empty);
-        Setup(technicalUserRequired, offerSubscription);
+        SetupAutoSetup(technicalUserRequired, offerSubscription, isSingleInstance);
         var clientId = Guid.NewGuid();
         var appInstanceId = Guid.NewGuid();
         var appSubscriptionDetailId = Guid.NewGuid();
@@ -216,20 +224,20 @@ public class OfferSetupServiceTests
         
         // Assert
         result.Should().NotBeNull();
-        if (technicalUserRequired)
-        {
-            result.TechnicalUserInfo.Should().NotBeNull();
-            result.TechnicalUserInfo!.TechnicalUserId.Should().Be(_technicalUserId);
-            result.TechnicalUserInfo.TechnicalUserSecret.Should().Be("katze!1234");
-        }
-        else
+        if (!technicalUserRequired || isSingleInstance)
         {
             result.TechnicalUserInfo.Should().BeNull();
             result.ClientInfo.Should().BeNull();
             clients.Should().BeEmpty();
         }
+        else
+        {
+            result.TechnicalUserInfo.Should().NotBeNull();
+            result.TechnicalUserInfo!.TechnicalUserId.Should().Be(_technicalUserId);
+            result.TechnicalUserInfo.TechnicalUserSecret.Should().Be("katze!1234");
+        }
 
-        if (offerTypeId == OfferTypeId.SERVICE)
+        if (offerTypeId == OfferTypeId.SERVICE || isSingleInstance)
         {
             appInstances.Should().BeEmpty();
             appSubscriptionDetails.Should().BeEmpty();
@@ -243,7 +251,10 @@ public class OfferSetupServiceTests
 
         notifications.Should().HaveCount(1);
         offerSubscription.OfferSubscriptionStatusId.Should().Be(OfferSubscriptionStatusId.ACTIVE);
-        A.CallTo(() => _mailingService.SendMails(A<string>._, A<Dictionary<string, string>>._, A<List<string>>._)).MustHaveHappenedOnceExactly();
+        if (!isSingleInstance)
+        {
+            A.CallTo(() => _mailingService.SendMails(A<string>._, A<Dictionary<string, string>>._, A<List<string>>._)).MustHaveHappenedOnceExactly();
+        }
         A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
     }
 
@@ -251,7 +262,7 @@ public class OfferSetupServiceTests
     public async Task AutoSetup_WithValidDataAndUserWithoutMail_NoMailIsSend()
     {
         // Arrange
-        Setup();
+        SetupAutoSetup();
         var serviceAccountRoles = new Dictionary<string, IEnumerable<string>>
         {
             { "technical_roles_management", new [] { "Digital Twin Management" } }
@@ -278,7 +289,7 @@ public class OfferSetupServiceTests
     public async Task AutoSetup_WithNotExistingOfferSubscriptionId_ThrowsException()
     {
         // Arrange
-        Setup();
+        SetupAutoSetup();
         var data = new OfferAutoSetupData(Guid.NewGuid(), "https://new-url.com/");
 
         // Act
@@ -295,7 +306,7 @@ public class OfferSetupServiceTests
     public async Task AutoSetup_WithActiveSubscription_ThrowsException()
     {
         // Arrange
-        Setup();
+        SetupAutoSetup();
         var data = new OfferAutoSetupData(_validSubscriptionId, "https://new-url.com/");
 
         // Act
@@ -311,7 +322,7 @@ public class OfferSetupServiceTests
     public async Task AutoSetup_WithUserNotFromProvidingCompany_ThrowsException()
     {
         // Arrange
-        Setup();
+        SetupAutoSetup();
         var data = new OfferAutoSetupData(_pendingSubscriptionId, "https://new-url.com/");
 
         // Act
@@ -323,6 +334,118 @@ public class OfferSetupServiceTests
         A.CallTo(() => _mailingService.SendMails(A<string>._, A<Dictionary<string, string>>._, A<List<string>>._)).MustNotHaveHappened();
     }
 
+    #endregion
+    
+    #region CreateSingleInstanceAppAsync
+    
+    [Fact]
+    public async Task CreateSingleInstanceAppAsync_WithValidData_ReturnsExpected()
+    {
+        // Arrange
+        var appInstanceSetupId = Guid.NewGuid();
+        var appInstanceSetup = new AppInstanceSetup(appInstanceSetupId, _validOfferId, true)
+        {
+            InstanceUrl = "https://test.de"
+        };
+        SetupCreateSingleInstance(appInstanceSetup);
+        var serviceAccountRoles = new Dictionary<string, IEnumerable<string>>
+        {
+            { "technical_roles_management", new [] { "Digital Twin Management" } }
+        };
+
+        // Act
+        var result = await _sut.CreateSingleInstanceAppAsync(_validOfferId, serviceAccountRoles).ConfigureAwait(false);
+        
+        // Assert
+        result.Should().NotBeNull();
+        appInstanceSetup.ServiceAccountId.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task CreateSingleInstanceAppAsync_WithNotExistingApp_ThrowsConflictException()
+    {
+        var offerId = Guid.NewGuid();
+        SetupCreateSingleInstance();
+        var serviceAccountRoles = new Dictionary<string, IEnumerable<string>>
+        {
+            { "technical_roles_management", new [] { "Digital Twin Management" } }
+        };
+        
+        async Task Act() => await _sut.CreateSingleInstanceAppAsync(offerId, serviceAccountRoles).ConfigureAwait(false);
+
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be($"App {offerId} does not exist.");
+    }
+
+    [Fact]
+    public async Task CreateSingleInstanceAppAsync_WithNoClientSet_ThrowsConflictException()
+    {
+        SetupCreateSingleInstance();
+        var serviceAccountRoles = new Dictionary<string, IEnumerable<string>>
+        {
+            { "technical_roles_management", new [] { "Digital Twin Management" } }
+        };
+        
+        async Task Act() => await _sut.CreateSingleInstanceAppAsync(_offerIdWithoutClient, serviceAccountRoles).ConfigureAwait(false);
+
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be("ClientId must not be null");
+    }
+
+    [Fact]
+    public async Task CreateSingleInstanceAppAsync_WithInstanceNotSet_ThrowsConflictException()
+    {
+        SetupCreateSingleInstance();
+        var serviceAccountRoles = new Dictionary<string, IEnumerable<string>>
+        {
+            { "technical_roles_management", new [] { "Digital Twin Management" } }
+        };
+        
+        async Task Act() => await _sut.CreateSingleInstanceAppAsync(_offerIdWithInstanceNotSet, serviceAccountRoles).ConfigureAwait(false);
+
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be("ClientId must not be null");
+    }
+
+    #endregion
+    
+    #region
+    
+    [Fact]
+    public async Task SetupSingleInstance_WithValidData_ReturnsExpected()
+    {
+        // Arrange
+        SetupServices();
+        var clientId = Guid.NewGuid();
+        var appInstanceId = Guid.NewGuid();
+        var offerId = Guid.NewGuid();
+        var clients = new List<IamClient>();
+        var appInstances = new List<AppInstance>();
+        A.CallTo(() => _clientRepository.CreateClient(A<string>._, A<Action<IamClient>?>._))
+            .Invokes((string clientName, Action<IamClient> setOptionalParameter) =>
+            {
+                var client = new IamClient(clientId, clientName);
+                setOptionalParameter.Invoke(client);
+                clients.Add(client);
+            })
+            .Returns(new IamClient(clientId, "cl1"));
+
+        A.CallTo(() => _appInstanceRepository.CreateAppInstance(A<Guid>._, A<Guid>._))
+            .Invokes((Guid appId, Guid iamClientId) =>
+            {
+                var appInstance = new AppInstance(appInstanceId, appId, iamClientId);
+                appInstances.Add(appInstance);
+            })
+            .Returns(new AppInstance(appInstanceId, _existingServiceId, clientId));
+
+        // Act
+        await _sut.SetupSingleInstance(offerId, "https://base-address.com").ConfigureAwait(false);
+        
+        // Assert
+        appInstances.Should().ContainSingle();
+        clients.Should().ContainSingle();
+    }
+    
     #endregion
     
     #region Setup
@@ -347,7 +470,7 @@ public class OfferSetupServiceTests
             .ReturnsLazily(() => Task.CompletedTask);
     }
 
-    private void Setup(bool technicalUserRequired = false, OfferSubscription? offerSubscription = null)
+    private void SetupAutoSetup(bool technicalUserRequired = false, OfferSubscription? offerSubscription = null, bool isSingleInstance = false)
     {
         SetupServices();
 
@@ -366,21 +489,21 @@ public class OfferSetupServiceTests
                 A<OfferTypeId>._))
             .ReturnsLazily(() => new OfferSubscriptionTransferData(OfferSubscriptionStatusId.ACTIVE, _companyUser.Id, Guid.Empty,
                 _companyUser.Company!.Name, _companyUser.CompanyId, _companyUser.Id, _existingServiceId, "Test Service",
-                Bpn, "user@email.com", "Tony", "Gilbert", technicalUserRequired, false));
+                Bpn, "user@email.com", "Tony", "Gilbert", technicalUserRequired, isSingleInstance));
         A.CallTo(() => _offerSubscriptionsRepository.GetOfferDetailsAndCheckUser(
                 A<Guid>.That.Matches(x => x == _pendingSubscriptionId),
                 A<string>.That.Matches(x => x == _iamUserIdWithoutMail),
                 A<OfferTypeId>._))
             .ReturnsLazily(() => new OfferSubscriptionTransferData(OfferSubscriptionStatusId.PENDING, _companyUser.Id, Guid.Empty,
                 _companyUser.Company!.Name, _companyUser.CompanyId, _companyUser.Id, _existingServiceId, "Test Service",
-                Bpn, null, null, null, technicalUserRequired, false));
+                Bpn, null, null, null, technicalUserRequired, isSingleInstance));
         A.CallTo(() => _offerSubscriptionsRepository.GetOfferDetailsAndCheckUser(
                 A<Guid>.That.Matches(x => x == _pendingSubscriptionId),
                 A<string>.That.Matches(x => x == _iamUserId),
                 A<OfferTypeId>._))
             .ReturnsLazily(() => new OfferSubscriptionTransferData(OfferSubscriptionStatusId.PENDING, _companyUser.Id, Guid.Empty,
                 string.Empty, _companyUser.CompanyId, _companyUser.Id, _existingServiceId, "Test Service",
-                Bpn, "user@email.com", "Tony", "Gilbert", technicalUserRequired, false));
+                Bpn, "user@email.com", "Tony", "Gilbert", technicalUserRequired, isSingleInstance));
         A.CallTo(() => _offerSubscriptionsRepository.GetOfferDetailsAndCheckUser(
                 A<Guid>.That.Not.Matches(x => x == _pendingSubscriptionId || x == _validSubscriptionId),
                 A<string>.That.Matches(x => x == _iamUserId),
@@ -392,8 +515,31 @@ public class OfferSetupServiceTests
                 A<OfferTypeId>._))
             .ReturnsLazily(() =>new OfferSubscriptionTransferData(OfferSubscriptionStatusId.PENDING, Guid.Empty, Guid.Empty,
                 string.Empty, _companyUser.CompanyId, _companyUser.Id, _existingServiceId, "Test Service",
-                Bpn, null, null, null, technicalUserRequired, false));
+                Bpn, null, null, null, technicalUserRequired, isSingleInstance));
 
+    }
+
+    private void SetupCreateSingleInstance(AppInstanceSetup? appInstanceSetup = null)
+    {
+        SetupServices();
+
+        if (appInstanceSetup != null)
+        {
+            A.CallTo(() => _offerRepository.AttachAndModifyAppInstanceSetup(A<Guid>._, A<Guid>._, A<Action<AppInstanceSetup>>._, A<Action<AppInstanceSetup>?>._))
+                .Invokes((Guid _, Guid _, Action<AppInstanceSetup> setOptionalFields, Action<AppInstanceSetup>? _) =>
+                {
+                    setOptionalFields.Invoke(appInstanceSetup);
+                });
+        }
+
+        A.CallTo(() => _offerRepository.GetSingleInstanceOfferData(_validOfferId, OfferTypeId.APP))
+            .ReturnsLazily(() => new SingleInstanceOfferData(_companyUserCompanyId, "app1", Bpn, "cl1", _validInstanceSetupId));
+        A.CallTo(() => _offerRepository.GetSingleInstanceOfferData(_offerIdWithoutClient, OfferTypeId.APP))
+            .ReturnsLazily(() => new SingleInstanceOfferData(_companyUserCompanyId, "app1", Bpn, null, _validInstanceSetupId));
+        A.CallTo(() => _offerRepository.GetSingleInstanceOfferData(_offerIdWithInstanceNotSet, OfferTypeId.APP))
+            .ReturnsLazily(() => new SingleInstanceOfferData(_companyUserCompanyId, "app1", Bpn, null, Guid.Empty));
+        A.CallTo(() => _offerRepository.GetSingleInstanceOfferData(A<Guid>.That.Not.Matches(x => x == _offerIdWithoutClient || x == _validOfferId || x == _offerIdWithInstanceNotSet), OfferTypeId.APP))
+            .ReturnsLazily(() => (SingleInstanceOfferData?)null);
     }
 
     #endregion

@@ -380,7 +380,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
     
     /// <inheritdoc/>
     public Task ApproveAppRequestAsync(Guid appId, string iamUserId) =>
-        _offerService.ApproveOfferRequestAsync(appId, iamUserId, OfferTypeId.APP, _settings.ApproveAppNotificationTypeIds, _settings.ApproveAppUserRoles, _settings.ServiceAccountRoles, _settings.ITAdminRoles);
+        _offerService.ApproveOfferRequestAsync(appId, iamUserId, OfferTypeId.APP, _settings.ApproveAppNotificationTypeIds, _settings.ApproveAppUserRoles, _settings.ServiceAccountRoles);
     
     private IEnumerable<OfferStatusId> GetOfferStatusIds(OfferStatusIdFilter? offerStatusIdFilter)
     {
@@ -537,7 +537,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
             .GetOfferWithSetupDataById(appId, iamUserId, OfferTypeId.APP)
             .ConfigureAwait(false);
         if (result == default)
-            throw new NotFoundException($"App {appId} does not exist.");
+            throw new NotFoundException($"App {appId} does not exist");
 
         if (!result.IsUserOfProvidingCompany)
             throw new ForbiddenException($"User {iamUserId} is not a user of the provider company");
@@ -545,8 +545,10 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         if (result.OfferStatus is not (OfferStatusId.CREATED or OfferStatusId.IN_REVIEW))
             throw new ConflictException($"App {appId} is not in Status {OfferStatusId.CREATED} or {OfferStatusId.IN_REVIEW}");
 
+        bool changed;
         if (result.SetupTransferData == null)
         {
+            changed = true;
             _portalRepositories.GetInstance<IOfferRepository>().CreateAppInstanceSetup(appId, data.IsSingleInstance,
                 entity =>
                 {
@@ -556,6 +558,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         else
         {
             var existingData = result.SetupTransferData;
+            changed = existingData.IsSingleInstance == data.IsSingleInstance;
             _portalRepositories.GetInstance<IOfferRepository>().AttachAndModifyAppInstanceSetup(
                 existingData.Id,
                 appId,
@@ -571,10 +574,10 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
                 });
         }
 
-        if (data.IsSingleInstance)
+        if (changed && data.IsSingleInstance)
         {
             await _offerSetupService
-                .SetupSingleInstance(appId, iamUserId)
+                .SetupSingleInstance(appId, data.InstanceUrl!)
                 .ConfigureAwait(false);
         }
 

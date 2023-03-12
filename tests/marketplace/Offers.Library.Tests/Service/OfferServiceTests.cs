@@ -773,7 +773,7 @@ public class OfferServiceTests
         };
 
         //Act
-        await _sut.ApproveOfferRequestAsync(offer.Id, iamUserId, OfferTypeId.APP, approveAppNotificationTypeIds, approveAppUserRoles, serviceAccountRoles, itAdminRoles).ConfigureAwait(false);
+        await _sut.ApproveOfferRequestAsync(offer.Id, iamUserId, OfferTypeId.APP, approveAppNotificationTypeIds, approveAppUserRoles, serviceAccountRoles).ConfigureAwait(false);
 
         //Assert
         A.CallTo(() => _offerRepository.GetOfferStatusDataByIdAsync(offer.Id, OfferTypeId.APP)).MustHaveHappened();
@@ -784,12 +784,14 @@ public class OfferServiceTests
         offer.DateReleased.Should().NotBeNull();
         if (isSingleInstance)
         {
-            A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly(); A.CallTo(() => _offerSetupService.CreateSingleInstanceAppAsync(offer.Id, A<Guid>._, serviceAccountRoles, itAdminRoles))
+            A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
+            A.CallTo(() => _offerSetupService.CreateSingleInstanceAppAsync(offer.Id, serviceAccountRoles))
                 .MustHaveHappenedOnceExactly();    
         }
         else
         {
-            A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly(); A.CallTo(() => _offerSetupService.CreateSingleInstanceAppAsync(offer.Id, A<Guid>._, serviceAccountRoles, itAdminRoles))
+            A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
+            A.CallTo(() => _offerSetupService.CreateSingleInstanceAppAsync(offer.Id, serviceAccountRoles))
                 .MustNotHaveHappened();
         }
     }
@@ -823,7 +825,7 @@ public class OfferServiceTests
         };
 
         //Act
-        Task Act() => _sut.ApproveOfferRequestAsync(offerId, iamUserId, OfferTypeId.APP, approveAppNotificationTypeIds, approveAppUserRoles, serviceAccountRoles, itAdminRoles);
+        Task Act() => _sut.ApproveOfferRequestAsync(offerId, iamUserId, OfferTypeId.APP, approveAppNotificationTypeIds, approveAppUserRoles, serviceAccountRoles);
 
         //Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act).ConfigureAwait(false);
@@ -859,7 +861,7 @@ public class OfferServiceTests
         };
 
         //Act
-        Task Act() => _sut.ApproveOfferRequestAsync(offerId, iamUserId, OfferTypeId.APP, approveAppNotificationTypeIds, approveAppUserRoles, serviceAccountRoles, itAdminRoles);
+        Task Act() => _sut.ApproveOfferRequestAsync(offerId, iamUserId, OfferTypeId.APP, approveAppNotificationTypeIds, approveAppUserRoles, serviceAccountRoles);
 
         //Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act).ConfigureAwait(false);

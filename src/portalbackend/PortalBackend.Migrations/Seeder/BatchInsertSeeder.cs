@@ -125,6 +125,7 @@ public class BatchInsertSeeder : ICustomSeeder
         await SeedTableForBaseEntity<UseCase>("use_cases", cancellationToken).ConfigureAwait(false);
         await SeedTableForBaseEntity<ProcessStep>("process_steps", cancellationToken).ConfigureAwait(false);
         await SeedTableForBaseEntity<Process>("processes", cancellationToken).ConfigureAwait(false);
+        await SeedTableForBaseEntity<AppInstanceSetup>("app_instance_setups", cancellationToken).ConfigureAwait(false);
     }
 
     private async Task SeedTableForBaseEntity<T>(string fileName, CancellationToken cancellationToken) where T : class, IBaseEntity

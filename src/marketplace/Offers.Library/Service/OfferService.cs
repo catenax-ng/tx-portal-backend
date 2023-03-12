@@ -432,7 +432,7 @@ public class OfferService : IOfferService
     }
 
     /// <inheritdoc/>
-    public async Task ApproveOfferRequestAsync(Guid offerId, string iamUserId, OfferTypeId offerTypeId, IEnumerable<NotificationTypeId> notificationTypeIds, IDictionary<string, IEnumerable<string>> approveOfferRoles, IDictionary<string, IEnumerable<string>> serviceAccountRoles, IDictionary<string, IEnumerable<string>> itAdminRoles)
+    public async Task ApproveOfferRequestAsync(Guid offerId, string iamUserId, OfferTypeId offerTypeId, IEnumerable<NotificationTypeId> notificationTypeIds, IDictionary<string, IEnumerable<string>> approveOfferRoles, IDictionary<string, IEnumerable<string>> serviceAccountRoles)
     {
         var offerRepository = _portalRepositories.GetInstance<IOfferRepository>();
         var offerDetails = await offerRepository.GetOfferStatusDataByIdAsync(offerId, offerTypeId).ConfigureAwait(false);
@@ -472,7 +472,7 @@ public class OfferService : IOfferService
         string? technicalUserId = null;
         if (offerDetails.IsSingleInstance)
         {
-            technicalUserId = await _offerSetupService.CreateSingleInstanceAppAsync(offerId, requesterId, serviceAccountRoles, itAdminRoles).ConfigureAwait(false);
+            technicalUserId = await _offerSetupService.CreateSingleInstanceAppAsync(offerId, serviceAccountRoles).ConfigureAwait(false);
         }
 
         object notificationContent = offerTypeId switch

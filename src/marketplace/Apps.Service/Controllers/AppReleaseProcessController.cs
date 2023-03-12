@@ -444,6 +444,7 @@ public class AppReleaseProcessController : ControllerBase
     /// Sets the instance type and all related data for the app
     /// </summary>
     /// <param name="appId" example="5636F9B9-C3DE-4BA5-8027-00D17A2FECFB">ID of the app to be deleted.</param>
+    /// <param name="data">Data needed for the instance setup</param>
     /// <remarks>Example: PUT: /api/apps/appreleaseprocess/instance-type/{appId}</remarks>
     /// <response code="204">Empty response on success.</response>
     /// <response code="400">Input is incorrect.</response>

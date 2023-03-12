@@ -51,7 +51,7 @@ public class PortalDbContext : DbContext
     public virtual DbSet<AgreementAssignedOfferType> AgreementAssignedOfferTypes { get; set; } = default!;
     public virtual DbSet<AgreementCategory> AgreementCategories { get; set; } = default!;
     public virtual DbSet<AppInstance> AppInstances { get; set; } = default!;
-    public virtual DbSet<AppInstanceSetup> AppInstanceSetups { get; set; }
+    public virtual DbSet<AppInstanceSetup> AppInstanceSetups { get; set; } = default!;
     public virtual DbSet<AppAssignedUseCase> AppAssignedUseCases { get; set; } = default!;
     public virtual DbSet<AppLanguage> AppLanguages { get; set; } = default!;
     public virtual DbSet<ApplicationChecklistEntry> ApplicationChecklist { get; set; } = default!;

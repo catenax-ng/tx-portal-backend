@@ -95,6 +95,7 @@ public class OfferSetupService : IOfferSetupService
 
         if (offerDetails.IsSingleInstance)
         {
+            await CreateNotifications(itAdminRoles, offerTypeId, offerDetails);
             await _portalRepositories.SaveAsync().ConfigureAwait(false);
             return new OfferAutoSetupResponseData(null, null);
         }
@@ -140,12 +141,8 @@ public class OfferSetupService : IOfferSetupService
         _portalRepositories.GetInstance<IAppInstanceRepository>().CreateAppInstance(offerId, iamClientId);
     }
 
-    public async Task<string> CreateSingleInstanceAppAsync(Guid offerId,
-        Guid companyUserId,
-        IDictionary<string, IEnumerable<string>> serviceAccountRoles,
-        IDictionary<string, IEnumerable<string>> itAdminRoles)
+    public async Task<string> CreateSingleInstanceAppAsync(Guid offerId, IDictionary<string, IEnumerable<string>> serviceAccountRoles)
     {
-        var userRolesRepository = _portalRepositories.GetInstance<IUserRolesRepository>();
         var data = await _portalRepositories.GetInstance<IOfferRepository>().GetSingleInstanceOfferData(offerId, OfferTypeId.APP).ConfigureAwait(false);
         if (data == null)
         {
@@ -157,8 +154,13 @@ public class OfferSetupService : IOfferSetupService
             throw new ConflictException("ClientId must not be null");
         }
 
+        if (data.InstanceSetupId == Guid.Empty)
+        {
+            throw new ConflictException("Instance must be set");
+        }
+
         var technicalUserData = new CreateTechnicalUserData(data.CompanyId, data.OfferName, data.Bpn);
-        var (technicalClientId, _, _) = await CreateTechnicalUser(serviceAccountRoles, userRolesRepository, technicalUserData, data.ClientId, true, null)
+        var (technicalClientId, _, _) = await CreateTechnicalUser(serviceAccountRoles, _portalRepositories.GetInstance<IUserRolesRepository>(), technicalUserData, data.ClientId, true, null)
             .ConfigureAwait(false);
 
         _portalRepositories.GetInstance<IOfferRepository>().AttachAndModifyAppInstanceSetup(data.InstanceSetupId, offerId, a =>
@@ -261,14 +263,20 @@ public class OfferSetupService : IOfferSetupService
             offerDetails.CompanyName,
             offerDetails.OfferName
         });
+        var notifications = new List<(string?, NotificationTypeId)>
+        {
+            (notificationContent, appSubscriptionActivation)
+        };
+
+        if (!offerDetails.IsSingleInstance)
+        {
+            notifications.Add((null, NotificationTypeId.TECHNICAL_USER_CREATION));
+        }
+
         await _notificationService.CreateNotifications(
             itAdminRoles,
             offerDetails.CompanyUserId != Guid.Empty ? offerDetails.CompanyUserId : null,
-            new (string?, NotificationTypeId)[]
-            {
-                (null, NotificationTypeId.TECHNICAL_USER_CREATION),
-                (notificationContent, appSubscriptionActivation)
-            },
+            notifications,
             offerDetails.CompanyId).ConfigureAwait(false);
 
         _portalRepositories.GetInstance<INotificationRepository>().CreateNotification(offerDetails.RequesterId, appSubscriptionActivation, false, notification =>

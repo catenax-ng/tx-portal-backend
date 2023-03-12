@@ -201,7 +201,7 @@ public class ServiceBusinessLogic : IServiceBusinessLogic
 
     /// <inheritdoc/>
     public Task ApproveServiceRequestAsync(Guid appId, string iamUserId) =>
-        _offerService.ApproveOfferRequestAsync(appId, iamUserId, OfferTypeId.SERVICE, _settings.ApproveServiceNotificationTypeIds, _settings.ApproveServiceUserRoles, _settings.ServiceAccountRoles, _settings.ITAdminRoles);
+        _offerService.ApproveOfferRequestAsync(appId, iamUserId, OfferTypeId.SERVICE, _settings.ApproveServiceNotificationTypeIds, _settings.ApproveServiceUserRoles, _settings.ServiceAccountRoles);
 
     /// <inheritdoc />
     public Task DeclineServiceRequestAsync(Guid serviceId, string iamUserId, OfferDeclineRequest data) => 
