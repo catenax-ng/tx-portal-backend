@@ -472,13 +472,39 @@ public class OfferSetupServiceTests
     public async Task UpdateSingleInstance_CallsExpected()
     {
         // Arrange
+        const string url = "https://test.de";
         
         // Act
-        await _sut.UpdateSingleInstance("test", "url").ConfigureAwait(false);
+        await _sut.UpdateSingleInstance("test", url).ConfigureAwait(false);
+        
+        // Assert
+        A.CallTo(() => _provisioningManager.UpdateClient("test", url, $"{url}/*"))
+            .MustHaveHappenedOnceExactly();
     }
 
     #endregion
 
+    #region DeleteSingleInstance
+    
+    [Fact]
+    public async Task DeleteSingleInstance_CallsExpected()
+    {
+        // Arrange
+        var appInstanceId = Guid.NewGuid();
+        var clientId = Guid.NewGuid();
+        var clientClientId = Guid.NewGuid().ToString();
+
+        // Act
+        await _sut.DeleteSingleInstance(appInstanceId, clientId, clientClientId).ConfigureAwait(false);
+        
+        // Assert
+        A.CallTo(() => _provisioningManager.DeleteCentralClientAsync(clientClientId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _clientRepository.RemoveClient(clientId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _appInstanceRepository.RemoveAppInstance(appInstanceId)).MustHaveHappenedOnceExactly();
+    }
+    
+    #endregion
+    
     #region Setup
 
     private void SetupServices()

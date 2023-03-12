@@ -32,6 +32,6 @@ public record OfferSubscriptionTransferData(OfferSubscriptionStatusId Status,
     string? RequesterFirstname,
     string? RequesterLastname, 
     bool IsTechnicalUserNeeded,
-    (bool IsSingleInstance, string InstanceUrl) InstanceData,
+    (bool IsSingleInstance, string? InstanceUrl) InstanceData,
     IEnumerable<Guid> AppInstanceIds
 );
