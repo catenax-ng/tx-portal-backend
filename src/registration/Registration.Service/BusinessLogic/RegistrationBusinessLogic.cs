@@ -233,12 +233,7 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
         }
 
         var document = await documentRepository.GetDocumentByIdAsync(documentId).ConfigureAwait(false);
-        if (document is null)
-        {
-            throw new NotFoundException($"document {documentId} does not exist.");
-        }
-
-        return (document.DocumentName, document.DocumentContent, document.MimeType);
+        return (document!.DocumentName, document.DocumentContent, document.MimeType);
     }
 
     public async IAsyncEnumerable<CompanyApplicationData> GetAllApplicationsForUserWithStatus(string userId)
