@@ -36,6 +36,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared;
 using System.Collections.Immutable;
 using PortalBackend.DBAccess.Models;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using Xunit;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.BusinessLogic.Tests;
@@ -910,6 +911,25 @@ public class AppReleaseBusinessLogicTest
 
     #endregion 
 
+    #region ApproveAppRequestAsync
+
+    [Fact]
+    public async Task ApproveAppRequestAsync_CallsExpected()
+    {
+        // Arrange
+        var offerId = Guid.NewGuid();
+
+        // Act
+        await _sut.ApproveAppRequestAsync(offerId, IamUserId).ConfigureAwait(false);
+
+        A.CallTo(() => _offerService.ApproveOfferRequestAsync(offerId, IamUserId, OfferTypeId.APP,
+                A<IEnumerable<NotificationTypeId>>._, A<IDictionary<string, IEnumerable<string>>>._,
+                A<IDictionary<string, IEnumerable<string>>>._))
+            .MustHaveHappenedOnceExactly();
+    }
+
+    #endregion
+    
     #region SetInstanceType
 
     [Fact]
@@ -994,23 +1014,6 @@ public class AppReleaseBusinessLogicTest
     }
 
     [Fact]
-    public async Task SetInstanceType_WithNewEntry_CreatesEntry()
-    {
-        //Arrange
-        var appId = Guid.NewGuid();
-        var data = new AppInstanceSetupData(true, "https://test.de");
-        A.CallTo(() => _offerRepository.GetOfferWithSetupDataById(appId, IamUserId, OfferTypeId.APP))
-            .ReturnsLazily(() => new ValueTuple<OfferStatusId, bool, AppInstanceSetupTransferData?, IEnumerable<(Guid, Guid, string)>>(OfferStatusId.CREATED, true, null, new List<(Guid, Guid, string)>()));
-
-        //Act
-        await _sut.SetInstanceType(appId, data, IamUserId).ConfigureAwait(false);
-
-        // Assert
-        A.CallTo(() => _offerSetupService.SetupSingleInstance(appId, "https://test.de")).MustHaveHappenedOnceExactly();
-        A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
-    }
-
-    [Fact]
     public async Task SetInstanceType_FromSingleToMultiWithoutAppInstance_ThrowsConflictException()
     {
         //Arrange
@@ -1028,6 +1031,68 @@ public class AppReleaseBusinessLogicTest
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
         ex.Message.Should().Be("The must be at exactly one AppInstance");
         A.CallTo(() => _portalRepositories.SaveAsync()).MustNotHaveHappened();
+    }
+
+    [Fact]
+    public async Task SetInstanceType_WithNewEntry_CreatesEntry()
+    {
+        //Arrange
+        var appId = Guid.NewGuid();
+        var instanceSetupId = Guid.NewGuid();
+        var data = new AppInstanceSetupData(true, "https://test.de");
+        AppInstanceSetup? instanceSetupData = null;
+        A.CallTo(() => _offerRepository.GetOfferWithSetupDataById(appId, IamUserId, OfferTypeId.APP))
+            .ReturnsLazily(() => new ValueTuple<OfferStatusId, bool, AppInstanceSetupTransferData?, IEnumerable<(Guid, Guid, string)>>(OfferStatusId.CREATED, true, null, new List<(Guid, Guid, string)>()));
+        A.CallTo(() => _offerRepository.CreateAppInstanceSetup(appId, true, A<Action<AppInstanceSetup>>._))
+            .Invokes((Guid callingAppId , bool isSingleInstance, Action<AppInstanceSetup> setOptionalParameters) =>
+            {
+                instanceSetupData = new AppInstanceSetup(instanceSetupId, callingAppId, isSingleInstance);
+                setOptionalParameters.Invoke(instanceSetupData);
+            });
+
+        //Act
+        await _sut.SetInstanceType(appId, data, IamUserId).ConfigureAwait(false);
+
+        // Assert
+        instanceSetupData.Should().NotBeNull();
+        instanceSetupData!.IsSingleInstance.Should().BeTrue();
+        instanceSetupData.InstanceUrl.Should().Be("https://test.de");
+        A.CallTo(() => _offerSetupService.SetupSingleInstance(appId, "https://test.de")).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task SetInstanceType_WithUrlUpdate_CreatesEntry()
+    {
+        //Arrange
+        var appId = Guid.NewGuid();
+        var instanceSetupId = Guid.NewGuid();
+        var internalClientId = Guid.NewGuid().ToString();
+        var appInstanceData = new List<(Guid, Guid, string)>
+        {
+            (Guid.NewGuid(), Guid.NewGuid(), internalClientId)
+        };
+        var data = new AppInstanceSetupData(true, "https://new-url.de");
+        var instanceSetupTransferData = new AppInstanceSetupTransferData(instanceSetupId, true, "https://test.de");
+        var instanceSetupData = new AppInstanceSetup(instanceSetupId, appId, true);
+        A.CallTo(() => _offerRepository.GetOfferWithSetupDataById(appId, IamUserId, OfferTypeId.APP))
+            .ReturnsLazily(() => new ValueTuple<OfferStatusId, bool, AppInstanceSetupTransferData?, IEnumerable<(Guid, Guid, string)>>(OfferStatusId.CREATED, true, instanceSetupTransferData, appInstanceData));
+        A.CallTo(() => _offerRepository.AttachAndModifyAppInstanceSetup(instanceSetupId, appId, A<Action<AppInstanceSetup>>._, A<Action<AppInstanceSetup>>._))
+            .Invokes((Guid _, Guid _, Action<AppInstanceSetup> setOptionalParameters,
+                Action<AppInstanceSetup>? initializeParameter) =>
+            {
+                initializeParameter?.Invoke(instanceSetupData);
+                setOptionalParameters.Invoke(instanceSetupData);
+            });
+
+        //Act
+        await _sut.SetInstanceType(appId, data, IamUserId).ConfigureAwait(false);
+
+        // Assert
+        instanceSetupData.InstanceUrl.Should().Be("https://new-url.de");
+        A.CallTo(() => _offerSetupService.UpdateSingleInstance(internalClientId, "https://new-url.de")).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _offerSetupService.SetupSingleInstance(A<Guid>._, A<string>._)).MustNotHaveHappened();
     }
 
     [Fact]
