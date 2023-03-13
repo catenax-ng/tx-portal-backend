@@ -38,7 +38,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Services.Service.ViewModels;
 public record ServiceData(
     Guid Id,
     string? Title,
-    IEnumerable<ServiceTypeId> ServiceTypes,
+    IEnumerable<string> ServiceTypes,
     string Provider,
     IEnumerable<LocalizedDescription> Descriptions,
     IDictionary<DocumentTypeId, IEnumerable<DocumentData>> Documents,

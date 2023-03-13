@@ -92,7 +92,7 @@ public class ServiceReleaseBusinessLogicTest
                            .With(x=>x.ProviderUri, "TestProviderUri")
                            .With(x=>x.ContactEmail, "test@gmail.com")
                            .With(x=>x.ContactNumber, "6754321786")
-                           .With(x=>x.ServiceTypeIds, new []{ServiceTypeId.CONSULTANCE_SERVICE,ServiceTypeId.DATASPACE_SERVICE})
+                           .With(x=>x.ServiceTypeIds, new []{ServiceTypeId.CONSULTANCE_SERVICE.ToString(),ServiceTypeId.DATASPACE_SERVICE.ToString()})
                            .Create();
         var serviceId = _fixture.Create<Guid>();
        
@@ -135,6 +135,23 @@ public class ServiceReleaseBusinessLogicTest
         error.Message.Should().Be($"serviceId {serviceId} is incorrect status");
     }
     
+    [Fact]
+    public async Task GetServiceDetailsByIdAsync_WithInvalidServiceId_ThrowsException()
+    {
+        // Arrange
+        var invalidserviceId = Guid.NewGuid();
+        A.CallTo(() => _offerRepository.GetServiceDetailsByIdAsync(invalidserviceId))
+           .Returns((ServiceDetailsData?)null);
+        var sut = _fixture.Create<ServiceReleaseBusinessLogic>();
+
+        // Act
+        async Task Act() => await sut.GetServiceDetailsByIdAsync(invalidserviceId).ConfigureAwait(false);
+
+        // Assert
+        var error = await Assert.ThrowsAsync<NotFoundException>(Act).ConfigureAwait(false);
+        error.Message.Should().Be($"serviceId {invalidserviceId} does not exist");
+    }
+
     [Fact]
     public async Task GetServiceTypeData_ReturnExpectedResult()
     {

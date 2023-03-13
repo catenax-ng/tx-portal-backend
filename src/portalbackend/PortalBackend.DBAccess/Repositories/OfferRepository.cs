@@ -644,7 +644,7 @@ public class OfferRepository : IOfferRepository
             .Select(offer => new ServiceDetailsData(
                 offer.Id,
                 offer.Name,
-                offer.ServiceDetails.Select(x => x.ServiceTypeId),
+                offer.ServiceDetails.Select(x => x.ServiceType!.Label),
                 offer.Provider,
                 offer.OfferDescriptions.Select(description => new OfferDescriptionData(description.LanguageShortName, description.DescriptionLong, description.DescriptionShort)),
                 offer.Documents.Select(d => new DocumentTypeData(d.DocumentTypeId, d.Id, d.DocumentName)),

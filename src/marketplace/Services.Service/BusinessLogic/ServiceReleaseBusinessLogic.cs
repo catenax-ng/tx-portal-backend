@@ -77,7 +77,6 @@ public class ServiceReleaseBusinessLogic : IServiceReleaseBusinessLogic
             result.ProviderUri ?? Constants.ErrorString,
             result.ContactEmail,
             result.ContactNumber
-
         );
     }
     
