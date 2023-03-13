@@ -102,7 +102,6 @@ public class ClientManagerTests
     public async Task EnableClient_CallsExpected()
     {
         // Arrange
-        const string url = "https://newurl.com";
         const string clientId = "cl1";
         using var httpTest = new HttpTest();
         A.CallTo(() => _provisioningDbAccess.GetNextClientSequenceAsync()).ReturnsLazily(() => 1);
