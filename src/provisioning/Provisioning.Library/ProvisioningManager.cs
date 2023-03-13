@@ -58,8 +58,10 @@ public partial class ProvisioningManager : IProvisioningManager
 
         await CreateSharedRealmAsync(sharedKeycloak, idpName, organisationName).ConfigureAwait(false);
 
-        await UpdateCentralIdentityProviderUrlsAsync(idpName, await sharedKeycloak.GetOpenIDConfigurationAsync(idpName).ConfigureAwait(false)).ConfigureAwait(false);
+        await UpdateSharedRealmAuthenticationAsync(sharedKeycloak, idpName).ConfigureAwait(false);
 
+        await UpdateCentralIdentityProviderUrlsAsync(idpName, await sharedKeycloak.GetOpenIDConfigurationAsync(idpName).ConfigureAwait(false)).ConfigureAwait(false);
+        
         await CreateCentralIdentityProviderOrganisationMapperAsync(idpName, organisationName).ConfigureAwait(false);
 
         await CreateCentralIdentityProviderUsernameMapperAsync(idpName).ConfigureAwait(false);

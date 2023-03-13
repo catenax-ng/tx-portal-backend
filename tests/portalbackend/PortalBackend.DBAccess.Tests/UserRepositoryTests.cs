@@ -65,7 +65,7 @@ public class UserRepositoryTests : IAssemblyFixture<TestDbFixture>
         // Assert
         result.Should().NotBeNull();
         result.companyUserId.Should().Be(new Guid("ac1cf001-7fbc-1f2f-817f-bce058020006"));
-        result.companyInformation.OrganizationName.Should().Be("Catena-X");
+        result.companyInformation.OrganizationName.Should().Be("Cofinity-X");
     }
 
     [Fact]

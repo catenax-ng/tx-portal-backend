@@ -430,8 +430,8 @@ public class CompanyRepositoryTests : IAssemblyFixture<TestDbFixture>
         result.Should().NotBeNull();
 
         result!.CompanyId.Should().Be(new Guid("2dc4249f-b5ca-4d42-bef1-7a7a950a4f87"));
-        result.Name.Should().Be("Catena-X");
-        result.ShortName.Should().Be("Catena-X");
+        result.Name.Should().Be("Cofinity-X");
+        result.ShortName.Should().Be("Cofinity-X");
         result.BusinessPartnerNumber.Should().Be("BPNL00000003CRHK");
         result.CountryAlpha2Code.Should().Be("DE");
         result.City.Should().Be("Munich");
