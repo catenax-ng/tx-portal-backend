@@ -461,7 +461,7 @@ public class OfferSetupServiceTests
         async Task Act() => await _sut.ActivateSingleInstanceAppAsync(_offerIdWithInstanceNotSet, serviceAccountRoles).ConfigureAwait(false);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
-        ex.Message.Should().Be("ClientId must not be null");
+        ex.Message.Should().Be("Instance must be set");
     }
 
     #endregion
