@@ -30,6 +30,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Library.Models.Common;
 using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Library.Models.Groups;
 using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Library.Models.RealmsAdmin;
 using Flurl.Http;
+using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Library.Models.AuthenticationManagement;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Keycloak.Library;
 
@@ -135,6 +136,64 @@ public partial class KeycloakClient
             .AppendPathSegment("/client-description-converter")
             .PostAsync(new StringContent(description))
             .ReceiveJson<Client>()
+            .ConfigureAwait(false);
+
+    public async Task duplicateFlow(string realm, string flowName,IDictionary<string, object> dataWithProvider) =>
+        await (await GetBaseUrlAsync(realm).ConfigureAwait(false))
+            .AppendPathSegment("/admin/realms")
+            .AppendPathSegment(realm, true)
+            .AppendPathSegment("/authentication/flows/")
+            .AppendPathSegment(flowName, true)
+            .AppendPathSegment("/copy")
+            .PostJsonAsync(dataWithProvider)
+            .ConfigureAwait(false);
+
+     public async Task addExecution(string realm, string flowName,IDictionary<string, object> dataWithProvider) =>
+        await (await GetBaseUrlAsync(realm).ConfigureAwait(false))
+            .AppendPathSegment("/admin/realms")
+            .AppendPathSegment(realm, true)
+            .AppendPathSegment("/authentication/flows/")
+            .AppendPathSegment(flowName, true)
+            .AppendPathSegment("/executions/execution")
+            .PostJsonAsync(dataWithProvider)
+            .ConfigureAwait(false);
+    
+    public async Task<List<AuthenticationFlowExecution>> GetAuthenticationFlow(string realm, string flowName) =>
+        await (await GetBaseUrlAsync(realm).ConfigureAwait(false))
+            .AppendPathSegment("/admin/realms")
+            .AppendPathSegment(realm, true)
+            .AppendPathSegment("/authentication/flows/")
+            .AppendPathSegment(flowName, true)
+            .AppendPathSegment("/executions")
+            .GetJsonAsync<List<AuthenticationFlowExecution>>()
+            .ConfigureAwait(false);
+
+    public async Task DeleteExecution(string realm, string executionId) =>
+        await (await GetBaseUrlAsync(realm).ConfigureAwait(false))
+            .AppendPathSegment("/admin/realms")
+            .AppendPathSegment(realm, true)
+            .AppendPathSegment("/authentication/executions/")
+            .AppendPathSegment(executionId, true)
+            .DeleteAsync()
+            .ConfigureAwait(false);     
+
+    public async Task updatePriority(string realm, string executionId,IDictionary<string, object> dataWithProvider) =>
+        await (await GetBaseUrlAsync(realm).ConfigureAwait(false))
+            .AppendPathSegment("/admin/realms")
+            .AppendPathSegment(realm, true)
+            .AppendPathSegment("/authentication/executions/")
+            .AppendPathSegment(executionId, true)
+            .AppendPathSegment("/raise-priority")
+            .PostJsonAsync(dataWithProvider)
+            .ConfigureAwait(false);
+    public async Task UpdateExecution(string realm, string flowName,AuthenticationFlowExecution dataWithProvider) =>
+        await (await GetBaseUrlAsync(realm).ConfigureAwait(false))
+            .AppendPathSegment("/admin/realms/")
+            .AppendPathSegment(realm, true)
+            .AppendPathSegment("/authentication/flows/")
+            .AppendPathSegment(flowName, true)
+            .AppendPathSegment("/executions")
+            .PutJsonAsync(dataWithProvider)
             .ConfigureAwait(false);
 
     public async Task<IEnumerable<IDictionary<string, object>>> GetClientSessionStatsAsync(string realm) =>

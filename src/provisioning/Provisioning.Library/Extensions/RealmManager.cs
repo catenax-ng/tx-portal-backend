@@ -21,7 +21,7 @@
 using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Library.Models.RealmsAdmin;
 using System.Text.Json;
-
+using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Library.Models.AuthenticationManagement;
 namespace Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
 
 public partial class ProvisioningManager
@@ -42,6 +42,51 @@ public partial class ProvisioningManager
         await keycloak.UpdateRealmAsync(alias, realm).ConfigureAwait(false);
     }
 
+
+    public static async ValueTask UpdateSharedRealmAuthenticationAsync(KeycloakClient keycloak, string alias)
+    {
+        string customFlow = "Custom_browser";
+        string originalFlow = "browser";
+        string customValidatorProviderId = "cus-auth-form";
+
+        IDictionary<string, object> customParam = new Dictionary<string,object>();
+        customParam.Add("newName",customFlow);
+        await keycloak.duplicateFlow(alias, originalFlow,customParam);
+
+        customParam = new Dictionary<string,object>();
+        customParam.Add("provider",customValidatorProviderId);
+        string parentForm =customFlow+" forms";
+        await keycloak.addExecution(alias, parentForm,customParam);
+
+        List<AuthenticationFlowExecution> authticationFlows= await keycloak.GetAuthenticationFlow(alias, customFlow);
+
+        if(authticationFlows != null && authticationFlows.ElementAt(0) != null){
+        string defaultUsernameExecutionId="";
+        AuthenticationFlowExecution? customExecution =null;
+        
+            foreach(var authticationFlow in authticationFlows)
+            {
+                if(authticationFlow.ProviderId ==customValidatorProviderId){
+                    customExecution = authticationFlow;
+                }else if (authticationFlow.ProviderId=="auth-username-password-form"){
+                    defaultUsernameExecutionId= authticationFlow.Id;
+                }
+            }
+
+            await keycloak.DeleteExecution(alias,defaultUsernameExecutionId);
+            if(customExecution != null){
+                await keycloak.updatePriority(alias, customExecution.Id,customParam);
+                customExecution.Requirement="REQUIRED";
+                customExecution.Level=1;
+                customExecution.Index=0;
+
+                await keycloak.UpdateExecution(alias,customFlow,customExecution);
+            }
+        }
+        var realm = await keycloak.GetRealmAsync(alias).ConfigureAwait(false);
+        realm.BrowserFlow= customFlow;
+        await keycloak.UpdateRealmAsync(alias, realm).ConfigureAwait(false);    
+    }
     private static async ValueTask SetSharedRealmStatusAsync(KeycloakClient keycloak, string alias, bool enabled)
     {
         var realm = await keycloak.GetRealmAsync(alias).ConfigureAwait(false);

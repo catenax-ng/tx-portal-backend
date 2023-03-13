@@ -169,7 +169,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         var (sut, context) = await CreateSutWithContext().ConfigureAwait(false);
 
         // Act
-        var results = sut.CreateOffer("Catena-X", OfferTypeId.APP, offer =>
+        var results = sut.CreateOffer("Cofinity-X", OfferTypeId.APP, offer =>
         {
             offer.Name = "Test App";
         });
