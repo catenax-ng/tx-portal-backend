@@ -40,7 +40,7 @@ public interface IDocumentsBusinessLogic
     /// </summary>
     /// <param name="documentId">Id of the document to get</param>
     /// <returns>Returns the filename and content of the file</returns>
-    Task<(string fileName, byte[] content)> GetSelfDescriptionDocumentAsync(Guid documentId);
+    Task<(string fileName, byte[] content, string mimeType)> GetSelfDescriptionDocumentAsync(Guid documentId);
     
     /// <summary>
     /// Deletes the document and the corresponding consent from the persistence layer.

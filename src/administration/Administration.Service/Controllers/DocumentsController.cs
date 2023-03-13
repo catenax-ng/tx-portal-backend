@@ -62,7 +62,7 @@ public class DocumentsController : ControllerBase
     [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
-     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status503ServiceUnavailable)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status503ServiceUnavailable)]
     public async Task<ActionResult> GetDocumentContentFileAsync([FromRoute] Guid documentId)
     {
         var (fileName, content, contentType) = await this.WithIamUserId(iamUserId => _businessLogic.GetDocumentAsync(documentId, iamUserId).ConfigureAwait(false));
@@ -84,8 +84,8 @@ public class DocumentsController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult> GetSelfDescriptionDocumentsAsync([FromRoute] Guid documentId)
     {
-        var (fileName, content) = await _businessLogic.GetSelfDescriptionDocumentAsync(documentId).ConfigureAwait(false);
-        return File(content, "application/json", fileName);
+        var (fileName, content, mimeType) = await _businessLogic.GetSelfDescriptionDocumentAsync(documentId).ConfigureAwait(false);
+        return File(content, mimeType, fileName);
     }
 
     /// <summary>

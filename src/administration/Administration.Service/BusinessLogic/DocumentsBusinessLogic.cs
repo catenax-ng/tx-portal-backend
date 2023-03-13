@@ -67,11 +67,11 @@ public class DocumentsBusinessLogic : IDocumentsBusinessLogic
             throw new UnexpectedConditionException("documentContent should never be null here");
         }
 
-        return (documentDetails.FileName, documentDetails.Content, documentDetails.FileName.MapToContentType());
+        return (documentDetails.FileName, documentDetails.Content, documentDetails.MimeType);
     }
 
     /// <inheritdoc />
-    public async Task<(string fileName, byte[] content)> GetSelfDescriptionDocumentAsync(Guid documentId)
+    public async Task<(string fileName, byte[] content, string mimeType)> GetSelfDescriptionDocumentAsync(Guid documentId)
     {
         var documentDetails = await _portalRepositories.GetInstance<IDocumentRepository>()
             .GetDocumentDataByIdAndTypeAsync(documentId, DocumentTypeId.SELF_DESCRIPTION)
@@ -80,7 +80,7 @@ public class DocumentsBusinessLogic : IDocumentsBusinessLogic
         {
             throw new NotFoundException($"Self description document {documentId} does not exist");
         }
-        return (documentDetails.FileName, documentDetails.Content);
+        return (documentDetails.FileName, documentDetails.Content, documentDetails.MimeType);
     }
 
     /// <inheritdoc />

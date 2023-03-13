@@ -31,13 +31,15 @@ public class Document : IBaseEntity
         DocumentHash = null!;
         DocumentName = null!;
         DocumentContent = null!;
+        MimeType = null!;
         Agreements = new HashSet<Agreement>();
         Consents = new HashSet<Consent>();
         Offers = new HashSet<Offer>();
         Companies = new HashSet<Company>();
     }
     
-    public Document(Guid id, byte[] documentContent, byte[] documentHash, string documentName, DateTimeOffset dateCreated, DocumentStatusId documentStatusId, DocumentTypeId documentTypeId) : this()
+    public Document(Guid id, byte[] documentContent, byte[] documentHash, string documentName, string mimeType, DateTimeOffset dateCreated, DocumentStatusId documentStatusId, DocumentTypeId documentTypeId) 
+        : this()
     {
         Id = id;
         DocumentContent = documentContent;
@@ -58,6 +60,8 @@ public class Document : IBaseEntity
 
     [MaxLength(255)]
     public string DocumentName { get; set; }
+
+    public string MimeType { get; set; }
 
     public DocumentTypeId DocumentTypeId { get; set; }
 

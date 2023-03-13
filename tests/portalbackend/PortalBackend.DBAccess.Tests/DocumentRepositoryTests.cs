@@ -60,7 +60,7 @@ public class DocumentRepositoryTests : IAssemblyFixture<TestDbFixture>
         var content = Encoding.UTF8.GetBytes(test);
 
         // Act
-        var result = sut.CreateDocument("New Document", content, content, DocumentTypeId.APP_CONTRACT, doc =>
+        var result = sut.CreateDocument("New Document", content, content, "application/pdf", DocumentTypeId.APP_CONTRACT, doc =>
         {
             doc.DocumentStatusId = DocumentStatusId.INACTIVE;
         });
@@ -295,7 +295,6 @@ public class DocumentRepositoryTests : IAssemblyFixture<TestDbFixture>
 
     #endregion
 
-    
     #region GetOfferImageDocumentContentAsync
 
     [Theory]
@@ -312,6 +311,13 @@ public class DocumentRepositoryTests : IAssemblyFixture<TestDbFixture>
         // Act
         var result = await sut.GetOfferDocumentContentAsync(offerId, documentId, documentTypeIds, offerTypeId, CancellationToken.None).ConfigureAwait(false);
 
+        // Assert
+        result.Should().NotBeNull();
+
+        result!.IsDocumentLinkedToOffer.Should().Be(isLinkedToOffer);
+        result.IsValidDocumentType.Should().Be(isValidDocumentType);
+        result.IsValidOfferType.Should().Be(isValidOfferType);
+        result.IsInactive.Should().Be(isInactive);
         if (isDocumentExisting && isLinkedToOffer && isValidDocumentType && isValidOfferType && !isInactive)
         {
             result.Content.Should().NotBeNull();
@@ -320,13 +326,6 @@ public class DocumentRepositoryTests : IAssemblyFixture<TestDbFixture>
         {
             result.Content.Should().BeNull();
         }
-
-        // Assert
-        result.IsDocumentExisting.Should().Be(isDocumentExisting);
-        result.IsDocumentLinkedToOffer.Should().Be(isLinkedToOffer);
-        result.IsValidDocumentType.Should().Be(isValidDocumentType);
-        result.IsValidOfferType.Should().Be(isValidOfferType);
-        result.IsInactive.Should().Be(isInactive);
     }
 
     #endregion

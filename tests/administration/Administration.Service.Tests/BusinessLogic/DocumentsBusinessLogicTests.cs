@@ -162,7 +162,7 @@ public class DocumentsBusinessLogicTests
         // Arrange
         var content = new byte[7];
         A.CallTo(() => _documentRepository.GetDocumentDataByIdAndTypeAsync(ValidDocumentId, DocumentTypeId.SELF_DESCRIPTION))
-            .ReturnsLazily(() => new ValueTuple<byte[], string>(content, "test.json"));
+            .ReturnsLazily(() => new ValueTuple<byte[], string, string>(content, "test.json", "aplication/json"));
 
         
         // Act
@@ -180,7 +180,7 @@ public class DocumentsBusinessLogicTests
         var documentId = Guid.NewGuid();
         var content = new byte[7];
         A.CallTo(() => _documentRepository.GetDocumentDataByIdAndTypeAsync(documentId, DocumentTypeId.SELF_DESCRIPTION))
-            .ReturnsLazily(() => new ValueTuple<byte[], string>());
+            .ReturnsLazily(() => new ValueTuple<byte[], string, string>());
         
         // Act
         async Task Act() => await _sut.GetSelfDescriptionDocumentAsync(documentId).ConfigureAwait(false);
@@ -206,11 +206,11 @@ public class DocumentsBusinessLogicTests
     {
         var content = new byte[7];
         A.CallTo(() => _documentRepository.GetDocumentDataAndIsCompanyUserAsync(ValidDocumentId, IamUserId))
-            .ReturnsLazily(() => new ValueTuple<byte[], string, bool>(content, "test.pdf", true));
+            .ReturnsLazily(() => new ValueTuple<byte[], string, string, bool>(content, "test.pdf", "application/pdf", true));
         A.CallTo(() => _documentRepository.GetDocumentDataAndIsCompanyUserAsync(A<Guid>.That.Not.Matches(x => x == ValidDocumentId), IamUserId))
-            .ReturnsLazily(() => new ValueTuple<byte[], string, bool>());
+            .ReturnsLazily(() => new ValueTuple<byte[], string, string, bool>());
         A.CallTo(() => _documentRepository.GetDocumentDataAndIsCompanyUserAsync(ValidDocumentId, A<string>.That.Not.Matches(x => x == IamUserId)))
-            .ReturnsLazily(() => new ValueTuple<byte[], string, bool>(content, "test.pdf", false));
+            .ReturnsLazily(() => new ValueTuple<byte[], string, string, bool>(content, "test.pdf", "application/pdf", false));
     }
 
     #endregion

@@ -34,7 +34,7 @@ public static class ContentTypeMapperExtensions
         {
             return match.Value.ToLower() switch
             {
-                ".jpg"  => "image/jpeg",
+                ".jpg"  => "image/jpg",
                 ".jpeg" => "image/jpeg",
                 ".png"  => "image/png",
                 ".gif"  => "image/gif",
