@@ -22,10 +22,16 @@ using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Library.Models.RealmsAdmin;
 using System.Text.Json;
 using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Library.Models.AuthenticationManagement;
+using Microsoft.Extensions.Logging;
+
 namespace Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
 
 public partial class ProvisioningManager
 {
+    
+    public ProvisioningManager(ILogger<ProvisioningManager> logger){
+        _logger=logger;
+    }
     private Task CreateSharedRealmAsync(KeycloakClient keycloak, string realm, string displayName)
     {
         var newRealm = CloneRealm(_Settings.SharedRealm);
@@ -43,8 +49,10 @@ public partial class ProvisioningManager
     }
 
 
-    public static async ValueTask UpdateSharedRealmAuthenticationAsync(KeycloakClient keycloak, string alias)
+    public async ValueTask UpdateSharedRealmAuthenticationAsync(KeycloakClient keycloak, string alias)
     {
+
+        _logger.LogInformation("Start Custom Authetication Flow alias:{}",alias);
         string customFlow = "Custom_browser";
         string originalFlow = "browser";
         string customValidatorProviderId = "cus-auth-form";
@@ -53,14 +61,22 @@ public partial class ProvisioningManager
         customParam.Add("newName",customFlow);
         await keycloak.duplicateFlow(alias, originalFlow,customParam);
 
+        _logger.LogInformation("Flow Duplicated");
+
         customParam = new Dictionary<string,object>();
         customParam.Add("provider",customValidatorProviderId);
         string parentForm =customFlow+" forms";
         await keycloak.addExecution(alias, parentForm,customParam);
-
+        
+        _logger.LogInformation("Flow Execution Added");
+        
         List<AuthenticationFlowExecution> authticationFlows= await keycloak.GetAuthenticationFlow(alias, customFlow);
 
+        _logger.LogInformation("Get Auth Flow complated");
         if(authticationFlows != null && authticationFlows.ElementAt(0) != null){
+        
+        _logger.LogInformation("Iterating Auth Flow");
+        
         string defaultUsernameExecutionId="";
         AuthenticationFlowExecution? customExecution =null;
         
@@ -72,17 +88,23 @@ public partial class ProvisioningManager
                     defaultUsernameExecutionId= authticationFlow.Id;
                 }
             }
-
+            _logger.LogInformation("Deleting execution ALIAS : {} defaultUsernameExecutionId:{}",alias,defaultUsernameExecutionId);
             await keycloak.DeleteExecution(alias,defaultUsernameExecutionId);
+
             if(customExecution != null){
+                _logger.LogInformation("Updating priority ALIAS : {} customExecution.Id:{}",alias,customExecution.Id);
                 await keycloak.updatePriority(alias, customExecution.Id,customParam);
+                
                 customExecution.Requirement="REQUIRED";
                 customExecution.Level=1;
                 customExecution.Index=0;
 
                 await keycloak.UpdateExecution(alias,customFlow,customExecution);
+                _logger.LogInformation("Updating Execution priority ALIAS : {} customExecution.Id:{}",alias,customExecution.Id);
             }
         }
+
+        _logger.LogInformation("Updating Realm Browser Flow priority ALIAS : {}",alias);
         var realm = await keycloak.GetRealmAsync(alias).ConfigureAwait(false);
         realm.BrowserFlow= customFlow;
         await keycloak.UpdateRealmAsync(alias, realm).ConfigureAwait(false);    

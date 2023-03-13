@@ -26,6 +26,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Models;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
 
@@ -35,22 +36,26 @@ public partial class ProvisioningManager : IProvisioningManager
     private readonly IKeycloakFactory _Factory;
     private readonly IProvisioningDBAccess? _ProvisioningDBAccess;
     private readonly ProvisioningSettings _Settings;
+    private readonly ILogger<ProvisioningManager> _logger;
 
-    public ProvisioningManager(IKeycloakFactory keycloakFactory, IProvisioningDBAccess? provisioningDBAccess, IOptions<ProvisioningSettings> options)
+    public ProvisioningManager(IKeycloakFactory keycloakFactory, IProvisioningDBAccess? provisioningDBAccess, IOptions<ProvisioningSettings> options,
+    ILogger<ProvisioningManager> logger)
     {
         _CentralIdp = keycloakFactory.CreateKeycloakClient("central");
         _Factory = keycloakFactory;
         _Settings = options.Value;
         _ProvisioningDBAccess = provisioningDBAccess;
+        _logger=logger;
     }
 
-    public ProvisioningManager(IKeycloakFactory keycloakFactory, IOptions<ProvisioningSettings> options)
-        : this(keycloakFactory, null, options)
+    public ProvisioningManager(IKeycloakFactory keycloakFactory, IOptions<ProvisioningSettings> options,ILogger<ProvisioningManager> logger)
+        : this(keycloakFactory, null, options,logger)
     {
     }
 
     public async Task SetupSharedIdpAsync(string idpName, string organisationName)
     {
+        _logger.LogInformation("START SetupSharedIdpAsync  idpName:{}  organisationName:{}",idpName,organisationName);        
         await CreateCentralIdentityProviderAsync(idpName, organisationName, _Settings.CentralIdentityProvider).ConfigureAwait(false);
 
         var (clientId, secret) = await CreateSharedIdpServiceAccountAsync(idpName).ConfigureAwait(false);
@@ -58,7 +63,9 @@ public partial class ProvisioningManager : IProvisioningManager
 
         await CreateSharedRealmAsync(sharedKeycloak, idpName, organisationName).ConfigureAwait(false);
 
+        _logger.LogInformation("Updating shared realm for custom auth flow START idpName:{}",idpName);        
         await UpdateSharedRealmAuthenticationAsync(sharedKeycloak, idpName).ConfigureAwait(false);
+        _logger.LogInformation("Updating shared realm for custom auth flow END idpName:{}",idpName);        
 
         await UpdateCentralIdentityProviderUrlsAsync(idpName, await sharedKeycloak.GetOpenIDConfigurationAsync(idpName).ConfigureAwait(false)).ConfigureAwait(false);
         
