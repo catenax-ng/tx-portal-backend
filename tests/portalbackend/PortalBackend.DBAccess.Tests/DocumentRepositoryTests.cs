@@ -141,7 +141,7 @@ public class DocumentRepositoryTests : IAssemblyFixture<TestDbFixture>
     
         // Assert
         result.Should().NotBe(default);
-        result.FileName.Should().Be("Default_App_Image");
+        result.FileName.Should().Be("Default_App_Image.png");
         result.IsUserInCompany.Should().BeTrue();
     }
 
@@ -156,7 +156,7 @@ public class DocumentRepositoryTests : IAssemblyFixture<TestDbFixture>
 
         // Assert
         result.Should().NotBe(default);
-        result.FileName.Should().Be("Default_App_Image");
+        result.FileName.Should().Be("Default_App_Image.png");
         result.IsUserInCompany.Should().BeFalse();
     }
 
@@ -188,7 +188,7 @@ public class DocumentRepositoryTests : IAssemblyFixture<TestDbFixture>
     
         // Assert
         result.Should().NotBe(default);
-        result.FileName.Should().Be("Default_App_Image");
+        result.FileName.Should().Be("Default_App_Image.png");
     }
 
     [Fact]
@@ -277,7 +277,7 @@ public class DocumentRepositoryTests : IAssemblyFixture<TestDbFixture>
         results.Should().NotBeNull();
         results!.DocumentStatusId.Should().Be(2);
         results.DocumentTypeId.Should().Be(6);
-        results.DocumentName.Should().Be("Default_App_Image");
+        results.DocumentName.Should().Be("Default_App_Image.png");
     }
 
     [Fact]
@@ -312,19 +312,21 @@ public class DocumentRepositoryTests : IAssemblyFixture<TestDbFixture>
         var result = await sut.GetOfferDocumentContentAsync(offerId, documentId, documentTypeIds, offerTypeId, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
-        result.Should().NotBeNull();
-
-        result!.IsDocumentLinkedToOffer.Should().Be(isLinkedToOffer);
-        result.IsValidDocumentType.Should().Be(isValidDocumentType);
-        result.IsValidOfferType.Should().Be(isValidOfferType);
-        result.IsInactive.Should().Be(isInactive);
-        if (isDocumentExisting && isLinkedToOffer && isValidDocumentType && isValidOfferType && !isInactive)
+        if (isDocumentExisting)
         {
-            result.Content.Should().NotBeNull();
+            result.Should().NotBeNull();
+            result!.IsDocumentLinkedToOffer.Should().Be(isLinkedToOffer);
+            result.IsValidDocumentType.Should().Be(isValidDocumentType);
+            result.IsValidOfferType.Should().Be(isValidOfferType);
+            result.IsInactive.Should().Be(isInactive);
+            if (isDocumentExisting && isLinkedToOffer && isValidDocumentType && isValidOfferType && !isInactive)
+            {
+                result.Content.Should().NotBeNull();
+            }
         }
         else
         {
-            result.Content.Should().BeNull();
+            result.Should().BeNull();
         }
     }
 

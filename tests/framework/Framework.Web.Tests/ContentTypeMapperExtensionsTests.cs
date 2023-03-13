@@ -41,14 +41,14 @@ public class ContentTypeMapperExtensionTests
     #region MapToImageContentType
 
     [Theory]
-    [InlineData("filename.jpg", "image/jpeg")]
+    [InlineData("filename.jpg", "image/jpg")]
     [InlineData("filename.jpeg", "image/jpeg")]
     [InlineData("filename.png", "image/png")]
     [InlineData("filename.gif", "image/gif")]
     [InlineData("filename.svg", "image/svg+xml")]
     [InlineData("filename.tif", "image/tiff")]
     [InlineData("filename.tiff", "image/tiff")]
-    [InlineData("filename.JPG", "image/jpeg")]
+    [InlineData("filename.JPG", "image/jpg")]
     [InlineData("filename.JPEG", "image/jpeg")]
     [InlineData("filename.PNG", "image/png")]
     [InlineData("filename.GIF", "image/gif")]

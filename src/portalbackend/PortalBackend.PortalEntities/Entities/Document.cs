@@ -48,6 +48,7 @@ public class Document : IBaseEntity
         DateCreated = dateCreated;
         DocumentStatusId = documentStatusId;
         DocumentTypeId = documentTypeId;
+        MimeType = mimeType;
     }
 
     public Guid Id { get; private set; }
