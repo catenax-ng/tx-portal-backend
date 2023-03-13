@@ -42,7 +42,7 @@ public interface IServiceReleaseBusinessLogic
     Task<ServiceData> GetServiceDetailsByIdAsync(Guid serviceId);
     
     /// <summary>
-    /// 
+    /// Retrieve Service Type Data
     /// </summary>
     /// <returns></returns>
     IAsyncEnumerable<ServiceTypeData> GetServiceTypeDataAsync();
