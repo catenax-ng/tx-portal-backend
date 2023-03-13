@@ -75,4 +75,18 @@ public class ServiceReleaseController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
     public Task<ServiceData> GetServiceDetailsByIdAsync([FromRoute] Guid serviceId) =>
         _serviceReleaseBusinessLogic.GetServiceDetailsByIdAsync(serviceId);
+
+    /// <summary>
+    /// Retrieve Service Type Data
+    /// </summary>
+    /// <returns>Service Type Data</returns>
+    /// <remarks>Example: GET: /api/services/servicerelease/serviceTypes </remarks>
+    /// <response code="200">Returns the Service Type.</response>
+    [HttpGet]
+    [Route("serviceTypes")]
+    [Authorize(Roles = "add_service_offering")]
+    [ProducesResponseType(typeof(IAsyncEnumerable<ServiceTypeData>), StatusCodes.Status200OK)]
+    public IAsyncEnumerable<ServiceTypeData> GetServiceTypeDataAsync() =>
+        _serviceReleaseBusinessLogic.GetServiceTypeDataAsync();
+
 }

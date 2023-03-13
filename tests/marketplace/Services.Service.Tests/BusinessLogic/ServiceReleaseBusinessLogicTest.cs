@@ -40,6 +40,7 @@ public class ServiceReleaseBusinessLogicTest
     private readonly IOfferRepository _offerRepository;
     private readonly IPortalRepositories _portalRepositories;
     private readonly IOfferService _offerService;
+    private readonly IStaticDataRepository _staticDataRepository;
     
     public ServiceReleaseBusinessLogicTest()
     {
@@ -53,6 +54,8 @@ public class ServiceReleaseBusinessLogicTest
         _offerRepository = A.Fake<IOfferRepository>();
         
         _offerService = A.Fake<IOfferService>();
+
+        _staticDataRepository = A.Fake<IStaticDataRepository>();
 
         SetupRepositories();
         
@@ -131,11 +134,37 @@ public class ServiceReleaseBusinessLogicTest
         var error = await Assert.ThrowsAsync<ConflictException>(Act).ConfigureAwait(false);
         error.Message.Should().Be($"serviceId {serviceId} is incorrect status");
     }
+    
+    [Fact]
+    public async Task GetServiceTypeData_ReturnExpectedResult()
+    {
+        // Arrange
+        var data = _fixture.Build<ServiceTypeData>()
+                            .With(x=>x.ServiceTypeId, 1)
+                            .With(x=>x.Name, ServiceTypeId.CONSULTANCE_SERVICE.ToString())
+                            .CreateMany()
+                            .ToAsyncEnumerable();
+       
+        A.CallTo(() => _staticDataRepository.GetServiceTypeData())
+            .Returns(data);
+        var sut = _fixture.Create<ServiceReleaseBusinessLogic>();
+
+        // Act
+        var result = await sut.GetServiceTypeDataAsync().ToListAsync().ConfigureAwait(false);
+
+        // Assert
+        A.CallTo(() => _staticDataRepository.GetServiceTypeData())
+            .MustHaveHappenedOnceExactly();
+        result.Should().BeOfType<List<ServiceTypeData>>();
+        result.FirstOrDefault()!.ServiceTypeId.Should().Be(1);
+        result.FirstOrDefault()!.Name.Should().Be(ServiceTypeId.CONSULTANCE_SERVICE.ToString());
+    }
 
     private void SetupRepositories()
     {
         
         A.CallTo(() => _portalRepositories.GetInstance<IOfferRepository>()).Returns(_offerRepository);
+        A.CallTo(() => _portalRepositories.GetInstance<IStaticDataRepository>()).Returns(_staticDataRepository);
         _fixture.Inject(_portalRepositories);
     }
 }

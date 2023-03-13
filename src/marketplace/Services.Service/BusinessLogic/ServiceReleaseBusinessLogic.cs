@@ -80,4 +80,8 @@ public class ServiceReleaseBusinessLogic : IServiceReleaseBusinessLogic
 
         );
     }
+    
+    /// <inheritdoc />
+    public IAsyncEnumerable<ServiceTypeData> GetServiceTypeDataAsync()=>
+        _portalRepositories.GetInstance<IStaticDataRepository>().GetServiceTypeData();
 }

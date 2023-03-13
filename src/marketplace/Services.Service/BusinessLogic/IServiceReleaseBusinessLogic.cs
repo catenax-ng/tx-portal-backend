@@ -40,4 +40,10 @@ public interface IServiceReleaseBusinessLogic
     /// <param name="serviceId"></param>
     /// <returns></returns>
     Task<ServiceData> GetServiceDetailsByIdAsync(Guid serviceId);
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
+    IAsyncEnumerable<ServiceTypeData> GetServiceTypeDataAsync();
 }

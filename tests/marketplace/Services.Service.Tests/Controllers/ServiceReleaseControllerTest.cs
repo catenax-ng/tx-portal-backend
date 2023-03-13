@@ -77,4 +77,21 @@ public class ServiceReleaseControllerTest
         A.CallTo(() => _logic.GetServiceDetailsByIdAsync(serviceId)).MustHaveHappenedOnceExactly();
         Assert.IsType<ServiceData>(result);
     }
+
+    [Fact]
+    public async Task GetServiceTypeData_ReturnsExpectedResult()
+    {
+        //Arrange
+        var data = _fixture.CreateMany<ServiceTypeData>(5).ToAsyncEnumerable();
+        A.CallTo(() => _logic.GetServiceTypeDataAsync())
+            .Returns(data);
+
+        //Act
+        var result = await this._controller.GetServiceTypeDataAsync().ToListAsync().ConfigureAwait(false);
+        
+        // Assert 
+        A.CallTo(() => _logic.GetServiceTypeDataAsync()).MustHaveHappenedOnceExactly();
+        Assert.IsType<List<ServiceTypeData>>(result);
+        result.Should().HaveCount(5);
+    }
 }
