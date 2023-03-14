@@ -303,7 +303,7 @@ public class OfferService : IOfferService
         return responseData.UserCompanyId;
     }
     
-    public void UpsertRemoveOfferDescription(Guid offerId, IEnumerable<Localization> updateDescriptions, IEnumerable<OfferDescriptionData> existingDescriptions)
+    public void UpsertRemoveOfferDescription(Guid offerId, IEnumerable<LocalizedDescription> updateDescriptions, IEnumerable<LocalizedDescription> existingDescriptions)
     {
         var offerRepository = _portalRepositories.GetInstance<IOfferRepository>();
         offerRepository.CreateUpdateDeleteOfferDescriptions(offerId, existingDescriptions, 

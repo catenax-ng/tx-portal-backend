@@ -29,6 +29,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Services.Service.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
+using Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Services.Service.ViewModels;
 using Xunit;
 
@@ -194,6 +195,27 @@ public class ServiceReleaseBusinessLogicTest
             .MustHaveHappenedOnceExactly();
         result.Should().BeOfType<OfferAgreementConsent>();
     } 
+
+    [Fact]
+    public async Task GetServiceTypeDataAsync_ReturnsExpected()
+    {
+        var serviceId = Guid.NewGuid();
+        var iamUserId = Guid.NewGuid().ToString();
+        var data = _fixture.Build<OfferProviderResponse>()
+            .With(x => x.Title, "test title")
+            .With(x => x.ContactEmail, "info@test.de")
+            .Create();
+
+        A.CallTo(() => _offerService.GetProviderOfferDetailsForStatusAsync(serviceId, iamUserId, OfferTypeId.SERVICE))
+            .ReturnsLazily(() => data);
+        var sut = _fixture.Create<ServiceReleaseBusinessLogic>();
+
+        var result = await sut.GetServiceDetailsForStatusAsync(serviceId, iamUserId).ConfigureAwait(false);
+
+        result.Should().NotBeNull();
+        result.Title.Should().Be("test title");
+        result.ContactEmail.Should().Be("info@test.de");
+    }
 
     private void SetupRepositories()
     {
