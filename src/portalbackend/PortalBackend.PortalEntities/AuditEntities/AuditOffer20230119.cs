@@ -66,4 +66,6 @@ public class AuditOffer20230119 : IAuditEntityV1
     public AuditOperationId AuditV1OperationId { get; set; }
     /// <inheritdoc />
     public DateTimeOffset AuditV1DateLastChanged { get; set; }
+
+    public bool IsSponsored { get; set; }
 }

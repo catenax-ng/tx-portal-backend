@@ -161,4 +161,11 @@ public interface IAppsBusinessLogic
     /// <param name="cancellationToken"></param>
     /// <returns>byte Array Content</returns>
     Task<(byte[] Content, string ContentType, string FileName)> GetAppImageDocumentContentAsync(Guid appId, Guid documentId, CancellationToken cancellationToken);
+   
+    /// <summary>
+    /// Get all sponsored marketplace apps.
+    /// </summary>
+    /// <param name="languageShortName">Optional two character language specifier for the app description. No description if not provided.</param>
+    /// <returns>List of sponsored marketplace apps.</returns>
+    IAsyncEnumerable<AppData> GetAllSponsoredAppsAsync(string? languageShortName = null);
 }

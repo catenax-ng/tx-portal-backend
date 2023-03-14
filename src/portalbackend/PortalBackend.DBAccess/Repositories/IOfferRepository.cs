@@ -65,6 +65,13 @@ public interface IOfferRepository
     IAsyncEnumerable<(Guid Id, string? Name, string VendorCompanyName, IEnumerable<string> UseCaseNames, Guid LeadPictureId, string? ShortDescription, string? LicenseText)> GetAllActiveAppsAsync(string? languageShortName);
 
     /// <summary>
+    /// Gets all sponsored apps with an optional filtered with the languageShortName
+    /// </summary>
+    /// <param name="languageShortName">The optional language shortName</param>
+    /// <returns>Returns a async enumerable of (Guid Id, string? Name, string VendorCompanyName, IEnumerable<string> UseCaseNames, string? ThumbnailUrl, string? ShortDescription, string? LicenseText)> GetAllSponsoredAppsAsync(string? languageShortName)</returns>
+    IAsyncEnumerable<(Guid Id, string? Name, string VendorCompanyName, IEnumerable<string> UseCaseNames, Guid LeadPictureId, string? ShortDescription, string? LicenseText)> GetAllSponsoredAppsAsync(string? languageShortName);
+
+    /// <summary>
     /// Gets the details of an app by its id
     /// </summary>
     /// <param name="offerId">Id of the offer to get details for</param>

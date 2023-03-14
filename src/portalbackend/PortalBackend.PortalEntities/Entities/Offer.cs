@@ -89,6 +89,8 @@ public class Offer : IAuditableV1, IBaseEntity
 
     public DateTimeOffset? DateLastChanged { get; set; }
     
+    public bool IsSponsored { get; set; }
+
     [AuditLastEditorV1]
     public Guid? LastEditorId { get; set; }
     // Navigation properties

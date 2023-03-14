@@ -77,6 +77,18 @@ public class AppsBusinessLogic : IAppsBusinessLogic
                     app.UseCaseNames));
 
     /// <inheritdoc/>
+    public IAsyncEnumerable<AppData> GetAllSponsoredAppsAsync(string? languageShortName = null) =>
+        _portalRepositories.GetInstance<IOfferRepository>().GetAllSponsoredAppsAsync(languageShortName)
+            .Select(app => new AppData(
+                    app.Id,
+                    app.Name ?? Constants.ErrorString,
+                    app.ShortDescription ?? Constants.ErrorString,
+                    app.VendorCompanyName,
+                    app.LicenseText ?? Constants.ErrorString,
+                    app.LeadPictureId,
+                    app.UseCaseNames));
+
+    /// <inheritdoc/>
     public IAsyncEnumerable<BusinessAppData> GetAllUserUserBusinessAppsAsync(string userId) =>
         _portalRepositories.GetInstance<IOfferSubscriptionsRepository>()
             .GetAllBusinessAppDataForUserIdAsync(userId)

@@ -65,6 +65,21 @@ public class AppsController : ControllerBase
     public IAsyncEnumerable<AppData> GetAllActiveAppsAsync([FromQuery] string? lang = null) =>
         _appsBusinessLogic.GetAllActiveAppsAsync(lang);
 
+
+    /// <summary>
+    /// Retrieves all Sponsored apps in the marketplace.
+    /// </summary>
+    /// <param name="lang" example="en">Optional two character language specifier for the app description. Will be empty if not provided.</param>
+    /// <returns>Collection of all active marketplace apps.</returns>
+    /// <remarks>Example: GET: /api/apps/sponsored</remarks>
+    /// <response code="200">Returns the list of all sponsored marketplace apps.</response>
+    [HttpGet]
+    [Route("sponsored")]
+    [Authorize(Roles = "view_apps")]
+    [ProducesResponseType(typeof(IAsyncEnumerable<AppData>), StatusCodes.Status200OK)]
+    public IAsyncEnumerable<AppData> GetAllSponsoredAppsAsync([FromQuery] string? lang = null) =>
+        _appsBusinessLogic.GetAllSponsoredAppsAsync(lang);
+
     /// <summary>
     /// Get all apps that currently logged in user has been assigned roles in.
     /// </summary>
