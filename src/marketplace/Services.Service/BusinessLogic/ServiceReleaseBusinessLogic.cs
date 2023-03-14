@@ -52,7 +52,7 @@ public class ServiceReleaseBusinessLogic : IServiceReleaseBusinessLogic
     }
 
     public IAsyncEnumerable<AgreementDocumentData> GetServiceAgreementDataAsync()=>
-        _offerService.GetOfferTypeAgreementsAsync(OfferTypeId.SERVICE);
+        _offerService.GetOfferTypeAgreements(OfferTypeId.SERVICE);
 
     /// <inheritdoc />
     public async Task<ServiceData> GetServiceDetailsByIdAsync(Guid serviceId)

@@ -42,7 +42,8 @@ public class ServiceReleaseBusinessLogicTest
     private readonly IPortalRepositories _portalRepositories;
     private readonly IOfferService _offerService;
     private readonly IStaticDataRepository _staticDataRepository;
-    
+    private readonly ServiceReleaseBusinessLogic _sut;
+
     public ServiceReleaseBusinessLogicTest()
     {
         _fixture = new Fixture().Customize(new AutoFakeItEasyCustomization { ConfigureMembers = true });
@@ -56,6 +57,7 @@ public class ServiceReleaseBusinessLogicTest
         _staticDataRepository = A.Fake<IStaticDataRepository>();
 
         SetupRepositories();
+        _sut = new ServiceReleaseBusinessLogic(_portalRepositories, _offerService);
     }
 
     [Fact]
@@ -63,17 +65,14 @@ public class ServiceReleaseBusinessLogicTest
     {
         //Arrange
         var data = _fixture.CreateMany<AgreementDocumentData>(5).ToAsyncEnumerable();
-        var offerService = A.Fake<IOfferService>();
-        _fixture.Inject(offerService);
-        A.CallTo(() => offerService.GetOfferTypeAgreementsAsync(OfferTypeId.SERVICE))
-            .ReturnsLazily(() => data);
+        A.CallTo(() => _offerService.GetOfferTypeAgreements(OfferTypeId.SERVICE))
+            .Returns(data);
 
         //Act
-        var sut = _fixture.Create<ServiceReleaseBusinessLogic>();
-        var result = await sut.GetServiceAgreementDataAsync().ToListAsync().ConfigureAwait(false);
+        var result = await _sut.GetServiceAgreementDataAsync().ToListAsync().ConfigureAwait(false);
         
         // Assert 
-        A.CallTo(() => offerService.GetOfferTypeAgreementsAsync(A<OfferTypeId>._))
+        A.CallTo(() => _offerService.GetOfferTypeAgreements(OfferTypeId.SERVICE))
             .MustHaveHappenedOnceExactly();
         result.Should().HaveCount(5);
     }
@@ -97,8 +96,7 @@ public class ServiceReleaseBusinessLogicTest
             .ReturnsLazily(() => data);
 
         //Act
-        var sut = _fixture.Create<ServiceReleaseBusinessLogic>();
-        var result = await sut.GetServiceDetailsByIdAsync(serviceId).ConfigureAwait(false);
+        var result = await _sut.GetServiceDetailsByIdAsync(serviceId).ConfigureAwait(false);
         
         // Assert 
         A.CallTo(() => _offerRepository.GetServiceDetailsByIdAsync(A<Guid>._))
@@ -122,10 +120,9 @@ public class ServiceReleaseBusinessLogicTest
        
         A.CallTo(() => _offerRepository.GetServiceDetailsByIdAsync(serviceId))
             .ReturnsLazily(() => data);
-        var sut = _fixture.Create<ServiceReleaseBusinessLogic>();
 
         // Act
-        async Task Act() => await sut.GetServiceDetailsByIdAsync(serviceId).ConfigureAwait(false);
+        async Task Act() => await _sut.GetServiceDetailsByIdAsync(serviceId).ConfigureAwait(false);
 
         // Assert
         var error = await Assert.ThrowsAsync<ConflictException>(Act).ConfigureAwait(false);
@@ -139,10 +136,9 @@ public class ServiceReleaseBusinessLogicTest
         var invalidServiceId = Guid.NewGuid();
         A.CallTo(() => _offerRepository.GetServiceDetailsByIdAsync(invalidServiceId))
            .ReturnsLazily(() => (ServiceDetailsData?)null);
-        var sut = _fixture.Create<ServiceReleaseBusinessLogic>();
 
         // Act
-        async Task Act() => await sut.GetServiceDetailsByIdAsync(invalidServiceId).ConfigureAwait(false);
+        async Task Act() => await _sut.GetServiceDetailsByIdAsync(invalidServiceId).ConfigureAwait(false);
 
         // Assert
         var error = await Assert.ThrowsAsync<NotFoundException>(Act).ConfigureAwait(false);
@@ -208,9 +204,8 @@ public class ServiceReleaseBusinessLogicTest
 
         A.CallTo(() => _offerService.GetProviderOfferDetailsForStatusAsync(serviceId, iamUserId, OfferTypeId.SERVICE))
             .ReturnsLazily(() => data);
-        var sut = _fixture.Create<ServiceReleaseBusinessLogic>();
 
-        var result = await sut.GetServiceDetailsForStatusAsync(serviceId, iamUserId).ConfigureAwait(false);
+        var result = await _sut.GetServiceDetailsForStatusAsync(serviceId, iamUserId).ConfigureAwait(false);
 
         result.Should().NotBeNull();
         result.Title.Should().Be("test title");

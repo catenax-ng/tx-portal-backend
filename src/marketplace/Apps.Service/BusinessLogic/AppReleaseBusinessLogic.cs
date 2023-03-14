@@ -137,7 +137,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
 
     /// <inheritdoc/>
     public IAsyncEnumerable<AgreementDocumentData> GetOfferAgreementDataAsync()=>
-        _offerService.GetOfferTypeAgreementsAsync(OfferTypeId.APP);
+        _offerService.GetOfferTypeAgreements(OfferTypeId.APP);
 
     /// <inheritdoc/>
     public async Task<OfferAgreementConsent> GetOfferAgreementConsentById(Guid appId, string userId)
