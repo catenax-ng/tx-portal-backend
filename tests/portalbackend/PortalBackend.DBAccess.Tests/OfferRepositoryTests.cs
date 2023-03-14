@@ -1097,7 +1097,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         // Assert
         result.Should().NotBeNull();
         result!.Title.Should().Be("SDE with EDC");
-        result!.Provider.Should().Be("Service Provider");
+        result.Provider.Should().Be("Service Provider");
     }
     
     #endregion

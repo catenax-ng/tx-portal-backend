@@ -50,15 +50,11 @@ public class ServiceReleaseBusinessLogicTest
         _fixture.Behaviors.Add(new OmitOnRecursionBehavior());
 
         _portalRepositories = A.Fake<IPortalRepositories>();
-        
         _offerRepository = A.Fake<IOfferRepository>();
-        
         _offerService = A.Fake<IOfferService>();
-
         _staticDataRepository = A.Fake<IStaticDataRepository>();
 
         SetupRepositories();
-        
     }
 
     [Fact]
@@ -69,7 +65,7 @@ public class ServiceReleaseBusinessLogicTest
         var offerService = A.Fake<IOfferService>();
         _fixture.Inject(offerService);
         A.CallTo(() => offerService.GetOfferTypeAgreementsAsync(OfferTypeId.SERVICE))
-            .Returns(data);
+            .ReturnsLazily(() => data);
 
         //Act
         var sut = _fixture.Create<ServiceReleaseBusinessLogic>();
@@ -97,7 +93,7 @@ public class ServiceReleaseBusinessLogicTest
         var serviceId = _fixture.Create<Guid>();
        
         A.CallTo(() => _offerRepository.GetServiceDetailsByIdAsync(serviceId))
-            .Returns(data);
+            .ReturnsLazily(() => data);
 
         //Act
         var sut = _fixture.Create<ServiceReleaseBusinessLogic>();
@@ -124,7 +120,7 @@ public class ServiceReleaseBusinessLogicTest
         var serviceId = _fixture.Create<Guid>();
        
         A.CallTo(() => _offerRepository.GetServiceDetailsByIdAsync(serviceId))
-            .Returns(data);
+            .ReturnsLazily(() => data);
         var sut = _fixture.Create<ServiceReleaseBusinessLogic>();
 
         // Act
@@ -139,17 +135,17 @@ public class ServiceReleaseBusinessLogicTest
     public async Task GetServiceDetailsByIdAsync_WithInvalidServiceId_ThrowsException()
     {
         // Arrange
-        var invalidserviceId = Guid.NewGuid();
-        A.CallTo(() => _offerRepository.GetServiceDetailsByIdAsync(invalidserviceId))
-           .Returns((ServiceDetailsData?)null);
+        var invalidServiceId = Guid.NewGuid();
+        A.CallTo(() => _offerRepository.GetServiceDetailsByIdAsync(invalidServiceId))
+           .ReturnsLazily(() => (ServiceDetailsData?)null);
         var sut = _fixture.Create<ServiceReleaseBusinessLogic>();
 
         // Act
-        async Task Act() => await sut.GetServiceDetailsByIdAsync(invalidserviceId).ConfigureAwait(false);
+        async Task Act() => await sut.GetServiceDetailsByIdAsync(invalidServiceId).ConfigureAwait(false);
 
         // Assert
         var error = await Assert.ThrowsAsync<NotFoundException>(Act).ConfigureAwait(false);
-        error.Message.Should().Be($"serviceId {invalidserviceId} does not exist");
+        error.Message.Should().Be($"serviceId {invalidServiceId} does not exist");
     }
 
     [Fact]
@@ -179,7 +175,6 @@ public class ServiceReleaseBusinessLogicTest
 
     private void SetupRepositories()
     {
-        
         A.CallTo(() => _portalRepositories.GetInstance<IOfferRepository>()).Returns(_offerRepository);
         A.CallTo(() => _portalRepositories.GetInstance<IStaticDataRepository>()).Returns(_staticDataRepository);
         _fixture.Inject(_portalRepositories);
