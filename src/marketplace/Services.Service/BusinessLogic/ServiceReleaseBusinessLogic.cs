@@ -83,4 +83,10 @@ public class ServiceReleaseBusinessLogic : IServiceReleaseBusinessLogic
     /// <inheritdoc />
     public IAsyncEnumerable<ServiceTypeData> GetServiceTypeDataAsync()=>
         _portalRepositories.GetInstance<IStaticDataRepository>().GetServiceTypeData();
+
+    /// <inheritdoc/>
+    public async Task<OfferAgreementConsent> GetServiceAgreementConsentAsync(Guid serviceId, string iamuserId)
+    {
+        return await _offerService.GetProviderOfferAgreementConsentById(serviceId,  iamuserId, OfferTypeId.SERVICE).ConfigureAwait(false);
+    }
 }
