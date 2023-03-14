@@ -1492,6 +1492,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                     offer_status_id = table.Column<int>(type: "integer", nullable: false),
                     date_last_changed = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     last_editor_id = table.Column<Guid>(type: "uuid", nullable: true)
+                   // is_sponsored = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1523,6 +1524,15 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.AddColumn<bool>(
+                name: "is_sponsored",
+                schema: "portal",
+                table: "offers",
+                type: "bool",
+                defaultValue: false
+
+            );
 
             migrationBuilder.CreateTable(
                 name: "connectors",

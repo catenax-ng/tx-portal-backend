@@ -70,6 +70,22 @@ public class AppsControllerTests
         A.CallTo(() => _logic.GetAllActiveAppsAsync(null)).MustHaveHappenedOnceExactly();
         result.Should().HaveCount(5);
     }
+    
+    [Fact]
+     public async Task GetAllSponsoredAppsAsync_ReturnsExpectedCount()
+    {
+        //Arrange
+        var data = new AsyncEnumerableStub<AppData>(_fixture.CreateMany<AppData>(5));
+        A.CallTo(() => _logic.GetAllSponsoredAppsAsync(A<string?>._))
+            .Returns(data.AsAsyncEnumerable());
+
+        //Act
+        var result = await this._controller.GetAllSponsoredAppsAsync().ToListAsync().ConfigureAwait(false);
+
+        //Assert
+        A.CallTo(() => _logic.GetAllSponsoredAppsAsync(null)).MustHaveHappenedOnceExactly();
+        result.Should().HaveCount(5);
+    }
 
     [Fact]
     public async Task GetAllBusinessAppsForCurrentUserAsync_ReturnsExpectedCount()
