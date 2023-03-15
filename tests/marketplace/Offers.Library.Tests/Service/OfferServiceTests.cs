@@ -1268,6 +1268,8 @@ public class OfferServiceTests
 
     #endregion
     
+    #region GetProviderOfferAgreementConsentById_ReturnExpectedResult
+    
     [Fact]
     public async Task GetProviderOfferAgreementConsentById_ReturnExpectedResult()
     {
@@ -1319,6 +1321,9 @@ public class OfferServiceTests
         var ex = await Assert.ThrowsAsync<NotFoundException>(Act).ConfigureAwait(false);
         ex.Message.Should().Be($"offer {serviceId}, offertype {OfferTypeId.SERVICE} does not exist");
     }
+
+    #endregion
+    
     #region Setup
 
     private void SetupValidateSalesManager()

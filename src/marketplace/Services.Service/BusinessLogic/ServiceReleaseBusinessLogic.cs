@@ -18,15 +18,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
+using Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Service;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
-using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Services.Service.ViewModels;
-using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
-using Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Models;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Services.Service.BusinessLogic;
 
@@ -85,8 +85,6 @@ public class ServiceReleaseBusinessLogic : IServiceReleaseBusinessLogic
         _portalRepositories.GetInstance<IStaticDataRepository>().GetServiceTypeData();
 
     /// <inheritdoc/>
-    public async Task<OfferAgreementConsent> GetServiceAgreementConsentAsync(Guid serviceId, string iamUserId)
-    {
-        return await _offerService.GetProviderOfferAgreementConsentById(serviceId,  iamUserId, OfferTypeId.SERVICE).ConfigureAwait(false);
-    }
+    public Task<OfferAgreementConsent> GetServiceAgreementConsentAsync(Guid serviceId, string iamUserId) => 
+        _offerService.GetProviderOfferAgreementConsentById(serviceId,  iamUserId, OfferTypeId.SERVICE);
 }
