@@ -119,5 +119,5 @@ public class CompanyDataControllerTests
         // Assert
         A.CallTo(() => _logic.RemoveCompanyAssigneduseCaseDetailsAsync(IamUserId, useCaseData.useCaseId)).MustHaveHappenedOnceExactly();
         result.Should().BeOfType<NoContentResult>();
-    }    
+    }
 }

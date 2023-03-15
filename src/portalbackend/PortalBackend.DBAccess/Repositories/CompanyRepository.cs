@@ -184,7 +184,7 @@ public class CompanyRepository : ICompanyRepository
             .SingleOrDefaultAsync();
 
     /// <inheritdoc />
-    public IAsyncEnumerable<CompanyAssignedUseCaseData?> GetCompanyAssigendUseCaseDetailsAsync(string iamUserId) =>
+    public IAsyncEnumerable<CompanyAssignedUseCaseData> GetCompanyAssigendUseCaseDetailsAsync(string iamUserId) =>
         _context.Companies
         .Where(company => company.CompanyUsers.Any(user => user.IamUser!.UserEntityId == iamUserId))
         .SelectMany(company => company.CompanyAssignedUseCase)

@@ -107,7 +107,7 @@ public interface ICompanyRepository
     /// </summary>
     /// <param name="iamUserId">Id of the iam user</param>
     /// <returns>Returns the companyAssigendUeseCase Details</returns>
-    IAsyncEnumerable<CompanyAssignedUseCaseData?> GetCompanyAssigendUseCaseDetailsAsync(string iamUserId);
+    IAsyncEnumerable<CompanyAssignedUseCaseData> GetCompanyAssigendUseCaseDetailsAsync(string iamUserId);
 
     /// <summary>
     /// Gets the CompanyActive Status and companyAssigendUeseCase Id
