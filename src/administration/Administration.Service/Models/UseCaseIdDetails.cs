@@ -18,18 +18,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
-using System.Net;
+namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Models;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
-
-public interface ICompanyDataBusinessLogic
-{
-    Task<CompanyAddressDetailData> GetOwnCompanyDetailsAsync(string iamUserId);
-
-    IAsyncEnumerable<CompanyAssignedUseCaseData> GetCompanyAssigendUseCaseDetailsAsync(string iamUserId);
-
-    Task<HttpStatusCode> CreateCompanyAssigneduseCaseDetailsAsync(string iamUserId, Guid useCaseId);
-
-    Task RemoveCompanyAssigneduseCaseDetailsAsync(string iamUserId, Guid useCaseId);
-}
+public record UseCaseIdDetails(Guid useCaseId);
