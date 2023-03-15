@@ -54,8 +54,6 @@ public class ServiceReleaseBusinessLogicTest
         _offerService = A.Fake<IOfferService>();
         _staticDataRepository = A.Fake<IStaticDataRepository>();
 
-        _staticDataRepository = A.Fake<IStaticDataRepository>();
-
         SetupRepositories();
     }
 
