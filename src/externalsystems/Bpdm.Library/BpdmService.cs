@@ -122,7 +122,7 @@ public class BpdmService : IBpdmService
             )
         };
     
-        await httpClient.PutAsJsonAsync("/api/catena/input/legal-entities", requestData, _options, cancellationToken)
+        await httpClient.PostAsJsonAsync("/api/catena/legal-entities", requestData, _options, cancellationToken)
             .CatchingIntoServiceExceptionFor("bpdm-put-legal-entities", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE).ConfigureAwait(false);
         return true;
     }
@@ -130,7 +130,7 @@ public class BpdmService : IBpdmService
     public async Task<BpdmLegalEntityData> FetchInputLegalEntity(string externalId, CancellationToken cancellationToken)
     {
         var httpClient = await _tokenService.GetAuthorizedClient<BpdmService>(_settings, cancellationToken).ConfigureAwait(false);
-        var result = await httpClient.GetAsync($"/api/catena/input/legal-entities/{externalId}", cancellationToken)
+        var result = await httpClient.GetAsync($"/api/catena/legal-entities/{externalId}/search", cancellationToken)
             .CatchingIntoServiceExceptionFor("bpdm-get-legal-entities", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE).ConfigureAwait(false);
         await using var responseStream = await result.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
         try
