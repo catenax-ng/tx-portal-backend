@@ -915,7 +915,7 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
     {
         var documentRepository = _portalRepositories.GetInstance<IDocumentRepository>();
 
-        var documentDetails = await documentRepository.GetRegistrationDocumentAsync(documentId, _settings.RegistrationDocumentTypeIds).ConfigureAwait(false);
+        var documentDetails = await documentRepository.GetDocumentAsync(documentId, _settings.RegistrationDocumentTypeIds).ConfigureAwait(false);
         if (!documentDetails.IsDocumentTypeMatch)
         {
             throw new NotFoundException($"document {documentId} does not exist.");

@@ -409,7 +409,7 @@ public class DocumentRepositoryTests : IAssemblyFixture<TestDbFixture>
         var (sut, _) = await CreateSut().ConfigureAwait(false);
     
         // Act
-        var result = await sut.GetRegistrationDocumentAsync(new Guid("00000000-0000-0000-0000-000000000002"), new[]{DocumentTypeId.CX_FRAME_CONTRACT}).ConfigureAwait(false);
+        var result = await sut.GetDocumentAsync(new Guid("00000000-0000-0000-0000-000000000002"), new[]{DocumentTypeId.CX_FRAME_CONTRACT}).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBe(default);

@@ -145,5 +145,5 @@ public interface IDocumentRepository
     /// <param name="documentId">Id of the document</param>
     /// <param name="documentTypeIds">the document types</param>
     /// <returns></returns>
-    Task<(byte[] Content, string FileName, bool IsDocumentTypeMatch, MediaTypeId MediaTypeId)> GetRegistrationDocumentAsync(Guid documentId, IEnumerable<DocumentTypeId> documentTypeIds);
+    Task<(byte[] Content, string FileName, bool IsDocumentTypeMatch, MediaTypeId MediaTypeId)> GetDocumentAsync(Guid documentId, IEnumerable<DocumentTypeId> documentTypeIds);
 }

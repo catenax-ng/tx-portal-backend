@@ -1993,7 +1993,7 @@ public class RegistrationBusinessLogicTest
        // var documentId = _fixture.Create<Guid>();
         var documentId = Guid.NewGuid();
         var content = new byte[7];
-        A.CallTo(() => _documentRepository.GetRegistrationDocumentAsync(documentId, A<IEnumerable<DocumentTypeId>>._))
+        A.CallTo(() => _documentRepository.GetDocumentAsync(documentId, A<IEnumerable<DocumentTypeId>>._))
             .ReturnsLazily(() => new ValueTuple<byte[], string, bool, MediaTypeId>(content, "test.json", true, MediaTypeId.JSON));
         var sut = new RegistrationBusinessLogic(_options, null!, null!, null!, null!, null!, _portalRepositories, null!);
 
@@ -2001,7 +2001,7 @@ public class RegistrationBusinessLogicTest
         var result = await sut.GetRegistrationDocumentAsync(documentId).ConfigureAwait(false);
         
         // Assert
-        A.CallTo(() => _documentRepository.GetRegistrationDocumentAsync(documentId, A<IEnumerable<DocumentTypeId>>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _documentRepository.GetDocumentAsync(documentId, A<IEnumerable<DocumentTypeId>>._)).MustHaveHappenedOnceExactly();
         result.Should().NotBeNull();
         result.fileName.Should().Be("test.json");
     }
@@ -2012,7 +2012,7 @@ public class RegistrationBusinessLogicTest
         // Arrange
         var documentId = Guid.NewGuid();
         var content = new byte[7];
-        A.CallTo(() => _documentRepository.GetRegistrationDocumentAsync(documentId, A<IEnumerable<DocumentTypeId>>._))
+        A.CallTo(() => _documentRepository.GetDocumentAsync(documentId, A<IEnumerable<DocumentTypeId>>._))
             .ReturnsLazily(() => new ValueTuple<byte[], string, bool, MediaTypeId>(content, "test.json", false, MediaTypeId.JSON));
         var sut = new RegistrationBusinessLogic(_options, null!, null!, null!, null!, null!, _portalRepositories, null!);
 
