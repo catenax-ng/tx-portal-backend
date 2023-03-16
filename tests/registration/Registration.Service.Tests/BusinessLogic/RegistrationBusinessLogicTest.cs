@@ -2083,7 +2083,7 @@ public class RegistrationBusinessLogicTest
     }
 
     #endregion
-    
+
     #region Setup  
 
     private void SetupRepositories()
