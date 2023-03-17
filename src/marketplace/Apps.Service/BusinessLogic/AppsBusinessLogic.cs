@@ -73,8 +73,27 @@ public class AppsBusinessLogic : IAppsBusinessLogic
       await _portalRepositories.GetInstance<IOfferRepository>().GetAllSponsoredAppsAsync(languageShortName);
 
     /// <inheritdoc/>
-    public async Task<AppFeaturesResponse> GetAppFeaturesByIdAsync(Guid appId) =>
-        await _portalRepositories.GetInstance<IOfferRepository>().GetAppFeaturesByIdAsync(appId);
+    public async Task<AppFeaturesResponse> GetAppFeaturesByIdAsync(Guid appId) {
+          var appRepository = _portalRepositories.GetInstance<IOfferRepository>();
+        if (!await appRepository.CheckAppExistsById(appId).ConfigureAwait(false))
+        {
+            throw new NotFoundException($"app {appId} does not found");
+        }
+
+        return await _portalRepositories.GetInstance<IOfferRepository>().GetAppFeaturesByIdAsync(appId);
+    }
+
+    /// <inheritdoc/>
+    public async Task<AppPricingResponse> GetAppPricingByIdAsync(Guid appId){
+
+        var appRepository = _portalRepositories.GetInstance<IOfferRepository>();
+        if (!await appRepository.CheckAppExistsById(appId).ConfigureAwait(false))
+        {
+            throw new NotFoundException($"app {appId} does not found");
+        }
+        return await _portalRepositories.GetInstance<IOfferRepository>().GetAppPricingByIdAsync(appId);
+    }
+
     /// <inheritdoc/>
     public IAsyncEnumerable<BusinessAppData> GetAllUserUserBusinessAppsAsync(string userId) =>
         _portalRepositories.GetInstance<IOfferSubscriptionsRepository>()

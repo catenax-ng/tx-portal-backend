@@ -130,6 +130,25 @@ public class AppsController : ControllerBase
     public Task<AppFeaturesResponse> GetAppFeaturesByIdAsync([FromRoute] Guid appId) =>
         _appsBusinessLogic.GetAppFeaturesByIdAsync(appId);
 
+    
+    /// <summary>
+    /// Retrieves app Features for an app referenced by id.
+    /// </summary>
+    /// <param name="appId" example="D3B1ECA2-6148-4008-9E6C-C1C2AEA5C645">ID of the app to retrieve.</param>
+    /// <returns>AppFeaturesResponse for requested application.</returns>
+    /// <remarks>Example: GET: /api/apps/D3B1ECA2-6148-4008-9E6C-C1C2AEA5C645/features</remarks>
+    /// <response code="200">Returns the requested app details.</response>
+    /// <response code="400">If sub claim is empty/invalid.</response>
+    /// <response code="404">App not found.</response>
+    [HttpGet]
+    [Route("{appId}/pricing", Name = nameof(GetAppPricingByIdAsync))]
+    [Authorize(Roles = "view_apps")]
+    [ProducesResponseType(typeof(AppPricingResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    public Task<AppPricingResponse> GetAppPricingByIdAsync([FromRoute] Guid appId) =>
+        _appsBusinessLogic.GetAppPricingByIdAsync(appId);
+
     /// <summary>
     /// Creates an app according to input model.
     /// </summary>

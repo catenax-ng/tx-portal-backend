@@ -15,16 +15,18 @@ namespace PortalBackend.PortalEntities.Entities
             Name = null!;
         }
 
-        public PlanFeatures(Guid id, string name, bool isenable) : this()
+        public PlanFeatures(Guid id, string name, bool isenable, Guid plansId) : this()
         {
             Id = id;
             Name = name;
             IsEnable = isenable;
+            PlansId = plansId;
         }
         public Guid Id { get; private set; }
 
         [MaxLength(300)]
         public string? Name { get; set; }
+        public Guid PlansId { get; set; }
         public bool IsEnable { get; set; }
         // Navigation properties
         public virtual Plans? Plans { get; set; }

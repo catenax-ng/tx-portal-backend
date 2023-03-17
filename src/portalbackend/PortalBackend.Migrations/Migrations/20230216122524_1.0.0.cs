@@ -3244,11 +3244,11 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
-                    amount = table.Column<decimal>(type: "numeric", nullable: false),
+                    amount = table.Column<string>(type: "character varying(300)", nullable: false),
                     model = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: true),
                     description = table.Column<string>(type: "character varying(800)", maxLength: 800, nullable: true),
-                    free_trial = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    free_version = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    free_trial = table.Column<bool>(type: "boolean", nullable: true),
+                    free_version = table.Column<bool>(type: "boolean", nullable: true),
                     weblink = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: true),
                     offers_id = table.Column<Guid>(type: "uuid", nullable: true)
                 },
@@ -3269,8 +3269,8 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
-                    type = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: true),
-                    amount = table.Column<decimal>(type: "numeric", nullable: false),
+                    type = table.Column<int>(type: "integer", maxLength: 300, nullable: true),
+                    amount = table.Column<string>(type: "character varying(100)", nullable: false),
                     currency = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     model = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     frequency = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
@@ -3309,6 +3309,45 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         principalTable: "plans",
                         principalColumn: "id");
                 });
+
+             migrationBuilder.CreateTable(
+                name: "offer_recommandation",
+                schema: "portal",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    offer_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    company_user_id = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_plan_features", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_offer_recommandation_offers_offer_id",
+                        column: x => x.offer_id,
+                        principalSchema: "portal",
+                        principalTable: "offers",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "fk_offer_recommandation_company_users_company_user_id",
+                        column: x => x.company_user_id,
+                        principalSchema: "portal",
+                        principalTable: "company_users",
+                        principalColumn: "id");
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_offer_recommandation_company_user_id",
+                schema: "portal",
+                table: "offer_recommandation",
+                column: "company_user_id");
+
+             migrationBuilder.CreateIndex(
+                name: "ix_offer_recommandation_offer_id",
+                schema: "portal",
+                table: "offer_recommandation",
+                column: "offer_id");
+
 
             migrationBuilder.CreateIndex(
                 name: "ix_key_features_features_id",

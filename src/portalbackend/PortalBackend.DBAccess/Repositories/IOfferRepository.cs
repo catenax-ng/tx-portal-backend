@@ -352,4 +352,11 @@ public interface IOfferRepository
     /// <param name="appId"></param>
     /// <returns></returns>
     Task<AppFeaturesResponse> GetAppFeaturesByIdAsync(Guid appId);
+
+    /// <summary>
+    /// Get App Pricing by app Id
+    /// </summary>
+    /// <param name="appId"></param>
+    /// <returns></returns>
+    Task<AppPricingResponse> GetAppPricingByIdAsync(Guid appId);
 }

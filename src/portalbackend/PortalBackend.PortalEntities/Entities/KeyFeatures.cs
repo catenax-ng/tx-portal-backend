@@ -17,14 +17,16 @@ namespace PortalBackend.PortalEntities.Entities
             ShortDescription = null!;
         }
 
-        public KeyFeatures(Guid id, string title, string shortdescription, int sequence) : this()
+        public KeyFeatures(Guid id, string title, string shortdescription, int sequence, Guid featuresId) : this()
         {
             Id = id;
             Title = title;
             ShortDescription = shortdescription;
             Sequence = sequence;
+            FeaturesId=featuresId;
         }
         public Guid Id { get; private set; }
+        public Guid FeaturesId { get;  set; }
 
         [MaxLength(300)]
         public string? Title { get; set; }

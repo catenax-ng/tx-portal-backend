@@ -12,11 +12,12 @@ namespace PortalBackend.PortalEntities.Entities
             VideoLink = null!;
         }
 
-        public Features(Guid id, string summary, string vidolink) : this()
+        public Features(Guid id, string summary, string vidolink, Guid offerId) : this()
         {
             Id = id;
             Summary = summary;
             VideoLink = vidolink;
+            OfferId = offerId;
         }
         public Guid Id { get; private set; }
 
@@ -26,6 +27,7 @@ namespace PortalBackend.PortalEntities.Entities
         [MaxLength(500)]
         public string? VideoLink { get; set; }
         // Navigation properties
+        public Guid OfferId { get;  set; }
         public virtual Offer? Offer { get; set; }
 
         public virtual ICollection<KeyFeatures> KeyFeatures { get; private set; }
