@@ -39,4 +39,6 @@ public static class Constants
     /// Default value for Language Code Error String
     /// </summary>
     public const string InvalidLanguageError = "InvalidLanguage";
+
+    public const string NO_DESC_MSG="One of the best apps on this marketplace";
 }
