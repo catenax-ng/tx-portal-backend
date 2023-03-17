@@ -176,4 +176,11 @@ public interface IAppsBusinessLogic
     /// <param name="appId"></param>
     /// <returns>Application features from marketplace apps.</returns>
     Task<AppFeaturesResponse> GetAppFeaturesByIdAsync(Guid appId);
+
+    ///<summary>
+    /// Retrieves app Pricing for an app referenced by id.
+    /// </summary>
+    /// <param name="appId"></param>
+    /// <returns>Application features from marketplace apps.</returns>
+    Task<AppPricingResponse> GetAppPricingByIdAsync(Guid appId);
 }

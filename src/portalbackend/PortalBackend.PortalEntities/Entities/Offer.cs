@@ -117,7 +117,7 @@ public class Offer : IAuditableV1, IBaseEntity
     public virtual ICollection<ServiceType> ServiceTypes { get; private set; }
     public virtual ICollection<OfferAssignedPrivacyPolicy> OfferAssignedPrivacyPolicies { get; private set; }
 
-    public virtual PricingAdditionalDetail PricingAditionalDetails { get; private set; }
+    public virtual PricingAdditionalDetail PricingAdditionalDetail { get; private set; }
     public virtual ICollection<Features> Features { get; private set; }
 
     public virtual ICollection<OfferRecommandation> OfferRecommandations{ get; private set; }

@@ -137,6 +137,9 @@ public class PortalDbContext : DbContext
     public virtual DbSet<UserRoleDescription> UserRoleDescriptions { get; set; } = default!;
     public virtual DbSet<Features> Features { get; set; } = default!;
 
+    public virtual DbSet<Plans> Plans { get; set; } = default!;
+    public virtual DbSet<PricingAdditionalDetail> PricingAdditionalDetail { get; set; } = default!;
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.UseSnakeCaseNamingConvention();
@@ -159,11 +162,21 @@ public class PortalDbContext : DbContext
                 .HasForeignKey(d => d.IssuerCompanyId)
                 .OnDelete(DeleteBehavior.ClientSetNull);
         });
-
+         
         modelBuilder.Entity<Offer>()
-            .HasOne(a => a.PricingAditionalDetails)
-            .WithOne(a => a.Offer)
-            .HasForeignKey<PricingAdditionalDetail>(c => c.Id);
+            .HasOne(a => a.PricingAdditionalDetail)
+            .WithOne(b => b.Offer)
+            .HasForeignKey<PricingAdditionalDetail>(c => c.OfferId);
+
+        
+        modelBuilder.Entity<Plans>(entity =>
+        {
+            entity
+                .HasOne(a => a.PricingAdditionalDetail)
+                .WithMany(p => p.Plans)
+                .HasForeignKey(c => c.PricingAdditionalDetailId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+        });
 
         modelBuilder.Entity<AgreementAssignedCompanyRole>(entity =>
         {

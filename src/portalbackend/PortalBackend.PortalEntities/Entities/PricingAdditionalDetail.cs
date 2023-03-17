@@ -20,7 +20,9 @@ namespace PortalBackend.PortalEntities.Entities
             Weblink = null!;
         }
 
-        public PricingAdditionalDetail(Guid id, decimal amount, string model, string description, string freetrial, string freeversion, string weblink,Guid offerId) : this()
+        public PricingAdditionalDetail(Guid id, string amount, string model, string description, bool freetrial, bool freeversion, string weblink
+        ,Guid offerId
+        ) : this()
         {
             Id = id;
             Amount = amount;
@@ -33,7 +35,7 @@ namespace PortalBackend.PortalEntities.Entities
         }
         public Guid Id { get; private set; }
         
-        public decimal Amount{ get; set; }
+        public string Amount{ get; set; }
 
         [MaxLength(300)]
         public string? Model { get; set; }
@@ -42,10 +44,10 @@ namespace PortalBackend.PortalEntities.Entities
         public string? Description { get; set; }
 
         [MaxLength(100)]
-        public string? FreeTrial { get; set; }
+        public bool? FreeTrial { get; set; }
 
         [MaxLength(100)]
-        public string? FreeVersion { get; set; }
+        public bool? FreeVersion { get; set; }
         
         [MaxLength(300)]
         public string? Weblink { get; set; }

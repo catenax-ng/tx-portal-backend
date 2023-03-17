@@ -18,25 +18,25 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+
+
+namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
 
 /// <summary>
-/// Status values for app Pricing Category.
+/// View model of an application's detailed data.
 /// </summary>
-public enum AppPriceCategory
-{
-    /// <summary>
-    /// App with free category 
-    /// </summary>
-    FREE=1,
 
-    /// <summary>
-    /// App with per month cost.
-    /// </summary>
-    PER_MONTH=2,
-
-    /// <summary>
-    /// App with fixed cost.
-    /// </summary>
-    FIXED=3
-}
+/// <param name="Amount">Amount of the app.</param>
+/// <param name="Model">Model of app.</param>
+/// <param name="Description">Pricing description of APP</param>
+/// <param name="FreeTrial">Free trial available on app</param>
+/// <param name="FreeVersion">Free Version available on app</param>
+/// <param name="weblink">Web link to app</param>
+public record AppPricingResponse(
+    string? Amount,
+    string? Model,
+    string? Description,
+    bool? FreeTrial,
+    bool? FreeVersion,
+    string? weblink
+);

@@ -119,8 +119,8 @@ public class OfferRepository : IOfferRepository
                 a.OfferLicenses.Select(license => license != null ? license.Licensetext : "").FirstOrDefault(),
                 a.Documents.Where(document => document.DocumentTypeId == DocumentTypeId.APP_LEADIMAGE && document.DocumentStatusId != DocumentStatusId.INACTIVE).Select(document => document.Id).FirstOrDefault(),
                 a.UseCases.Select(uc => uc.Name),
-                a.PricingAditionalDetails != null && a.PricingAditionalDetails.Plans != null ? a.PricingAditionalDetails.Plans.First(e => e != null && e.Currency != null).Currency: "EURO",
-                a.PricingAditionalDetails != null && a.PricingAditionalDetails.Plans != null ? a.PricingAditionalDetails.Plans.First(e => e.Type != null).Type : AppPriceCategory.PER_MONTH,
+                _context.Plans.Where(p => p.PricingAdditionalDetail.OfferId.Equals(a.Id)).First().Currency,
+                _context.Plans.Where(p => p.PricingAdditionalDetail.OfferId.Equals(a.Id)).First().Type,
                 a.DateReleased >= DateTime.UtcNow.AddDays(-90) ? "NEW" : "RECOMMENDED"
             ))
             .ToListAsync();
@@ -136,6 +136,21 @@ public class OfferRepository : IOfferRepository
             a.Summary,
             a.VideoLink,
             a.KeyFeatures.Where(k => k.Features != null).Select(keyFeature => new AppFeatures(keyFeature.Title,keyFeature.ShortDescription))
+        )).SingleOrDefaultAsync();
+
+        return result;
+    }
+
+    /// <inheritdoc />
+    public async Task<AppPricingResponse> GetAppPricingByIdAsync(Guid appId){
+        var result = await _context.PricingAdditionalDetail.AsNoTracking().Where(pad => pad.Offer != null && pad.Offer.Id.Equals(appId))
+        .Select(a => new AppPricingResponse(
+            a.Amount,
+            a.Model,
+            a.Description,
+            a.FreeTrial,
+            a.FreeVersion,
+            a.Weblink
         )).SingleOrDefaultAsync();
 
         return result;
