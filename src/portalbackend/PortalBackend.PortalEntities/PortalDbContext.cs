@@ -23,6 +23,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Auditing;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Microsoft.EntityFrameworkCore;
+using PortalBackend.PortalEntities.Entities;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 
@@ -134,6 +135,7 @@ public class PortalDbContext : DbContext
     public virtual DbSet<UserRoleCollection> UserRoleCollections { get; set; } = default!;
     public virtual DbSet<UserRoleCollectionDescription> UserRoleCollectionDescriptions { get; set; } = default!;
     public virtual DbSet<UserRoleDescription> UserRoleDescriptions { get; set; } = default!;
+    public virtual DbSet<Features> Features { get; set; } = default!;
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -157,6 +159,11 @@ public class PortalDbContext : DbContext
                 .HasForeignKey(d => d.IssuerCompanyId)
                 .OnDelete(DeleteBehavior.ClientSetNull);
         });
+
+        modelBuilder.Entity<Offer>()
+            .HasOne(a => a.PricingAditionalDetails)
+            .WithOne(a => a.Offer)
+            .HasForeignKey<PricingAdditionalDetail>(c => c.Id);
 
         modelBuilder.Entity<AgreementAssignedCompanyRole>(entity =>
         {

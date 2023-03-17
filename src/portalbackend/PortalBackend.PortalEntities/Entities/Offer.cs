@@ -23,6 +23,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Auditing;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.AuditEntities;
 using System.ComponentModel.DataAnnotations;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Base;
+using PortalBackend.PortalEntities.Entities;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 
@@ -115,4 +116,9 @@ public class Offer : IAuditableV1, IBaseEntity
     public virtual ICollection<ConsentAssignedOffer> ConsentAssignedOffers { get; private set; }
     public virtual ICollection<ServiceType> ServiceTypes { get; private set; }
     public virtual ICollection<OfferAssignedPrivacyPolicy> OfferAssignedPrivacyPolicies { get; private set; }
+
+    public virtual PricingAdditionalDetail PricingAditionalDetails { get; private set; }
+    public virtual ICollection<Features> Features { get; private set; }
+
+    public virtual ICollection<OfferRecommandation> OfferRecommandations{ get; private set; }
 }

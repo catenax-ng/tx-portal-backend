@@ -3190,6 +3190,149 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
             migrationBuilder.Sql("CREATE FUNCTION portal.LC_TRIGGER_AFTER_INSERT_USERROLE() RETURNS trigger as $LC_TRIGGER_AFTER_INSERT_USERROLE$\r\nBEGIN\r\n  INSERT INTO portal.audit_user_role20221017 (\"id\", \"user_role\", \"offer_id\", \"last_editor_id\", \"audit_v1id\", \"audit_v1operation_id\", \"audit_v1date_last_changed\", \"audit_v1last_editor_id\") SELECT NEW.id, \r\n  NEW.user_role, \r\n  NEW.offer_id, \r\n  NEW.last_editor_id, \r\n  gen_random_uuid(), \r\n  1, \r\n  CURRENT_DATE, \r\n  NEW.last_editor_id;\r\nRETURN NEW;\r\nEND;\r\n$LC_TRIGGER_AFTER_INSERT_USERROLE$ LANGUAGE plpgsql;\r\nCREATE TRIGGER LC_TRIGGER_AFTER_INSERT_USERROLE AFTER INSERT\r\nON portal.user_roles\r\nFOR EACH ROW EXECUTE PROCEDURE portal.LC_TRIGGER_AFTER_INSERT_USERROLE();");
 
             migrationBuilder.Sql("CREATE FUNCTION portal.LC_TRIGGER_AFTER_UPDATE_USERROLE() RETURNS trigger as $LC_TRIGGER_AFTER_UPDATE_USERROLE$\r\nBEGIN\r\n  INSERT INTO portal.audit_user_role20221017 (\"id\", \"user_role\", \"offer_id\", \"last_editor_id\", \"audit_v1id\", \"audit_v1operation_id\", \"audit_v1date_last_changed\", \"audit_v1last_editor_id\") SELECT NEW.id, \r\n  NEW.user_role, \r\n  NEW.offer_id, \r\n  NEW.last_editor_id, \r\n  gen_random_uuid(), \r\n  2, \r\n  CURRENT_DATE, \r\n  NEW.last_editor_id;\r\nRETURN NEW;\r\nEND;\r\n$LC_TRIGGER_AFTER_UPDATE_USERROLE$ LANGUAGE plpgsql;\r\nCREATE TRIGGER LC_TRIGGER_AFTER_UPDATE_USERROLE AFTER UPDATE\r\nON portal.user_roles\r\nFOR EACH ROW EXECUTE PROCEDURE portal.LC_TRIGGER_AFTER_UPDATE_USERROLE();");
+
+
+            migrationBuilder.CreateTable(
+                name: "features",
+                schema: "portal",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    offer_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    summary = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    videolink = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true)
+                    
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_offer_features", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_offer_features_offer_id",
+                        column: x => x.offer_id,
+                        principalSchema: "portal",
+                        principalTable: "offers",
+                        principalColumn: "id");
+            });
+
+
+
+             migrationBuilder.CreateTable(
+                name: "key_features",
+                schema: "portal",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    title = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: true),
+                    short_description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    sequence = table.Column<int>(type: "integer", nullable: false),
+                    features_id = table.Column<Guid>(type: "uuid", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_key_features", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_key_features_features_features_id",
+                        column: x => x.features_id,
+                        principalSchema: "portal",
+                        principalTable: "features",
+                        principalColumn: "id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "pricing_additional_detail",
+                schema: "portal",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    amount = table.Column<decimal>(type: "numeric", nullable: false),
+                    model = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: true),
+                    description = table.Column<string>(type: "character varying(800)", maxLength: 800, nullable: true),
+                    free_trial = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    free_version = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    weblink = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: true),
+                    offers_id = table.Column<Guid>(type: "uuid", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_pricing_additional_detail", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_pricing_additional_detail_offers_offers_id",
+                        column: x => x.offers_id,
+                        principalSchema: "portal",
+                        principalTable: "offers",
+                        principalColumn: "id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "plans",
+                schema: "portal",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    type = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: true),
+                    amount = table.Column<decimal>(type: "numeric", nullable: false),
+                    currency = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    model = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    frequency = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    description = table.Column<string>(type: "character varying(800)", maxLength: 800, nullable: true),
+                    sequence = table.Column<int>(type: "integer", nullable: false),
+                    pricing_additional_details_id = table.Column<Guid>(type: "uuid", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_plans", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_plans_pricing_additional_detail_pricing_additional_details_id",
+                        column: x => x.pricing_additional_details_id,
+                        principalSchema: "portal",
+                        principalTable: "pricing_additional_detail",
+                        principalColumn: "id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "plan_features",
+                schema: "portal",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    name = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: true),
+                    is_enable = table.Column<bool>(type: "boolean", nullable: false),
+                    plans_id = table.Column<Guid>(type: "uuid", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_plan_features", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_plan_features_plans_plans_id",
+                        column: x => x.plans_id,
+                        principalSchema: "portal",
+                        principalTable: "plans",
+                        principalColumn: "id");
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_key_features_features_id",
+                schema: "portal",
+                table: "key_features",
+                column: "features_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_plan_features_plans_id",
+                schema: "portal",
+                table: "plan_features",
+                column: "plans_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_plans_pricing_additional_details_id",
+                schema: "portal",
+                table: "plans",
+                column: "pricing_additional_details_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_pricing_additional_detail_offers_id",
+                schema: "portal",
+                table: "pricing_additional_detail",
+                column: "offers_id");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -3620,6 +3763,26 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
 
             migrationBuilder.DropTable(
                 name: "company_user_statuses",
+                schema: "portal");
+
+             migrationBuilder.DropTable(
+                name: "features",
+                schema: "portal");
+
+            migrationBuilder.DropTable(
+                name: "key_features",
+                schema: "portal");
+
+            migrationBuilder.DropTable(
+                name: "plan_features",
+                schema: "portal");
+
+            migrationBuilder.DropTable(
+                name: "plans",
+                schema: "portal");
+
+            migrationBuilder.DropTable(
+                name: "pricing_additional_detail",
                 schema: "portal");
         }
     }

@@ -35,8 +35,9 @@ public interface IAppsBusinessLogic
     /// Get all active marketplace apps.
     /// </summary>
     /// <param name="languageShortName">Optional two character language specifier for the app description. No description if not provided.</param>
+    /// <param name="iamUserId">ID of the user to evaluate app purchase status for. No company purchase status if not provided.</param>
     /// <returns>List of active marketplace apps.</returns>
-    public IAsyncEnumerable<AppData> GetAllActiveAppsAsync(string? languageShortName = null);
+    public Task<List<AppData>> GetAllActiveAppsAsync(string iamUserId,string? languageShortName = null);
 
     /// <summary>
     /// Get all apps that a user has been assigned roles in.
@@ -162,10 +163,17 @@ public interface IAppsBusinessLogic
     /// <returns>byte Array Content</returns>
     Task<(byte[] Content, string ContentType, string FileName)> GetAppImageDocumentContentAsync(Guid appId, Guid documentId, CancellationToken cancellationToken);
    
-    /// <summary>
+/// <summary>
     /// Get all sponsored marketplace apps.
     /// </summary>
     /// <param name="languageShortName">Optional two character language specifier for the app description. No description if not provided.</param>
     /// <returns>List of sponsored marketplace apps.</returns>
-    IAsyncEnumerable<AppData> GetAllSponsoredAppsAsync(string? languageShortName = null);
+    public Task<List<SponsoredAppData>> GetAllSponsoredAppsAsync(string? languageShortName = null);
+
+    ///<summary>
+    /// Retrieves app Features for an app referenced by id.
+    /// </summary>
+    /// <param name="appId"></param>
+    /// <returns>Application features from marketplace apps.</returns>
+    Task<AppFeaturesResponse> GetAppFeaturesByIdAsync(Guid appId);
 }
