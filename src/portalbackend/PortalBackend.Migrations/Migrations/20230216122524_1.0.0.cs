@@ -3310,6 +3310,45 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         principalColumn: "id");
                 });
 
+             migrationBuilder.CreateTable(
+                name: "offer_recommandation",
+                schema: "portal",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    offer_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    company_user_id = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_plan_features", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_offer_recommandation_offers_offer_id",
+                        column: x => x.offer_id,
+                        principalSchema: "portal",
+                        principalTable: "offers",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "fk_offer_recommandation_company_users_company_user_id",
+                        column: x => x.company_user_id,
+                        principalSchema: "portal",
+                        principalTable: "company_users",
+                        principalColumn: "id");
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_offer_recommandation_company_user_id",
+                schema: "portal",
+                table: "offer_recommandation",
+                column: "company_user_id");
+
+             migrationBuilder.CreateIndex(
+                name: "ix_offer_recommandation_offer_id",
+                schema: "portal",
+                table: "offer_recommandation",
+                column: "offer_id");
+
+
             migrationBuilder.CreateIndex(
                 name: "ix_key_features_features_id",
                 schema: "portal",
