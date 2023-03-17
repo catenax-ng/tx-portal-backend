@@ -65,29 +65,16 @@ public class AppsBusinessLogic : IAppsBusinessLogic
     }
 
     /// <inheritdoc/>
-    public IAsyncEnumerable<AppData> GetAllActiveAppsAsync(string? languageShortName = null) =>
-        _portalRepositories.GetInstance<IOfferRepository>().GetAllActiveAppsAsync(languageShortName)
-            .Select(app => new AppData(
-                    app.Id,
-                    app.Name ?? Constants.ErrorString,
-                    app.ShortDescription ?? Constants.ErrorString,
-                    app.VendorCompanyName,
-                    app.LicenseText ?? Constants.ErrorString,
-                    app.LeadPictureId,
-                    app.UseCaseNames));
+    public async Task<List<AppData>> GetAllActiveAppsAsync(string iamUserId, string? languageShortName = null) =>
+        await _portalRepositories.GetInstance<IOfferRepository>().GetAllActiveAppsAsync(iamUserId,languageShortName);
+
+   /// <inheritdoc/>
+    public async Task<List<SponsoredAppData>> GetAllSponsoredAppsAsync(string? languageShortName = null) =>
+      await _portalRepositories.GetInstance<IOfferRepository>().GetAllSponsoredAppsAsync(languageShortName);
 
     /// <inheritdoc/>
-    public IAsyncEnumerable<AppData> GetAllSponsoredAppsAsync(string? languageShortName = null) =>
-        _portalRepositories.GetInstance<IOfferRepository>().GetAllSponsoredAppsAsync(languageShortName)
-            .Select(app => new AppData(
-                    app.Id,
-                    app.Name ?? Constants.ErrorString,
-                    app.ShortDescription ?? Constants.ErrorString,
-                    app.VendorCompanyName,
-                    app.LicenseText ?? Constants.ErrorString,
-                    app.LeadPictureId,
-                    app.UseCaseNames));
-
+    public async Task<AppFeaturesResponse> GetAppFeaturesByIdAsync(Guid appId) =>
+        await _portalRepositories.GetInstance<IOfferRepository>().GetAppFeaturesByIdAsync(appId);
     /// <inheritdoc/>
     public IAsyncEnumerable<BusinessAppData> GetAllUserUserBusinessAppsAsync(string userId) =>
         _portalRepositories.GetInstance<IOfferSubscriptionsRepository>()

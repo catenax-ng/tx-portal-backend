@@ -18,6 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
@@ -60,16 +61,17 @@ public interface IOfferRepository
     /// <summary>
     /// Gets all active apps with an optional filtered with the languageShortName
     /// </summary>
+    /// <param name="iamUserId">OPTIONAL: iamUserId of the company the calling user belongs to</param>
     /// <param name="languageShortName">The optional language shortName</param>
     /// <returns>Returns a async enumerable of (Guid Id, string? Name, string VendorCompanyName, IEnumerable<string> UseCaseNames, string? ThumbnailUrl, string? ShortDescription, string? LicenseText)> GetAllActiveAppsAsync(string? languageShortName)</returns>
-    IAsyncEnumerable<(Guid Id, string? Name, string VendorCompanyName, IEnumerable<string> UseCaseNames, Guid LeadPictureId, string? ShortDescription, string? LicenseText)> GetAllActiveAppsAsync(string? languageShortName);
+    public Task<List<AppData>> GetAllActiveAppsAsync(string iamUserId,string? languageShortName);
 
     /// <summary>
     /// Gets all sponsored apps with an optional filtered with the languageShortName
     /// </summary>
     /// <param name="languageShortName">The optional language shortName</param>
     /// <returns>Returns a async enumerable of (Guid Id, string? Name, string VendorCompanyName, IEnumerable<string> UseCaseNames, string? ThumbnailUrl, string? ShortDescription, string? LicenseText)> GetAllSponsoredAppsAsync(string? languageShortName)</returns>
-    IAsyncEnumerable<(Guid Id, string? Name, string VendorCompanyName, IEnumerable<string> UseCaseNames, Guid LeadPictureId, string? ShortDescription, string? LicenseText)> GetAllSponsoredAppsAsync(string? languageShortName);
+    public Task<List<SponsoredAppData>> GetAllSponsoredAppsAsync(string? languageShortName);
 
     /// <summary>
     /// Gets the details of an app by its id
@@ -343,4 +345,11 @@ public interface IOfferRepository
     /// <param name="modifyPrivacyPolicy"></param>
     /// <returns></returns>
     void CreateDeleteAppAssignedPrivacyPolicies(Guid appId, IEnumerable<PrivacyPolicyId> initialPrivacyPolicy, IEnumerable<PrivacyPolicyId> modifyPrivacyPolicy);
+
+    /// <summary>
+    /// Get Appp Features by app Id
+    /// </summary>
+    /// <param name="appId"></param>
+    /// <returns></returns>
+    Task<AppFeaturesResponse> GetAppFeaturesByIdAsync(Guid appId);
 }

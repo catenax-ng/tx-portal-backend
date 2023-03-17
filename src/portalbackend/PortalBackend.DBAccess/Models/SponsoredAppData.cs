@@ -18,6 +18,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+
 namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
 
 /// <summary>
@@ -30,11 +32,14 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
 /// <param name="Price">Price.</param>
 /// <param name="LeadPictureId">Lead pircture Id.</param>
 /// <param name="UseCases">The apps use cases.</param>
-public record AppData(
+public record SponsoredAppData(
     Guid Id,
     string Name,
     string ShortDescription,
     string Provider,
     string Price,
     Guid LeadPictureId,
-    IEnumerable<string> UseCases);
+    IEnumerable<string> UseCases,
+    string currency,
+    AppPriceCategory priceCategory,
+    string type);

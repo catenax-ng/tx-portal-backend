@@ -62,11 +62,11 @@ public class AppsController : ControllerBase
     [Route("active")]
     [Authorize(Roles = "view_apps")]
     [ProducesResponseType(typeof(IAsyncEnumerable<AppData>), StatusCodes.Status200OK)]
-    public IAsyncEnumerable<AppData> GetAllActiveAppsAsync([FromQuery] string? lang = null) =>
-        _appsBusinessLogic.GetAllActiveAppsAsync(lang);
+    public async Task<List<AppData>> GetAllActiveAppsAsync([FromQuery] string? lang = null) =>
+       await this.WithIamUserId(iamUserId =>  _appsBusinessLogic.GetAllActiveAppsAsync(iamUserId,lang));
 
 
-    /// <summary>
+     /// <summary>
     /// Retrieves all Sponsored apps in the marketplace.
     /// </summary>
     /// <param name="lang" example="en">Optional two character language specifier for the app description. Will be empty if not provided.</param>
@@ -76,10 +76,9 @@ public class AppsController : ControllerBase
     [HttpGet]
     [Route("sponsored")]
     [Authorize(Roles = "view_apps")]
-    [ProducesResponseType(typeof(IAsyncEnumerable<AppData>), StatusCodes.Status200OK)]
-    public IAsyncEnumerable<AppData> GetAllSponsoredAppsAsync([FromQuery] string? lang = null) =>
-        _appsBusinessLogic.GetAllSponsoredAppsAsync(lang);
-
+    [ProducesResponseType(typeof(IAsyncEnumerable<SponsoredAppData>), StatusCodes.Status200OK)]
+    public async Task<List<SponsoredAppData>> GetAllSponsoredAppsAsync([FromQuery] string? lang = null) =>
+        await _appsBusinessLogic.GetAllSponsoredAppsAsync(lang);
     /// <summary>
     /// Get all apps that currently logged in user has been assigned roles in.
     /// </summary>
@@ -112,6 +111,24 @@ public class AppsController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public Task<AppDetailResponse> GetAppDetailsByIdAsync([FromRoute] Guid appId, [FromQuery] string? lang = null) =>
         this.WithIamUserId(userId => _appsBusinessLogic.GetAppDetailsByIdAsync(appId, userId, lang));
+
+    /// <summary>
+    /// Retrieves app Features for an app referenced by id.
+    /// </summary>
+    /// <param name="appId" example="D3B1ECA2-6148-4008-9E6C-C1C2AEA5C645">ID of the app to retrieve.</param>
+    /// <returns>AppFeaturesResponse for requested application.</returns>
+    /// <remarks>Example: GET: /api/apps/D3B1ECA2-6148-4008-9E6C-C1C2AEA5C645/features</remarks>
+    /// <response code="200">Returns the requested app details.</response>
+    /// <response code="400">If sub claim is empty/invalid.</response>
+    /// <response code="404">App not found.</response>
+    [HttpGet]
+    [Route("{appId}/features", Name = nameof(GetAppFeaturesByIdAsync))]
+    [Authorize(Roles = "view_apps")]
+    [ProducesResponseType(typeof(AppFeaturesResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    public Task<AppFeaturesResponse> GetAppFeaturesByIdAsync([FromRoute] Guid appId) =>
+        _appsBusinessLogic.GetAppFeaturesByIdAsync(appId);
 
     /// <summary>
     /// Creates an app according to input model.
