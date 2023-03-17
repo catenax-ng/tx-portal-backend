@@ -155,11 +155,12 @@ public class ProcessExecutor : IProcessExecutor
 
     private bool SetProcessStepStatus(ProcessStepTypeId stepTypeId, ProcessStepStatusId stepStatusId, ProcessContext context, string? processMessage)
     {
-        if ((stepStatusId == ProcessStepStatusId.TODO || !context.AllSteps.Remove(stepTypeId, out var stepIds) && processMessage == null))
+        if ((stepStatusId == ProcessStepStatusId.TODO && processMessage == null) || !context.AllSteps.Remove(stepTypeId, out var stepIds))
         {
             return false;
         }
-        bool isFirst = true;
+
+        var isFirst = true;
         foreach (var stepId in stepIds)
         {
             _processStepRepository.AttachAndModifyProcessStep(stepId, null, step =>
