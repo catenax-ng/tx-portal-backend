@@ -158,17 +158,18 @@ public class ApplicationChecklistProcessTypeExecutor : IProcessTypeExecutor
 
     private static (ProcessStepStatusId,Action<ApplicationChecklistEntry>?, string? processMessage) ProcessError(Exception ex)
     {
-        var errorMessage = string.IsNullOrEmpty(ex.Message) ? ex.ToString() : ex.Message;
+        var itemMessage = string.IsNullOrWhiteSpace(ex.Message) ? ex.GetType().ToString() : ex.Message;
+        var stepMessage = $"{ex.GetType()}: {ex.Message}";
         return ex is ServiceException {IsRecoverable: true}
             ? (ProcessStepStatusId.TODO,
-                item => { item.Comment = errorMessage; },
-                errorMessage)
+                item => { item.Comment = itemMessage; },
+                stepMessage)
             : (ProcessStepStatusId.FAILED,
                 item =>
                 {
                     item.ApplicationChecklistEntryStatusId = ApplicationChecklistEntryStatusId.FAILED;
-                    item.Comment = errorMessage;
+                    item.Comment = itemMessage;
                 },
-                errorMessage);
+                stepMessage);
     }
 }

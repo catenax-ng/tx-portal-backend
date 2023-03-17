@@ -81,8 +81,8 @@ public class ProcessExecutor : IProcessExecutor
             ProcessStepStatusId resultStepStatusId;
             IEnumerable<ProcessStepTypeId>? scheduleStepTypeIds;
             IEnumerable<ProcessStepTypeId>? skipStepTypeIds;
+            string? processMessage;
             bool success;
-            string? processMessage = null;
             try
             {
                 (modified, resultStepStatusId, scheduleStepTypeIds, skipStepTypeIds, processMessage) = await executor.ExecuteProcessStep(stepTypeId, context.AllSteps.Keys, cancellationToken).ConfigureAwait(false);
@@ -91,6 +91,7 @@ public class ProcessExecutor : IProcessExecutor
             catch(Exception e) when (e is not SystemException)
             {
                 resultStepStatusId = ProcessStepStatusId.FAILED;
+                processMessage = $"{e.GetType()}: {e.Message}";
                 scheduleStepTypeIds = null;
                 skipStepTypeIds = null;
                 modified = false;
