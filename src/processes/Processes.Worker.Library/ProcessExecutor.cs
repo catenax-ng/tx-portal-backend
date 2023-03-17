@@ -82,9 +82,10 @@ public class ProcessExecutor : IProcessExecutor
             IEnumerable<ProcessStepTypeId>? scheduleStepTypeIds;
             IEnumerable<ProcessStepTypeId>? skipStepTypeIds;
             bool success;
+            string? processMessage = null;
             try
             {
-                (modified, resultStepStatusId, scheduleStepTypeIds, skipStepTypeIds) = await executor.ExecuteProcessStep(stepTypeId, context.AllSteps.Keys, cancellationToken).ConfigureAwait(false);
+                (modified, resultStepStatusId, scheduleStepTypeIds, skipStepTypeIds, processMessage) = await executor.ExecuteProcessStep(stepTypeId, context.AllSteps.Keys, cancellationToken).ConfigureAwait(false);
                 success = true;
             }
             catch(Exception e) when (e is not SystemException)
@@ -99,7 +100,7 @@ public class ProcessExecutor : IProcessExecutor
             {
                 yield return IProcessExecutor.ProcessExecutionResult.Unmodified;
             }
-            modified |= SetProcessStepStatus(stepTypeId, resultStepStatusId, context);
+            modified |= SetProcessStepStatus(stepTypeId, resultStepStatusId, context, processMessage);
             modified |= SkipProcessStepTypeIds(skipStepTypeIds, context);
             modified |= ScheduleProcessStepTypeIds(scheduleStepTypeIds, context);
 
@@ -141,7 +142,7 @@ public class ProcessExecutor : IProcessExecutor
         var modified = false;
         foreach (var skipStepTypeId in skipStepTypeIds)
         {
-            var skippedStep = SetProcessStepStatus(skipStepTypeId, ProcessStepStatusId.SKIPPED, context);
+            var skippedStep = SetProcessStepStatus(skipStepTypeId, ProcessStepStatusId.SKIPPED, context, null);
             if (skippedStep)
             {
                 _logger.LogInformation("Skipped step {SkipStepTypeId} for process {ProcessId}", skipStepTypeId, context.ProcessId);
@@ -152,16 +153,20 @@ public class ProcessExecutor : IProcessExecutor
         return modified;
     }
 
-    private bool SetProcessStepStatus(ProcessStepTypeId stepTypeId, ProcessStepStatusId stepStatusId, ProcessContext context)
+    private bool SetProcessStepStatus(ProcessStepTypeId stepTypeId, ProcessStepStatusId stepStatusId, ProcessContext context, string? processMessage)
     {
-        if (stepStatusId == ProcessStepStatusId.TODO || !context.AllSteps.Remove(stepTypeId, out var stepIds))
+        if ((stepStatusId == ProcessStepStatusId.TODO || !context.AllSteps.Remove(stepTypeId, out var stepIds) && processMessage == null))
         {
             return false;
         }
         bool isFirst = true;
         foreach (var stepId in stepIds)
         {
-            _processStepRepository.AttachAndModifyProcessStep(stepId, null, step => { step.ProcessStepStatusId = isFirst ? stepStatusId : ProcessStepStatusId.DUPLICATE; });
+            _processStepRepository.AttachAndModifyProcessStep(stepId, null, step =>
+            {
+                step.ProcessStepStatusId = isFirst ? stepStatusId : ProcessStepStatusId.DUPLICATE;
+                step.Message = processMessage;
+            });
             isFirst = false;
         }
         if (context.Executor.IsExecutableStepTypeId(stepTypeId))

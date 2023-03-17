@@ -128,7 +128,8 @@ public sealed class ApplicationChecklistService : IApplicationChecklistService
                     },
                     null,
                     null,
-                    true)
+                    true,
+                    exception.ToString())
                 : new IApplicationChecklistService.WorkerChecklistProcessStepExecutionResult(
                     ProcessStepStatusId.FAILED,
                     item =>
@@ -138,6 +139,7 @@ public sealed class ApplicationChecklistService : IApplicationChecklistService
                     },
                     new [] { manualProcessTriggerStep },
                     null,
-                    true));
+                    true,
+                    exception.ToString()));
     }
 }
