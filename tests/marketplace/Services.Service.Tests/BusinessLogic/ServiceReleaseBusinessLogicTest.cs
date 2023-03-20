@@ -218,7 +218,7 @@ public class ServiceReleaseBusinessLogicTest
     [Fact]
     public async Task SubmitOfferConsentAsync_WithValidData_ReturnsExpected()
     {
-        var serviceId = Guid.Empty;
+        var serviceId = Guid.NewGuid();
         var iamUserId = Guid.NewGuid().ToString();
         var data = new OfferAgreementConsent(new List<AgreementConsentStatus>());
 
