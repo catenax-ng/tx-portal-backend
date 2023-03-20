@@ -67,7 +67,7 @@ jobs:
 
       - name: Convert image name to lowercase
         run: |
-          echo IMAGE_NAME_ADMINISTRATION=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
+          echo IMAGE_NAME_ADMINISTRATION=$(echo ${{ github.repository }}_administration-service | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
@@ -108,7 +108,7 @@ jobs:
 
       - name: Convert image name to lowercase
         run: |
-          echo IMAGE_NAME_CHECKLIST_WORKER=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
+          echo IMAGE_NAME_CHECKLIST_WORKER=$(echo ${{ github.repository }}_checklist-worker | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
@@ -149,7 +149,7 @@ jobs:
 
       - name: Convert image name to lowercase
         run: |
-          echo IMAGE_NAME_REGISTRATION=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV  
+          echo IMAGE_NAME_REGISTRATION=$(echo ${{ github.repository }}_registration-service | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV  
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
@@ -190,7 +190,7 @@ jobs:
 
       - name: Convert image name to lowercase
         run: |
-          echo IMAGE_NAME_PROVISIONING=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
+          echo IMAGE_NAME_PROVISIONING=$(echo ${{ github.repository }}_provisioning-service | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
@@ -231,7 +231,7 @@ jobs:
 
       - name: Convert image name to lowercase
         run: |
-          echo IMAGE_NAME_MARKETPLACE_APP=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
+          echo IMAGE_NAME_MARKETPLACE_APP=$(echo ${{ github.repository }}_marketplace-app-service | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
@@ -272,7 +272,7 @@ jobs:
 
       - name: Convert image name to lowercase
         run: |
-          echo IMAGE_NAME_PORTAL_MIGRATIONS=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
+          echo IMAGE_NAME_PORTAL_MIGRATIONS=$(echo ${{ github.repository }}_portal-migrations | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
@@ -313,7 +313,7 @@ jobs:
 
       - name: Convert image name to lowercase
         run: |
-          echo IMAGE_NAME_MAINTENANCE=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
+          echo IMAGE_NAME_MAINTENANCE=$(echo ${{ github.repository }}_maintenance-service | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
@@ -354,7 +354,7 @@ jobs:
 
       - name: Convert image name to lowercase
         run: |
-          echo IMAGE_NAME_NOTIFICATION=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
+          echo IMAGE_NAME_NOTIFICATION=$(echo ${{ github.repository }}_notification-service | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
@@ -395,7 +395,7 @@ jobs:
 
       - name: Convert image name to lowercase
         run: |
-          echo IMAGE_NAME_SERVICES=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
+          echo IMAGE_NAME_SERVICES=$(echo ${{ github.repository }}_services-service | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
@@ -436,7 +436,7 @@ jobs:
 
       - name: Convert image name to lowercase
         run: |
-          echo IMAGE_NAME_PROVISIONING_MIGRATIONS=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
+          echo IMAGE_NAME_PROVISIONING_MIGRATIONS=$(echo ${{ github.repository }}_provisioning-migrations | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
