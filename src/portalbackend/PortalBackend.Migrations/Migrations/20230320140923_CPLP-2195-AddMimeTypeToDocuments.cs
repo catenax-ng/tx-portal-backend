@@ -61,7 +61,11 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                     { 4, "SVG" },
                     { 5, "TIFF" },
                     { 6, "PDF" },
-                    { 7, "JSON" }
+                    { 7, "JSON" },
+                    { 8, "PEM" },
+                    { 9, "CA_CERT" },
+                    { 10, "PKX_CER" },
+                    { 11, "OCTET" }
                 });
 
             migrationBuilder.Sql("UPDATE portal.documents SET media_type_id = 1 where document_name ILIKE '%.jpg'");

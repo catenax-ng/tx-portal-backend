@@ -15,6 +15,10 @@ public class ContentTypeMapperExtensionsTests
     [InlineData(MediaTypeId.JSON, "application/json")]
     [InlineData(MediaTypeId.JPEG, "image/jpeg")]
     [InlineData(MediaTypeId.TIFF, "image/tiff")]
+    [InlineData(MediaTypeId.PEM, "application/x-pem-file")]
+    [InlineData(MediaTypeId.CA_CERT, "application/x-x509-ca-cert")]
+    [InlineData(MediaTypeId.PKX_CER, "application/pkix-cert")]
+    [InlineData(MediaTypeId.OCTET, "application/octet-stream")]
     public void MapToMediaType_WithValid_ReturnsExpected(MediaTypeId mediaTypeId, string result)
     {
         var mediaType = mediaTypeId.MapToMediaType();
@@ -38,6 +42,10 @@ public class ContentTypeMapperExtensionsTests
     [InlineData(MediaTypeId.JSON, "application/json")]
     [InlineData(MediaTypeId.JPEG, "image/jpeg")]
     [InlineData(MediaTypeId.TIFF, "image/tiff")]
+    [InlineData(MediaTypeId.PEM, "application/x-pem-file")]
+    [InlineData(MediaTypeId.CA_CERT, "application/x-x509-ca-cert")]
+    [InlineData(MediaTypeId.PKX_CER, "application/pkix-cert")]
+    [InlineData(MediaTypeId.OCTET, "application/octet-stream")]
     public void ParseMediaTypeId_WithValid_ReturnsExpected(MediaTypeId expectedResult, string mediaType)
     {
         var result = mediaType.ParseMediaTypeId();

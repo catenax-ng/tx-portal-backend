@@ -2652,6 +2652,26 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         {
                             Id = 7,
                             Label = "JSON"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Label = "PEM"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Label = "CA_CERT"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Label = "PKX_CER"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            Label = "OCTET"
                         });
                 });
 

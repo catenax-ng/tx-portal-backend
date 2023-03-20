@@ -37,6 +37,10 @@ public static class ContentTypeMapperExtensions
             MediaTypeId.TIFF  => MediaTypeNames.Image.Tiff,
             MediaTypeId.PDF  => MediaTypeNames.Application.Pdf,
             MediaTypeId.JSON  => MediaTypeNames.Application.Json,
+            MediaTypeId.PEM  => "application/x-pem-file",
+            MediaTypeId.CA_CERT  => "application/x-x509-ca-cert",
+            MediaTypeId.PKX_CER  => "application/pkix-cert",
+            MediaTypeId.OCTET  => MediaTypeNames.Application.Octet,
             _ => throw new ConflictException($"document mediatype {mediaTypeId} is not supported")
         };
     }
@@ -52,6 +56,10 @@ public static class ContentTypeMapperExtensions
             MediaTypeNames.Image.Tiff => MediaTypeId.TIFF,
             MediaTypeNames.Application.Pdf => MediaTypeId.PDF,
             MediaTypeNames.Application.Json => MediaTypeId.JSON,
+            "application/x-pem-file" => MediaTypeId.PEM,
+            "application/x-x509-ca-cert" => MediaTypeId.CA_CERT, 
+            "application/pkix-cert" => MediaTypeId.PKX_CER,
+            MediaTypeNames.Application.Octet => MediaTypeId.OCTET,
             _ => throw new UnsupportedMediaTypeException($"mediaType '{mediaType}' is not supported")
         };
     }
