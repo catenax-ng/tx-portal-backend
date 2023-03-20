@@ -32,8 +32,8 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migrations
 {
     [DbContext(typeof(PortalDbContext))]
-    [Migration("20230316110754_cplp-1538-companyAssignedRolesAudit")]
-    partial class cplp1538companyAssignedRolesAudit
+    [Migration("20230320125008_CPLP-1538-AddCompanyAssignedRolesAudit")]
+    partial class CPLP1538AddCompanyAssignedRolesAudit
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -3258,9 +3258,18 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<DateTimeOffset?>("LockExpiryDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lock_expiry_date");
+
                     b.Property<int>("ProcessTypeId")
                         .HasColumnType("integer")
                         .HasColumnName("process_type_id");
+
+                    b.Property<Guid>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("version");
 
                     b.HasKey("Id")
                         .HasName("pk_processes");
@@ -3285,6 +3294,10 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                     b.Property<DateTimeOffset?>("DateLastChanged")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("date_last_changed");
+
+                    b.Property<string>("Message")
+                        .HasColumnType("text")
+                        .HasColumnName("message");
 
                     b.Property<Guid>("ProcessId")
                         .HasColumnType("uuid")

@@ -25,7 +25,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migrations
 {
-    public partial class cplp1538companyAssignedRolesAudit : Migration
+    public partial class CPLP1538AddCompanyAssignedRolesAudit : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
