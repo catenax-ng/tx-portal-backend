@@ -118,7 +118,7 @@ public class ServiceReleaseController : ControllerBase
     /// <response code="404">App does not exist.</response>
     /// <response code="403">User not associated with provider company.</response>
     [HttpGet]
-    [Route("{serviceId}/serviceStatus")]
+    [Route("{serviceId}/serviceStatus", Name = nameof(GetServiceDetailsForStatusAsync))]
     [Authorize(Roles = "add_service_offering")]
     [ProducesResponseType(typeof(OfferProviderResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
