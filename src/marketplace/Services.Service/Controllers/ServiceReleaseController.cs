@@ -120,9 +120,9 @@ public class ServiceReleaseController : ControllerBase
     [HttpGet]
     [Route("{serviceId}/serviceStatus", Name = nameof(GetServiceDetailsForStatusAsync))]
     [Authorize(Roles = "add_service_offering")]
-    [ProducesResponseType(typeof(OfferProviderResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ServiceProviderResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
-    public Task<OfferProviderResponse> GetServiceDetailsForStatusAsync([FromRoute] Guid serviceId) =>
+    public Task<ServiceProviderResponse> GetServiceDetailsForStatusAsync([FromRoute] Guid serviceId) =>
         this.WithIamUserId(iamUserId => _serviceReleaseBusinessLogic.GetServiceDetailsForStatusAsync(serviceId, iamUserId));
 }

@@ -375,7 +375,8 @@ public class OfferRepository : IOfferRepository
                     offer.ContactNumber,
                     offer.Documents.Select(d => new DocumentTypeData(d.DocumentTypeId, d.Id, d.DocumentName)),
                     offer.SalesManagerId,
-                    offer.OfferAssignedPrivacyPolicies.Select(x => x.PrivacyPolicyId)),
+                    offer.OfferAssignedPrivacyPolicies.Select(x => x.PrivacyPolicyId),
+                    offer.ServiceDetails.Select(x => x.ServiceTypeId)),
                 offer.ProviderCompany!.CompanyUsers.Any(companyUser => companyUser.IamUser!.UserEntityId == userId)
                 ))
             .SingleOrDefaultAsync();

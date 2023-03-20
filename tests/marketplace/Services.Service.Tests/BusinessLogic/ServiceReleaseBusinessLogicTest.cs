@@ -200,6 +200,7 @@ public class ServiceReleaseBusinessLogicTest
         var data = _fixture.Build<OfferProviderResponse>()
             .With(x => x.Title, "test title")
             .With(x => x.ContactEmail, "info@test.de")
+            .With(x => x.ServiceTypeIds, new [] {ServiceTypeId.DATASPACE_SERVICE, ServiceTypeId.CONSULTANCE_SERVICE})
             .Create();
 
         A.CallTo(() => _offerService.GetProviderOfferDetailsForStatusAsync(serviceId, iamUserId, OfferTypeId.SERVICE))
@@ -210,6 +211,7 @@ public class ServiceReleaseBusinessLogicTest
         result.Should().NotBeNull();
         result.Title.Should().Be("test title");
         result.ContactEmail.Should().Be("info@test.de");
+        result.ServiceTypeIds.Should().HaveCount(2);
     }
 
     private void SetupRepositories()

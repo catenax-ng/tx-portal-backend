@@ -1,4 +1,4 @@
-/********************************************************************************
+﻿/********************************************************************************
  * Copyright (c) 2021, 2023 BMW Group AG
  * Copyright (c) 2021, 2023 Contributors to the Eclipse Foundation
  *
@@ -18,17 +18,18 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Models;
+namespace Org.Eclipse.TractusX.Portal.Backend.Services.Service.ViewModels;
 
-public record OfferProviderResponse(
+public record ServiceProviderResponse(
     string? Title, 
     string Provider, 
     Guid LeadPictureId, 
     string? ProviderName, 
-    IEnumerable<AppUseCaseData> UseCase, 
+    IEnumerable<string> UseCase, 
     IEnumerable<LocalizedDescription> Descriptions, 
     IEnumerable<OfferAgreement> Agreements, 
     IEnumerable<string> SupportedLanguageCodes, 
@@ -39,22 +40,5 @@ public record OfferProviderResponse(
     string? ContactNumber, 
     IDictionary<DocumentTypeId, IEnumerable<DocumentData>> Documents,
     Guid? SalesManagerId,
-    IEnumerable<PrivacyPolicyId> PrivacyPolicies,
     IEnumerable<ServiceTypeId> ServiceTypeIds
 );
-
-/// <summary>
-/// Model for Agreement and Consent Status
-/// </summary>
-/// <param name="Id"></param>
-/// <param name="Name"></param>
-/// <param name="ConsentStatus"></param>
-/// <returns></returns>
-public record OfferAgreement(Guid? Id, string? Name, string? ConsentStatus);
-
-/// <summary>
-/// Model for Document
-/// </summary>
-/// <param name="documentId"></param>
-/// <param name="documentName"></param>
-public record DocumentData(Guid documentId, string documentName);
