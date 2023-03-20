@@ -71,11 +71,10 @@ public interface IAgreementRepository
     /// Return matching Agreement ,Consent,CompanyUserId and CompanyId for agreement category app_contract , offer id and offer status created
     /// </summary>
     /// <param name="appId"></param>
-    /// <param name="userId"></param>
+    /// <param name="iamUserId"></param>
     /// <param name="statusId"></param>
-    /// <param name="categoryId"></param>
+    /// <param name="offerTypeId"></param>
     /// <returns></returns>
-    
     Task<(OfferAgreementConsentUpdate OfferAgreementConsentUpdate, bool IsProviderCompany)> GetOfferAgreementConsent(Guid appId, string iamUserId, OfferStatusId statusId, OfferTypeId offerTypeId);
 
     /// <summary>

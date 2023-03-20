@@ -190,7 +190,7 @@ public class OfferService : IOfferService
             result.Add(new ConsentStatusData(existing.ConsentId, consentStatus));
         }
 
-        result.AddRange(dbAgreements.Select(x => new ConsentStatusData(x.ConsentId, x.ConsentStatusId)).Except(result));
+        result.AddRange(dbAgreements.ExceptBy(result.Select(x => x.ConsentId), a => a.ConsentId).Select(x => new ConsentStatusData(x.ConsentId, x.ConsentStatusId)));
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
         return result;
     }
