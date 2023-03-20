@@ -1,4 +1,6 @@
-﻿namespace PortalBackend.DBAccess.Models;
+﻿using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+
+namespace PortalBackend.DBAccess.Models;
 
 public record OfferDocumentContentData(
     bool IsValidDocumentType,
@@ -7,5 +9,5 @@ public record OfferDocumentContentData(
     bool IsInactive,
     byte[]? Content,
     string FileName,
-    string MimeType
+    DocumentMediaTypeId MediaType
 );

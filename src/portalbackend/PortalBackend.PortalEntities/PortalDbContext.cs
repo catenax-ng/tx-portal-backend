@@ -98,6 +98,7 @@ public class PortalDbContext : DbContext
     public virtual DbSet<CountryAssignedIdentifier> CountryAssignedIdentifiers { get; set; } = default!;
     public virtual DbSet<Document> Documents { get; set; } = default!;
     public virtual DbSet<DocumentType> DocumentTypes { get; set; } = default!;
+    public virtual DbSet<DocumentMediaType> DocumentMediaTypes { get; set; } = default!;
     public virtual DbSet<DocumentStatus> DocumentStatus { get; set; } = default!;
     public virtual DbSet<IamClient> IamClients { get; set; } = default!;
     public virtual DbSet<IamIdentityProvider> IamIdentityProviders { get; set; } = default!;
@@ -808,6 +809,13 @@ public class PortalDbContext : DbContext
                 Enum.GetValues(typeof(DocumentTypeId))
                     .Cast<DocumentTypeId>()
                     .Select(e => new DocumentType(e))
+            );
+
+        modelBuilder.Entity<DocumentMediaType>()
+            .HasData(
+                Enum.GetValues(typeof(DocumentMediaTypeId))
+                    .Cast<DocumentMediaTypeId>()
+                    .Select(e => new DocumentMediaType(e))
             );
 
         modelBuilder.Entity<DocumentStatus>()

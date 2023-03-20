@@ -155,8 +155,8 @@ public class SdFactoryServiceTests
 
     private void SetupRepositoryMethods()
     { 
-        A.CallTo(() => _documentRepository.CreateDocument(A<string>._, A<byte[]>._, A<byte[]>._, A<string>._, A<DocumentTypeId>._, A<Action<Document>?>._))
-            .Invokes((string documentName, byte[] documentContent, byte[] hash, string mimeType, DocumentTypeId documentTypeId, Action<Document>? action) =>
+        A.CallTo(() => _documentRepository.CreateDocument(A<string>._, A<byte[]>._, A<byte[]>._, A<DocumentMediaTypeId>._, A<DocumentTypeId>._, A<Action<Document>?>._))
+            .Invokes((string documentName, byte[] documentContent, byte[] hash, DocumentMediaTypeId mimeType, DocumentTypeId documentTypeId, Action<Document>? action) =>
             {
                 var document = new Document(Guid.NewGuid(), documentContent, hash, documentName, mimeType, DateTimeOffset.UtcNow, DocumentStatusId.PENDING, documentTypeId);
                 action?.Invoke(document);

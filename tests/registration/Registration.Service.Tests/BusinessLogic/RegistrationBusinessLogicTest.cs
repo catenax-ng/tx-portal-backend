@@ -1090,8 +1090,8 @@ public class RegistrationBusinessLogicTest
         var documentId = Guid.NewGuid();
         var file = FormFileHelper.GetFormFile("this is just a test", "superFile.pdf", "application/pdf");
         var documents = new List<Document>();
-        A.CallTo(() => _documentRepository.CreateDocument(A<string>._, A<byte[]>._, A<byte[]>._, A<string>._, A<DocumentTypeId>._,A<Action<Document>?>._))
-            .Invokes((string documentName, byte[] documentContent, byte[] hash, string mimeType, DocumentTypeId documentTypeId, Action<Document>? action) =>
+        A.CallTo(() => _documentRepository.CreateDocument(A<string>._, A<byte[]>._, A<byte[]>._, A<DocumentMediaTypeId>._, A<DocumentTypeId>._,A<Action<Document>?>._))
+            .Invokes((string documentName, byte[] documentContent, byte[] hash, DocumentMediaTypeId mimeType, DocumentTypeId documentTypeId, Action<Document>? action) =>
             {
                 var document = new Document(documentId, documentContent, hash, documentName, mimeType, DateTimeOffset.UtcNow, DocumentStatusId.PENDING, documentTypeId);
                 action?.Invoke(document);
@@ -1997,7 +1997,7 @@ public class RegistrationBusinessLogicTest
         A.CallTo(() => _documentRepository.GetDocumentIdCompanyUserSameAsIamUserAsync(documentId, _iamUserId))
             .ReturnsLazily(() => new ValueTuple<Guid, bool>(documentId, true));
         A.CallTo(() => _documentRepository.GetDocumentByIdAsync(documentId))
-            .ReturnsLazily(() => new Document(documentId, content, content, "test.pdf", "application/pdf", DateTimeOffset.UtcNow, DocumentStatusId.LOCKED, DocumentTypeId.APP_CONTRACT));
+            .ReturnsLazily(() => new Document(documentId, content, content, "test.pdf", DocumentMediaTypeId.PDF, DateTimeOffset.UtcNow, DocumentStatusId.LOCKED, DocumentTypeId.APP_CONTRACT));
         var sut = new RegistrationBusinessLogic(Options.Create(new RegistrationSettings()), null!, null!, null!, null!, null!, _portalRepositories, null!);
 
         // Act

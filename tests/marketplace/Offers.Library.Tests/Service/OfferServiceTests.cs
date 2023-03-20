@@ -676,7 +676,7 @@ public class OfferServiceTests
         A.CallTo(() => _documentRepository.AttachAndModifyDocument(A<Guid>._,A<Action<Document>>._, A<Action<Document>>._))
             .Invokes((Guid DocId, Action<Document>? initialize, Action<Document> modify)
                 => {
-                        var document = new Document(DocId, null!, null!, null!, null!, default, default, default);
+                        var document = new Document(DocId, null!, null!, null!, default, default, default, default);
                         initialize?.Invoke(document);
                         modify(document);
                     });
@@ -889,7 +889,7 @@ public class OfferServiceTests
         A.CallTo(() => _documentRepository.AttachAndModifyDocument(A<Guid>._,A<Action<Document>>._, A<Action<Document>>._))
             .Invokes((Guid DocId, Action<Document>? initialize, Action<Document> modify)
                 => {
-                        var document = new Document(DocId, null!, null!, null!, null!, default, default, default);
+                        var document = new Document(DocId, null!, null!, null!, default, default, default, default);
                         initialize?.Invoke(document);
                         modify(document);
                     });
@@ -1119,8 +1119,8 @@ public class OfferServiceTests
         var documents = new List<Document>();
         var offerAssignedDocuments = new List<OfferAssignedDocument>();
         SetupCreateDocument(id, offerTypeId);
-        A.CallTo(() => _documentRepository.CreateDocument(A<string>._, A<byte[]>._, A<byte[]>._, A<string>._, A<DocumentTypeId>._,A<Action<Document>?>._))
-            .Invokes((string documentName, byte[] documentContent, byte[] hash, string mimeType, DocumentTypeId documentType, Action<Document>? setupOptionalFields) =>
+        A.CallTo(() => _documentRepository.CreateDocument(A<string>._, A<byte[]>._, A<byte[]>._, A<DocumentMediaTypeId>._, A<DocumentTypeId>._,A<Action<Document>?>._))
+            .Invokes((string documentName, byte[] documentContent, byte[] hash, DocumentMediaTypeId mimeType, DocumentTypeId documentType, Action<Document>? setupOptionalFields) =>
             {
                 var document = new Document(documentId, documentContent, hash, documentName, mimeType, DateTimeOffset.UtcNow, DocumentStatusId.PENDING, documentType);
                 setupOptionalFields?.Invoke(document);

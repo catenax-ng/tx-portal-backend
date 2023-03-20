@@ -22,6 +22,7 @@ using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Web;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Extensions;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
@@ -67,7 +68,7 @@ public class DocumentsBusinessLogic : IDocumentsBusinessLogic
             throw new UnexpectedConditionException("documentContent should never be null here");
         }
 
-        return (documentDetails.FileName, documentDetails.Content, documentDetails.MimeType);
+        return (documentDetails.FileName, documentDetails.Content, documentDetails.MediaType.MapToMediaType());
     }
 
     /// <inheritdoc />
@@ -80,7 +81,7 @@ public class DocumentsBusinessLogic : IDocumentsBusinessLogic
         {
             throw new NotFoundException($"Self description document {documentId} does not exist");
         }
-        return (documentDetails.FileName, documentDetails.Content, documentDetails.MimeType);
+        return (documentDetails.FileName, documentDetails.Content, documentDetails.MediaType.MapToMediaType());
     }
 
     /// <inheritdoc />

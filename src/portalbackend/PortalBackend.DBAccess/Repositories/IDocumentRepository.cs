@@ -36,11 +36,11 @@ public interface IDocumentRepository
     /// <param name="documentName">The documents name</param>
     /// <param name="documentContent">The document itself</param>
     /// <param name="hash">Hash of the document</param>
-    /// <param name="mimeType">The documents mimeType</param>
+    /// <param name="mediaType">The documents mimeType</param>
     /// <param name="documentType">the document type id</param>
     /// <param name="setupOptionalFields">Action to setup the additional fields</param>
     /// <returns>Returns the created document</returns>
-    Document CreateDocument(string documentName, byte[] documentContent, byte[] hash, string mimeType, DocumentTypeId documentType, Action<Document>? setupOptionalFields);
+    Document CreateDocument(string documentName, byte[] documentContent, byte[] hash, DocumentMediaTypeId mediaType, DocumentTypeId documentType, Action<Document>? setupOptionalFields);
 
     /// <summary>
     /// Gets the document with the given id from the persistence layer.
@@ -73,7 +73,7 @@ public interface IDocumentRepository
     /// <param name="documentId">id of the document</param>
     /// <param name="iamUserId">id of the iamUser</param>
     /// <returns>Returns the document data</returns>
-    Task<(byte[]? Content, string FileName, string MimeType, bool IsUserInCompany)> GetDocumentDataAndIsCompanyUserAsync(Guid documentId, string iamUserId);
+    Task<(byte[]? Content, string FileName, DocumentMediaTypeId MediaType, bool IsUserInCompany)> GetDocumentDataAndIsCompanyUserAsync(Guid documentId, string iamUserId);
 
     /// <summary>
     /// Gets the document data for the given id and type
@@ -81,7 +81,7 @@ public interface IDocumentRepository
     /// <param name="documentId">id of the document</param>
     /// <param name="documentTypeId">type of the document</param>
     /// <returns>Returns the document data</returns>
-    Task<(byte[] Content, string FileName, string MimeType)> GetDocumentDataByIdAndTypeAsync(Guid documentId, DocumentTypeId documentTypeId);
+    Task<(byte[] Content, string FileName, DocumentMediaTypeId MediaType)> GetDocumentDataByIdAndTypeAsync(Guid documentId, DocumentTypeId documentTypeId);
     
     /// <summary>
     ///Deleting document record and document file from the portal db/document storage location

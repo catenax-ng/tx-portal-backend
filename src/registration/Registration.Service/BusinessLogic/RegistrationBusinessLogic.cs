@@ -34,6 +34,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Bpn;
 using Org.Eclipse.TractusX.Portal.Backend.Registration.Service.Bpn.Model;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Extensions;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Registration.Service.BusinessLogic;
 
@@ -211,7 +212,7 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
             throw new ArgumentException($"document {document.FileName} transmitted length {document.Length} doesn't match actual length {ms.Length}.");
         }
         
-        _portalRepositories.GetInstance<IDocumentRepository>().CreateDocument(documentName, documentContent, hash, document.ContentType, documentTypeId, doc =>
+        _portalRepositories.GetInstance<IDocumentRepository>().CreateDocument(documentName, documentContent, hash, document.ContentType.MapToDocumentMediaType(), documentTypeId, doc =>
         {
             doc.CompanyUserId = companyUserId;
         });
@@ -233,7 +234,7 @@ public class RegistrationBusinessLogic : IRegistrationBusinessLogic
         }
 
         var document = await documentRepository.GetDocumentByIdAsync(documentId).ConfigureAwait(false);
-        return (document!.DocumentName, document.DocumentContent, document.MimeType);
+        return (document!.DocumentName, document.DocumentContent, document.DocumentMediaTypeId.MapToMediaType());
     }
 
     public async IAsyncEnumerable<CompanyApplicationData> GetAllApplicationsForUserWithStatus(string userId)

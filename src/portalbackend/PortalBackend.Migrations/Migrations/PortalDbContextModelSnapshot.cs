@@ -2163,6 +2163,10 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         .HasColumnType("bytea")
                         .HasColumnName("document_hash");
 
+                    b.Property<int>("DocumentMediaTypeId")
+                        .HasColumnType("integer")
+                        .HasColumnName("document_media_type_id");
+
                     b.Property<string>("DocumentName")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -2177,16 +2181,14 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         .HasColumnType("integer")
                         .HasColumnName("document_type_id");
 
-                    b.Property<string>("MimeType")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("mime_type");
-
                     b.HasKey("Id")
                         .HasName("pk_documents");
 
                     b.HasIndex("CompanyUserId")
                         .HasDatabaseName("ix_documents_company_user_id");
+
+                    b.HasIndex("DocumentMediaTypeId")
+                        .HasDatabaseName("ix_documents_document_media_type_id");
 
                     b.HasIndex("DocumentStatusId")
                         .HasDatabaseName("ix_documents_document_status_id");
@@ -2195,6 +2197,61 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         .HasDatabaseName("ix_documents_document_type_id");
 
                     b.ToTable("documents", "portal");
+                });
+
+            modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.DocumentMediaType", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("label");
+
+                    b.HasKey("Id")
+                        .HasName("pk_document_media_types");
+
+                    b.ToTable("document_media_types", "portal");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Label = "JPEG"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Label = "GIF"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Label = "PNG"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Label = "SVG"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Label = "TIFF"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Label = "PDF"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Label = "JSON"
+                        });
                 });
 
             modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.DocumentStatus", b =>
@@ -4451,6 +4508,13 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         .HasForeignKey("CompanyUserId")
                         .HasConstraintName("fk_documents_company_users_company_user_id");
 
+                    b.HasOne("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.DocumentMediaType", "DocumentMediaType")
+                        .WithMany("Documents")
+                        .HasForeignKey("DocumentMediaTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_documents_document_media_types_document_media_type_id");
+
                     b.HasOne("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.DocumentStatus", "DocumentStatus")
                         .WithMany("Documents")
                         .HasForeignKey("DocumentStatusId")
@@ -4466,6 +4530,8 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         .HasConstraintName("fk_documents_document_types_document_type_id");
 
                     b.Navigation("CompanyUser");
+
+                    b.Navigation("DocumentMediaType");
 
                     b.Navigation("DocumentStatus");
 
@@ -5070,6 +5136,11 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                     b.Navigation("Connector");
 
                     b.Navigation("Consents");
+                });
+
+            modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.DocumentMediaType", b =>
+                {
+                    b.Navigation("Documents");
                 });
 
             modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.DocumentStatus", b =>

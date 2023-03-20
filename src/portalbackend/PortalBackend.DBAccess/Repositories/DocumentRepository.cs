@@ -42,14 +42,14 @@ public class DocumentRepository : IDocumentRepository
     }
     
     /// <inheritdoc />
-    public Document CreateDocument(string documentName, byte[] documentContent, byte[] hash, string mimeType, DocumentTypeId documentType, Action<Document>? setupOptionalFields)
+    public Document CreateDocument(string documentName, byte[] documentContent, byte[] hash, DocumentMediaTypeId mediaTypeId, DocumentTypeId documentType, Action<Document>? setupOptionalFields)
     {
         var document = new Document(
             Guid.NewGuid(),
             documentContent,
             hash,
             documentName,
-            mimeType,
+            mediaTypeId,
             DateTimeOffset.UtcNow,
             DocumentStatusId.PENDING,
             documentType);
@@ -98,30 +98,30 @@ public class DocumentRepository : IDocumentRepository
             .SingleOrDefaultAsync();
 
     /// <inheritdoc />
-    public Task<(byte[]? Content, string FileName, string MimeType, bool IsUserInCompany)> GetDocumentDataAndIsCompanyUserAsync(Guid documentId, string iamUserId) =>
+    public Task<(byte[]? Content, string FileName, DocumentMediaTypeId MediaType, bool IsUserInCompany)> GetDocumentDataAndIsCompanyUserAsync(Guid documentId, string iamUserId) =>
         this._dbContext.Documents
             .Where(x => x.Id == documentId)
             .Select(x => new {
                 Document = x,
                 IsUserInSameCompany = x.CompanyUser!.Company!.CompanyUsers.Any(cu => cu.IamUser!.UserEntityId == iamUserId)
             })
-            .Select(x => new ValueTuple<byte[]?, string, string, bool>(
+            .Select(x => new ValueTuple<byte[]?, string, DocumentMediaTypeId, bool>(
                 x.IsUserInSameCompany ? x.Document.DocumentContent : null,
                 x.Document.DocumentName,
-                x.Document.MimeType,
+                x.Document.DocumentMediaTypeId,
                 x.IsUserInSameCompany))
             .SingleOrDefaultAsync();
 
     /// <inheritdoc />
-    public Task<(byte[] Content, string FileName, string MimeType)> GetDocumentDataByIdAndTypeAsync(Guid documentId, DocumentTypeId documentTypeId) =>
+    public Task<(byte[] Content, string FileName, DocumentMediaTypeId MediaType)> GetDocumentDataByIdAndTypeAsync(Guid documentId, DocumentTypeId documentTypeId) =>
         _dbContext.Documents
         .Where(x => x.Id == documentId && x.DocumentTypeId == documentTypeId)
-        .Select(x => new ValueTuple<byte[], string, string>(x.DocumentContent, x.DocumentName, x.MimeType))
+        .Select(x => new ValueTuple<byte[], string, DocumentMediaTypeId>(x.DocumentContent, x.DocumentName, x.DocumentMediaTypeId))
         .SingleOrDefaultAsync();
 
     /// <inheritdoc />
     public void RemoveDocument(Guid documentId) => 
-        _dbContext.Documents.Remove(new Document(documentId, null!, null!, null!, null!, default, default, default));
+        _dbContext.Documents.Remove(new Document(documentId, null!, null!, null!, default, default, default, default));
 
     /// <inheritdoc />
     public Task<Document?> GetDocumentByIdAsync(Guid documentId) =>
@@ -147,7 +147,7 @@ public class DocumentRepository : IDocumentRepository
     /// <inheritdoc />
     public void AttachAndModifyDocument(Guid documentId, Action<Document>? initialize, Action<Document> modify)
     {
-        var document = new Document(documentId, null!, null!, null!, null!, default, default, default);
+        var document = new Document(documentId, null!, null!, null!, default, default, default, default);
         initialize?.Invoke(document);
         _dbContext.Attach(document);
         modify(document);
@@ -191,7 +191,7 @@ public class DocumentRepository : IDocumentRepository
                 x.IsInactive,
                 x.IsValidDocumentType && x.IsDocumentLinkedToOffer && x.IsValidOfferType && !x.IsInactive ? x.Document.DocumentContent : null,
                 x.Document.DocumentName,
-                x.Document.MimeType
+                x.Document.DocumentMediaTypeId
             ))
             .SingleOrDefaultAsync(cancellationToken);
 
@@ -220,5 +220,5 @@ public class DocumentRepository : IDocumentRepository
 
     /// <inheritdoc />
     public void RemoveDocuments(IEnumerable<Guid> documentIds) => 
-        _dbContext.Documents.RemoveRange(documentIds.Select(documentId=> new Document(documentId, null!, null!, null!, null!, default, default, default)));
+        _dbContext.Documents.RemoveRange(documentIds.Select(documentId=> new Document(documentId, null!, null!, null!, default, default, default, default)));
 }
