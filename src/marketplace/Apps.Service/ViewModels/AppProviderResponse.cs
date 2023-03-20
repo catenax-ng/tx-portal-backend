@@ -24,6 +24,25 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
 
+/// <summary>
+/// Response for the app creation
+/// </summary>
+/// <param name="Title">title of the offer</param>
+/// <param name="Provider">provider name</param>
+/// <param name="LeadPictureId">id of the lead picture</param>
+/// <param name="ProviderName">provider name</param>
+/// <param name="UseCase">list of use cases</param>
+/// <param name="Descriptions">the offer descriptions</param>
+/// <param name="Agreements">the assigned agreements</param>
+/// <param name="SupportedLanguageCodes">the supported language codes</param>
+/// <param name="Price">the app price</param>
+/// <param name="Images">list of the images</param>
+/// <param name="ProviderUri">the provider uri</param>
+/// <param name="ContactEmail">contact email</param>
+/// <param name="ContactNumber">contact number</param>
+/// <param name="Documents">list of linked documents</param>
+/// <param name="SalesManagerId">id of the salesmanager</param>
+/// <param name="PrivacyPolicies">the privacy policies</param>
 public record AppProviderResponse (
     string? Title, 
     string Provider, 
