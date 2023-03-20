@@ -161,10 +161,10 @@ public class OfferService : IOfferService
         return result.OfferAgreementConsent;
     }
 
-    public async Task<int> CreateOrUpdateProviderOfferAgreementConsent(Guid offerId, OfferAgreementConsent offerAgreementConsent, string iamUserId, OfferTypeId offerTypeId)
+    public async Task<IEnumerable<ConsentStatusData>> CreateOrUpdateProviderOfferAgreementConsent(Guid offerId, OfferAgreementConsent offerAgreementConsent, string iamUserId, OfferTypeId offerTypeId)
     {
+        var result = new List<ConsentStatusData>();
         var consentRepository = _portalRepositories.GetInstance<IConsentRepository>();
-
         var (companyUserId, companyId, dbAgreements) = await GetProviderOfferAgreementConsent(offerId, iamUserId, OfferStatusId.CREATED, offerTypeId).ConfigureAwait(false);
 
         foreach (var agreementId in offerAgreementConsent.Agreements
@@ -173,10 +173,11 @@ public class OfferService : IOfferService
         {
             var consent = consentRepository.CreateConsent(agreementId, companyId, companyUserId, ConsentStatusId.ACTIVE);
             consentRepository.CreateConsentAssignedOffer(consent.Id, offerId);
+            result.Add(new ConsentStatusData(consent.Id, ConsentStatusId.ACTIVE));
         }
         foreach (var (agreementId, consentStatus) in offerAgreementConsent.Agreements
-                .IntersectBy(dbAgreements.Select(d => d.AgreementId), input => input.AgreementId)
-                .Select(input => (input.AgreementId, input.ConsentStatusId)))
+                     .IntersectBy(dbAgreements.Select(d => d.AgreementId), input => input.AgreementId)
+                     .Select(input => (input.AgreementId, input.ConsentStatusId)))
         {
             var existing = dbAgreements.First(d => d.AgreementId == agreementId);
             _portalRepositories.Attach(new Consent(existing.ConsentId), consent =>
@@ -186,9 +187,12 @@ public class OfferService : IOfferService
                     consent.ConsentStatusId = consentStatus;
                 }
             });
+            result.Add(new ConsentStatusData(existing.ConsentId, consentStatus));
         }
 
-        return await _portalRepositories.SaveAsync().ConfigureAwait(false);
+        result.AddRange(dbAgreements.Select(x => new ConsentStatusData(x.ConsentId, x.ConsentStatusId)).Except(result));
+        await _portalRepositories.SaveAsync().ConfigureAwait(false);
+        return result;
     }
 
     private async Task<OfferAgreementConsentUpdate> GetProviderOfferAgreementConsent(Guid offerId, string iamUserId, OfferStatusId statusId, OfferTypeId offerTypeId)
