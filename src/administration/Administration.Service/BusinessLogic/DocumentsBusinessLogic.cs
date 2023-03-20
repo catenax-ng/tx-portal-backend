@@ -140,6 +140,10 @@ public class DocumentsBusinessLogic : IDocumentsBusinessLogic
         var documentRepository = _portalRepositories.GetInstance<IDocumentRepository>();
 
         var documentDetails = await documentRepository.GetDocumentAsync(documentId, _settings.FrameDocumentTypeIds).ConfigureAwait(false);
+        if(documentDetails == default)
+        {
+            throw new NotFoundException($"document {documentId} does not exist.");
+        }
         if (!documentDetails.IsDocumentTypeMatch)
         {
             throw new NotFoundException($"document {documentId} does not exist.");

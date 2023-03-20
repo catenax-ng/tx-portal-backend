@@ -228,6 +228,22 @@ public class DocumentsBusinessLogicTests
         result.Message.Should().Be($"document {documentId} does not exist.");
     }
 
+    [Fact]
+    public async Task GetFrameDocumentAsync_WithInvalidDocumentId_ThrowsNotFoundException()
+    {
+        // Arrange
+        var documentId = Guid.NewGuid();
+        A.CallTo(() => _documentRepository.GetDocumentAsync(documentId, A<IEnumerable<DocumentTypeId>>._))
+            .ReturnsLazily(() => new ValueTuple<byte[], string, bool>());
+
+        //Act
+        var Act = () => _sut.GetFrameDocumentAsync(documentId);
+        
+        // Assert
+        var result = await Assert.ThrowsAsync<NotFoundException>(Act).ConfigureAwait(false);
+        result.Message.Should().Be($"document {documentId} does not exist.");
+    }
+
     #region Setup
 
     private void SetupFakesForGetSeedData()
