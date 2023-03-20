@@ -20,40 +20,39 @@
 
 using System.Net.Mime;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
-using System.Text.RegularExpressions;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Extensions;
 
 public static class ContentTypeMapperExtensions
 {
-    public static string MapToMediaType(this DocumentMediaTypeId documentMediaType)
+    public static string MapToMediaType(this MediaTypeId mediaTypeId)
     {
-        return documentMediaType switch
+        return mediaTypeId switch
         {
-            DocumentMediaTypeId.JPEG  => MediaTypeNames.Image.Jpeg,
-            DocumentMediaTypeId.GIF  => MediaTypeNames.Image.Gif,
-            DocumentMediaTypeId.PNG  => "image/png",
-            DocumentMediaTypeId.SVG  => "image/svg+xml",
-            DocumentMediaTypeId.TIFF  => MediaTypeNames.Image.Tiff,
-            DocumentMediaTypeId.PDF  => MediaTypeNames.Application.Pdf,
-            DocumentMediaTypeId.JSON  => MediaTypeNames.Application.Json,
-            _ => throw new ConflictException($"document mimetype {documentMediaType} is not supported")
+            MediaTypeId.JPEG  => MediaTypeNames.Image.Jpeg,
+            MediaTypeId.GIF  => MediaTypeNames.Image.Gif,
+            MediaTypeId.PNG  => "image/png",
+            MediaTypeId.SVG  => "image/svg+xml",
+            MediaTypeId.TIFF  => MediaTypeNames.Image.Tiff,
+            MediaTypeId.PDF  => MediaTypeNames.Application.Pdf,
+            MediaTypeId.JSON  => MediaTypeNames.Application.Json,
+            _ => throw new ConflictException($"document mediatype {mediaTypeId} is not supported")
         };
     }
     
-    public static DocumentMediaTypeId MapToDocumentMediaType(this string mimeType)
+    public static MediaTypeId ParseMediaTypeId(this string mediaType)
     {
-        return mimeType.ToLower() switch
+        return mediaType.ToLower() switch
         {
-            MediaTypeNames.Image.Jpeg => DocumentMediaTypeId.JPEG,
-            "image/png" => DocumentMediaTypeId.PNG,
-            MediaTypeNames.Image.Gif => DocumentMediaTypeId.GIF,
-            "image/svg+xml" => DocumentMediaTypeId.SVG,
-            MediaTypeNames.Image.Tiff => DocumentMediaTypeId.TIFF,
-            MediaTypeNames.Application.Pdf => DocumentMediaTypeId.PDF,
-            MediaTypeNames.Application.Json => DocumentMediaTypeId.JSON,
-            _ => throw new UnsupportedMediaTypeException($"mimeType {mimeType} is not supported")
+            MediaTypeNames.Image.Jpeg => MediaTypeId.JPEG,
+            "image/png" => MediaTypeId.PNG,
+            MediaTypeNames.Image.Gif => MediaTypeId.GIF,
+            "image/svg+xml" => MediaTypeId.SVG,
+            MediaTypeNames.Image.Tiff => MediaTypeId.TIFF,
+            MediaTypeNames.Application.Pdf => MediaTypeId.PDF,
+            MediaTypeNames.Application.Json => MediaTypeId.JSON,
+            _ => throw new UnsupportedMediaTypeException($"mediaType '{mediaType}' is not supported")
         };
     }
 }

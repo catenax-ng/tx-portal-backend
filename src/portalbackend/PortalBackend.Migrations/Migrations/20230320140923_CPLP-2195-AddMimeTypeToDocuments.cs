@@ -29,7 +29,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<int>(
-                name: "document_media_type_id",
+                name: "media_type_id",
                 schema: "portal",
                 table: "documents",
                 type: "integer",
@@ -37,7 +37,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 defaultValue: 0);
 
             migrationBuilder.CreateTable(
-                name: "document_media_types",
+                name: "media_types",
                 schema: "portal",
                 columns: table => new
                 {
@@ -46,12 +46,12 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_document_media_types", x => x.id);
+                    table.PrimaryKey("pk_media_types", x => x.id);
                 });
 
             migrationBuilder.InsertData(
                 schema: "portal",
-                table: "document_media_types",
+                table: "media_types",
                 columns: new[] { "id", "label" },
                 values: new object[,]
                 {
@@ -64,29 +64,29 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                     { 7, "JSON" }
                 });
 
-            migrationBuilder.Sql("UPDATE portal.documents SET document_media_type_id = 1 where LOWER(document_name) LIKE '%.jpg'");
-            migrationBuilder.Sql("UPDATE portal.documents SET document_media_type_id = 1 where LOWER(document_name) LIKE '%.jpeg'");
-            migrationBuilder.Sql("UPDATE portal.documents SET document_media_type_id = 2 where LOWER(document_name) LIKE '%.gif'");
-            migrationBuilder.Sql("UPDATE portal.documents SET document_media_type_id = 3 where LOWER(document_name) LIKE '%.png'");
-            migrationBuilder.Sql("UPDATE portal.documents SET document_media_type_id = 4 where LOWER(document_name) LIKE '%.svg'");
-            migrationBuilder.Sql("UPDATE portal.documents SET document_media_type_id = 5 where LOWER(document_name) LIKE '%.tif'");
-            migrationBuilder.Sql("UPDATE portal.documents SET document_media_type_id = 5 where LOWER(document_name) LIKE '%.tiff'");
-            migrationBuilder.Sql("UPDATE portal.documents SET document_media_type_id = 6 where LOWER(document_name) LIKE '%.pdf'");
-            migrationBuilder.Sql("UPDATE portal.documents SET document_media_type_id = 7 where LOWER(document_name) LIKE '%.json'");
+            migrationBuilder.Sql("UPDATE portal.documents SET media_type_id = 1 where document_name ILIKE '%.jpg'");
+            migrationBuilder.Sql("UPDATE portal.documents SET media_type_id = 1 where document_name ILIKE '%.jpeg'");
+            migrationBuilder.Sql("UPDATE portal.documents SET media_type_id = 2 where document_name ILIKE '%.gif'");
+            migrationBuilder.Sql("UPDATE portal.documents SET media_type_id = 3 where document_name ILIKE '%.png'");
+            migrationBuilder.Sql("UPDATE portal.documents SET media_type_id = 4 where document_name ILIKE '%.svg'");
+            migrationBuilder.Sql("UPDATE portal.documents SET media_type_id = 5 where document_name ILIKE '%.tif'");
+            migrationBuilder.Sql("UPDATE portal.documents SET media_type_id = 5 where document_name ILIKE '%.tiff'");
+            migrationBuilder.Sql("UPDATE portal.documents SET media_type_id = 6 where document_name ILIKE '%.pdf'");
+            migrationBuilder.Sql("UPDATE portal.documents SET media_type_id = 7 where document_name ILIKE '%.json'");
 
             migrationBuilder.CreateIndex(
-                name: "ix_documents_document_media_type_id",
+                name: "ix_documents_media_type_id",
                 schema: "portal",
                 table: "documents",
-                column: "document_media_type_id");
+                column: "media_type_id");
 
             migrationBuilder.AddForeignKey(
-                name: "fk_documents_document_media_types_document_media_type_id",
+                name: "fk_documents_media_types_media_type_id",
                 schema: "portal",
                 table: "documents",
-                column: "document_media_type_id",
+                column: "media_type_id",
                 principalSchema: "portal",
-                principalTable: "document_media_types",
+                principalTable: "media_types",
                 principalColumn: "id",
                 onDelete: ReferentialAction.Cascade);
         }
@@ -94,21 +94,21 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "fk_documents_document_media_types_document_media_type_id",
+                name: "fk_documents_media_types_media_type_id",
                 schema: "portal",
                 table: "documents");
 
             migrationBuilder.DropTable(
-                name: "document_media_types",
+                name: "media_types",
                 schema: "portal");
 
             migrationBuilder.DropIndex(
-                name: "ix_documents_document_media_type_id",
+                name: "ix_documents_media_type_id",
                 schema: "portal",
                 table: "documents");
 
             migrationBuilder.DropColumn(
-                name: "document_media_type_id",
+                name: "media_type_id",
                 schema: "portal",
                 table: "documents");
         }

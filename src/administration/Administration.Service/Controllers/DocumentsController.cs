@@ -65,8 +65,8 @@ public class DocumentsController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status503ServiceUnavailable)]
     public async Task<ActionResult> GetDocumentContentFileAsync([FromRoute] Guid documentId)
     {
-        var (fileName, content, contentType) = await this.WithIamUserId(iamUserId => _businessLogic.GetDocumentAsync(documentId, iamUserId).ConfigureAwait(false));
-        return File(content, contentType, fileName);
+        var (fileName, content, mediaType) = await this.WithIamUserId(iamUserId => _businessLogic.GetDocumentAsync(documentId, iamUserId).ConfigureAwait(false));
+        return File(content, mediaType, fileName);
     }
 
     /// <summary>
@@ -84,8 +84,8 @@ public class DocumentsController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult> GetSelfDescriptionDocumentsAsync([FromRoute] Guid documentId)
     {
-        var (fileName, content, mimeType) = await _businessLogic.GetSelfDescriptionDocumentAsync(documentId).ConfigureAwait(false);
-        return File(content, mimeType, fileName);
+        var (fileName, content, mediaType) = await _businessLogic.GetSelfDescriptionDocumentAsync(documentId).ConfigureAwait(false);
+        return File(content, mediaType, fileName);
     }
 
     /// <summary>

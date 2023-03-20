@@ -177,7 +177,7 @@ public class SdFactoryBusinessLogic : ISdFactoryBusinessLogic
             $"SelfDescription_{title}.json",
             documentContent,
             hash,
-            DocumentMediaTypeId.JSON,
+            MediaTypeId.JSON,
             DocumentTypeId.SELF_DESCRIPTION,
             doc => { doc.DocumentStatusId = DocumentStatusId.LOCKED; });
         return document.Id;

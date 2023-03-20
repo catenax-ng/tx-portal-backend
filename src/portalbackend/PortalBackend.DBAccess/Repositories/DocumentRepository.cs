@@ -42,17 +42,17 @@ public class DocumentRepository : IDocumentRepository
     }
     
     /// <inheritdoc />
-    public Document CreateDocument(string documentName, byte[] documentContent, byte[] hash, DocumentMediaTypeId mediaType, DocumentTypeId documentType, Action<Document>? setupOptionalFields)
+    public Document CreateDocument(string documentName, byte[] documentContent, byte[] hash, MediaTypeId mediaTypeId, DocumentTypeId documentTypeId, Action<Document>? setupOptionalFields)
     {
         var document = new Document(
             Guid.NewGuid(),
             documentContent,
             hash,
             documentName,
-            mediaType,
+            mediaTypeId,
             DateTimeOffset.UtcNow,
             DocumentStatusId.PENDING,
-            documentType);
+            documentTypeId);
 
         setupOptionalFields?.Invoke(document);
         return _dbContext.Documents.Add(document).Entity;
@@ -98,25 +98,25 @@ public class DocumentRepository : IDocumentRepository
             .SingleOrDefaultAsync();
 
     /// <inheritdoc />
-    public Task<(byte[]? Content, string FileName, DocumentMediaTypeId MediaType, bool IsUserInCompany)> GetDocumentDataAndIsCompanyUserAsync(Guid documentId, string iamUserId) =>
+    public Task<(byte[]? Content, string FileName, MediaTypeId MediaTypeId, bool IsUserInCompany)> GetDocumentDataAndIsCompanyUserAsync(Guid documentId, string iamUserId) =>
         this._dbContext.Documents
             .Where(x => x.Id == documentId)
             .Select(x => new {
                 Document = x,
                 IsUserInSameCompany = x.CompanyUser!.Company!.CompanyUsers.Any(cu => cu.IamUser!.UserEntityId == iamUserId)
             })
-            .Select(x => new ValueTuple<byte[]?, string, DocumentMediaTypeId, bool>(
+            .Select(x => new ValueTuple<byte[]?, string, MediaTypeId, bool>(
                 x.IsUserInSameCompany ? x.Document.DocumentContent : null,
                 x.Document.DocumentName,
-                x.Document.DocumentMediaTypeId,
+                x.Document.MediaTypeId,
                 x.IsUserInSameCompany))
             .SingleOrDefaultAsync();
 
     /// <inheritdoc />
-    public Task<(byte[] Content, string FileName, DocumentMediaTypeId MediaType)> GetDocumentDataByIdAndTypeAsync(Guid documentId, DocumentTypeId documentTypeId) =>
+    public Task<(byte[] Content, string FileName, MediaTypeId MediaTypeId)> GetDocumentDataByIdAndTypeAsync(Guid documentId, DocumentTypeId documentTypeId) =>
         _dbContext.Documents
         .Where(x => x.Id == documentId && x.DocumentTypeId == documentTypeId)
-        .Select(x => new ValueTuple<byte[], string, DocumentMediaTypeId>(x.DocumentContent, x.DocumentName, x.DocumentMediaTypeId))
+        .Select(x => new ValueTuple<byte[], string, MediaTypeId>(x.DocumentContent, x.DocumentName, x.MediaTypeId))
         .SingleOrDefaultAsync();
 
     /// <inheritdoc />
@@ -191,7 +191,7 @@ public class DocumentRepository : IDocumentRepository
                 x.IsInactive,
                 x.IsValidDocumentType && x.IsDocumentLinkedToOffer && x.IsValidOfferType && !x.IsInactive ? x.Document.DocumentContent : null,
                 x.Document.DocumentName,
-                x.Document.DocumentMediaTypeId
+                x.Document.MediaTypeId
             ))
             .SingleOrDefaultAsync(cancellationToken);
 

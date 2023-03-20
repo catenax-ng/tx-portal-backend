@@ -1,6 +1,6 @@
 ﻿namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 
-public enum DocumentMediaTypeId
+public enum MediaTypeId
 {
     JPEG = 1,
     GIF = 2,

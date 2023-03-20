@@ -335,7 +335,7 @@ public class AppsBusinessLogic : IAppsBusinessLogic
         {
             throw new UnexpectedConditionException($"document content should never be null");
         }
-        return (result.Content, result.MediaType.MapToMediaType(), result.FileName);
+        return (result.Content, result.MediaTypeId.MapToMediaType(), result.FileName);
     }
 
     /// <inheritdoc />
@@ -421,7 +421,7 @@ public class AppsBusinessLogic : IAppsBusinessLogic
         {
             throw new ControllerArgumentException($"document {document.FileName} transmitted length {document.Length} doesn't match actual length {ms.Length}.");
         }
-        var doc = documentRepository.CreateDocument(documentName, documentContent, hash, documentContentType.MapToDocumentMediaType(), DocumentTypeId.APP_LEADIMAGE, x =>
+        var doc = documentRepository.CreateDocument(documentName, documentContent, hash, documentContentType.ParseMediaTypeId(), DocumentTypeId.APP_LEADIMAGE, x =>
         {
             x.CompanyUserId = companyUserId;
             x.DocumentStatusId = DocumentStatusId.LOCKED;

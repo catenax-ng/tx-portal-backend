@@ -48,7 +48,7 @@ public class DocumentsBusinessLogic : IDocumentsBusinessLogic
     }
 
     /// <inheritdoc />
-    public async Task<(string fileName, byte[] content, string contentType)> GetDocumentAsync(Guid documentId, string iamUserId)
+    public async Task<(string FileName, byte[] Content, string MediaType)> GetDocumentAsync(Guid documentId, string iamUserId)
     {
         var documentDetails = await _portalRepositories.GetInstance<IDocumentRepository>()
             .GetDocumentDataAndIsCompanyUserAsync(documentId, iamUserId)
@@ -68,11 +68,11 @@ public class DocumentsBusinessLogic : IDocumentsBusinessLogic
             throw new UnexpectedConditionException("documentContent should never be null here");
         }
 
-        return (documentDetails.FileName, documentDetails.Content, documentDetails.MediaType.MapToMediaType());
+        return (documentDetails.FileName, documentDetails.Content, documentDetails.MediaTypeId.MapToMediaType());
     }
 
     /// <inheritdoc />
-    public async Task<(string fileName, byte[] content, string mimeType)> GetSelfDescriptionDocumentAsync(Guid documentId)
+    public async Task<(string FileName, byte[] Content, string MediaType)> GetSelfDescriptionDocumentAsync(Guid documentId)
     {
         var documentDetails = await _portalRepositories.GetInstance<IDocumentRepository>()
             .GetDocumentDataByIdAndTypeAsync(documentId, DocumentTypeId.SELF_DESCRIPTION)
@@ -81,7 +81,7 @@ public class DocumentsBusinessLogic : IDocumentsBusinessLogic
         {
             throw new NotFoundException($"Self description document {documentId} does not exist");
         }
-        return (documentDetails.FileName, documentDetails.Content, documentDetails.MediaType.MapToMediaType());
+        return (documentDetails.FileName, documentDetails.Content, documentDetails.MediaTypeId.MapToMediaType());
     }
 
     /// <inheritdoc />

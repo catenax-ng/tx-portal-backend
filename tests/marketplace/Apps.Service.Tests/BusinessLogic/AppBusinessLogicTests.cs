@@ -419,7 +419,7 @@ public class AppBusinessLogicTests
         {
             AppImageDocumentTypeIds = _fixture.Create<IEnumerable<DocumentTypeId>>(),
         };
-        var documentContentData = new OfferDocumentContentData(true, true, true, false, data, fileName, DocumentMediaTypeId.JPEG);
+        var documentContentData = new OfferDocumentContentData(true, true, true, false, data, fileName, MediaTypeId.JPEG);
         A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
             .ReturnsLazily(() => documentContentData);
 
@@ -468,7 +468,7 @@ public class AppBusinessLogicTests
         {
             AppImageDocumentTypeIds = _fixture.Create<IEnumerable<DocumentTypeId>>(),
         };
-        var documentContentData = new OfferDocumentContentData(false, true, true, false, null, fileName, DocumentMediaTypeId.JPEG);
+        var documentContentData = new OfferDocumentContentData(false, true, true, false, null, fileName, MediaTypeId.JPEG);
         A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
             .ReturnsLazily(() => documentContentData);
 
@@ -493,7 +493,7 @@ public class AppBusinessLogicTests
         {
             AppImageDocumentTypeIds = _fixture.Create<IEnumerable<DocumentTypeId>>(),
         };
-        var documentContentData = new OfferDocumentContentData(true, true, false, false, null, fileName, DocumentMediaTypeId.JPEG);
+        var documentContentData = new OfferDocumentContentData(true, true, false, false, null, fileName, MediaTypeId.JPEG);
         A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
             .ReturnsLazily(() => documentContentData);
 
@@ -518,7 +518,7 @@ public class AppBusinessLogicTests
         {
             AppImageDocumentTypeIds = _fixture.Create<IEnumerable<DocumentTypeId>>(),
         };
-        var documentContentData = new OfferDocumentContentData(true, false, true, false, null, fileName, DocumentMediaTypeId.JPEG);
+        var documentContentData = new OfferDocumentContentData(true, false, true, false, null, fileName, MediaTypeId.JPEG);
         A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
             .ReturnsLazily(() => documentContentData);
 
@@ -543,7 +543,7 @@ public class AppBusinessLogicTests
         {
             AppImageDocumentTypeIds = _fixture.Create<IEnumerable<DocumentTypeId>>(),
         };
-        var documentContentData = new OfferDocumentContentData(true, true, true, true, null, fileName, DocumentMediaTypeId.JPEG);
+        var documentContentData = new OfferDocumentContentData(true, true, true, true, null, fileName, MediaTypeId.JPEG);
         A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
             .ReturnsLazily(() => documentContentData);
 
@@ -568,7 +568,7 @@ public class AppBusinessLogicTests
         {
             AppImageDocumentTypeIds = _fixture.Create<IEnumerable<DocumentTypeId>>(),
         };
-        var documentContentData = new OfferDocumentContentData(true, true, true, false, null, fileName, DocumentMediaTypeId.JPEG);
+        var documentContentData = new OfferDocumentContentData(true, true, true, false, null, fileName, MediaTypeId.JPEG);
         A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
             .ReturnsLazily(() => documentContentData);
 
@@ -809,10 +809,10 @@ public class AppBusinessLogicTests
         A.CallTo(() => _offerRepository.GetOfferAssignedAppLeadImageDocumentsByIdAsync(appId, iamUserId, OfferTypeId.APP))
             .ReturnsLazily(() => (true, companyUserId, documentStatusData));
 
-        A.CallTo(() => _documentRepository.CreateDocument(A<string>._, A<byte[]>._, A<byte[]>._, A<DocumentMediaTypeId>._, A<DocumentTypeId>._,A<Action<Document>?>._))
-            .Invokes((string documentName, byte[] documentContent, byte[] hash, DocumentMediaTypeId mimeType, DocumentTypeId documentType, Action<Document>? setupOptionalFields) =>
+        A.CallTo(() => _documentRepository.CreateDocument(A<string>._, A<byte[]>._, A<byte[]>._, A<MediaTypeId>._, A<DocumentTypeId>._,A<Action<Document>?>._))
+            .Invokes((string documentName, byte[] documentContent, byte[] hash, MediaTypeId mediaTypeId, DocumentTypeId documentType, Action<Document>? setupOptionalFields) =>
             {
-                var document = new Document(documentId, documentContent, hash, documentName, mimeType, DateTimeOffset.UtcNow, DocumentStatusId.LOCKED, documentType);
+                var document = new Document(documentId, documentContent, hash, documentName, mediaTypeId, DateTimeOffset.UtcNow, DocumentStatusId.LOCKED, documentType);
                 setupOptionalFields?.Invoke(document);
                 documents.Add(document);
             });
@@ -830,7 +830,7 @@ public class AppBusinessLogicTests
         await sut.CreatOfferAssignedAppLeadImageDocumentByIdAsync(appId, iamUserId, file, CancellationToken.None);
 
         // Assert
-        A.CallTo(() => _documentRepository.CreateDocument(A<string>._, A<byte[]>._, A<byte[]>._, A<DocumentMediaTypeId>._, A<DocumentTypeId>._,A<Action<Document>?>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _documentRepository.CreateDocument(A<string>._, A<byte[]>._, A<byte[]>._, A<MediaTypeId>._, A<DocumentTypeId>._,A<Action<Document>?>._)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _offerRepository.CreateOfferAssignedDocument(A<Guid>._, A<Guid>._)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _offerRepository.RemoveOfferAssignedDocument(A<Guid>._,A<Guid>._)).MustHaveHappenedTwiceExactly();
         A.CallTo(() => _documentRepository.RemoveDocument(A<Guid>._)).MustHaveHappenedTwiceExactly();

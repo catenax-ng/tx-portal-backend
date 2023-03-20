@@ -9,5 +9,5 @@ public record OfferDocumentContentData(
     bool IsInactive,
     byte[]? Content,
     string FileName,
-    DocumentMediaTypeId MediaType
+    MediaTypeId MediaTypeId
 );

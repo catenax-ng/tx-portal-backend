@@ -60,7 +60,7 @@ public class DocumentRepositoryTests : IAssemblyFixture<TestDbFixture>
         var content = Encoding.UTF8.GetBytes(test);
 
         // Act
-        var result = sut.CreateDocument("New Document", content, content, DocumentMediaTypeId.PDF, DocumentTypeId.APP_CONTRACT, doc =>
+        var result = sut.CreateDocument("New Document", content, content, MediaTypeId.PDF, DocumentTypeId.APP_CONTRACT, doc =>
         {
             doc.DocumentStatusId = DocumentStatusId.INACTIVE;
         });
@@ -143,6 +143,7 @@ public class DocumentRepositoryTests : IAssemblyFixture<TestDbFixture>
         result.Should().NotBe(default);
         result.FileName.Should().Be("Default_App_Image.png");
         result.IsUserInCompany.Should().BeTrue();
+        result.MediaTypeId.Should().Be(MediaTypeId.PNG);
     }
 
     [Fact]
@@ -158,6 +159,7 @@ public class DocumentRepositoryTests : IAssemblyFixture<TestDbFixture>
         result.Should().NotBe(default);
         result.FileName.Should().Be("Default_App_Image.png");
         result.IsUserInCompany.Should().BeFalse();
+        result.MediaTypeId.Should().Be(MediaTypeId.PNG);
     }
 
     [Fact]
@@ -189,6 +191,7 @@ public class DocumentRepositoryTests : IAssemblyFixture<TestDbFixture>
         // Assert
         result.Should().NotBe(default);
         result.FileName.Should().Be("Default_App_Image.png");
+        result.MediaTypeId.Should().Be(MediaTypeId.PNG);
     }
 
     [Fact]

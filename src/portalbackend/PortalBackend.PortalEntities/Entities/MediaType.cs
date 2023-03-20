@@ -23,21 +23,21 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 
-public class DocumentMediaType
+public class MediaType
 {
-    private DocumentMediaType()
+    private MediaType()
     {
         Label = null!;
         Documents = new HashSet<Document>();
     }
 
-    public DocumentMediaType(DocumentMediaTypeId documentMediaTypeId) : this()
+    public MediaType(MediaTypeId mediaTypeId) : this()
     {
-        Id = documentMediaTypeId;
-        Label = documentMediaTypeId.ToString();
+        Id = mediaTypeId;
+        Label = mediaTypeId.ToString();
     }
     
-    public DocumentMediaTypeId Id { get; private set; }
+    public MediaTypeId Id { get; private set; }
 
     [MaxLength(255)]
     public string Label { get; private set; }

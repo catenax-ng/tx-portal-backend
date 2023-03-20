@@ -1119,10 +1119,10 @@ public class OfferServiceTests
         var documents = new List<Document>();
         var offerAssignedDocuments = new List<OfferAssignedDocument>();
         SetupCreateDocument(id, offerTypeId);
-        A.CallTo(() => _documentRepository.CreateDocument(A<string>._, A<byte[]>._, A<byte[]>._, A<DocumentMediaTypeId>._, A<DocumentTypeId>._,A<Action<Document>?>._))
-            .Invokes((string documentName, byte[] documentContent, byte[] hash, DocumentMediaTypeId mimeType, DocumentTypeId documentType, Action<Document>? setupOptionalFields) =>
+        A.CallTo(() => _documentRepository.CreateDocument(A<string>._, A<byte[]>._, A<byte[]>._, A<MediaTypeId>._, A<DocumentTypeId>._,A<Action<Document>?>._))
+            .Invokes((string documentName, byte[] documentContent, byte[] hash, MediaTypeId mediaTypeId, DocumentTypeId documentTypeId, Action<Document>? setupOptionalFields) =>
             {
-                var document = new Document(documentId, documentContent, hash, documentName, mimeType, DateTimeOffset.UtcNow, DocumentStatusId.PENDING, documentType);
+                var document = new Document(documentId, documentContent, hash, documentName, mediaTypeId, DateTimeOffset.UtcNow, DocumentStatusId.PENDING, documentTypeId);
                 setupOptionalFields?.Invoke(document);
                 documents.Add(document);
             });

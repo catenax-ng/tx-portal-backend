@@ -8,14 +8,14 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Tests;
 public class ContentTypeMapperExtensionsTests
 {
     [Theory]
-    [InlineData(DocumentMediaTypeId.GIF, "image/gif")]
-    [InlineData(DocumentMediaTypeId.PDF, "application/pdf")]
-    [InlineData(DocumentMediaTypeId.PNG, "image/png")]
-    [InlineData(DocumentMediaTypeId.SVG, "image/svg+xml")]
-    [InlineData(DocumentMediaTypeId.JSON, "application/json")]
-    [InlineData(DocumentMediaTypeId.JPEG, "image/jpeg")]
-    [InlineData(DocumentMediaTypeId.TIFF, "image/tiff")]
-    public void MapToMediaType_WithValid_ReturnsExpected(DocumentMediaTypeId mediaTypeId, string result)
+    [InlineData(MediaTypeId.GIF, "image/gif")]
+    [InlineData(MediaTypeId.PDF, "application/pdf")]
+    [InlineData(MediaTypeId.PNG, "image/png")]
+    [InlineData(MediaTypeId.SVG, "image/svg+xml")]
+    [InlineData(MediaTypeId.JSON, "application/json")]
+    [InlineData(MediaTypeId.JPEG, "image/jpeg")]
+    [InlineData(MediaTypeId.TIFF, "image/tiff")]
+    public void MapToMediaType_WithValid_ReturnsExpected(MediaTypeId mediaTypeId, string result)
     {
         var mediaType = mediaTypeId.MapToMediaType();
         mediaType.Should().Be(result);
@@ -24,32 +24,32 @@ public class ContentTypeMapperExtensionsTests
     [Fact]
     public void MapToMediaType_WithInvalid_ThrowsConflictException()
     {
-        void Act() => ((DocumentMediaTypeId)666).MapToMediaType();
+        void Act() => ((MediaTypeId)666).MapToMediaType();
 
         var ex = Assert.Throws<ConflictException>((Action) Act);
-        ex.Message.Should().Be($"document mimetype 666 is not supported");
+        ex.Message.Should().Be($"document mediatype 666 is not supported");
     }
 
     [Theory]
-    [InlineData(DocumentMediaTypeId.GIF, "image/gif")]
-    [InlineData(DocumentMediaTypeId.PDF, "application/pdf")]
-    [InlineData(DocumentMediaTypeId.PNG, "image/png")]
-    [InlineData(DocumentMediaTypeId.SVG, "image/svg+xml")]
-    [InlineData(DocumentMediaTypeId.JSON, "application/json")]
-    [InlineData(DocumentMediaTypeId.JPEG, "image/jpeg")]
-    [InlineData(DocumentMediaTypeId.TIFF, "image/tiff")]
-    public void MapToDocumentMediaType_WithValid_ReturnsExpected(DocumentMediaTypeId expectedResult, string mediaType)
+    [InlineData(MediaTypeId.GIF, "image/gif")]
+    [InlineData(MediaTypeId.PDF, "application/pdf")]
+    [InlineData(MediaTypeId.PNG, "image/png")]
+    [InlineData(MediaTypeId.SVG, "image/svg+xml")]
+    [InlineData(MediaTypeId.JSON, "application/json")]
+    [InlineData(MediaTypeId.JPEG, "image/jpeg")]
+    [InlineData(MediaTypeId.TIFF, "image/tiff")]
+    public void ParseMediaTypeId_WithValid_ReturnsExpected(MediaTypeId expectedResult, string mediaType)
     {
-        var result = mediaType.MapToDocumentMediaType();
+        var result = mediaType.ParseMediaTypeId();
         result.Should().Be(expectedResult);
     }
 
     [Fact]
-    public void MapToDocumentMediaType_WithInvalid_ThrowsUnsupportedMediaTypeException()
+    public void ParseMediaTypeId_WithInvalid_ThrowsUnsupportedMediaTypeException()
     {
-        void Act() => "just a test".MapToDocumentMediaType();
+        void Act() => "just a test".ParseMediaTypeId();
 
         var ex = Assert.Throws<UnsupportedMediaTypeException>((Action) Act);
-        ex.Message.Should().Be($"mimeType just a test is not supported");
+        ex.Message.Should().Be($"mediaType 'just a test' is not supported");
     }
 }

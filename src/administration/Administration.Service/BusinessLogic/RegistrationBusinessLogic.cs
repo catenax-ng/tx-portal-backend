@@ -498,6 +498,6 @@ public sealed class RegistrationBusinessLogic : IRegistrationBusinessLogic
             throw new NotFoundException($"Document {documentId} does not exist");
         }
 
-        return (document.DocumentName, document.DocumentContent, document.DocumentMediaTypeId.MapToMediaType());
+        return (document.DocumentName, document.DocumentContent, document.MediaTypeId.MapToMediaType());
     }
 }

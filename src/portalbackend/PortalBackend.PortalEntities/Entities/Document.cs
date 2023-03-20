@@ -37,7 +37,7 @@ public class Document : IBaseEntity
         Companies = new HashSet<Company>();
     }
     
-    public Document(Guid id, byte[] documentContent, byte[] documentHash, string documentName, DocumentMediaTypeId documentMediaTypeId, DateTimeOffset dateCreated, DocumentStatusId documentStatusId, DocumentTypeId documentTypeId) 
+    public Document(Guid id, byte[] documentContent, byte[] documentHash, string documentName, MediaTypeId mediaTypeId, DateTimeOffset dateCreated, DocumentStatusId documentStatusId, DocumentTypeId documentTypeId) 
         : this()
     {
         Id = id;
@@ -47,7 +47,7 @@ public class Document : IBaseEntity
         DateCreated = dateCreated;
         DocumentStatusId = documentStatusId;
         DocumentTypeId = documentTypeId;
-        DocumentMediaTypeId = documentMediaTypeId;
+        MediaTypeId = mediaTypeId;
     }
 
     public Guid Id { get; private set; }
@@ -61,7 +61,7 @@ public class Document : IBaseEntity
     [MaxLength(255)]
     public string DocumentName { get; set; }
 
-    public DocumentMediaTypeId DocumentMediaTypeId { get; set; }
+    public MediaTypeId MediaTypeId { get; set; }
 
     public DocumentTypeId DocumentTypeId { get; set; }
 
@@ -72,7 +72,7 @@ public class Document : IBaseEntity
     // Navigation properties
     public virtual CompanyUser? CompanyUser { get; set; }
     public virtual DocumentType? DocumentType { get; set; }
-    public virtual DocumentMediaType? DocumentMediaType { get; set; }
+    public virtual MediaType? MediaType { get; set; }
     public virtual DocumentStatus? DocumentStatus { get; set; }
 
     /// <summary>
