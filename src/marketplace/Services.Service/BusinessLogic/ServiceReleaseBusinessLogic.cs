@@ -72,7 +72,7 @@ public class ServiceReleaseBusinessLogic : IServiceReleaseBusinessLogic
             result.Title ?? Constants.ErrorString,
             result.ServiceTypeIds,
             result.Provider,
-            result.Descriptions.Select(x => new LocalizedDescription(x.LanguageCode, x.LongDescription, x.ShortDescription)),
+            result.Descriptions,
             result.Documents.GroupBy(d => d.documentTypeId).ToDictionary(g => g.Key, g => g.Select(d => new DocumentData(d.documentId, d.documentName))),
             result.ProviderUri ?? Constants.ErrorString,
             result.ContactEmail,
