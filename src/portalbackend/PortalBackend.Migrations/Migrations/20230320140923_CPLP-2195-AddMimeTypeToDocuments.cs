@@ -73,6 +73,8 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
             migrationBuilder.Sql("UPDATE portal.documents SET media_type_id = 5 where document_name ILIKE '%.tiff'");
             migrationBuilder.Sql("UPDATE portal.documents SET media_type_id = 6 where document_name ILIKE '%.pdf'");
             migrationBuilder.Sql("UPDATE portal.documents SET media_type_id = 7 where document_name ILIKE '%.json'");
+            migrationBuilder.Sql("UPDATE portal.documents SET media_type_id = 6 where media_type_id = 0 AND document_type_id IN (1,3,5)");
+            migrationBuilder.Sql("UPDATE portal.documents SET media_type_id = 3 where media_type_id = 0 AND document_type_id IN (6,7)");
 
             migrationBuilder.CreateIndex(
                 name: "ix_documents_media_type_id",
