@@ -93,13 +93,9 @@ public class ServiceReleaseBusinessLogic : IServiceReleaseBusinessLogic
         var result = await _offerService.GetProviderOfferDetailsForStatusAsync(serviceId, userId, OfferTypeId.SERVICE).ConfigureAwait(false);
         return new ServiceProviderResponse(
             result.Title,
-            result.Provider,
             result.LeadPictureId,
-            result.ProviderName,
-            result.UseCase,
             result.Descriptions,
             result.Agreements,
-            result.SupportedLanguageCodes,
             result.Price,
             result.Images,
             result.ProviderUri,

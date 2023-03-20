@@ -28,13 +28,9 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Services.Service.ViewModels;
 /// Response for the service creation
 /// </summary>
 /// <param name="Title">title of the offer</param>
-/// <param name="Provider">provider name</param>
 /// <param name="LeadPictureId">id of the lead picture</param>
-/// <param name="ProviderName">provider name</param>
-/// <param name="UseCase">list of use cases</param>
 /// <param name="Descriptions">the offer descriptions</param>
 /// <param name="Agreements">the assigned agreements</param>
-/// <param name="SupportedLanguageCodes">the supported language codes</param>
 /// <param name="Price">the offer price</param>
 /// <param name="Images">list of the images</param>
 /// <param name="ProviderUri">the provider uri</param>
@@ -45,13 +41,9 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Services.Service.ViewModels;
 /// <param name="ServiceTypeIds">ids of the service types</param>
 public record ServiceProviderResponse(
     string? Title, 
-    string Provider, 
     Guid LeadPictureId, 
-    string? ProviderName, 
-    IEnumerable<string> UseCase, 
     IEnumerable<LocalizedDescription> Descriptions, 
     IEnumerable<OfferAgreement> Agreements, 
-    IEnumerable<string> SupportedLanguageCodes, 
     string? Price, 
     IEnumerable<Guid> Images, 
     string? ProviderUri, 
