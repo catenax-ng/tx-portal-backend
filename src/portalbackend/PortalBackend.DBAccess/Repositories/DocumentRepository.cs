@@ -42,14 +42,14 @@ public class DocumentRepository : IDocumentRepository
     }
     
     /// <inheritdoc />
-    public Document CreateDocument(string documentName, byte[] documentContent, byte[] hash, DocumentMediaTypeId mediaTypeId, DocumentTypeId documentType, Action<Document>? setupOptionalFields)
+    public Document CreateDocument(string documentName, byte[] documentContent, byte[] hash, DocumentMediaTypeId mediaType, DocumentTypeId documentType, Action<Document>? setupOptionalFields)
     {
         var document = new Document(
             Guid.NewGuid(),
             documentContent,
             hash,
             documentName,
-            mediaTypeId,
+            mediaType,
             DateTimeOffset.UtcNow,
             DocumentStatusId.PENDING,
             documentType);
