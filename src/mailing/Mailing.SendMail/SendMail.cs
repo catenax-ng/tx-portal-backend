@@ -37,7 +37,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Mailing.SendMail
         Task ISendMail.Send(string sender, string recipient, string subject, string body, bool useHtml)
         {
             var message = new MimeMessage();
-            message.From.Add(MailboxAddress.Parse(sender));
+            message.From.Add(sender !=null && !sender.Equals("") ? MailboxAddress.Parse(sender) : MailboxAddress.Parse(_MailSettings.SmtpFromEmail));
             message.To.Add(MailboxAddress.Parse(recipient));
             message.Subject = subject;
             if(useHtml)

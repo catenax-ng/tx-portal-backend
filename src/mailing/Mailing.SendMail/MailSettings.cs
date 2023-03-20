@@ -30,6 +30,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Mailing.SendMail
         public string SmtpHost { get; set; } = null!;
         public string SmtpUser { get; set; } = null!;
         public string SmtpPassword { get; set; } = null!;
+        public string SmtpFromEmail { get; set; } = null!;
         public int SmtpPort { get; set; } = 0;
         public string? HttpProxy { get; set; }
         public int HttpProxyPort { get; set; }
@@ -39,7 +40,8 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Mailing.SendMail
             var validation = new ConfigurationValidation<MailSettings>()
                 .NotNullOrWhiteSpace(SmtpHost, () => nameof(SmtpHost))
                 .NotNullOrWhiteSpace(SmtpUser, () => nameof(SmtpUser))
-                .NotNullOrWhiteSpace(SmtpPassword, () => nameof(SmtpPassword));
+                .NotNullOrWhiteSpace(SmtpPassword, () => nameof(SmtpPassword))
+                .NotNullOrWhiteSpace(SmtpFromEmail, () => nameof(SmtpFromEmail));
             if (HttpProxy != null)
             {
                 validation.NotNullOrWhiteSpace(HttpProxy, () => nameof(HttpProxy));
