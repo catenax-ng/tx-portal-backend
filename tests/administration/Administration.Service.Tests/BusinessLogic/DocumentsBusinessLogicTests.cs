@@ -200,7 +200,7 @@ public class DocumentsBusinessLogicTests
         var documentId = Guid.NewGuid();
         var content = new byte[7];
         A.CallTo(() => _documentRepository.GetDocumentAsync(documentId, A<IEnumerable<DocumentTypeId>>._))
-            .ReturnsLazily(() => new ValueTuple<byte[], string, bool>(content, "test.json", true));
+            .ReturnsLazily(() => new ValueTuple<byte[], string, bool, MediaTypeId>(content, "test.json", true, MediaTypeId.JSON));
 
         //Act
         var result = await _sut.GetFrameDocumentAsync(documentId).ConfigureAwait(false);
@@ -218,7 +218,7 @@ public class DocumentsBusinessLogicTests
         var documentId = Guid.NewGuid();
         var content = new byte[7];
         A.CallTo(() => _documentRepository.GetDocumentAsync(documentId, A<IEnumerable<DocumentTypeId>>._))
-            .ReturnsLazily(() => new ValueTuple<byte[], string, bool>(content, "test.json", false));
+            .ReturnsLazily(() => new ValueTuple<byte[], string, bool, MediaTypeId>(content, "test.json", false, MediaTypeId.JSON));
 
         //Act
         var Act = () => _sut.GetFrameDocumentAsync(documentId);
@@ -234,7 +234,7 @@ public class DocumentsBusinessLogicTests
         // Arrange
         var documentId = Guid.NewGuid();
         A.CallTo(() => _documentRepository.GetDocumentAsync(documentId, A<IEnumerable<DocumentTypeId>>._))
-            .ReturnsLazily(() => new ValueTuple<byte[], string, bool>());
+            .ReturnsLazily(() => new ValueTuple<byte[], string, bool, MediaTypeId>());
 
         //Act
         var Act = () => _sut.GetFrameDocumentAsync(documentId);
