@@ -521,6 +521,47 @@ public class CompanyRepositoryTests : IAssemblyFixture<TestDbFixture>
         deletedEntities.Select(x => (x.CompanyId, x.UseCaseId)).Should().Contain((companyId, useCaseId));
     }
 
+    #region GetCompanyRoleAndConsentAgreement
+
+    [Fact]
+    public async Task GetCompanyRoleAndConsentAgreementDetailsAsync_ReturnsExpected()
+    {
+        var (sut, context) = await CreateSut().ConfigureAwait(false);
+
+        var result = sut.GetCompanyRoleAndConsentAgreementDetailsAsync("502dabcf-01c7-47d9-a88e-0be4279097b5");
+
+        result.Should().NotBeNull();
+        var data = await result.FirstAsync();
+        var companyRole = data!.CompanyRoles;
+        var isActiveCompanyRole = data.CompanyRolesActive;
+        var agreement = data.Agreements.First();
+        companyRole.Should().Be("ACTIVE_PARTICIPANT");
+        isActiveCompanyRole.Should().BeTrue();
+        agreement.AgreementId.Should().Be(new Guid("aa0a0000-7fbc-1f2f-817f-bce0502c1090"));
+    }
+
+    #endregion
+
+    #region  GetCompanyRolesData
+
+    [Fact]
+    public async Task GetCompanyRolesDataAsync_ReturnsExpected()
+    {
+        // Arrange
+        var (sut, context) = await CreateSut().ConfigureAwait(false);
+
+        // Act
+        var result = await sut.GetCompanyRolesDataAsync("502dabcf-01c7-47d9-a88e-0be4279097b5").ConfigureAwait(false);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.companyId.Should().Be(new Guid("2dc4249f-b5ca-4d42-bef1-7a7a950a4f87"));
+        result.companyRoleId.Should().Contain(CompanyRoleId.ACTIVE_PARTICIPANT);
+        result.companyUserId.Should().Be(new Guid("ac1cf001-7fbc-1f2f-817f-bce058020006"));
+        result.isCompanyActive.Should().BeTrue();
+        result.agreementAssignedRole.Should().Contain(CompanyRoleId.APP_PROVIDER);
+    }
+
     #endregion
 
     #region Setup

@@ -130,4 +130,16 @@ public interface ICompanyRepository
     /// <param name="companyId">Id of the comapny</param>
     /// <param name="useCaseId">Id of the UseCase</param>
     void RemoveCompanyAssignedUseCase(Guid companyId, Guid useCaseId);
+    /// Gets the the companyRole and ConsentAgreemnet
+    /// </summary>
+    /// <param name="iamUserId">Id of the iam user</param>
+    /// <returns>Returns the companyRole and ConsentAgreemnet</returns>
+    IAsyncEnumerable<CompanyRoleConsentData> GetCompanyRoleAndConsentAgreementDetailsAsync(string iamUserId);
+
+    /// <summary>
+    /// Gets the the companyRole
+    /// </summary>
+    /// <param name="iamUserId">Id of the iam user</param>
+    /// <returns>Returns the companyRole</returns>
+    Task<(bool isCompanyActive,Guid companyId, IEnumerable<CompanyRoleId> companyRoleId, Guid companyUserId, IEnumerable<CompanyRoleId> agreementAssignedRole)> GetCompanyRolesDataAsync(string iamUserId);
 }

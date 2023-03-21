@@ -120,4 +120,34 @@ public class CompanyDataControllerTests
         A.CallTo(() => _logic.RemoveCompanyAssignedUseCaseDetailsAsync(IamUserId, useCaseData.useCaseId)).MustHaveHappenedOnceExactly();
         result.Should().BeOfType<NoContentResult>();
     }
+
+    public async Task GetCompanyRoleAndConsentAgreementDetailsAsync_ReturnsExpectedResult()
+    {
+        // Arrange
+        var companyRoleConsentDatas = _fixture.CreateMany<CompanyRoleConsentData>(2).ToAsyncEnumerable();
+        A.CallTo(() => _logic.GetCompanyRoleAndConsentAgreementDetailsAsync(IamUserId))
+            .ReturnsLazily(() => companyRoleConsentDatas);
+        
+        // Act
+        await this._controller.GetCompanyRoleAndConsentAgreementDetailsAsync().ToListAsync();
+
+        // Assert
+        A.CallTo(() => _logic.GetCompanyRoleAndConsentAgreementDetailsAsync(IamUserId)).MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task CreateCompanyRoleAndConsentAgreementDetailsAsync()
+    {
+        // Arrange
+        var companyRoleConsentDetails = _fixture.CreateMany<CompanyRoleConsentDetails>(2);
+        A.CallTo(() => _logic.CreateCompanyRoleAndConsentAgreementDetailsAsync(IamUserId, companyRoleConsentDetails))
+            .ReturnsLazily(() => Task.CompletedTask);
+        
+        // Act
+        var result = await this._controller.CreateCompanyRoleAndConsentAgreementDetailsAsync(companyRoleConsentDetails).ConfigureAwait(false);
+
+        // Assert
+        A.CallTo(() => _logic.CreateCompanyRoleAndConsentAgreementDetailsAsync(IamUserId, companyRoleConsentDetails)).MustHaveHappenedOnceExactly();
+        result.Should().BeOfType<NoContentResult>();
+    } 
 }

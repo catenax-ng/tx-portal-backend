@@ -18,10 +18,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using System.Net;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
@@ -87,5 +89,18 @@ public class CompanyDataBusinessLogic : ICompanyDataBusinessLogic
         }
         companyRepositories.RemoveCompanyAssignedUseCase(useCaseDetails.companyId, useCaseId);
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
+    }
+
+    public async IAsyncEnumerable<CompanyRoleConsentData> GetCompanyRoleAndConsentAgreementDetailsAsync(string iamUserId)
+    {
+        var result =  _portalRepositories.GetInstance<ICompanyRepository>().GetCompanyRoleAndConsentAgreementDetailsAsync(iamUserId);
+        if (!await result.AnyAsync())
+        {
+            throw new ConflictException($"user {iamUserId} is not associated with any company or Incorrect Status");
+        }
+        await foreach(var data in result)
+        {
+            yield return data;
+        }
     }
 }

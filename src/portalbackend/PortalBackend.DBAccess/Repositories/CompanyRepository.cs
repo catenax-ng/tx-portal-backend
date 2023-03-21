@@ -18,8 +18,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.DBAccess;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
@@ -210,4 +210,32 @@ public class CompanyRepository : ICompanyRepository
     /// <inheritdoc /> 
     public void RemoveCompanyAssignedUseCase(Guid companyId, Guid useCaseId) =>
         _context.CompanyAssignedUseCases.Remove( new CompanyAssignedUseCase(companyId, useCaseId));
+
+    public IAsyncEnumerable<CompanyRoleConsentData> GetCompanyRoleAndConsentAgreementDetailsAsync(string iamUserId) =>
+        _context.Companies
+        .AsSplitQuery()
+        .Where(company => company.CompanyUsers.Any(user => user.IamUser!.UserEntityId == iamUserId) && company.CompanyStatusId == CompanyStatusId.ACTIVE)
+        .SelectMany(company => company.CompanyRoles, (company, companyRole) => new { CompanyId = company.Id, CompanyRole = companyRole})
+        .Select(company => new CompanyRoleConsentData(
+            company.CompanyRole.Label,
+            company.CompanyRole.CompanyRoleRegistrationData!.IsRegistrationRole,
+            company.CompanyRole.AgreementAssignedCompanyRoles.Where(c => c.Agreement!.IssuerCompanyId == company.CompanyId)
+                .Select(aacr => new ConsentAgreementData(
+                    aacr.Agreement!.Id,
+                    aacr.Agreement!.Name,
+                    aacr.Agreement.Consents.Where(c => c.CompanyId == company.CompanyId).Select(x => x.ConsentStatusId).SingleOrDefault()))))
+        .AsAsyncEnumerable();
+
+    /// <inheritdoc />
+    public Task<(bool isCompanyActive, Guid companyId, IEnumerable<CompanyRoleId> companyRoleId, Guid companyUserId, IEnumerable<CompanyRoleId> agreementAssignedRole)> GetCompanyRolesDataAsync(string iamUserId) =>
+    _context.Companies
+    .Where(company => company.CompanyUsers.Any(user => user.IamUser!.UserEntityId == iamUserId))
+    .Select( company => new ValueTuple<bool,Guid,IEnumerable<CompanyRoleId>,Guid,IEnumerable<CompanyRoleId>>(
+        company.CompanyStatusId == CompanyStatusId.ACTIVE,
+        company.Id,
+        company.CompanyRoles.Select(cr => cr.Id),
+        company.CompanyUsers.Select(cu => cu.Id).FirstOrDefault(),
+        company.Agreements.SelectMany(agreement => agreement.AgreementAssignedCompanyRoles)
+            .Select(aacr => aacr.CompanyRoleId)
+    )).SingleOrDefaultAsync();
 }
