@@ -48,7 +48,7 @@ public record AppProviderResponse (
     string Provider, 
     Guid LeadPictureId, 
     string? ProviderName, 
-    IEnumerable<string> UseCase, 
+    IEnumerable<AppUseCaseData> UseCase, 
     IEnumerable<LocalizedDescription> Descriptions, 
     IEnumerable<OfferAgreement> Agreements, 
     IEnumerable<string> SupportedLanguageCodes, 
