@@ -69,6 +69,10 @@ public class CompanyDataBusinessLogic : ICompanyDataBusinessLogic
     public async Task CreateCompanyRoleAndConsentAgreementDetailsAsync(string iamUserId,IEnumerable<CompanyRoleConsentDetails> companyRoleConsentDetails)
     {
         var companyRole = await _portalRepositories.GetInstance<ICompanyRepository>().GetCompanyRolesDataAsync(iamUserId).ConfigureAwait(false);
+        if(companyRole == default)
+        {
+            throw new NotFoundException($"user {iamUserId} is not associated with any company");
+        }
         if(!companyRole.isCompanyActive)
         {
             throw new ConflictException("Company Status is Incorrect");

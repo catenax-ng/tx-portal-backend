@@ -274,5 +274,23 @@ public class CompanyDataBusinessLogicTests
         ex.Message.Should().Be("companyRole already exists");
     }
 
+    [Fact]
+    public async Task CreateCompanyRoleAndConsentAgreementDetailsAsync_ThrowsNotFoundException()
+    {
+        // Arrange
+        var companyRoleConsentDetails = _fixture.CreateMany<CompanyRoleConsentDetails>(2);
+
+        A.CallTo(() => _companyRepository.GetCompanyRolesDataAsync(IamUserId))
+            .ReturnsLazily(() => new ValueTuple<bool,Guid,IEnumerable<CompanyRoleId>,Guid,IEnumerable<CompanyRoleId>>());
+        
+        var sut = new CompanyDataBusinessLogic(_portalRepositories);
+
+        // Act
+        async Task Act() => await sut.CreateCompanyRoleAndConsentAgreementDetailsAsync(IamUserId,companyRoleConsentDetails).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
+        ex.Message.Should().Be($"user {IamUserId} is not associated with any company");
+    }
     #endregion
 }
