@@ -1356,7 +1356,7 @@ public class OfferServiceTests
         var agreementId = Guid.NewGuid();
         var consentData = new OfferAgreementConsent(new []{ new AgreementConsentStatus(agreementId, ConsentStatusId.ACTIVE)});
         A.CallTo(() => _agreementRepository.GetOfferAgreementConsent(offerId, _iamUserId, OfferStatusId.CREATED, offerTypeId))
-            .ReturnsLazily(() => new ValueTuple<OfferAgreementConsentUpdate,bool>(new OfferAgreementConsentUpdate(_companyUser.Id, _companyUserCompanyId, new List<AppAgreementConsentStatus>()), false));
+            .ReturnsLazily(() => new ValueTuple<OfferAgreementConsentUpdate,bool>(new OfferAgreementConsentUpdate(_companyUser.Id, _companyUserCompanyId, Enumerable.Empty<AppAgreementConsentStatus>(), Enumerable.Empty<Guid>()), false));
 
         // Act
         async Task Act() => await _sut.CreateOrUpdateProviderOfferAgreementConsent(offerId, consentData, _iamUserId, offerTypeId).ConfigureAwait(false);
@@ -1369,36 +1369,83 @@ public class OfferServiceTests
     [Theory]
     [InlineData(OfferTypeId.SERVICE)]
     [InlineData(OfferTypeId.APP)]
-    public async Task CreateOrUpdateProviderOfferAgreementConsent_WithValidData_ReturnsExpected(OfferTypeId offerTypeId)
+    public async Task CreateOrUpdateProviderOfferAgreementConsent_WithInvalidData_Throws(OfferTypeId offerTypeId)
     {
         //Arrange
         var offerId = Guid.NewGuid();
         var agreementId = Guid.NewGuid();
+        var additionalAgreementId = Guid.NewGuid();
         var consentId = Guid.NewGuid();
-        var newCreatedConsentId = Guid.NewGuid();
-        var consentData = new OfferAgreementConsent(new []{ new AgreementConsentStatus(agreementId, ConsentStatusId.ACTIVE), new AgreementConsentStatus(Guid.NewGuid(), ConsentStatusId.ACTIVE)});
+        var consentData = new OfferAgreementConsent(new []{ new AgreementConsentStatus(agreementId, ConsentStatusId.ACTIVE), new AgreementConsentStatus(additionalAgreementId, ConsentStatusId.ACTIVE)});
         var offerAgreementConsent = new OfferAgreementConsentUpdate(
             _companyUser.Id,
             _companyUserCompanyId,
             new []
             {
                 new AppAgreementConsentStatus(agreementId, consentId, ConsentStatusId.INACTIVE)
+            },
+            new []
+            {
+                agreementId
             });
         A.CallTo(() => _agreementRepository.GetOfferAgreementConsent(offerId, _iamUserId, OfferStatusId.CREATED, offerTypeId))
             .ReturnsLazily(() => new ValueTuple<OfferAgreementConsentUpdate, bool>(offerAgreementConsent, true));
-        A.CallTo(() => _consentRepository.CreateConsent(A<Guid>._, _companyUserCompanyId, _companyUser.Id, ConsentStatusId.ACTIVE, null))
-            .Returns(new Consent(newCreatedConsentId));
+        
+        // Act
+        async Task Act() => await _sut.CreateOrUpdateProviderOfferAgreementConsent(offerId, consentData, _iamUserId, offerTypeId).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Act).ConfigureAwait(false);
+        ex.Message.Should().Be($"agreements {additionalAgreementId} are not valid for offer {offerId} (Parameter 'offerAgreementConsent')");
+        A.CallTo(() => _consentRepository.AddAttachAndModifyConsents(A<IEnumerable<AppAgreementConsentStatus>>._,A<IEnumerable<AgreementConsentStatus>>._,A<Guid>._,A<Guid>._,A<Guid>._,A<DateTimeOffset>._))
+            .MustNotHaveHappened();
+    }
+
+    [Theory]
+    [InlineData(OfferTypeId.SERVICE)]
+    [InlineData(OfferTypeId.APP)]
+    public async Task CreateOrUpdateProviderOfferAgreementConsent_WithValidData_ReturnsExpected(OfferTypeId offerTypeId)
+    {
+        //Arrange
+        var offerId = Guid.NewGuid();
+        var agreementId = Guid.NewGuid();
+        var additionalAgreementId = Guid.NewGuid();
+        var consentId = Guid.NewGuid();
+        var newCreatedConsentId = Guid.NewGuid();
+        var utcNow = DateTimeOffset.UtcNow;
+        var consentData = new OfferAgreementConsent(new []{ new AgreementConsentStatus(agreementId, ConsentStatusId.ACTIVE), new AgreementConsentStatus(additionalAgreementId, ConsentStatusId.ACTIVE)});
+        var offerAgreementConsent = new OfferAgreementConsentUpdate(
+            _companyUser.Id,
+            _companyUserCompanyId,
+            new []
+            {
+                new AppAgreementConsentStatus(agreementId, consentId, ConsentStatusId.INACTIVE)
+            },
+            new []
+            {
+                agreementId,
+                additionalAgreementId
+            });
+        A.CallTo(() => _agreementRepository.GetOfferAgreementConsent(offerId, _iamUserId, OfferStatusId.CREATED, offerTypeId))
+            .ReturnsLazily(() => new ValueTuple<OfferAgreementConsentUpdate, bool>(offerAgreementConsent, true));
+        A.CallTo(() => _consentRepository.AddAttachAndModifyConsents(A<IEnumerable<AppAgreementConsentStatus>>._,A<IEnumerable<AgreementConsentStatus>>._,A<Guid>._,A<Guid>._,A<Guid>._,A<DateTimeOffset>._))
+            .Returns(new Consent[] {
+                new(consentId, agreementId, _companyUserCompanyId, _companyUser.Id, ConsentStatusId.ACTIVE, utcNow),
+                new(newCreatedConsentId, additionalAgreementId, _companyUserCompanyId, _companyUser.Id, ConsentStatusId.ACTIVE, utcNow)
+            });
         
         // Act
         var result = await _sut.CreateOrUpdateProviderOfferAgreementConsent(offerId, consentData, _iamUserId, offerTypeId).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() => _consentRepository.CreateConsent(A<Guid>._, _companyUserCompanyId, _companyUser.Id, ConsentStatusId.ACTIVE, null))
+        A.CallTo(() => _consentRepository.AddAttachAndModifyConsents(A<IEnumerable<AppAgreementConsentStatus>>._,A<IEnumerable<AgreementConsentStatus>>._, offerId, _companyUserCompanyId, _companyUser.Id, A<DateTimeOffset>._))
             .MustHaveHappenedOnceExactly();
-        A.CallTo(() => _consentRepository.CreateConsentAssignedOffer(newCreatedConsentId, offerId))
-            .MustHaveHappenedOnceExactly();
-        A.CallTo(() => _portalRepositories.Attach(A<Consent>._, A<Action<Consent>>._)).MustHaveHappenedOnceExactly();
-        result.Should().HaveCount(2);
+        result.Should()
+            .HaveCount(2)
+            .And.Satisfy(
+                x => x.ConsentId == consentId && x.ConsentStatus == ConsentStatusId.ACTIVE,
+                x => x.ConsentId == newCreatedConsentId && x.ConsentStatus == ConsentStatusId.ACTIVE
+            );
     }
 
     #endregion

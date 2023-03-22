@@ -95,6 +95,7 @@ public class AgreementRepository : IAgreementRepository
     public Task<(OfferAgreementConsentUpdate OfferAgreementConsentUpdate, bool IsProviderCompany)> GetOfferAgreementConsent(Guid appId, string iamUserId, OfferStatusId statusId, OfferTypeId offerTypeId) =>
         _context.Offers
             .AsNoTracking()
+            .AsSplitQuery()
             .Where(offer=>offer.Id == appId &&
                 offer.OfferStatusId == statusId &&
                 offer.OfferTypeId == offerTypeId)
@@ -103,9 +104,10 @@ public class AgreementRepository : IAgreementRepository
                     offer.ProviderCompany!.CompanyUsers.Select(companyUser=>companyUser.Id).SingleOrDefault(),
                     offer.ProviderCompany.Id,
                     offer.ConsentAssignedOffers.Select(consentAssignedOffer => new AppAgreementConsentStatus(
-                    consentAssignedOffer.Consent!.AgreementId,
-                    consentAssignedOffer.Consent.Id,
-                    consentAssignedOffer.Consent.ConsentStatusId))),
+                        consentAssignedOffer.Consent!.AgreementId,
+                        consentAssignedOffer.Consent.Id,
+                        consentAssignedOffer.Consent.ConsentStatusId)),
+                    offer.OfferType!.AgreementAssignedOfferTypes.Select(assigned => assigned.AgreementId)),
                 offer.ProviderCompany!.CompanyUsers.Any(companyUser => companyUser.IamUser!.UserEntityId == iamUserId)))
             .SingleOrDefaultAsync();
 

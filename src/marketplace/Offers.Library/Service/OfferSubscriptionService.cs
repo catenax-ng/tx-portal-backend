@@ -63,7 +63,7 @@ public class OfferSubscriptionService : IOfferSubscriptionService
     {
         var (companyInformation, companyUserId, userEmail) = await ValidateCompanyInformationAsync(iamUserId).ConfigureAwait(false);
         var offerProviderDetails = await ValidateOfferProviderDetailDataAsync(offerId, offerTypeId).ConfigureAwait(false);
-        await ValidateConsent(offerAgreementConsentData, offerId, offerTypeId).ConfigureAwait(false);
+        await ValidateConsent(offerAgreementConsentData, offerId).ConfigureAwait(false);
 
         var offerSubscriptionsRepository = _portalRepositories.GetInstance<IOfferSubscriptionsRepository>();
         var offerSubscriptionId = offerTypeId == OfferTypeId.APP
@@ -113,19 +113,19 @@ public class OfferSubscriptionService : IOfferSubscriptionService
         throw new ConflictException("The offer name has not been configured properly");
     }
 
-    private async Task ValidateConsent(IEnumerable<OfferAgreementConsentData> offerAgreementConsentData, Guid offerId, OfferTypeId offerTypeId)
+    private async Task ValidateConsent(IEnumerable<OfferAgreementConsentData> offerAgreementConsentData, Guid offerId)
     {
         var agreementIds = await _portalRepositories.GetInstance<IAgreementRepository>().GetAgreementIdsForOfferAsync(offerId).ToListAsync().ConfigureAwait(false);
 
         var invalid = offerAgreementConsentData.Select(data => data.AgreementId).Except(agreementIds);
         if (invalid.Any())
         {
-            throw new ControllerArgumentException($"agreements {string.Join(",",invalid)} are not valid for offer {offerId}", nameof(offerAgreementConsentData));
+            throw new ControllerArgumentException($"agreements {string.Join(",", invalid)} are not valid for offer {offerId}", nameof(offerAgreementConsentData));
         }
         var missing = agreementIds.Except(offerAgreementConsentData.Where(data => data.ConsentStatusId == ConsentStatusId.ACTIVE).Select(data => data.AgreementId));
         if (missing.Any())
         {
-            throw new ControllerArgumentException($"consent to agreements {string.Join(",",missing)} must be given for offer {offerId}", nameof(offerAgreementConsentData));
+            throw new ControllerArgumentException($"consent to agreements {string.Join(",", missing)} must be given for offer {offerId}", nameof(offerAgreementConsentData));
         }
     }
 
