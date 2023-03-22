@@ -91,6 +91,10 @@ public class ServiceReleaseBusinessLogic : IServiceReleaseBusinessLogic
     public async Task<ServiceProviderResponse> GetServiceDetailsForStatusAsync(Guid serviceId, string userId)
     {
         var result = await _offerService.GetProviderOfferDetailsForStatusAsync(serviceId, userId, OfferTypeId.SERVICE).ConfigureAwait(false);
+        if (result.ServiceTypeIds == null)
+        {
+            throw new UnexpectedConditionException("serviceTypeIds should never be null here");
+        }
         return new ServiceProviderResponse(
             result.Title,
             result.LeadPictureId,

@@ -163,6 +163,10 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
     public async Task<AppProviderResponse> GetAppDetailsForStatusAsync(Guid appId, string userId)
     {
         var result = await _offerService.GetProviderOfferDetailsForStatusAsync(appId, userId, OfferTypeId.APP).ConfigureAwait(false);
+        if (result.UseCase == null)
+        {
+            throw new UnexpectedConditionException("usecase should never be null here");
+        }
         return new AppProviderResponse(
             result.Title,
             result.Provider,

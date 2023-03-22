@@ -255,6 +255,10 @@ public class OfferService : IOfferService
         {
             throw new ForbiddenException($"userId {userId} is not associated with provider-company of offer {offerId}");
         }
+        if (offerDetail.OfferProviderData == null)
+        {
+            throw new UnexpectedConditionException("offerProviderData should never be null here");
+        }
 
         var data = offerDetail.OfferProviderData;
 

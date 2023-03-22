@@ -200,6 +200,7 @@ public class ServiceReleaseBusinessLogicTest
         var data = _fixture.Build<OfferProviderResponse>()
             .With(x => x.Title, "test title")
             .With(x => x.ContactEmail, "info@test.de")
+            .With(x => x.UseCase, (IEnumerable<AppUseCaseData>?) null)
             .With(x => x.ServiceTypeIds, new [] {ServiceTypeId.DATASPACE_SERVICE, ServiceTypeId.CONSULTANCE_SERVICE})
             .Create();
 

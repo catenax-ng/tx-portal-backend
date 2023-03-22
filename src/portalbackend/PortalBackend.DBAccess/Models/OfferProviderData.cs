@@ -46,7 +46,7 @@ public record OfferProviderData(
     string Provider,
     Guid LeadPictureId,
     string? ProviderName,
-    IEnumerable<AppUseCaseData> UseCase,
+    IEnumerable<AppUseCaseData>? UseCase,
     IEnumerable<LocalizedDescription> Descriptions,
     IEnumerable<AgreementAssignedOfferData> Agreements,
     IEnumerable<string> SupportedLanguageCodes,
@@ -58,7 +58,7 @@ public record OfferProviderData(
     IEnumerable<DocumentTypeData> Documents,
     Guid? SalesManagerId,
     IEnumerable<PrivacyPolicyId> PrivacyPolicies,
-    IEnumerable<ServiceTypeId> ServiceTypeIds
+    IEnumerable<ServiceTypeId>? ServiceTypeIds
 );
 
 /// <summary>

@@ -44,23 +44,23 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Models;
 /// <param name="PrivacyPolicies">the privacy policies</param>
 /// <param name="ServiceTypeIds">ids of the service types</param>
 public record OfferProviderResponse(
-    string? Title, 
-    string Provider, 
-    Guid LeadPictureId, 
-    string? ProviderName, 
-    IEnumerable<AppUseCaseData> UseCase, 
-    IEnumerable<LocalizedDescription> Descriptions, 
-    IEnumerable<OfferAgreement> Agreements, 
-    IEnumerable<string> SupportedLanguageCodes, 
-    string? Price, 
-    IEnumerable<Guid> Images, 
-    string? ProviderUri, 
-    string? ContactEmail, 
-    string? ContactNumber, 
+    string? Title,
+    string Provider,
+    Guid LeadPictureId,
+    string? ProviderName,
+    IEnumerable<AppUseCaseData>? UseCase,
+    IEnumerable<LocalizedDescription> Descriptions,
+    IEnumerable<OfferAgreement> Agreements,
+    IEnumerable<string> SupportedLanguageCodes,
+    string? Price,
+    IEnumerable<Guid> Images,
+    string? ProviderUri,
+    string? ContactEmail,
+    string? ContactNumber,
     IDictionary<DocumentTypeId, IEnumerable<DocumentData>> Documents,
     Guid? SalesManagerId,
     IEnumerable<PrivacyPolicyId> PrivacyPolicies,
-    IEnumerable<ServiceTypeId> ServiceTypeIds
+    IEnumerable<ServiceTypeId>? ServiceTypeIds
 );
 
 /// <summary>
