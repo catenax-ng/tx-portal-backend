@@ -103,4 +103,35 @@ public class CompanyDataBusinessLogic : ICompanyDataBusinessLogic
             yield return data;
         }
     }
+
+    /// <inheritdoc/>
+    public async Task CreateCompanyRoleAndConsentAgreementDetailsAsync(string iamUserId,IEnumerable<CompanyRoleConsentDetails> companyRoleConsentDetails)
+    {
+        var companyRole = await _portalRepositories.GetInstance<ICompanyRepository>().GetCompanyRolesDataAsync(iamUserId).ConfigureAwait(false);
+        if(companyRole == default)
+        {
+            throw new NotFoundException($"user {iamUserId} is not associated with any company");
+        }
+        if(!companyRole.isCompanyActive)
+        {
+            throw new ConflictException("Company Status is Incorrect");
+        }
+        foreach(var data in  companyRoleConsentDetails)
+        {
+            if(!companyRole.agreementAssignedRole.Contains(data.companyRoles) || data.agreements.Any(x => x.consentStatus != ConsentStatusId.ACTIVE))
+            {
+                throw new ConflictException("All agreement need to get signed");
+            }
+            if(companyRole.companyRoleId.Contains(data.companyRoles))
+            {
+                throw new ConflictException("companyRole already exists");   
+            }
+            _portalRepositories.GetInstance<ICompanyRolesRepository>().CreateCompanyAssignedRole(companyRole.companyId, data.companyRoles);
+            foreach(var agreementData in data.agreements)
+            {
+                _portalRepositories.GetInstance<IConsentRepository>().CreateConsent(agreementData.agreementId, companyRole.companyId, companyRole.companyUserId, agreementData.consentStatus);
+            }
+        }
+        await _portalRepositories.SaveAsync();
+    }
 }
