@@ -69,7 +69,7 @@ public class AgreementRepository : IAgreementRepository
         _context.Agreements
             .AsNoTracking()
             .Where(agreement=>agreement.AgreementAssignedOfferTypes.Any(aaot => aaot.OfferTypeId == offerTypeId))
-            .Select(agreement=> new  AgreementDocumentData(
+            .Select(agreement=> new AgreementDocumentData(
                 agreement.Id,
                 agreement.Name,
                 agreement.DocumentId
@@ -118,10 +118,10 @@ public class AgreementRepository : IAgreementRepository
                 aao.Offer.OfferSubscriptions.Any(subscription => subscription.Id == subscriptionId)));
 
     /// <inheritdoc />
-    public Task<bool> CheckAgreementsExistsForOfferAsync(IEnumerable<Guid> agreementIds, Guid offerId, OfferTypeId offerTypeId) =>
-        _context.Agreements.AnyAsync(agreement =>
-            agreementIds.Any(a => a == agreement.Id) &&
-            agreement.AgreementAssignedOffers.Any(aao =>
-                aao.OfferId == offerId &&
-                aao.Offer!.OfferTypeId == offerTypeId));
+    public IAsyncEnumerable<Guid> GetAgreementIdsForOfferAsync(Guid offerId) =>
+        _context.AgreementAssignedOffers
+            .AsNoTracking()
+            .Where(assigned => assigned.OfferId == offerId)
+            .Select(assigned => assigned.AgreementId)
+            .AsAsyncEnumerable();
 }

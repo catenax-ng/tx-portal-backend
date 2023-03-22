@@ -88,11 +88,9 @@ public interface IAgreementRepository
 
     
     /// <summary>
-    /// Checks whether the given agreements exists in the database
+    /// Returns all agreeementIds associated with a given offer
     /// </summary>
-    /// <param name="agreementIds">Ids of the agreements</param>
     /// <param name="offerId">Id of the offer the agreement must be associated with</param>
-    /// <param name="offerTypeId">The OfferTypeId that the agreement must be associated with</param>
-    /// <returns>Returns <c>true</c> if the agreements were found, otherwise <c>false</c>.</returns>
-    Task<bool> CheckAgreementsExistsForOfferAsync(IEnumerable<Guid> agreementIds, Guid offerId, OfferTypeId offerTypeId);
+    /// <returns></returns>
+    IAsyncEnumerable<Guid> GetAgreementIdsForOfferAsync(Guid offerId);
 }
