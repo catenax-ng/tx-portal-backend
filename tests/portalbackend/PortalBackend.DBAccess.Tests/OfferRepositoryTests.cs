@@ -1111,8 +1111,25 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         result!.Title.Should().Be("SDE with EDC");
         result.Provider.Should().Be("Service Provider");
     }
-    
+
     #endregion
+
+    [Theory]
+    [InlineData(new[] { OfferStatusId.ACTIVE }, OfferSorting.NameDesc, "en")]
+    public async Task GetAllInReviewStatusServiceAsync_ReturnsExpectedResult(IEnumerable<OfferStatusId> statusids, OfferSorting sorting, string languagename)
+    {
+        // Arrange
+        var sut = await CreateSut().ConfigureAwait(false);
+
+        // Act
+        var result = await sut.GetAllInReviewStatusServiceAsync(statusids, sorting, languagename)(0, 10).ConfigureAwait(false);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.Data.Should().NotBeEmpty();
+        result!.Data.Should().HaveCount(3);
+    }
+
 
     #region Setup
     
