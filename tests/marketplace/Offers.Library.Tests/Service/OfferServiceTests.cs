@@ -596,7 +596,7 @@ public class OfferServiceTests
     [InlineData("name", null, false, false, true)]
     [InlineData("name", "c8d4d854-8ac6-425f-bc5a-dbf457670732", true, false, true)]
     [InlineData("name", "c8d4d854-8ac6-425f-bc5a-dbf457670732", false, true, true)]
-    [InlineData("name", "c8d4d854-8ac6-425f-bc5a-dbf457670732", false, false, false)]
+    [InlineData("name", "c8d4d854-8ac6-425f-bc5a-dbf457670732", true, true, false)]
     public async Task SubmitOffer_WithInvalidOffer_ThrowsConflictException(string? name, string? providerCompanyId, bool isDescriptionLongNotSet, bool isDescriptionShortNotSet, bool hasUserRoles)
     {
         // Arrange
@@ -608,7 +608,14 @@ public class OfferServiceTests
 
         // Assert
         var result = await Assert.ThrowsAsync<ConflictException>(Act).ConfigureAwait(false);
-        result.Message.Should().StartWith("The app has no roles assigned");
+        if (hasUserRoles)
+        {
+            result.Message.Should().StartWith("Missing ");
+        }
+        else
+        {
+            result.Message.Should().Be("The app has no roles assigned");
+        }
     }
 
     [Fact]
