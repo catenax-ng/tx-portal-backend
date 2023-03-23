@@ -250,6 +250,8 @@ public class ServiceReleaseBusinessLogicTest
         result.ContactEmail.Should().Be("info@test.de");
         result.ServiceTypeIds.Should().HaveCount(2);
     }
+    
+    #region GetAllInReviewStatusApps
 
     #region GetAllInReviewStatusApps
 
