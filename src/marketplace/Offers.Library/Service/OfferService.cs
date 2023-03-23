@@ -335,7 +335,7 @@ public class OfferService : IOfferService
         }
         if (!offerDetails.HasUserRoles)
         {
-            throw new ConflictException($"Missing  : {string.Join(",", offerDetails.HasUserRoles)}");
+            throw new ConflictException("The app has no roles assigned");
         }
        
         await SubmitAppServiceAsync(offerId, iamUserId, notificationTypeIds, catenaAdminRoles, offerDetails).ConfigureAwait(false);

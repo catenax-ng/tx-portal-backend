@@ -608,7 +608,7 @@ public class OfferServiceTests
 
         // Assert
         var result = await Assert.ThrowsAsync<ConflictException>(Act).ConfigureAwait(false);
-        result.Message.Should().StartWith("Missing  : ");
+        result.Message.Should().StartWith("The app has no roles assigned");
     }
 
     [Fact]
@@ -674,7 +674,7 @@ public class OfferServiceTests
 
         // Assert
         var result = await Assert.ThrowsAsync<ConflictException>(Act).ConfigureAwait(false);
-        result.Message.Should().StartWith($"Missing  : {string.Join(",", false)}");
+        result.Message.Should().StartWith("The app has no roles assigned");
     }
 
     [Theory]
