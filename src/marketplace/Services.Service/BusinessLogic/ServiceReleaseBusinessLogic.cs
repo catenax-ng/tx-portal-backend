@@ -128,9 +128,9 @@ public class ServiceReleaseBusinessLogic : IServiceReleaseBusinessLogic
         _offerService.CreateOrUpdateProviderOfferAgreementConsent(serviceId, offerAgreementConsents, userId, OfferTypeId.SERVICE);
 
      /// <inheritdoc/>
-    public Task<Pagination.Response<InReviewServiceData>> GetAllInReviewStatusServiceAsync(int page, int size, OfferSorting? sorting, string? languageShortName) =>
+    public Task<Pagination.Response<InReviewServiceData>> GetAllInReviewStatusServiceAsync(int page, int size, OfferSorting? sorting, string? serviceName, string? languageShortName) =>
         Pagination.CreateResponseAsync(page, size, 15,
             _portalRepositories.GetInstance<IOfferRepository>()
-                .GetAllInReviewStatusServiceAsync(_settings.OfferStatusIds, sorting ?? OfferSorting.DateDesc, languageShortName));
+                .GetAllInReviewStatusServiceAsync(_settings.OfferStatusIds, sorting ?? OfferSorting.DateDesc,serviceName, languageShortName));
 
 }

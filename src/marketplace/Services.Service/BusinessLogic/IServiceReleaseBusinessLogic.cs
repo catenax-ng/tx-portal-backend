@@ -73,11 +73,13 @@ public interface IServiceReleaseBusinessLogic
     /// <param name="userId">Id of th iam user</param>
     Task<IEnumerable<ConsentStatusData>> SubmitOfferConsentAsync(Guid serviceId, OfferAgreementConsent offerAgreementConsents, string userId);
 
+    /// <summary>
     /// Retrieves all in review status offer in the marketplace.
     /// </summary>
     /// <param name="page"></param>
     /// <param name="size"></param>
     /// <param name="sorting"></param>
+    /// <param name="serviceName"></param>
     /// <param name="languageShortName"></param>
-    Task<Pagination.Response<InReviewServiceData>> GetAllInReviewStatusServiceAsync(int page, int size, OfferSorting? sorting, string? languageShortName);
+    Task<Pagination.Response<InReviewServiceData>> GetAllInReviewStatusServiceAsync(int page, int size, OfferSorting? sorting, string? serviceName, string? languageShortName);
 }

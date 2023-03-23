@@ -696,12 +696,12 @@ public class OfferRepository : IOfferRepository
             .SingleOrDefaultAsync();
 
     /// <inheritdoc />
-    public Func<int,int,Task<Pagination.Source<InReviewServiceData>?>> GetAllInReviewStatusServiceAsync(IEnumerable<OfferStatusId> offerStatusIds, OfferSorting? sorting, string? languageShortName) =>
+    public Func<int,int,Task<Pagination.Source<InReviewServiceData>?>> GetAllInReviewStatusServiceAsync(IEnumerable<OfferStatusId> offerStatusIds, OfferSorting? sorting, string? serviceName, string? languageShortName) =>
         (skip, take) => Pagination.CreateSourceQueryAsync(
             skip,
             take,
             _context.Offers.AsNoTracking()
-                .Where(offer => offer.OfferTypeId == OfferTypeId.SERVICE && offerStatusIds.Contains(offer.OfferStatusId))
+                .Where(offer => offer.OfferTypeId == OfferTypeId.SERVICE && offerStatusIds.Contains(offer.OfferStatusId) && (serviceName == null || EF.Functions.ILike(offer.Name!, $"%{serviceName!.EscapeForILike()}%")))
                 .GroupBy(offer=>offer.OfferTypeId),
             sorting switch
             {

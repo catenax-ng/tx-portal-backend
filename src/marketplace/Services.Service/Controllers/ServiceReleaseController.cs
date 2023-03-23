@@ -146,12 +146,14 @@ public class ServiceReleaseController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IEnumerable<ConsentStatusData>> SubmitOfferConsentToAgreementsAsync([FromRoute] Guid serviceId, [FromBody] OfferAgreementConsent offerAgreementConsents) => 
         await this.WithIamUserId(iamUserId => _serviceReleaseBusinessLogic.SubmitOfferConsentAsync(serviceId, offerAgreementConsents, iamUserId));
-
+        
+    /// <summary>
     /// Retrieves all in review status service in the marketplace .
     /// </summary>
     /// <param name="page">page index start from 0</param>
     /// <param name="size">size to get number of records</param>
     /// <param name="sorting">sort by</param>
+    /// <param name="serviceName">search by service name</param>
     /// <param name="languageShortName">Filter by language shortname</param>
     /// <returns>Collection of all in review status marketplace service.</returns>
     /// <remarks>Example: GET: /api/services/servicerelease/inReview</remarks>
@@ -160,6 +162,6 @@ public class ServiceReleaseController : ControllerBase
     [Route("inReview")]
     [Authorize(Roles = "approve_service_release,decline_service_release")]
     [ProducesResponseType(typeof(Pagination.Response<InReviewServiceData>), StatusCodes.Status200OK)]
-    public Task<Pagination.Response<InReviewServiceData>> GetAllInReviewStatusServiceAsync([FromQuery] int page = 0, [FromQuery] int size = 15, [FromQuery] OfferSorting? sorting = null, string? languageShortName = null) =>
-        _serviceReleaseBusinessLogic.GetAllInReviewStatusServiceAsync(page, size, sorting, languageShortName);
+    public Task<Pagination.Response<InReviewServiceData>> GetAllInReviewStatusServiceAsync([FromQuery] int page = 0, [FromQuery] int size = 15, [FromQuery] OfferSorting? sorting = null, [FromQuery] string? serviceName = null, [FromQuery] string? languageShortName = null) =>
+        _serviceReleaseBusinessLogic.GetAllInReviewStatusServiceAsync(page, size, sorting,serviceName, languageShortName);
 }

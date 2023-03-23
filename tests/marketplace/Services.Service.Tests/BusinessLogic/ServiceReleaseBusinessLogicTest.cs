@@ -239,7 +239,7 @@ public class ServiceReleaseBusinessLogicTest
         result.ContactEmail.Should().Be("info@test.de");
         result.ServiceTypeIds.Should().HaveCount(2);
     }
-    
+
     #region GetAllInReviewStatusApps
 
     [Fact]
@@ -254,15 +254,15 @@ public class ServiceReleaseBusinessLogicTest
             new InReviewServiceData(Guid.NewGuid(),null!, OfferStatusId.ACTIVE,null!,"test data5")
         };
         var paginationResult = (int skip, int take) => Task.FromResult(new Pagination.Source<InReviewServiceData>(5, InReviewData.Skip(skip).Take(take)));
-        A.CallTo(() => _offerRepository.GetAllInReviewStatusServiceAsync(A<IEnumerable<OfferStatusId>>._,A<OfferSorting>._, A<string>._))
+        A.CallTo(() => _offerRepository.GetAllInReviewStatusServiceAsync(A<IEnumerable<OfferStatusId>>._, A<OfferSorting>._, A<string>._, A<string>._))
             .Returns(paginationResult);
 
         // Act
-        var result = await _sut.GetAllInReviewStatusServiceAsync(0, 5, OfferSorting.DateAsc, "en").ConfigureAwait(false);
-        
+        var result = await _sut.GetAllInReviewStatusServiceAsync(0, 5, OfferSorting.DateAsc, null, "en").ConfigureAwait(false);
+
         // Assert
         A.CallTo(() => _offerRepository.GetAllInReviewStatusServiceAsync(A<IEnumerable<OfferStatusId>>
-            .That.Matches(x => x.Count() == 2 && x.All(y => _options.Value.OfferStatusIds.Contains(y))),A<OfferSorting>._, A<string>._)).MustHaveHappenedOnceExactly();
+            .That.Matches(x => x.Count() == 2 && x.All(y => _options.Value.OfferStatusIds.Contains(y))), A<OfferSorting>._, A<string>._, A<string>._)).MustHaveHappenedOnceExactly();
         Assert.IsType<Pagination.Response<InReviewServiceData>>(result);
         result.Content.Should().HaveCount(5);
         result.Content.Should().Contain(x => x.Status == OfferStatusId.ACTIVE);
@@ -270,7 +270,7 @@ public class ServiceReleaseBusinessLogicTest
 
     [Fact]
     public async Task GetAllInReviewStatusServiceAsync_InReviewRequest()
-    { 
+    {
         // Arrange
         var InReviewData = new[]{
             new InReviewServiceData(Guid.NewGuid(),null!, OfferStatusId.IN_REVIEW,null!,"test data1"),
@@ -280,15 +280,15 @@ public class ServiceReleaseBusinessLogicTest
             new InReviewServiceData(Guid.NewGuid(),null!, OfferStatusId.IN_REVIEW,null!,"test data5")
         };
         var paginationResult = (int skip, int take) => Task.FromResult(new Pagination.Source<InReviewServiceData>(5, InReviewData.Skip(skip).Take(take)));
-        A.CallTo(() => _offerRepository.GetAllInReviewStatusServiceAsync(A<IEnumerable<OfferStatusId>>._, A<OfferSorting>._, A<string>._))
+        A.CallTo(() => _offerRepository.GetAllInReviewStatusServiceAsync(A<IEnumerable<OfferStatusId>>._, A<OfferSorting>._, A<string>._, A<string>._))
             .Returns(paginationResult);
 
         // Act
-        var result = await _sut.GetAllInReviewStatusServiceAsync(0, 5, OfferSorting.DateAsc,"en").ConfigureAwait(false);
-        
+        var result = await _sut.GetAllInReviewStatusServiceAsync(0, 5, OfferSorting.DateAsc, null, "en").ConfigureAwait(false);
+
         // Assert
         A.CallTo(() => _offerRepository.GetAllInReviewStatusServiceAsync(A<IEnumerable<OfferStatusId>>
-            .That.Matches(x => x.Count() == 2 && x.All(y => _options.Value.OfferStatusIds.Contains(y))),A<OfferSorting>._, A<string>._)).MustHaveHappenedOnceExactly();
+            .That.Matches(x => x.Count() == 2 && x.All(y => _options.Value.OfferStatusIds.Contains(y))), A<OfferSorting>._, A<string>._, A<string>._)).MustHaveHappenedOnceExactly();
         Assert.IsType<Pagination.Response<InReviewServiceData>>(result);
         result.Content.Should().HaveCount(5);
         result.Content.Should().Contain(x => x.Status == OfferStatusId.IN_REVIEW);

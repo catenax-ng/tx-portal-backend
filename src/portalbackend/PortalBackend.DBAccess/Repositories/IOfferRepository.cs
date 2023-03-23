@@ -443,6 +443,7 @@ public interface IOfferRepository
     /// </summary>
     /// <param name="offerStatusIds"></param>
     /// <param name="sorting"></param>
+    /// <param name="serviceName"></param>
     /// <param name="languageShortName"></param>
-    Func<int,int,Task<Pagination.Source<InReviewServiceData>?>> GetAllInReviewStatusServiceAsync(IEnumerable<OfferStatusId> offerStatusIds, OfferSorting? sorting, string? languageShortName);
+    Func<int,int,Task<Pagination.Source<InReviewServiceData>?>> GetAllInReviewStatusServiceAsync(IEnumerable<OfferStatusId> offerStatusIds, OfferSorting? sorting, string? serviceName, string? languageShortName);
 }

@@ -1115,14 +1115,14 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     #endregion
 
     [Theory]
-    [InlineData(new[] { OfferStatusId.ACTIVE }, OfferSorting.NameDesc, "en")]
-    public async Task GetAllInReviewStatusServiceAsync_ReturnsExpectedResult(IEnumerable<OfferStatusId> statusids, OfferSorting sorting, string languagename)
+    [InlineData(new[] { OfferStatusId.ACTIVE }, OfferSorting.NameDesc,null,"en")]
+    public async Task GetAllInReviewStatusServiceAsync_ReturnsExpectedResult(IEnumerable<OfferStatusId> statusids, OfferSorting? sorting,string? serviceName, string? languagename)
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
 
         // Act
-        var result = await sut.GetAllInReviewStatusServiceAsync(statusids, sorting, languagename)(0, 10).ConfigureAwait(false);
+        var result = await sut.GetAllInReviewStatusServiceAsync(statusids, sorting,serviceName, languagename)(0, 10).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
