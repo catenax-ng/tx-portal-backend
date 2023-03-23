@@ -145,7 +145,6 @@ public class AppsController : ControllerBase
         await this.WithIamUserId(userId => _appsBusinessLogic.RemoveFavouriteAppForUserAsync(appId, userId)).ConfigureAwait(false);
         return NoContent();
     }
-        
 
     /// <summary>
     /// Retrieves subscription statuses of subscribed apps of the currently logged in user's company.
@@ -332,23 +331,6 @@ public class AppsController : ControllerBase
         var (content, contentType, fileName) = await _appsBusinessLogic.GetAppDocumentContentAsync(appId, documentId, cancellationToken).ConfigureAwait(false);
         return File(content, contentType, fileName);
     }
-
-    /// <summary>
-    /// Get description of the app by Id.
-    /// </summary>
-    /// <param name="appId" example="092bdae3-a044-4314-94f4-85c65a09e31b">Id for the app description to retrieve.</param>
-    /// <returns>collection of descriptions of app by Id that are provided by the calling users company</returns>
-    /// <remarks>Example: Get: /api/apps/092bdae3-a044-4314-94f4-85c65a09e31b/appupdate/description</remarks>
-    /// <response code="200">returns list of app descriptions</response>
-    [HttpGet]
-    [Route("{appId}/appupdate/description")]
-    [Authorize(Roles = "edit_apps")]
-    [ProducesResponseType(typeof(IEnumerable<LocalizedDescription>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
-    public async Task<IEnumerable<LocalizedDescription>> GetAppUpdateDescriptionsAsync([FromRoute] Guid appId) =>
-        await this.WithIamUserId(userId => _appsBusinessLogic.GetAppUpdateDescriptionByIdAsync(appId, userId)).ConfigureAwait(false);
     
     /// <summary>
     /// Create or Update description of the app by Id.

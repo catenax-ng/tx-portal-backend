@@ -48,6 +48,7 @@ public class AppsBusinessLogic : IAppsBusinessLogic
     private readonly IOfferService _offerService;
     private readonly IOfferSetupService _offerSetupService;
     private readonly IMailingService _mailingService;
+    private readonly IAppBusinessValidation _appBusinessValidation;
 
     /// <summary>
     /// Constructor.
@@ -58,13 +59,15 @@ public class AppsBusinessLogic : IAppsBusinessLogic
     /// <param name="offerSetupService">Offer Setup Service</param>
     /// <param name="settings">Settings</param>
     /// <param name="mailingService">Mailing service</param>
+    /// <param name="appBusinessValidation">business Validation service</param>
     public AppsBusinessLogic(
         IPortalRepositories portalRepositories,
         IOfferSubscriptionService offerSubscriptionService,
         IOfferService offerService,
         IOfferSetupService offerSetupService,
         IOptions<AppsSettings> settings,
-        IMailingService mailingService)
+        IMailingService mailingService,
+        IAppBusinessValidation appBusinessValidation)
     {
         _portalRepositories = portalRepositories;
         _offerSubscriptionService = offerSubscriptionService;
@@ -72,6 +75,7 @@ public class AppsBusinessLogic : IAppsBusinessLogic
         _offerSetupService = offerSetupService;
         _mailingService = mailingService;
         _settings = settings.Value;
+        _appBusinessValidation = appBusinessValidation;
     }
 
     /// <inheritdoc/>
@@ -280,47 +284,15 @@ public class AppsBusinessLogic : IAppsBusinessLogic
         _offerService.GetOfferDocumentContentAsync(appId, documentId, _settings.AppImageDocumentTypeIds, OfferTypeId.APP, cancellationToken);
 
     /// <inheritdoc />
-    public async Task<IEnumerable<LocalizedDescription>> GetAppUpdateDescriptionByIdAsync(Guid appId, string iamUserId)
-    {        
-        var offerRepository = _portalRepositories.GetInstance<IOfferRepository>();
-        return await ValidateAndGetAppDescription(appId, iamUserId, offerRepository);        
-    }
-
-    /// <inheritdoc />
     public async Task CreateOrUpdateAppDescriptionByIdAsync(Guid appId, string iamUserId, IEnumerable<LocalizedDescription> offerDescriptionDatas)
     {
         var offerRepository = _portalRepositories.GetInstance<IOfferRepository>();
 
         offerRepository.CreateUpdateDeleteOfferDescriptions(appId,
-            await ValidateAndGetAppDescription(appId, iamUserId, offerRepository),
+            await _appBusinessValidation.ValidateAndGetAppDescription(appId, iamUserId, offerRepository),
             offerDescriptionDatas.Select(od => new ValueTuple<string,string, string>(od.LanguageCode,od.LongDescription,od.ShortDescription)));
 
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
-    }
-
-    private static async Task<IEnumerable<LocalizedDescription>> ValidateAndGetAppDescription(Guid appId, string iamUserId, IOfferRepository offerRepository)
-    {
-        var result = await offerRepository.GetActiveOfferDescriptionDataByIdAsync(appId, OfferTypeId.APP, iamUserId).ConfigureAwait(false);
-        if(result == default)
-        {
-            throw new NotFoundException($"App {appId} does not exist.");
-        }
-
-        if(!result.IsStatusActive)
-        {
-            throw new ConflictException($"App {appId} is in InCorrect Status");
-        }
-
-        if(!result.IsProviderCompanyUser)
-        {
-            throw new ForbiddenException($"user {iamUserId} is not a member of the providercompany of App {appId}");
-        }
-
-        if (result.OfferDescriptionDatas == null)
-        {
-            throw new UnexpectedConditionException("offerDescriptionDatas should never be null here");
-        }
-        return result.OfferDescriptionDatas;
     }
 
     /// <inheritdoc />

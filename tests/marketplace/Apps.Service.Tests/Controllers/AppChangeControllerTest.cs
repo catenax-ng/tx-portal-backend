@@ -23,6 +23,7 @@ using FakeItEasy;
 using Org.Eclipse.TractusX.Portal.Backend.Apps.Service.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
 using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared.Extensions;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Xunit;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.Controllers.Tests;
@@ -62,5 +63,22 @@ public class AppChangeControllerTest
             Assert.NotNull(item);
             Assert.IsType<AppRoleData>(item);
         }
+    }
+
+    [Fact]
+    public async Task GetAppUpdateDescriptionsAsync_ReturnsExpected()
+    {
+        //Arrange
+        var appId = _fixture.Create<Guid>();
+        var offerDescriptionData = _fixture.CreateMany<LocalizedDescription>(3);
+
+        A.CallTo(() => _logic.GetAppUpdateDescriptionByIdAsync(A<Guid>._, A<string>._))
+            .ReturnsLazily(() => offerDescriptionData);
+        
+        //Act
+        var result = await this._controller.GetAppUpdateDescriptionsAsync(appId).ConfigureAwait(false);
+
+        //Assert
+        A.CallTo(() => _logic.GetAppUpdateDescriptionByIdAsync(A<Guid>._, A<string>._)).MustHaveHappened();
     }
 }

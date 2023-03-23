@@ -27,6 +27,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using System.Text.Json;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.BusinessLogic;
@@ -40,6 +41,7 @@ public class AppChangeBusinessLogic : IAppChangeBusinessLogic
     private readonly AppsSettings _settings;
     private readonly INotificationService _notificationService;
     private readonly IProvisioningManager _provisioningManager;
+    private readonly IAppBusinessValidation _appBusinessValidation;
 
     /// <summary>
     /// Constructor.
@@ -48,12 +50,14 @@ public class AppChangeBusinessLogic : IAppChangeBusinessLogic
     /// <param name="notificationService">the notification service</param>
     /// <param name="provisioningManager">The provisioning manager</param>
     /// <param name="settings">Settings for the app change bl</param>
-    public AppChangeBusinessLogic(IPortalRepositories portalRepositories, INotificationService notificationService, IProvisioningManager provisioningManager, IOptions<AppsSettings> settings)
+    /// <param name="appBusinessValidation">business validation service</param>
+    public AppChangeBusinessLogic(IPortalRepositories portalRepositories, INotificationService notificationService, IProvisioningManager provisioningManager, IOptions<AppsSettings> settings, IAppBusinessValidation appBusinessValidation)
     {
         _portalRepositories = portalRepositories;
         _notificationService = notificationService;
         _provisioningManager = provisioningManager;
         _settings = settings.Value;
+        _appBusinessValidation = appBusinessValidation;
     }
 
     /// <inheritdoc/>
@@ -97,5 +101,12 @@ public class AppChangeBusinessLogic : IAppChangeBusinessLogic
         await _notificationService.CreateNotifications(_settings.ActiveAppCompanyAdminRoles, result.CompanyUserId, content, result.ProviderCompanyId.Value).ConfigureAwait(false);
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
         return roleData;
+    }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<LocalizedDescription>> GetAppUpdateDescriptionByIdAsync(Guid appId, string iamUserId)
+    {        
+        var offerRepository = _portalRepositories.GetInstance<IOfferRepository>();
+        return await _appBusinessValidation.ValidateAndGetAppDescription(appId, iamUserId, offerRepository);        
     }
 }

@@ -50,6 +50,7 @@ public class AppBusinessLogicTests
     private readonly IMailingService _mailingService;
     private readonly IOfferService _offerService;
     private readonly IDocumentRepository _documentRepository;
+    private readonly IAppBusinessValidation _appBusinessValidation;
 
     public AppBusinessLogicTests()
     {
@@ -67,7 +68,7 @@ public class AppBusinessLogicTests
         _userRepository = A.Fake<IUserRepository>();
         _notificationRepository = A.Fake<INotificationRepository>();
         _documentRepository = A.Fake<IDocumentRepository>();
-
+        _appBusinessValidation = A.Fake<IAppBusinessValidation>();
         A.CallTo(() => _portalRepositories.GetInstance<IOfferRepository>()).Returns(_offerRepository);
         A.CallTo(() => _portalRepositories.GetInstance<IUserRepository>()).Returns(_userRepository);
         A.CallTo(() => _portalRepositories.GetInstance<INotificationRepository>()).Returns(_notificationRepository);
@@ -84,7 +85,7 @@ public class AppBusinessLogicTests
         A.CallTo(() => _userRepository.GetCompanyUserIdForIamUserUntrackedAsync(iamUser.UserEntityId))
             .Returns(companyUser.Id);
 
-        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(new AppsSettings()), null!);
+        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(new AppsSettings()), null!, _appBusinessValidation);
 
         // Act
         await sut.AddFavouriteAppForUserAsync(appId, iamUser.UserEntityId);
@@ -104,7 +105,7 @@ public class AppBusinessLogicTests
         A.CallTo(() => _userRepository.GetCompanyUserIdForIamUserUntrackedAsync(iamUser.UserEntityId))
             .Returns(companyUser.Id);
 
-        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(new AppsSettings()), null!);
+        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(new AppsSettings()), null!, _appBusinessValidation);
 
         // Act
         await sut.RemoveFavouriteAppForUserAsync(appId, iamUser.UserEntityId);
@@ -123,7 +124,7 @@ public class AppBusinessLogicTests
         var results = _fixture.CreateMany<ValueTuple<Guid, string?, string, IEnumerable<string>, Guid, string?, string?>>(5);
         A.CallTo(() => _offerRepository.GetAllActiveAppsAsync(A<string>._)).Returns(results.ToAsyncEnumerable());
 
-        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(new AppsSettings()), null!);
+        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(new AppsSettings()), null!, _appBusinessValidation);
 
         // Act
         var result = await sut.GetAllActiveAppsAsync().ToListAsync().ConfigureAwait(false);
@@ -142,7 +143,7 @@ public class AppBusinessLogicTests
         // Arrange
         var appData = _fixture.CreateMany<(Guid, string?, string, Guid, string)>(5);
         A.CallTo(() => _offerSubscriptionRepository.GetAllBusinessAppDataForUserIdAsync(A<string>._)).Returns(appData.ToAsyncEnumerable());
-        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(new AppsSettings()), null!);
+        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(new AppsSettings()), null!, _appBusinessValidation);
 
         // Act
         var result = await sut.GetAllUserUserBusinessAppsAsync(_fixture.Create<string>()).ToListAsync().ConfigureAwait(false);
@@ -165,7 +166,7 @@ public class AppBusinessLogicTests
         var data = _fixture.CreateMany<AgreementData>(1);
         A.CallTo(() => offerService.GetOfferAgreementsAsync(A<Guid>.That.Matches(x => x == appId), A<OfferTypeId>._))
             .Returns(data.ToAsyncEnumerable());
-        var sut = new AppsBusinessLogic(null!, null!, offerService, null!, Options.Create(new AppsSettings()), null!);
+        var sut = new AppsBusinessLogic(null!, null!, offerService, null!, Options.Create(new AppsSettings()), null!, _appBusinessValidation);
 
         // Act
         var result = await sut.GetAppAgreement(appId).ToListAsync().ConfigureAwait(false);
@@ -187,7 +188,7 @@ public class AppBusinessLogicTests
         var consentData = _fixture.CreateMany<OfferAgreementConsentData>(2);
         A.CallTo(() => offerSubscriptionService.AddOfferSubscriptionAsync(A<Guid>._, A<IEnumerable<OfferAgreementConsentData>>._, A<string>._, A<string>._, A<IDictionary<string, IEnumerable<string>>>._, A<OfferTypeId>._, A<string>._))
             .ReturnsLazily(() => offerSubscriptionId);
-        var sut = new AppsBusinessLogic(null!, offerSubscriptionService, null!, null!, Options.Create(new AppsSettings()), null!);
+        var sut = new AppsBusinessLogic(null!, offerSubscriptionService, null!, null!, Options.Create(new AppsSettings()), null!, _appBusinessValidation);
 
         // Act
         var result = await sut.AddOwnCompanyAppSubscriptionAsync(Guid.NewGuid(), consentData, "44638c72-690c-42e8-bd5e-c8ac3047ff82", "THISISAACCESSTOKEN").ConfigureAwait(false);
@@ -219,7 +220,7 @@ public class AppBusinessLogicTests
             .ReturnsLazily(() => offerAutoSetupResponseData);
         var data = new OfferAutoSetupData(Guid.NewGuid(), "https://www.offer.com");
 
-        var sut = new AppsBusinessLogic(null!, null!, null!, offerSetupService, _fixture.Create<IOptions<AppsSettings>>(), A.Fake<MailingService>());
+        var sut = new AppsBusinessLogic(null!, null!, null!, offerSetupService, _fixture.Create<IOptions<AppsSettings>>(), A.Fake<MailingService>(), _appBusinessValidation);
 
         // Act
         var result = await sut.AutoSetupAppAsync(data, IamUserId).ConfigureAwait(false);
@@ -246,7 +247,7 @@ public class AppBusinessLogicTests
             ApplicationsMaxPageSize = 15
         };
         
-        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(appsSettings), null!);
+        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(appsSettings), null!, _appBusinessValidation);
 
         // Act
         var result = await sut.GetCompanyProvidedAppSubscriptionStatusesForUserAsync(0, 10, iamUserId, null, null).ConfigureAwait(false);
@@ -267,7 +268,7 @@ public class AppBusinessLogicTests
         A.CallTo(() => _offerSubscriptionRepository.GetCompanyAssignedAppDataForProvidingCompanyUserAsync(notExistingAppId, A<Guid>._, IamUserId))
             .ReturnsLazily(() => new ValueTuple<Guid, OfferSubscriptionStatusId, Guid, string?, Guid, RequesterData>());
         
-        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(new AppsSettings()), null!);
+        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(new AppsSettings()), null!, _appBusinessValidation);
 
         // Act
         async Task Act() => await sut.ActivateOwnCompanyProvidedAppSubscriptionAsync(notExistingAppId, Guid.NewGuid(), IamUserId).ConfigureAwait(false);
@@ -290,7 +291,7 @@ public class AppBusinessLogicTests
                 Guid.Empty,
                 new RequesterData(string.Empty, string.Empty, string.Empty)));
         
-        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(new AppsSettings()), null!);
+        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(new AppsSettings()), null!, _appBusinessValidation);
 
         // Act
         async Task Act() => await sut.ActivateOwnCompanyProvidedAppSubscriptionAsync(appId, Guid.NewGuid(), Guid.NewGuid().ToString()).ConfigureAwait(false);
@@ -317,7 +318,7 @@ public class AppBusinessLogicTests
                 Guid.NewGuid(),
                 new RequesterData(string.Empty, string.Empty, string.Empty)));
         
-        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(new AppsSettings()), null!);
+        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(new AppsSettings()), null!, _appBusinessValidation);
 
         // Act
         async Task Act() => await sut.ActivateOwnCompanyProvidedAppSubscriptionAsync(appId, companyId, IamUserId).ConfigureAwait(false);
@@ -343,7 +344,7 @@ public class AppBusinessLogicTests
                 Guid.NewGuid(),
                 new RequesterData(string.Empty, string.Empty, string.Empty)));
         
-        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(new AppsSettings()), null!);
+        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(new AppsSettings()), null!, _appBusinessValidation);
 
         // Act
         await sut.ActivateOwnCompanyProvidedAppSubscriptionAsync(appId, Guid.NewGuid(), IamUserId).ConfigureAwait(false);
@@ -369,7 +370,7 @@ public class AppBusinessLogicTests
                 Guid.NewGuid(),
                 new RequesterData("test@email.com", "tony", "gilbert")));
         
-        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(new AppsSettings()), _mailingService);
+        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(new AppsSettings()), _mailingService, _appBusinessValidation);
 
         // Act
         await sut.ActivateOwnCompanyProvidedAppSubscriptionAsync(appId, Guid.NewGuid(), IamUserId).ConfigureAwait(false);
@@ -393,7 +394,7 @@ public class AppBusinessLogicTests
             ServiceManagerRoles = _fixture.Create<Dictionary<string, IEnumerable<string>>>(),
             BasePortalAddress = "test"
         };
-        var sut = new AppsBusinessLogic(null!, null!, _offerService, null!, Options.Create(settings), _mailingService);
+        var sut = new AppsBusinessLogic(null!, null!, _offerService, null!, Options.Create(settings), _mailingService, _appBusinessValidation);
         
         // Act
         await sut.DeactivateOfferByAppIdAsync(appId, IamUserId).ConfigureAwait(false);
@@ -412,18 +413,171 @@ public class AppBusinessLogicTests
         // Arrange
         var appId = _fixture.Create<Guid>();
         var documentId = _fixture.Create<Guid>();
+        var data = _fixture.Create<byte[]>();
+        var fileName = _fixture.Create<string>()+".jpeg";
         var settings = new AppsSettings
         {
             AppImageDocumentTypeIds = _fixture.Create<IEnumerable<DocumentTypeId>>(),
         };
 
-        var sut = new AppsBusinessLogic(_portalRepositories, null!, _offerService, null!, Options.Create(settings), null!);
+        var sut = new AppsBusinessLogic(_portalRepositories, null!, _offerService, null!, Options.Create(settings), null!, _appBusinessValidation);
 
         // Act
-        await sut.GetAppDocumentContentAsync(appId, documentId, CancellationToken.None).ConfigureAwait(false);
+        var result = await sut.GetAppDocumentContentAsync(appId, documentId, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _offerService.GetOfferDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._)).MustHaveHappened();
+        result.Content.Should().BeSameAs(data);
+        result.ContentType.Should().Be("image/jpeg");
+        A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._)).MustHaveHappened();
+    }
+
+    [Fact]
+    public async Task GetAppDocumentContentAsync_ForDocumentIdNotExist_ThrowsArgumentException()
+    {
+        // Arrange
+        var appId = _fixture.Create<Guid>();
+        var documentId = _fixture.Create<Guid>();
+        var settings = new AppsSettings
+        {
+            AppImageDocumentTypeIds = _fixture.Create<IEnumerable<DocumentTypeId>>(),
+        };
+        A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
+            .ReturnsLazily(() => (OfferDocumentContentData?)null);
+
+        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(settings), null!, _appBusinessValidation);
+
+        // Act
+        async Task Act() => await sut.GetAppDocumentContentAsync(appId, documentId, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
+        ex.Message.Should().Be($"document {documentId} does not exist");
+    }
+
+    [Fact]
+    public async Task GetAppDocumentContentAsync_WithInvalidDocumentType_ThrowsArgumentException()
+    {
+        // Arrange
+        var appId = _fixture.Create<Guid>();
+        var documentId = _fixture.Create<Guid>();
+        var fileName = _fixture.Create<string>()+".jpeg";;
+        var settings = new AppsSettings
+        {
+            AppImageDocumentTypeIds = _fixture.Create<IEnumerable<DocumentTypeId>>(),
+        };
+        var documentContentData = new OfferDocumentContentData(false, true, true, false, null, fileName, MediaTypeId.JPEG);
+        A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
+            .ReturnsLazily(() => documentContentData);
+
+        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(settings), null!, _appBusinessValidation);
+
+        // Act
+        async Task Act() => await sut.GetAppDocumentContentAsync(appId, documentId, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Act);
+        ex.Message.Should().Be($"Document {documentId} can not get retrieved. Document type not supported.");
+    }
+
+    [Fact]
+    public async Task GetAppDocumentContentAsync_WithInvalidOfferType_ThrowsArgumentException()
+    {
+        // Arrange
+        var appId = _fixture.Create<Guid>();
+        var documentId = _fixture.Create<Guid>();
+        var fileName = _fixture.Create<string>()+".jpeg";;
+        var settings = new AppsSettings
+        {
+            AppImageDocumentTypeIds = _fixture.Create<IEnumerable<DocumentTypeId>>(),
+        };
+        var documentContentData = new OfferDocumentContentData(true, true, false, false, null, fileName, MediaTypeId.JPEG);
+        A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
+            .ReturnsLazily(() => documentContentData);
+
+        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(settings), null!, _appBusinessValidation);
+
+        // Act
+        async Task Act() => await sut.GetAppDocumentContentAsync(appId, documentId, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Act);
+        ex.Message.Should().Be($"offer {appId} is not an app");
+    }
+
+    [Fact]
+    public async Task GetAppDocumentContentAsync_WithOfferNotLinkToDocument_ThrowsArgumentException()
+    {
+        // Arrange
+        var appId = _fixture.Create<Guid>();
+        var documentId = _fixture.Create<Guid>();
+        var fileName = _fixture.Create<string>()+".jpeg";;
+        var settings = new AppsSettings
+        {
+            AppImageDocumentTypeIds = _fixture.Create<IEnumerable<DocumentTypeId>>(),
+        };
+        var documentContentData = new OfferDocumentContentData(true, false, true, false, null, fileName, MediaTypeId.JPEG);
+        A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
+            .ReturnsLazily(() => documentContentData);
+
+        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(settings), null!, _appBusinessValidation);
+
+        // Act
+        async Task Act() => await sut.GetAppDocumentContentAsync(appId, documentId, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Act);
+        ex.Message.Should().Be($"Document {documentId} and app id {appId} do not match.");
+    }
+
+    [Fact]
+    public async Task GetAppDocumentContentAsync_WithInvalidStatus_ThrowsConflictException()
+    {
+        // Arrange
+        var appId = _fixture.Create<Guid>();
+        var documentId = _fixture.Create<Guid>();
+        var fileName = _fixture.Create<string>()+".jpeg";;
+        var settings = new AppsSettings
+        {
+            AppImageDocumentTypeIds = _fixture.Create<IEnumerable<DocumentTypeId>>(),
+        };
+        var documentContentData = new OfferDocumentContentData(true, true, true, true, null, fileName, MediaTypeId.JPEG);
+        A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
+            .ReturnsLazily(() => documentContentData);
+
+        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(settings), null!, _appBusinessValidation);
+
+        // Act
+        async Task Act() => await sut.GetAppDocumentContentAsync(appId, documentId, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be($"Document {documentId} is in status INACTIVE");
+    }
+
+    [Fact]
+    public async Task GetAppImageDocumentContentAsync_WithContentNull_ThrowsUnexpectedConditionException()
+    {
+        // Arrange
+        var appId = _fixture.Create<Guid>();
+        var documentId = _fixture.Create<Guid>();
+        var fileName = _fixture.Create<string>()+".jpeg";;
+        var settings = new AppsSettings
+        {
+            AppImageDocumentTypeIds = _fixture.Create<IEnumerable<DocumentTypeId>>(),
+        };
+        var documentContentData = new OfferDocumentContentData(true, true, true, false, null, fileName, MediaTypeId.JPEG);
+        A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(appId, documentId, settings.AppImageDocumentTypeIds, OfferTypeId.APP, A<CancellationToken>._))
+            .ReturnsLazily(() => documentContentData);
+
+        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, Options.Create(settings), null!, _appBusinessValidation);
+
+        // Act
+        async Task Act() => await sut.GetAppDocumentContentAsync(appId, documentId, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<UnexpectedConditionException>(Act);
+        ex.Message.Should().Be($"document content should never be null");
     }
 
     #endregion
@@ -439,7 +593,7 @@ public class AppBusinessLogicTests
         A.CallTo(() => _offerRepository.GetProvidedOffersData(A<OfferTypeId>._, A<string>._))
             .Returns(data.AsAsyncEnumerable());
 
-        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), _mailingService);
+        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), _mailingService, _appBusinessValidation);
 
         //Act
         var result = await sut.GetCompanyProvidedAppsDataForUserAsync(IamUserId).ToListAsync().ConfigureAwait(false);
@@ -449,90 +603,6 @@ public class AppBusinessLogicTests
     }
 
     #endregion
-    
-    #region  AppDescription
-
-    [Fact]
-    public async Task GetAppUpdateDescritionByIdAsync_ReturnsExpected()
-    {
-        // Arrange
-        var appId = _fixture.Create<Guid>();
-        var offerDescription = _fixture.CreateMany<LocalizedDescription>(3);
-        var appDescriptionData = (IsStatusActive: true, IsProviderCompanyUser: true, OfferDescriptionDatas: offerDescription);
-
-        A.CallTo(() => _offerRepository.GetActiveOfferDescriptionDataByIdAsync(appId, OfferTypeId.APP, IamUserId))
-            .ReturnsLazily(() => appDescriptionData);
-        
-        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), null!);
-
-        // Act
-        var result = await sut.GetAppUpdateDescriptionByIdAsync(appId, IamUserId).ConfigureAwait(false);
-
-        // Assert
-        result.Should().NotBeNull();
-        result.Select(x => x.LanguageCode).Should().Contain(offerDescription.Select(od => od.LanguageCode));
-    }
-
-    [Fact]    
-    public async Task GetAppUpdateDescritionByIdAsync_ThrowsNotFoundException()
-    {
-        // Arrange
-        var appId = _fixture.Create<Guid>();
-
-        A.CallTo(() => _offerRepository.GetActiveOfferDescriptionDataByIdAsync(appId, OfferTypeId.APP, IamUserId))
-            .ReturnsLazily(() => ((bool IsStatusActive, bool IsProviderCompanyUser, IEnumerable<LocalizedDescription> OfferDescriptionDatas))default);
-        
-        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), null!);
-
-        // Act
-        async Task Act() => await sut.GetAppUpdateDescriptionByIdAsync(appId, IamUserId).ConfigureAwait(false);
-
-        // Assert
-        var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
-        ex.Message.Should().Be($"App {appId} does not exist.");  
-    }
-
-    [Fact]    
-    public async Task GetAppUpdateDescritionByIdAsync_ThrowsConflictException()
-    {
-        // Arrange
-        var appId = _fixture.Create<Guid>();
-        var offerDescription = _fixture.CreateMany<LocalizedDescription>(3);
-        var appDescriptionData = (IsStatusActive: false, IsProviderCompanyUser: true, OfferDescriptionDatas: offerDescription);
-
-        A.CallTo(() => _offerRepository.GetActiveOfferDescriptionDataByIdAsync(appId, OfferTypeId.APP, IamUserId))
-            .ReturnsLazily(() => appDescriptionData);
-        
-        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), null!);
-
-        // Act
-        async Task Act() => await sut.GetAppUpdateDescriptionByIdAsync(appId, IamUserId).ConfigureAwait(false);
-
-        // Assert
-        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
-        ex.Message.Should().Be($"App {appId} is in InCorrect Status");  
-    }
-
-    [Fact]    
-    public async Task GetAppUpdateDescritionByIdAsync_ThrowsForbiddenException()
-    {
-        // Arrange
-        var appId = _fixture.Create<Guid>();
-        var offerDescription = _fixture.CreateMany<LocalizedDescription>(3);
-        var appDescriptionData = (IsStatusActive: true, IsProviderCompanyUser: false, OfferDescriptionDatas: offerDescription);
-
-        A.CallTo(() => _offerRepository.GetActiveOfferDescriptionDataByIdAsync(appId, OfferTypeId.APP, IamUserId))
-            .ReturnsLazily(() => appDescriptionData);
-        
-        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), null!);
-
-        // Act
-        async Task Act() => await sut.GetAppUpdateDescriptionByIdAsync(appId, IamUserId).ConfigureAwait(false);
-
-        // Assert
-        var ex = await Assert.ThrowsAsync<ForbiddenException>(Act);
-        ex.Message.Should().Be($"user {IamUserId} is not a member of the providercompany of App {appId}");  
-    }
 
     [Fact]
     public async Task CreateOrUpdateAppDescriptionByIdAsync_withExistingDescriptionData_ExpectedCall()
@@ -547,12 +617,10 @@ public class AppBusinessLogicTests
             new ("en", _fixture.Create<string>(), _fixture.Create<string>()),
             new ("de", _fixture.Create<string>(), _fixture.Create<string>())
         };
-        var appDescriptionData = (IsStatusActive: true, IsProviderCompanyUser: true, OfferDescriptionDatas: existingOfferDescriptions);
-
-        A.CallTo(() => _offerRepository.GetActiveOfferDescriptionDataByIdAsync(appId, OfferTypeId.APP, IamUserId))
-            .ReturnsLazily(() => appDescriptionData);
+        A.CallTo(() => _appBusinessValidation.ValidateAndGetAppDescription(appId, IamUserId, _offerRepository))
+            .ReturnsLazily(() => existingOfferDescriptions);
         
-        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), null!);
+        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), null!, _appBusinessValidation);
 
         // Act
         await sut.CreateOrUpdateAppDescriptionByIdAsync(appId, IamUserId, updateDescriptionData).ConfigureAwait(false);
@@ -572,47 +640,17 @@ public class AppBusinessLogicTests
             new ("en", _fixture.Create<string>(), _fixture.Create<string>()),
             new ("de", _fixture.Create<string>(), _fixture.Create<string>())
             };
-        var appDescriptionData = (IsStatusActive: true, IsProviderCompanyUser: true, OfferDescriptionDatas: Array.Empty<LocalizedDescription>());
-
-        A.CallTo(() => _offerRepository.GetActiveOfferDescriptionDataByIdAsync(appId, OfferTypeId.APP, IamUserId))
-            .ReturnsLazily(() => appDescriptionData);
+        A.CallTo(() => _appBusinessValidation.ValidateAndGetAppDescription(appId, IamUserId, _offerRepository))
+            .ReturnsLazily(() => updateDescriptionData);
         
-        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), null!);
+        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), null!, _appBusinessValidation);
 
         // Act
         await sut.CreateOrUpdateAppDescriptionByIdAsync(appId, IamUserId, updateDescriptionData).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() => _offerRepository.CreateUpdateDeleteOfferDescriptions(appId, A<IEnumerable<LocalizedDescription>>.That.IsEmpty(), A<IEnumerable<(string,string,string)>>.That.IsSameSequenceAs(updateDescriptionData.Select(x => new ValueTuple<string,string,string>(x.LanguageCode, x.LongDescription, x.ShortDescription)))))
+        A.CallTo(() => _offerRepository.CreateUpdateDeleteOfferDescriptions(appId, A<IEnumerable<LocalizedDescription>>._, A<IEnumerable<(string,string,string)>>.That.IsSameSequenceAs(updateDescriptionData.Select(x => new ValueTuple<string,string,string>(x.LanguageCode, x.LongDescription, x.ShortDescription)))))
             .MustHaveHappenedOnceExactly();
-    }
-
-    [Fact]
-    public async Task CreateOrUpdateAppDescriptionByIdAsync_withNullDescriptionData_ThowsUnexpectedConditionException()
-    {
-        // Arrange
-        var appId = _fixture.Create<Guid>();
-        var updateDescriptionData =  new []{
-            new LocalizedDescription("en", _fixture.Create<string>(), _fixture.Create<string>()),
-            new LocalizedDescription("de", _fixture.Create<string>(), _fixture.Create<string>())
-            };
-        var appDescriptionData = (IsStatusActive: true, IsProviderCompanyUser: true, OfferDescriptionDatas: (IEnumerable<LocalizedDescription>)null!);
-
-        A.CallTo(() => _offerRepository.GetActiveOfferDescriptionDataByIdAsync(appId, OfferTypeId.APP, IamUserId))
-            .ReturnsLazily(() => appDescriptionData);
-
-        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), null!);
-
-        // Act
-        var Act = () => sut.CreateOrUpdateAppDescriptionByIdAsync(appId, IamUserId, updateDescriptionData);
-
-        // Assert
-        var result = await Assert.ThrowsAsync<UnexpectedConditionException>(Act).ConfigureAwait(false);
-        result.Message.Should().Be("offerDescriptionDatas should never be null here");
-        
-        A.CallTo(() => _offerRepository.CreateUpdateDeleteOfferDescriptions(A<Guid>._, A<IEnumerable<LocalizedDescription>>._, A<IEnumerable<(string,string,string)>>._)) 
-            .MustNotHaveHappened();
-
     }
 
     [Fact]
@@ -624,7 +662,7 @@ public class AppBusinessLogicTests
         A.CallTo(() => _offerSubscriptionRepository.GetOwnCompanySubscribedAppSubscriptionStatusesUntrackedAsync(iamUserId))
             .Returns(data.ToAsyncEnumerable());
         
-        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!,  null!, _fixture.Create<IOptions<AppsSettings>>(), null!);
+        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!,  null!, _fixture.Create<IOptions<AppsSettings>>(), null!, _appBusinessValidation);
 
         // Act
         var result = await sut.GetCompanySubscribedAppSubscriptionStatusesForUserAsync(iamUserId).ToListAsync().ConfigureAwait(false);
@@ -633,8 +671,6 @@ public class AppBusinessLogicTests
         result.Should().HaveCount(5);
     }
     
-    #endregion
-
     #region  CreateOfferAssignedAppLeadImageDocumentById
 
     [Fact]
@@ -668,7 +704,7 @@ public class AppBusinessLogicTests
                 offerAssignedDocuments.Add(offerAssignedDocument);
             });
 
-        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), null!);
+        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), null!, _appBusinessValidation);
 
         // Act
         await sut.CreatOfferAssignedAppLeadImageDocumentByIdAsync(appId, iamUserId, file, CancellationToken.None);
@@ -692,7 +728,7 @@ public class AppBusinessLogicTests
         var appLeadImageContentTypes = new [] {"image/jpeg","image/png"};
         var file = FormFileHelper.GetFormFile("Test File", "TestImage.pdf", "application/pdf");
 
-        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), null!);
+        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), null!, _appBusinessValidation);
 
         // Act
         var Act = () => sut.CreatOfferAssignedAppLeadImageDocumentByIdAsync(appId, iamUserId, file, CancellationToken.None);
@@ -714,7 +750,7 @@ public class AppBusinessLogicTests
         A.CallTo(() => _offerRepository.GetOfferAssignedAppLeadImageDocumentsByIdAsync(appId, iamUserId, OfferTypeId.APP))
             .ReturnsLazily(() => (false, companyUserId, null!));
 
-        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), null!);
+        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), null!, _appBusinessValidation);
 
         // Act
         var Act = () => sut.CreatOfferAssignedAppLeadImageDocumentByIdAsync(appId, iamUserId, file, CancellationToken.None);
@@ -736,7 +772,7 @@ public class AppBusinessLogicTests
         A.CallTo(() => _offerRepository.GetOfferAssignedAppLeadImageDocumentsByIdAsync(appId, iamUserId, OfferTypeId.APP))
             .ReturnsLazily(() => (true, Guid.Empty, null!));
 
-        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), null!);
+        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), null!, _appBusinessValidation);
 
         // Act
         async Task Act() => await sut.CreatOfferAssignedAppLeadImageDocumentByIdAsync(appId, iamUserId, file, CancellationToken.None);
@@ -757,7 +793,7 @@ public class AppBusinessLogicTests
         A.CallTo(() => _offerRepository.GetOfferAssignedAppLeadImageDocumentsByIdAsync(appId, iamUserId, OfferTypeId.APP))
             .ReturnsLazily(() => new ValueTuple<bool,Guid,IEnumerable<DocumentStatusData>>());
 
-        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), null!);
+        var sut = new AppsBusinessLogic(_portalRepositories, null!, null!, null!, _fixture.Create<IOptions<AppsSettings>>(), null!, _appBusinessValidation);
 
         // Act
         async Task Act() => await sut.CreatOfferAssignedAppLeadImageDocumentByIdAsync(appId, iamUserId, file, CancellationToken.None);

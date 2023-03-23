@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021, 2023 BMW Group AG
  * Copyright (c) 2021, 2023 Contributors to the Eclipse Foundation
  *
@@ -18,29 +18,22 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.BusinessLogic;
 
 /// <summary>
 /// Business logic for handling app change-related operations. Includes persistence layer access.
 /// </summary>
-public interface IAppChangeBusinessLogic
+public interface IAppBusinessValidation
 {
     /// <summary>
-    /// Add User Role for Active App and creates a notification
+    /// Retrieve app and app description data for app in active status and validate the same
     /// </summary>
     /// <param name="appId"></param>
-    /// <param name="appUserRolesDescription"></param>
     /// <param name="iamUserId"></param>
-    /// <returns>List of the created AppRoles</returns>
-    Task<IEnumerable<AppRoleData>> AddActiveAppUserRoleAsync(Guid appId, IEnumerable<AppUserRole> appUserRolesDescription, string iamUserId);
-
-    /// <summary>
-    /// Get OfferDescription by appId
-    /// </summary>
-    /// <param name="appId">Id of the app</param>
-    /// <param name="iamUserId">Id of the iamUser</param>
-    Task<IEnumerable<LocalizedDescription>> GetAppUpdateDescriptionByIdAsync(Guid appId, string iamUserId);
+    /// <param name="offerRepository"></param>
+    /// <returns></returns>
+    Task<IEnumerable<LocalizedDescription>> ValidateAndGetAppDescription(Guid appId, string iamUserId, IOfferRepository offerRepository);
 }

@@ -328,23 +328,6 @@ public class AppsControllerTests
     }
 
     [Fact]
-    public async Task GetAppUpdateDescriptionsAsync_ReturnsExpected()
-    {
-        //Arrange
-        var appId = _fixture.Create<Guid>();
-        var offerDescriptionData = _fixture.CreateMany<LocalizedDescription>(3);
-
-        A.CallTo(() => _logic.GetAppUpdateDescriptionByIdAsync(A<Guid>._, A<string>._))
-            .ReturnsLazily(() => offerDescriptionData);
-        
-        //Act
-        var result = await this._controller.GetAppUpdateDescriptionsAsync(appId).ConfigureAwait(false);
-
-        //Assert
-        A.CallTo(() => _logic.GetAppUpdateDescriptionByIdAsync(A<Guid>._, A<string>._)).MustHaveHappened();
-    }
-
-    [Fact]
     public async Task CreateOrUpdateAppDescriptionsAsync_ReturnsExpected()
     {
         //Arrange

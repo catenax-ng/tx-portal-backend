@@ -30,6 +30,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
 using System.Collections.Immutable;
 using Xunit;
@@ -48,7 +49,7 @@ public class AppChangeBusinessLogicTest
     private readonly IOfferRepository _offerRepository;
     private readonly IUserRolesRepository _userRolesRepository;
     private readonly INotificationService _notificationService;
-    
+    private readonly IAppBusinessValidation _appBusinessValidation;
     private readonly AppChangeBusinessLogic _sut;
 
     public AppChangeBusinessLogicTest()
@@ -63,7 +64,8 @@ public class AppChangeBusinessLogicTest
         _offerRepository = A.Fake<IOfferRepository>();
         _userRolesRepository = A.Fake<IUserRolesRepository>();
         _notificationService = A.Fake<INotificationService>();
-        
+        _appBusinessValidation = A.Fake<IAppBusinessValidation>();
+
         var settings = new AppsSettings
         {
             ActiveAppNotificationTypeIds = new []
@@ -77,7 +79,8 @@ public class AppChangeBusinessLogicTest
         };
         A.CallTo(() => _portalRepositories.GetInstance<IOfferRepository>()).Returns(_offerRepository);
         A.CallTo(() => _portalRepositories.GetInstance<IUserRolesRepository>()).Returns(_userRolesRepository);
-        _sut = new AppChangeBusinessLogic(_portalRepositories, _notificationService, _provisioningManager, Options.Create(settings));
+        A.CallTo(() => _portalRepositories.GetInstance<IAppBusinessValidation>()).Returns(_appBusinessValidation);
+        _sut = new AppChangeBusinessLogic(_portalRepositories, _notificationService, _provisioningManager, Options.Create(settings), _appBusinessValidation);
     }
 
     #region  AddActiveAppUserRole
@@ -206,6 +209,30 @@ public class AppChangeBusinessLogicTest
         //Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
         ex.Message.Should().Be($"App {appId} providing company is not yet set.");
+    }
+
+    #endregion
+
+    #region  AppDescription
+
+    [Fact]
+    public async Task GetAppUpdateDescritionByIdAsync_ReturnsExpected()
+    {
+        // Arrange
+        var appId = _fixture.Create<Guid>();
+        var offerDescription = _fixture.Build<LocalizedDescription>()
+                                        .With(x=>x.LanguageCode,"De")
+                                        .CreateMany(1)
+                                        .AsEnumerable();
+        A.CallTo(() => _appBusinessValidation.ValidateAndGetAppDescription(appId, _iamUserId,_offerRepository))
+            .ReturnsLazily(() => offerDescription);
+
+        // Act
+        var result = await _sut.GetAppUpdateDescriptionByIdAsync(appId, _iamUserId).ConfigureAwait(false);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Select(x => x.LanguageCode).Should().Contain(offerDescription.Select(od => od.LanguageCode));
     }
 
     #endregion

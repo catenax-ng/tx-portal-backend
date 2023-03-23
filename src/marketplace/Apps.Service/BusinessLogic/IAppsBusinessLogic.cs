@@ -156,13 +156,6 @@ public interface IAppsBusinessLogic
     Task<(byte[] Content, string ContentType, string FileName)> GetAppDocumentContentAsync(Guid appId, Guid documentId, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Get OfferDescription by appId
-    /// </summary>
-    /// <param name="appId">Id of the app</param>
-    /// <param name="iamUserId">Id of the iamUser</param>
-    Task<IEnumerable<LocalizedDescription>> GetAppUpdateDescriptionByIdAsync(Guid appId, string iamUserId);
-
-    /// <summary>
     /// Create or Update OfferDescription by appId
     /// </summary>
     /// <param name="appId">Id of the app</param>
