@@ -1474,8 +1474,8 @@ public class OfferServiceTests
         result.Should()
             .HaveCount(2)
             .And.Satisfy(
-                x => x.ConsentId == consentId && x.ConsentStatus == ConsentStatusId.ACTIVE,
-                x => x.ConsentId == newCreatedConsentId && x.ConsentStatus == ConsentStatusId.ACTIVE
+                x => x.AgreementId == agreementId && x.ConsentStatus == ConsentStatusId.ACTIVE,
+                x => x.AgreementId == additionalAgreementId && x.ConsentStatus == ConsentStatusId.ACTIVE
             );
     }
 

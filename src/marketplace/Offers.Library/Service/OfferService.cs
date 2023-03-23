@@ -178,7 +178,7 @@ public class OfferService : IOfferService
                 companyId,
                 companyUserId,
                 DateTimeOffset.UtcNow)
-            .Select(consent => new ConsentStatusData(consent.Id, consent.ConsentStatusId));
+            .Select(consent => new ConsentStatusData(consent.AgreementId, consent.ConsentStatusId));
     }
 
     private async Task<OfferAgreementConsentUpdate> GetProviderOfferAgreementConsent(Guid offerId, string iamUserId, OfferStatusId statusId, OfferTypeId offerTypeId)
