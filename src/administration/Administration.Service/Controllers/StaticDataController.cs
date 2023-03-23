@@ -54,7 +54,7 @@ public class StaticDataController : ControllerBase
     /// </remarks>
     /// <response code="200">Returns a list of all of the use case data.</response>
     [HttpGet]
-    [Authorize(Roles = "view_use_cases")]
+    // [Authorize(Roles = "view_use_cases")]
     [Route("usecases")]
     [ProducesResponseType(typeof(IAsyncEnumerable<UseCaseData>), StatusCodes.Status200OK)]
     public IAsyncEnumerable<UseCaseData> GetUseCases() =>
@@ -70,7 +70,7 @@ public class StaticDataController : ControllerBase
     /// </remarks>
     /// <response code="200">Returns a list of all of the Language i.e german and english</response>
     [HttpGet]
-    [Authorize(Roles = "view_app_language")]
+    // [Authorize(Roles = "view_app_language")]
     [Route("languagetags")]
     [ProducesResponseType(typeof(IAsyncEnumerable<LanguageData>), StatusCodes.Status200OK)]
     public IAsyncEnumerable<LanguageData> GetLanguages() =>

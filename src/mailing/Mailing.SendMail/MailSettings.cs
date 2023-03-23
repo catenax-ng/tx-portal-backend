@@ -30,7 +30,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Mailing.SendMail
         public string SmtpHost { get; set; } = null!;
         public string SmtpUser { get; set; } = null!;
         public string SmtpPassword { get; set; } = null!;
-        public string SmtpFromEmail { get; set; } = null!;
+        public string SmtpFromEmail { get; set; } = "Test";
         public int SmtpPort { get; set; } = 0;
         public string? HttpProxy { get; set; }
         public int HttpProxyPort { get; set; }
