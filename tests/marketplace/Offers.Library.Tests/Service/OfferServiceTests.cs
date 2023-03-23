@@ -238,7 +238,7 @@ public class OfferServiceTests
                 setupOptionalFields?.Invoke(consent);
                 consents.Add(consent);
             })
-            .Returns(new Consent(consentId)
+            .Returns(new Consent(consentId, Guid.Empty, Guid.Empty, Guid.Empty, default, default)
             {
                 ConsentStatusId = statusId
             });
@@ -325,7 +325,7 @@ public class OfferServiceTests
                 setupOptionalFields?.Invoke(consent);
                 consents.Add(consent);
             })
-            .Returns(new Consent(consentId)
+            .Returns(new Consent(consentId, Guid.Empty, Guid.Empty, Guid.Empty, default, default)
             {
                 ConsentStatusId = statusId
             });

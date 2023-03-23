@@ -95,10 +95,7 @@ public class OfferService : IOfferService
 
         foreach (var offerSubscriptionConsent in offerSubscriptionConsents)
         {
-            var consent = new Consent(offerSubscriptionConsent.ConsentId)
-                {
-                    ConsentStatusId = offerSubscriptionConsent.ConsentStatusId
-                };
+            var consent = new Consent(offerSubscriptionConsent.ConsentId, Guid.Empty, Guid.Empty, Guid.Empty, offerSubscriptionConsent.ConsentStatusId, default);
             var dbConsent = _portalRepositories.Attach(consent);
             dbConsent.ConsentStatusId = offerAgreementConsentData.Single(x => x.AgreementId == offerSubscriptionConsent.AgreementId).ConsentStatusId;
         }
