@@ -2015,6 +2015,9 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                     b.HasKey("Id")
                         .HasName("pk_consents");
 
+                    b.HasIndex("AgreementId")
+                        .HasDatabaseName("ix_consents_agreement_id");
+
                     b.HasIndex("CompanyId")
                         .HasDatabaseName("ix_consents_company_id");
 
@@ -2026,10 +2029,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
 
                     b.HasIndex("DocumentId")
                         .HasDatabaseName("ix_consents_document_id");
-
-                    b.HasIndex("AgreementId", "CompanyId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_consents_agreement_id_company_id");
 
                     b.ToTable("consents", "portal");
                 });

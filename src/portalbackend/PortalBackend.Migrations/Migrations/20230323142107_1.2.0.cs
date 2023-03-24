@@ -29,11 +29,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropIndex(
-                name: "ix_consents_agreement_id",
-                schema: "portal",
-                table: "consents");
-
             migrationBuilder.AddColumn<DateTimeOffset>(
                 name: "lock_expiry_date",
                 schema: "portal",
@@ -140,13 +135,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 table: "documents",
                 column: "media_type_id");
 
-            migrationBuilder.CreateIndex(
-                name: "ix_consents_agreement_id_company_id",
-                schema: "portal",
-                table: "consents",
-                columns: new[] { "agreement_id", "company_id" },
-                unique: true);
-
             migrationBuilder.AddForeignKey(
                 name: "fk_documents_media_types_media_type_id",
                 schema: "portal",
@@ -190,11 +178,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 schema: "portal",
                 table: "documents");
 
-            migrationBuilder.DropIndex(
-                name: "ix_consents_agreement_id_company_id",
-                schema: "portal",
-                table: "consents");
-
             migrationBuilder.DropColumn(
                 name: "lock_expiry_date",
                 schema: "portal",
@@ -219,12 +202,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 name: "last_editor_id",
                 schema: "portal",
                 table: "company_assigned_roles");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_consents_agreement_id",
-                schema: "portal",
-                table: "consents",
-                column: "agreement_id");
         }
     }
 }
