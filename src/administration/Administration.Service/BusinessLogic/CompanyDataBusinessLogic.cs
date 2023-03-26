@@ -127,10 +127,21 @@ public class CompanyDataBusinessLogic : ICompanyDataBusinessLogic
                 throw new ConflictException("companyRole already exists");   
             }
             _portalRepositories.GetInstance<ICompanyRolesRepository>().CreateCompanyAssignedRole(companyRole.companyId, data.companyRoles);
+
+            var consentRepository = _portalRepositories.GetInstance<IConsentRepository>();
             foreach(var agreementData in data.agreements)
             {
-                _portalRepositories.GetInstance<IConsentRepository>().CreateConsent(agreementData.agreementId, companyRole.companyId, companyRole.companyUserId, agreementData.consentStatus);
+                if(companyRole.consentStatusDatas.Any(csd => csd.AgreementId == agreementData.agreementId))
+                {
+                    consentRepository.AttachAndModifiesConsents(companyRole.consentStatusDatas.Select(csd => csd.consentId), consent =>
+                        consent.ConsentStatusId = agreementData.consentStatus);
+                }
+                else
+                {
+                    consentRepository.CreateConsent(agreementData.agreementId,companyRole.companyId,companyRole.companyUserId,agreementData.consentStatus);
+                }
             }
+
         }
         await _portalRepositories.SaveAsync();
     }

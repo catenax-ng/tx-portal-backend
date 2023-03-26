@@ -220,22 +220,27 @@ public class CompanyRepository : ICompanyRepository
             company.CompanyRole.Label,
             company.CompanyRole.CompanyRoleRegistrationData!.IsRegistrationRole,
             company.CompanyRole.AgreementAssignedCompanyRoles.Where(c => c.Agreement!.IssuerCompanyId == company.CompanyId)
-                .Select(aacr => new ConsentAgreementData(
-                    aacr.Agreement!.Id,
-                    aacr.Agreement!.Name,
-                    aacr.Agreement.Consents.Where(c => c.CompanyId == company.CompanyId).Select(x => x.ConsentStatusId).SingleOrDefault()))))
+                .SelectMany(aacr => aacr.Agreement!.Consents)
+                .Select(consent => new ConsentAgreementData(
+                    consent.AgreementId,
+                    consent.Agreement!.Name,
+                    consent.ConsentStatusId))))
         .AsAsyncEnumerable();
 
     /// <inheritdoc />
-    public Task<(bool isCompanyActive, Guid companyId, IEnumerable<CompanyRoleId> companyRoleId, Guid companyUserId, IEnumerable<CompanyRoleId> agreementAssignedRole)> GetCompanyRolesDataAsync(string iamUserId) =>
+    public Task<(bool isCompanyActive, Guid companyId, IEnumerable<CompanyRoleId> companyRoleId, Guid companyUserId, IEnumerable<CompanyRoleId> agreementAssignedRole, IEnumerable<ConsentStatusData> consentStatusDatas)> GetCompanyRolesDataAsync(string iamUserId) =>
     _context.Companies
     .Where(company => company.CompanyUsers.Any(user => user.IamUser!.UserEntityId == iamUserId))
-    .Select( company => new ValueTuple<bool,Guid,IEnumerable<CompanyRoleId>,Guid,IEnumerable<CompanyRoleId>>(
+    .Select( company => new ValueTuple<bool,Guid,IEnumerable<CompanyRoleId>,Guid,IEnumerable<CompanyRoleId>,IEnumerable<ConsentStatusData>>(
         company.CompanyStatusId == CompanyStatusId.ACTIVE,
         company.Id,
         company.CompanyRoles.Select(cr => cr.Id),
         company.CompanyUsers.Select(cu => cu.Id).FirstOrDefault(),
         company.Agreements.SelectMany(agreement => agreement.AgreementAssignedCompanyRoles)
-            .Select(aacr => aacr.CompanyRoleId)
-    )).SingleOrDefaultAsync();
+            .Select(aacr => aacr.CompanyRoleId),
+        company.Consents.Select(consent => new ConsentStatusData(
+            consent.Id,
+            consent.AgreementId,
+            consent.ConsentStatusId))))
+    .SingleOrDefaultAsync();
 }

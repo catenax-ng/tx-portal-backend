@@ -528,16 +528,16 @@ public class CompanyRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         var (sut, context) = await CreateSut().ConfigureAwait(false);
 
-        var result = sut.GetCompanyRoleAndConsentAgreementDetailsAsync("502dabcf-01c7-47d9-a88e-0be4279097b5");
+        var result = sut.GetCompanyRoleAndConsentAgreementDetailsAsync("8be5ee49-4b9c-4008-b641-138305430cc4");
 
         result.Should().NotBeNull();
         var data = await result.FirstAsync();
         var companyRole = data!.CompanyRoles;
         var isActiveCompanyRole = data.CompanyRolesActive;
-        var agreement = data.Agreements.First();
-        companyRole.Should().Be("ACTIVE_PARTICIPANT");
+        var agreement = data.Agreements.FirstOrDefault();
+        companyRole.Should().Be("SERVICE_PROVIDER");
         isActiveCompanyRole.Should().BeTrue();
-        agreement.AgreementId.Should().Be(new Guid("aa0a0000-7fbc-1f2f-817f-bce0502c1090"));
+        agreement!.AgreementId.Should().Be(new Guid("aa0a0000-7fbc-1f2f-817f-bce0502c1094"));
     }
 
     #endregion
@@ -551,15 +551,16 @@ public class CompanyRepositoryTests : IAssemblyFixture<TestDbFixture>
         var (sut, context) = await CreateSut().ConfigureAwait(false);
 
         // Act
-        var result = await sut.GetCompanyRolesDataAsync("502dabcf-01c7-47d9-a88e-0be4279097b5").ConfigureAwait(false);
+        var result = await sut.GetCompanyRolesDataAsync("8be5ee49-4b9c-4008-b641-138305430cc4").ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
-        result.companyId.Should().Be(new Guid("2dc4249f-b5ca-4d42-bef1-7a7a950a4f87"));
-        result.companyRoleId.Should().Contain(CompanyRoleId.ACTIVE_PARTICIPANT);
-        result.companyUserId.Should().Be(new Guid("ac1cf001-7fbc-1f2f-817f-bce058020006"));
+        result.companyId.Should().Be(new Guid("3390c2d7-75c1-4169-aa27-6ce00e1f3cdd"));
+        result.companyRoleId.Should().Contain(CompanyRoleId.SERVICE_PROVIDER);
+        result.companyUserId.Should().Be(new Guid("ac1cf001-7fbc-1f2f-817f-bce058020005"));
         result.isCompanyActive.Should().BeTrue();
-        result.agreementAssignedRole.Should().Contain(CompanyRoleId.APP_PROVIDER);
+        result.agreementAssignedRole.Should().Contain(CompanyRoleId.SERVICE_PROVIDER);
+        result.consentStatusDatas.Select(x => x.ConsentStatus).Should().Contain(ConsentStatusId.ACTIVE);
     }
 
     #endregion
