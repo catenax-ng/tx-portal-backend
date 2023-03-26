@@ -193,9 +193,10 @@ public class CompanyRepository : ICompanyRepository
             company.CompanyRole.Label,
             company.CompanyRole.CompanyRoleRegistrationData!.IsRegistrationRole,
             company.CompanyRole.AgreementAssignedCompanyRoles.Where(c => c.Agreement!.IssuerCompanyId == company.CompanyId)
-                .Select(aacr => new ConsentAgreementData(
-                    aacr.Agreement!.Id,
-                    aacr.Agreement!.Name,
-                    aacr.Agreement.Consents.Where(c => c.CompanyId == company.CompanyId).Select(x => x.ConsentStatusId).SingleOrDefault()))))
+                    .SelectMany(consent => consent.Agreement!.Consents)
+                    .Select(consent => new ConsentAgreementData(
+                        consent.AgreementId,
+                        consent.Agreement!.Name,
+                        consent.ConsentStatusId))))
         .AsAsyncEnumerable();
 }
