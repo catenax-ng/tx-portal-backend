@@ -97,6 +97,13 @@ public class ServiceSettings
     /// </summary>
     [Required(AllowEmptyStrings = false)]
     public string UserManagementAddress { get; init; } = null!;
+
+    /// <summary>
+    /// Service Document Type Id
+    /// </summary>
+    /// <value></value>
+    [Required]
+    public IEnumerable<DocumentTypeId> ServiceImageDocumentTypeIds{ get; set; } = null!;
 }
 
 public static class ServiceSettingsExtension
