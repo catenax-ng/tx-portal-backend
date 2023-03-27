@@ -263,6 +263,9 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
             {
                 app.SalesManagerId = appRequestModel.SalesManagerId;
             }
+            app.ContactEmail = appRequestModel.ContactEmail;
+            app.ContactNumber = appRequestModel.ContactNumber;
+            app.MarketingUrl = appRequestModel.ProviderUri;
         }).Id;
         appRepository.AddOfferDescriptions(appRequestModel.Descriptions.Select(d =>
               (appId, d.LanguageCode, d.LongDescription, d.ShortDescription)));
@@ -287,7 +290,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
     }
 
     /// <inheritdoc/>
-    public async Task UpdateAppReleaseAsync(Guid appId, AppUpdateModel appRequestModel, string iamUserId)
+    public async Task UpdateAppReleaseAsync(Guid appId, AppRequestModel appRequestModel, string iamUserId)
     {
         var appData = await _portalRepositories.GetInstance<IOfferRepository>()
             .GetAppUpdateData(
@@ -329,7 +332,6 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         app =>
         {
             app.Name = appRequestModel.Title;
-            app.OfferStatusId = OfferStatusId.CREATED;
             app.Provider = appRequestModel.Provider;
             app.SalesManagerId = appRequestModel.SalesManagerId;
             app.ContactEmail = appRequestModel.ContactEmail;
@@ -337,7 +339,12 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
             app.MarketingUrl = appRequestModel.ProviderUri;
         },
         app => {
+            app.Name = appData.Name;
+            app.Provider = appData.Provider;
             app.SalesManagerId = appData.SalesManagerId;
+            app.ContactEmail = appData.ContactEmail;
+            app.ContactNumber = appData.ContactNumber;
+            app.MarketingUrl = appData.MarketingUrl;
         });
 
         _offerService.UpsertRemoveOfferDescription(appId, appRequestModel.Descriptions, appData.OfferDescriptions);

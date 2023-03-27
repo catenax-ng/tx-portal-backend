@@ -269,7 +269,7 @@ public class AppReleaseProcessController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
-    public async Task<NoContentResult> UpdateAppRelease([FromRoute] Guid appId, [FromBody] AppUpdateModel appRequestModel)
+    public async Task<NoContentResult> UpdateAppRelease([FromRoute] Guid appId, [FromBody] AppRequestModel appRequestModel)
     {
         await this.WithIamUserId(iamUserId => _appReleaseBusinessLogic.UpdateAppReleaseAsync(appId, appRequestModel, iamUserId).ConfigureAwait(false));
         return NoContent();

@@ -243,7 +243,7 @@ public class AppReleaseProcessControllerTest
     {
         // Arrange
         var appId = new Guid("5cf74ef8-e0b7-4984-a872-474828beb5d2");
-        var data = new AppUpdateModel(
+        var data = new AppRequestModel(
             "Test",
             "Test Provider",
             Guid.NewGuid(),
@@ -268,7 +268,7 @@ public class AppReleaseProcessControllerTest
             "test@gmail.com",
             "9456321678"
             );
-        A.CallTo(() => _logic.UpdateAppReleaseAsync(A<Guid>._, A<AppUpdateModel>._, A<string>._))
+        A.CallTo(() => _logic.UpdateAppReleaseAsync(A<Guid>._, A<AppRequestModel>._, A<string>._))
             .ReturnsLazily(() => Task.CompletedTask);
 
         // Act
