@@ -212,7 +212,7 @@ public class OfferService : IOfferService
 
         if (data.SalesManager.HasValue && results.All(x => x.CompanyUserId != data.SalesManager))
             throw new ControllerArgumentException("SalesManager does not exist", nameof(data.SalesManager));
-        
+
         await CheckLanguageCodesExist(data.Descriptions.Select(x => x.LanguageCode)).ConfigureAwait(false);
 
         var offerRepository = _portalRepositories.GetInstance<IOfferRepository>();

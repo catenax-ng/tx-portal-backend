@@ -528,12 +528,15 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
     {
         switch (data.IsSingleInstance)
         {
-            case true when !string.IsNullOrWhiteSpace(data.InstanceUrl):
+            case true:
+                if (string.IsNullOrWhiteSpace(data.InstanceUrl))
+                {
+                    throw new ControllerArgumentException("InstanceUrl must be set for a single instance app",
+                        nameof(data.InstanceUrl));
+                }
                 data.InstanceUrl!.EnsureValidHttpUrl(() => nameof(data.InstanceUrl));
                 break;
-            case true when string.IsNullOrWhiteSpace(data.InstanceUrl):
-                throw new ControllerArgumentException("InstanceUrl must be set for a single instance app",
-                    nameof(data.InstanceUrl));
+
             case false when !string.IsNullOrWhiteSpace(data.InstanceUrl):
                 throw new ControllerArgumentException("Multi instance app must not have a instance url set",
                     nameof(data.InstanceUrl));
@@ -573,7 +576,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
         }
         else
         {
-            await HandleAppInstanceUpdate(appId, data, result!).ConfigureAwait(false);
+            await HandleAppInstanceUpdate(appId, data, (result.OfferStatus, result.IsUserOfProvidingCompany, result.SetupTransferData, result.AppInstanceData)).ConfigureAwait(false);
         }
 
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
@@ -633,7 +636,6 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
             throw new ConflictException("The must be at exactly one AppInstance");
         }
 
-        var appInstance = result.AppInstanceData.Single();
-        return appInstance;
+        return result.AppInstanceData.Single();
     }
 }

@@ -6,4 +6,5 @@ public record SingleInstanceOfferData(
     string? Bpn,
     string? InternalClientId,
     Guid InstanceSetupId,
-    Guid ClientId);
+    Guid ClientId
+);
