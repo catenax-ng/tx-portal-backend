@@ -294,10 +294,13 @@ public class AppReleaseBusinessLogicTest
     {
         // Arrange
         SetupUpdateApp();
-        var data = new AppRequestModel("test", "test", Guid.NewGuid(), new List<Guid>(), new List<LocalizedDescription>(), new [] { string.Empty }, "123", new[]
+        var data = new AppUpdateModel("test", "test", Guid.NewGuid(), new List<Guid>(), new List<LocalizedDescription>(), new [] { string.Empty }, "123", new[]
             {
                 PrivacyPolicyId.COMPANY_DATA   
-            });
+            },
+            "https://test.provider.com",
+            "test@gmail.com",
+            "9456321678");
         var settings = new AppsSettings();
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService);
      
@@ -314,10 +317,13 @@ public class AppReleaseBusinessLogicTest
     {
         // Arrange
         SetupUpdateApp();
-        var data = new AppRequestModel("test", "test", Guid.NewGuid(), new []{ Guid.Empty }, new List<LocalizedDescription>(), new [] { "de" }, "123", new[]
+        var data = new AppUpdateModel("test", "test", Guid.NewGuid(), new []{ Guid.Empty }, new List<LocalizedDescription>(), new [] { "de" }, "123", new[]
             {
                 PrivacyPolicyId.COMPANY_DATA  
-            });
+            },
+            "https://test.provider.com",
+            "test@gmail.com",
+            "9456321678");
         var settings = new AppsSettings();
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService);
      
@@ -334,10 +340,13 @@ public class AppReleaseBusinessLogicTest
     {
         // Arrange
         SetupUpdateApp();
-        var data = new AppRequestModel("test", "test", Guid.NewGuid(), new []{ Guid.NewGuid() }, new List<LocalizedDescription>(), new [] { "de" }, "123", new[]
+        var data = new AppUpdateModel("test", "test", Guid.NewGuid(), new []{ Guid.NewGuid() }, new List<LocalizedDescription>(), new [] { "de" }, "123", new[]
             {
                 PrivacyPolicyId.COMPANY_DATA  
-            });
+            },
+            "https://test.provider.com",
+            "test@gmail.com",
+            "9456321678");
         var settings = new AppsSettings();
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService);
      
@@ -354,10 +363,14 @@ public class AppReleaseBusinessLogicTest
     {
         // Arrange
         SetupUpdateApp();
-        var data = new AppRequestModel("test", "test", _companyUser.Id, new []{ Guid.NewGuid() }, new List<LocalizedDescription>(), new [] { "de", "en", "invalid" }, "123", new[]
+        var data = new AppUpdateModel("test", "test", _companyUser.Id, new []{ Guid.NewGuid() }, new List<LocalizedDescription>(), new [] { "de", "en", "invalid" }, "123", new[]
             {
                 PrivacyPolicyId.COMPANY_DATA  
-            });
+            },
+            "https://test.provider.com",
+            "test@gmail.com",
+            "9456321678"
+            );
         var settings = new AppsSettings();
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService);
         
@@ -375,7 +388,7 @@ public class AppReleaseBusinessLogicTest
         // Arrange
         SetupUpdateApp();
 
-        var data = new AppRequestModel(
+        var data = new AppUpdateModel(
             "test",
             "test",  
             _companyUser.Id, 
@@ -389,7 +402,11 @@ public class AppReleaseBusinessLogicTest
             new[]
             {
                 PrivacyPolicyId.COMPANY_DATA  
-            });
+            },
+            "https://test.provider.com",
+            "test@gmail.com",
+            "9456321678"
+            );
         var settings = new AppsSettings();
         var sut = new AppReleaseBusinessLogic(_portalRepositories, Options.Create(settings), _offerService);
         

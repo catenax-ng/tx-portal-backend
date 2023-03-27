@@ -287,7 +287,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
     }
 
     /// <inheritdoc/>
-    public async Task UpdateAppReleaseAsync(Guid appId, AppRequestModel appRequestModel, string iamUserId)
+    public async Task UpdateAppReleaseAsync(Guid appId, AppUpdateModel appRequestModel, string iamUserId)
     {
         var appData = await _portalRepositories.GetInstance<IOfferRepository>()
             .GetAppUpdateData(
@@ -332,6 +332,9 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
             app.OfferStatusId = OfferStatusId.CREATED;
             app.Provider = appRequestModel.Provider;
             app.SalesManagerId = appRequestModel.SalesManagerId;
+            app.ContactEmail = appRequestModel.ContactEmail;
+            app.ContactNumber = appRequestModel.ContactNumber;
+            app.MarketingUrl = appRequestModel.ProviderUri;
         },
         app => {
             app.SalesManagerId = appData.SalesManagerId;
