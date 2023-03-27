@@ -141,5 +141,5 @@ public interface ICompanyRepository
     /// </summary>
     /// <param name="iamUserId">Id of the iam user</param>
     /// <returns>Returns the companyRole</returns>
-    Task<(bool isCompanyActive,Guid companyId, IEnumerable<CompanyRoleId> companyRoleId, Guid companyUserId, IEnumerable<CompanyRoleId> agreementAssignedRole, IEnumerable<ConsentStatusData> consentStatusDatas)> GetCompanyRolesDataAsync(string iamUserId);
+    Task<(bool isCompanyActive,Guid companyId, IEnumerable<CompanyRoleId> companyRoleId, Guid companyUserId, IEnumerable<CompanyRoleId> agreementAssignedRole, IEnumerable<ConsentStatusDetails> consentStatusDatas)> GetCompanyRolesDataAsync(string iamUserId);
 }
