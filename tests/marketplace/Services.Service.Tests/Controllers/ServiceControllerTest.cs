@@ -291,7 +291,7 @@ public class ServiceControllerTest
         var fileName = _fixture.Create<string>();
         
         A.CallTo(() => _logic.GetServiceDocumentContentAsync(A<Guid>._ , A<Guid>._, A<CancellationToken>._))
-            .ReturnsLazily(() => (content,"image/png",fileName));
+            .Returns((content,"image/png",fileName));
 
         //Act
         var result = await this._controller.GetServiceDocumentContentAsync(serviceId,documentId,CancellationToken.None).ConfigureAwait(false);

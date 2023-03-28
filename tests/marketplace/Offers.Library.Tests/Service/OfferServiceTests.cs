@@ -27,7 +27,6 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Mailing.SendMail;
 using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared;
-using PortalBackend.DBAccess.Models;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Tests.Service;
 
@@ -1496,7 +1495,7 @@ public class OfferServiceTests
 
         var documentContentData = new OfferDocumentContentData(true, true, true, false, data, fileName, MediaTypeId.JPEG);
         A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(offerId, documentId, documentTypeIdSettings, offerTypeId, A<CancellationToken>._))
-            .ReturnsLazily(() => documentContentData);
+            .Returns(documentContentData);
 
 
         // Act
@@ -1505,7 +1504,7 @@ public class OfferServiceTests
         // Assert
         result.Content.Should().BeSameAs(data);
         result.ContentType.Should().Be("image/jpeg");
-        A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(offerId, documentId, documentTypeIdSettings, offerTypeId, A<CancellationToken>._)).MustHaveHappened();
+        A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(offerId, documentId, documentTypeIdSettings, offerTypeId, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
     }
 
     [Theory]
@@ -1518,7 +1517,7 @@ public class OfferServiceTests
         var documentId = _fixture.Create<Guid>();
 
         A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(offerId, documentId, documentTypeIdSettings, offerTypeId, A<CancellationToken>._))
-            .ReturnsLazily(() => (OfferDocumentContentData?)null);
+            .Returns((OfferDocumentContentData?)null);
 
         // Act
         async Task Act() => await _sut.GetOfferDocumentContentAsync(offerId, documentId, documentTypeIdSettings, offerTypeId, CancellationToken.None).ConfigureAwait(false);
@@ -1540,7 +1539,7 @@ public class OfferServiceTests
 
         var documentContentData = new OfferDocumentContentData(false, true, true, false, null, fileName, MediaTypeId.JPEG);
         A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(offerId, documentId, documentTypeIdSettings, offerTypeId, A<CancellationToken>._))
-            .ReturnsLazily(() => documentContentData);
+            .Returns(documentContentData);
 
         // Act
         async Task Act() => await _sut.GetOfferDocumentContentAsync(offerId, documentId, documentTypeIdSettings, offerTypeId, CancellationToken.None).ConfigureAwait(false);
@@ -1562,7 +1561,7 @@ public class OfferServiceTests
 
         var documentContentData = new OfferDocumentContentData(true, true, false, false, null, fileName, MediaTypeId.JPEG);
         A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(offerId, documentId, documentTypeIdSettings, offerTypeId, A<CancellationToken>._))
-            .ReturnsLazily(() => documentContentData);
+            .Returns(documentContentData);
 
         // Act
         async Task Act() => await _sut.GetOfferDocumentContentAsync(offerId, documentId, documentTypeIdSettings, offerTypeId, CancellationToken.None).ConfigureAwait(false);
@@ -1584,7 +1583,7 @@ public class OfferServiceTests
 
         var documentContentData = new OfferDocumentContentData(true, false, true, false, null, fileName, MediaTypeId.JPEG);
         A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(offerId, documentId, documentTypeIdSettings, offerTypeId, A<CancellationToken>._))
-            .ReturnsLazily(() => documentContentData);
+            .Returns(documentContentData);
 
         // Act
         async Task Act() => await _sut.GetOfferDocumentContentAsync(offerId, documentId, documentTypeIdSettings, offerTypeId, CancellationToken.None).ConfigureAwait(false);
@@ -1606,7 +1605,7 @@ public class OfferServiceTests
  
         var documentContentData = new OfferDocumentContentData(true, true, true, true, null, fileName, MediaTypeId.JPEG);
         A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(offerId, documentId, documentTypeIdSettings, offerTypeId, A<CancellationToken>._))
-            .ReturnsLazily(() => documentContentData);
+            .Returns(documentContentData);
 
         // Act
         async Task Act() => await _sut.GetOfferDocumentContentAsync(offerId, documentId, documentTypeIdSettings, offerTypeId, CancellationToken.None).ConfigureAwait(false);
@@ -1628,7 +1627,7 @@ public class OfferServiceTests
 
         var documentContentData = new OfferDocumentContentData(true, true, true, false, null, fileName, MediaTypeId.JPEG);
         A.CallTo(() => _documentRepository.GetOfferDocumentContentAsync(offerId, documentId, documentTypeIdSettings, offerTypeId, A<CancellationToken>._))
-            .ReturnsLazily(() => documentContentData);
+            .Returns(documentContentData);
 
         // Act
         async Task Act() => await _sut.GetOfferDocumentContentAsync(offerId, documentId, documentTypeIdSettings, offerTypeId, CancellationToken.None).ConfigureAwait(false);

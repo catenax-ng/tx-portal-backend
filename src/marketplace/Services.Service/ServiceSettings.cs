@@ -48,7 +48,7 @@ public class ServiceSettings
     /// </summary>
     /// <value></value>
     [Required]
-    public IEnumerable<NotificationTypeId> SubmitServiceNotificationTypeIds { get; set; } = null!;
+    public IEnumerable<NotificationTypeId> SubmitServiceNotificationTypeIds { get; init; } = null!;
 
     /// <summary>
     /// BasePortalAddress url required for subscription email 
@@ -103,7 +103,7 @@ public class ServiceSettings
     /// </summary>
     /// <value></value>
     [Required]
-    public IEnumerable<DocumentTypeId> ServiceImageDocumentTypeIds{ get; set; } = null!;
+    public IEnumerable<DocumentTypeId> ServiceImageDocumentTypeIds{ get; init; } = null!;
 }
 
 public static class ServiceSettingsExtension
