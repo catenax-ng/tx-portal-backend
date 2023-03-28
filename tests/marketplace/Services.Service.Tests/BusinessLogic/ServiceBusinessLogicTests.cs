@@ -95,10 +95,6 @@ public class ServiceBusinessLogicTests
         var serviceSettings = new ServiceSettings
         {
             ApplicationsMaxPageSize = 15, 
-            ServiceAccountRoles = new Dictionary<string, IEnumerable<string>>
-            {
-                {"Test", new[] {"Technical User"}}
-            }, 
             ITAdminRoles = new Dictionary<string, IEnumerable<string>>
             {
                 {"Cl2-CX-Portal", new[] {"IT Admin"}}
@@ -364,7 +360,7 @@ public class ServiceBusinessLogicTests
     {
         // Arrange
         var offerSetupService = A.Fake<IOfferSetupService>();
-        A.CallTo(() => offerSetupService.AutoSetupOfferAsync(A<OfferAutoSetupData>._, A<IDictionary<string, IEnumerable<string>>>._, A<IDictionary<string, IEnumerable<string>>>._, A<string>._, A<OfferTypeId>._, A<string>._))
+        A.CallTo(() => offerSetupService.AutoSetupOfferAsync(A<OfferAutoSetupData>._, A<IDictionary<string, IEnumerable<string>>>._, A<string>._, A<OfferTypeId>._, A<string>._))
             .ReturnsLazily(() => new OfferAutoSetupResponseData(new TechnicalUserInfoData(Guid.NewGuid(), "abcSecret", "sa1"), new ClientInfoData(Guid.NewGuid().ToString())));
         var data = new OfferAutoSetupData(Guid.NewGuid(), "https://www.offer.com");
         var sut = _fixture.Create<ServiceBusinessLogic>();
@@ -631,8 +627,7 @@ public class ServiceBusinessLogicTests
         
         // Assert
         A.CallTo(() => _offerService.ApproveOfferRequestAsync(appId, _iamUser.UserEntityId, OfferTypeId.SERVICE,
-            A<IEnumerable<NotificationTypeId>>._, A<IDictionary<string, IEnumerable<string>>>._,
-            A<IDictionary<string, IEnumerable<string>>>._)).MustHaveHappenedOnceExactly();
+            A<IEnumerable<NotificationTypeId>>._, A<IDictionary<string, IEnumerable<string>>>._)).MustHaveHappenedOnceExactly();
     }
 
     #endregion

@@ -297,7 +297,7 @@ public interface IOfferRepository
     /// <param name="appId"></param>
     /// <param name="offerTypeId"></param>
     /// <returns></returns>
-    Task<(bool IsStatusInReview, string? OfferName, Guid? ProviderCompanyId, bool IsSingleInstance)> GetOfferStatusDataByIdAsync(Guid appId, OfferTypeId offerTypeId);
+    Task<(bool IsStatusInReview, string? OfferName, Guid? ProviderCompanyId, bool IsSingleInstance, IEnumerable<string> ClientIds, IEnumerable<Guid> InstanceIds)> GetOfferStatusDataByIdAsync(Guid appId, OfferTypeId offerTypeId);
 
     /// <summary>
     /// Gets the data needed for declining an offer
@@ -468,15 +468,6 @@ public interface IOfferRepository
     AppInstanceSetup CreateAppInstanceSetup(Guid appId, bool isSingleInstance, Action<AppInstanceSetup>? setOptionalParameter);
 
     /// <summary>
-    /// Updates the <see cref="AppInstance"/>
-    /// </summary>
-    /// <param name="appInstanceId">Id of the appInstance that should be updated</param>
-    /// <param name="offerId">Id of the offer</param>
-    /// <param name="setOptionalParameters">Sets the values that should be updated</param>
-    /// <param name="initializeParameter">Initializes the parameters</param>
-    void AttachAndModifyAppInstance(Guid appInstanceId, Guid offerId, Action<AppInstance> setOptionalParameters, Action<AppInstance>? initializeParameter = null);
-
-    /// <summary>
     /// Gets the single instance offer data
     /// </summary>
     /// <param name="offerId">id of the offer</param>
@@ -492,4 +483,18 @@ public interface IOfferRepository
     /// <param name="setOptionalParameters">Sets the values that should be updated</param>
     /// <param name="initializeParameter">Initializes the parameters</param>
     void AttachAndModifyAppInstanceSetup(Guid appInstanceSetupId, Guid offerId, Action<AppInstanceSetup> setOptionalParameters, Action<AppInstanceSetup>? initializeParameter = null);
+
+    /// <summary>
+    /// Gets the related service account data
+    /// </summary>
+    /// <param name="offerId"></param>
+    /// <returns></returns>
+    Task<(bool IsSingleInstance, bool TechnicalUserNeeded, string? OfferName)> GetServiceAccountProfileData(Guid offerId);
+
+    /// <summary>
+    /// Gets the related service account data
+    /// </summary>
+    /// <param name="subscriptionId"></param>
+    /// <returns></returns>
+    Task<(bool IsSingleInstance, bool TechnicalUserNeeded, string? OfferName)> GetServiceAccountProfileDataForSubscription(Guid subscriptionId);
 }

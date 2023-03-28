@@ -43,4 +43,12 @@ public class AppInstanceRepository : IAppInstanceRepository
     /// <inheritdoc />
     public void RemoveAppInstance(Guid appInstanceId) =>
         _portalDbContext.AppInstances.Remove(new AppInstance(appInstanceId, Guid.Empty, Guid.Empty));
+
+    /// <inheritdoc />
+    public void CreateAppInstanceAssignedServiceAccounts(
+        IEnumerable<(Guid AppInstanceId, Guid CompanyServiceAccountId)> instanceAccounts) =>
+        _portalDbContext.AppInstancesAssignedServiceAccounts.AddRange(instanceAccounts
+            .Select(x => new AppInstanceAssignedCompanyServiceAccount(
+                x.AppInstanceId,
+                x.CompanyServiceAccountId)));
 }

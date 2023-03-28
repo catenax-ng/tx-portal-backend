@@ -67,6 +67,7 @@ public class OfferSetupServiceTests
     private readonly IMailingService _mailingService;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly OfferSetupService _sut;
+    private readonly ITechnicalUserProfileService _technicalUserProfileService;
 
     public OfferSetupServiceTests()
     {
@@ -91,6 +92,7 @@ public class OfferSetupServiceTests
         _notificationService = A.Fake<INotificationService>();
         _mailingService = A.Fake<IMailingService>();
         _httpClientFactory = A.Fake<IHttpClientFactory>();
+        _technicalUserProfileService = A.Fake<ITechnicalUserProfileService>();
         
         A.CallTo(() => _portalRepositories.GetInstance<IAppSubscriptionDetailRepository>()).Returns(_appSubscriptionDetailRepository);
         A.CallTo(() => _portalRepositories.GetInstance<IAppInstanceRepository>()).Returns(_appInstanceRepository);
@@ -99,7 +101,7 @@ public class OfferSetupServiceTests
         A.CallTo(() => _portalRepositories.GetInstance<IOfferSubscriptionsRepository>()).Returns(_offerSubscriptionsRepository);
         A.CallTo(() => _portalRepositories.GetInstance<IOfferRepository>()).Returns(_offerRepository);
 
-        _sut = new OfferSetupService(_portalRepositories, _provisioningManager, _serviceAccountCreation, _notificationService, _mailingService, _httpClientFactory);
+        _sut = new OfferSetupService(_portalRepositories, _provisioningManager, _serviceAccountCreation, _notificationService, _mailingService, _httpClientFactory, _technicalUserProfileService);
     }
 
     #region CallThirdPartyAutoSetupOfferAsync
@@ -181,7 +183,12 @@ public class OfferSetupServiceTests
                 clients.Add(client);
             })
             .Returns(new IamClient(clientId, "cl1"));
-
+        if (technicalUserRequired)
+        {
+            A.CallTo(() => _technicalUserProfileService.GetTechnicalUserProfilesForOfferSubscription(A<Guid>._))
+                .ReturnsLazily(() => Enumerable.Repeat(new ServiceAccountCreationInfo(Guid.NewGuid().ToString(), "test", IamClientAuthMethod.SECRET, new List<Guid>()), 1));
+        }
+        
         A.CallTo(() => _appInstanceRepository.CreateAppInstance(A<Guid>._, A<Guid>._))
             .Invokes((Guid appId, Guid iamClientId) =>
             {
@@ -205,10 +212,6 @@ public class OfferSetupServiceTests
                 setOptionalParameters?.Invoke(notification);
                 notifications.Add(notification);
             });
-        var serviceAccountRoles = new Dictionary<string, IEnumerable<string>>
-        {
-            { "technical_roles_management", new [] { "Digital Twin Management" } }
-        };
         var companyAdminRoles = new Dictionary<string, IEnumerable<string>>
         {
             { "Cl2-CX-Portal", new [] { "IT Admin" } }
@@ -217,7 +220,7 @@ public class OfferSetupServiceTests
         var data = new OfferAutoSetupData(_pendingSubscriptionId, "https://new-url.com/");
 
         // Act
-        var result = await _sut.AutoSetupOfferAsync(data, serviceAccountRoles, companyAdminRoles, IamUserId, offerTypeId, "https://base-address.com").ConfigureAwait(false);
+        var result = await _sut.AutoSetupOfferAsync(data, companyAdminRoles, IamUserId, offerTypeId, "https://base-address.com").ConfigureAwait(false);
         
         // Assert
         result.Should().NotBeNull();
@@ -268,10 +271,6 @@ public class OfferSetupServiceTests
     {
         // Arrange
         SetupAutoSetup();
-        var serviceAccountRoles = new Dictionary<string, IEnumerable<string>>
-        {
-            { "technical_roles_management", new [] { "Digital Twin Management" } }
-        };
         var companyAdminRoles = new Dictionary<string, IEnumerable<string>>
         {
             { "Cl2-CX-Portal", new [] { "IT Admin" } }
@@ -280,7 +279,7 @@ public class OfferSetupServiceTests
         var data = new OfferAutoSetupData(_pendingSubscriptionId, "https://new-url.com/");
 
         // Act
-        var result = await _sut.AutoSetupOfferAsync(data, serviceAccountRoles, companyAdminRoles, IamUserIdWithoutMail, OfferTypeId.SERVICE, "https://base-address.com").ConfigureAwait(false);
+        var result = await _sut.AutoSetupOfferAsync(data, companyAdminRoles, IamUserIdWithoutMail, OfferTypeId.SERVICE, "https://base-address.com").ConfigureAwait(false);
         
         // Assert
         result.Should().NotBeNull();
@@ -295,10 +294,6 @@ public class OfferSetupServiceTests
     {
         // Arrange
         SetupAutoSetup(isSingleInstance: true);
-        var serviceAccountRoles = new Dictionary<string, IEnumerable<string>>
-        {
-            { "technical_roles_management", new [] { "Digital Twin Management" } }
-        };
         var companyAdminRoles = new Dictionary<string, IEnumerable<string>>
         {
             { "Cl2-CX-Portal", new [] { "IT Admin" } }
@@ -307,7 +302,7 @@ public class OfferSetupServiceTests
         var data = new OfferAutoSetupData(_offerIdWithInstanceNotSet, "https://new-url.com/");
 
         // Act
-        async Task Act() => await _sut.AutoSetupOfferAsync(data, serviceAccountRoles, companyAdminRoles, IamUserId, OfferTypeId.APP, "https://base-address.com").ConfigureAwait(false);
+        async Task Act() => await _sut.AutoSetupOfferAsync(data, companyAdminRoles, IamUserId, OfferTypeId.APP, "https://base-address.com").ConfigureAwait(false);
         
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -324,7 +319,7 @@ public class OfferSetupServiceTests
         var data = new OfferAutoSetupData(Guid.NewGuid(), "https://new-url.com/");
 
         // Act
-        async Task Action() => await _sut.AutoSetupOfferAsync(data, new Dictionary<string, IEnumerable<string>>(), new Dictionary<string, IEnumerable<string>>(), IamUserId, OfferTypeId.SERVICE, "https://base-address.com");
+        async Task Action() => await _sut.AutoSetupOfferAsync(data, new Dictionary<string, IEnumerable<string>>(), IamUserId, OfferTypeId.SERVICE, "https://base-address.com");
         
         // Assert
         var ex = await Assert.ThrowsAsync<NotFoundException>(Action);
@@ -341,7 +336,7 @@ public class OfferSetupServiceTests
         var data = new OfferAutoSetupData(_validSubscriptionId, "https://new-url.com/");
 
         // Act
-        async Task Action() => await _sut.AutoSetupOfferAsync(data, new Dictionary<string, IEnumerable<string>>(), new Dictionary<string, IEnumerable<string>>(), IamUserId, OfferTypeId.SERVICE, "https://base-address.com");
+        async Task Action() => await _sut.AutoSetupOfferAsync(data, new Dictionary<string, IEnumerable<string>>(), IamUserId, OfferTypeId.SERVICE, "https://base-address.com");
         
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Action);
@@ -357,7 +352,7 @@ public class OfferSetupServiceTests
         var data = new OfferAutoSetupData(_pendingSubscriptionId, "https://new-url.com/");
 
         // Act
-        async Task Action() => await _sut.AutoSetupOfferAsync(data, new Dictionary<string, IEnumerable<string>>(), new Dictionary<string, IEnumerable<string>>(), Guid.NewGuid().ToString(), OfferTypeId.SERVICE, "https://base-address.com");
+        async Task Action() => await _sut.AutoSetupOfferAsync(data, new Dictionary<string, IEnumerable<string>>(), Guid.NewGuid().ToString(), OfferTypeId.SERVICE, "https://base-address.com");
         
         // Assert
         var ex = await Assert.ThrowsAsync<ForbiddenException>(Action);
@@ -376,17 +371,15 @@ public class OfferSetupServiceTests
         var appInstanceId = Guid.NewGuid();
         var appInstance = new AppInstance(appInstanceId, _validOfferId, default);
         SetupCreateSingleInstance(appInstance);
-        var serviceAccountRoles = new Dictionary<string, IEnumerable<string>>
-        {
-            { "technical_roles_management", new [] { "Digital Twin Management" } }
-        };
-
+        A.CallTo(() => _technicalUserProfileService.GetTechnicalUserProfilesForOffer(_validOfferId))
+            .ReturnsLazily(() => Enumerable.Repeat(new ServiceAccountCreationInfo(Guid.NewGuid().ToString(), "test", IamClientAuthMethod.SECRET, new List<Guid>()), 1));
+        
         // Act
-        var result = await _sut.ActivateSingleInstanceAppAsync(_validOfferId, serviceAccountRoles).ConfigureAwait(false);
+        var result = await _sut.ActivateSingleInstanceAppAsync(_validOfferId).ConfigureAwait(false);
         
         // Assert
         result.Should().NotBeNull();
-        appInstance.ServiceAccountId.Should().NotBeNull();
+        appInstance.ServiceAccounts.Should().HaveCount(1);
         A.CallTo(() => _provisioningManager.EnableClient(A<string>._))
             .MustHaveHappenedOnceExactly();
         
@@ -397,12 +390,8 @@ public class OfferSetupServiceTests
     {
         var offerId = Guid.NewGuid();
         SetupCreateSingleInstance();
-        var serviceAccountRoles = new Dictionary<string, IEnumerable<string>>
-        {
-            { "technical_roles_management", new [] { "Digital Twin Management" } }
-        };
         
-        async Task Act() => await _sut.ActivateSingleInstanceAppAsync(offerId, serviceAccountRoles).ConfigureAwait(false);
+        async Task Act() => await _sut.ActivateSingleInstanceAppAsync(offerId).ConfigureAwait(false);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
         ex.Message.Should().Be($"App {offerId} does not exist.");
@@ -412,12 +401,8 @@ public class OfferSetupServiceTests
     public async Task ActivateSingleInstanceAppAsync_WithNoInstanceSetupId_ThrowsConflictException()
     {
         SetupCreateSingleInstance();
-        var serviceAccountRoles = new Dictionary<string, IEnumerable<string>>
-        {
-            { "technical_roles_management", new [] { "Digital Twin Management" } }
-        };
         
-        async Task Act() => await _sut.ActivateSingleInstanceAppAsync(_offerIdWithInstanceNotSet, serviceAccountRoles).ConfigureAwait(false);
+        async Task Act() => await _sut.ActivateSingleInstanceAppAsync(_offerIdWithInstanceNotSet).ConfigureAwait(false);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
         ex.Message.Should().Be($"There must exactly be one instance set for offer {_offerIdWithInstanceNotSet}");
@@ -427,12 +412,7 @@ public class OfferSetupServiceTests
     public async Task ActivateSingleInstanceAppAsync_WithNoClientSet_ThrowsConflictException()
     {
         SetupCreateSingleInstance();
-        var serviceAccountRoles = new Dictionary<string, IEnumerable<string>>
-        {
-            { "technical_roles_management", new [] { "Digital Twin Management" } }
-        };
-        
-        async Task Act() => await _sut.ActivateSingleInstanceAppAsync(_offerIdWithoutClient, serviceAccountRoles).ConfigureAwait(false);
+        async Task Act() => await _sut.ActivateSingleInstanceAppAsync(_offerIdWithoutClient).ConfigureAwait(false);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
         ex.Message.Should().Be($"There must exactly be one clientId set for offer {_offerIdWithoutClient}");
@@ -442,12 +422,7 @@ public class OfferSetupServiceTests
     public async Task ActivateSingleInstanceAppAsync_WithInstanceNotSet_ThrowsConflictException()
     {
         SetupCreateSingleInstance();
-        var serviceAccountRoles = new Dictionary<string, IEnumerable<string>>
-        {
-            { "technical_roles_management", new [] { "Digital Twin Management" } }
-        };
-        
-        async Task Act() => await _sut.ActivateSingleInstanceAppAsync(_offerIdWithInstanceNotSet, serviceAccountRoles).ConfigureAwait(false);
+        async Task Act() => await _sut.ActivateSingleInstanceAppAsync(_offerIdWithInstanceNotSet).ConfigureAwait(false);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
         ex.Message.Should().Be($"There must exactly be one instance set for offer {_offerIdWithInstanceNotSet}");
@@ -616,19 +591,24 @@ public class OfferSetupServiceTests
 
         if (appInstance != null)
         {
-            A.CallTo(() => _offerRepository.AttachAndModifyAppInstance(A<Guid>._, A<Guid>._, A<Action<AppInstance>>._, A<Action<AppInstance>?>._))
-                .Invokes((Guid _, Guid _, Action<AppInstance> setOptionalFields, Action<AppInstance>? _) =>
+            A.CallTo(() => _appInstanceRepository.CreateAppInstanceAssignedServiceAccounts(A<IEnumerable<(Guid, Guid)>>._))
+                .Invokes((IEnumerable<(Guid AppInstanceId, Guid CompanyServiceAccountId)> instanceAccounts) =>
                 {
-                    setOptionalFields.Invoke(appInstance);
+                    foreach (var i in instanceAccounts.Select(x =>
+                                 new AppInstanceAssignedCompanyServiceAccount(x.AppInstanceId,
+                                     x.CompanyServiceAccountId)))
+                    {
+                        appInstance.ServiceAccounts.Add(i);
+                    }
                 });
         }
 
         A.CallTo(() => _offerRepository.GetSingleInstanceOfferData(_validOfferId, OfferTypeId.APP))
-            .ReturnsLazily(() => new SingleInstanceOfferData(_companyUserCompanyId, "app1", Bpn, Enumerable.Repeat("cl1", 1),Enumerable.Repeat(_validInstanceSetupId, 1)));
+            .ReturnsLazily(() => new SingleInstanceOfferData(_companyUserCompanyId, "app1", Bpn, true, Enumerable.Repeat("cl1", 1),Enumerable.Repeat(_validInstanceSetupId, 1)));
         A.CallTo(() => _offerRepository.GetSingleInstanceOfferData(_offerIdWithoutClient, OfferTypeId.APP))
-            .ReturnsLazily(() => new SingleInstanceOfferData(_companyUserCompanyId, "app1", Bpn, Enumerable.Empty<string>(), Enumerable.Repeat(_validInstanceSetupId, 1)));
+            .ReturnsLazily(() => new SingleInstanceOfferData(_companyUserCompanyId, "app1", Bpn, true, Enumerable.Empty<string>(), Enumerable.Repeat(_validInstanceSetupId, 1)));
         A.CallTo(() => _offerRepository.GetSingleInstanceOfferData(_offerIdWithInstanceNotSet, OfferTypeId.APP))
-            .ReturnsLazily(() => new SingleInstanceOfferData(_companyUserCompanyId, "app1", Bpn, Enumerable.Repeat("cl1", 1), Enumerable.Empty<Guid>()));
+            .ReturnsLazily(() => new SingleInstanceOfferData(_companyUserCompanyId, "app1", Bpn, true, Enumerable.Repeat("cl1", 1), Enumerable.Empty<Guid>()));
         A.CallTo(() => _offerRepository.GetSingleInstanceOfferData(A<Guid>.That.Not.Matches(x => x == _offerIdWithoutClient || x == _validOfferId || x == _offerIdWithInstanceNotSet), OfferTypeId.APP))
             .ReturnsLazily(() => (SingleInstanceOfferData?)null);
     }

@@ -432,7 +432,7 @@ public class OfferService : IOfferService
     }
 
     /// <inheritdoc/>
-    public async Task ApproveOfferRequestAsync(Guid offerId, string iamUserId, OfferTypeId offerTypeId, IEnumerable<NotificationTypeId> notificationTypeIds, IDictionary<string, IEnumerable<string>> approveOfferRoles, IDictionary<string, IEnumerable<string>> serviceAccountRoles)
+    public async Task ApproveOfferRequestAsync(Guid offerId, string iamUserId, OfferTypeId offerTypeId, IEnumerable<NotificationTypeId> notificationTypeIds, IDictionary<string, IEnumerable<string>> approveOfferRoles)
     {
         var offerRepository = _portalRepositories.GetInstance<IOfferRepository>();
         var offerDetails = await offerRepository.GetOfferStatusDataByIdAsync(offerId, offerTypeId).ConfigureAwait(false);
@@ -454,6 +454,14 @@ public class OfferService : IOfferService
         if (offerDetails.ProviderCompanyId == null)
         {
             throw new ConflictException($"Offer {offerId} providing company is not yet set.");
+        }
+
+        switch (offerDetails.IsSingleInstance)
+        {
+            case true when (offerDetails.ClientIds.Count() != 1 || string.IsNullOrWhiteSpace(offerDetails.ClientIds.Single())):
+                throw new ConflictException($"There must exactly be one clientId set for offer {offerId}");
+            case true when (offerDetails.InstanceIds.Count() != 1 || offerDetails.InstanceIds.Single() == Guid.Empty):
+                throw new ConflictException($"There must exactly be one instance set for offer {offerId}");
         }
 
         var requesterId = await _portalRepositories.GetInstance<IUserRepository>()
@@ -480,8 +488,8 @@ public class OfferService : IOfferService
             {
                 OfferId = offerId,
                 AppName = offerDetails.OfferName,
-                TechnicalUserId = offerDetails.IsSingleInstance
-                    ? await _offerSetupService.ActivateSingleInstanceAppAsync(offerId, serviceAccountRoles).ConfigureAwait(false)
+                TechnicalUserIds = offerDetails.IsSingleInstance
+                    ? await _offerSetupService.ActivateSingleInstanceAppAsync(offerId).ConfigureAwait(false)
                     : null,
             },
             _ => throw new UnexpectedConditionException($"offerTypeId {offerTypeId} is not implemented yet")

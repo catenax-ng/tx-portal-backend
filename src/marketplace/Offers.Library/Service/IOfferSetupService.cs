@@ -42,13 +42,12 @@ public interface IOfferSetupService
     /// Internally auto setup the offer.
     /// </summary>
     /// <param name="data">The offer subscription id and url for the service</param>
-    /// <param name="serviceAccountRoles">Roles that will be assigned to the service account</param>
     /// <param name="itAdminRoles">Roles that will be assigned to the company admin</param>
     /// <param name="iamUserId">Id of the iam user</param>
     /// <param name="offerTypeId">OfferTypeId of offer to be created</param>
     /// <param name="basePortalAddress">Address of the portal</param>
     /// <returns>Returns the response data</returns>
-    Task<OfferAutoSetupResponseData> AutoSetupOfferAsync(OfferAutoSetupData data, IDictionary<string,IEnumerable<string>> serviceAccountRoles, IDictionary<string,IEnumerable<string>> itAdminRoles, string iamUserId, OfferTypeId offerTypeId, string basePortalAddress);
+    Task<OfferAutoSetupResponseData> AutoSetupOfferAsync(OfferAutoSetupData data, IDictionary<string,IEnumerable<string>> itAdminRoles, string iamUserId, OfferTypeId offerTypeId, string basePortalAddress);
 
     /// <summary>
     /// Setup a single instance app
@@ -69,9 +68,7 @@ public interface IOfferSetupService
     /// Setup a single instance app
     /// </summary>
     /// <param name="offerId">id of the offer</param>
-    /// <param name="serviceAccountRoles">the service account roles</param>
-    Task<string> ActivateSingleInstanceAppAsync(Guid offerId,
-        IDictionary<string, IEnumerable<string>> serviceAccountRoles);
+    Task<IEnumerable<string?>> ActivateSingleInstanceAppAsync(Guid offerId);
 
     /// <summary>
     /// Updates the single instance

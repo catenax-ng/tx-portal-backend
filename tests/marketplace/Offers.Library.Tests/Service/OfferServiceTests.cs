@@ -743,9 +743,29 @@ public class OfferServiceTests
         var requesterId = _fixture.Create<Guid>();
         var companyId = _fixture.Create<Guid>();
         var iamUserId = _fixture.Create<string>();
-       
+        var clientIds = isSingleInstance
+            ? new[]
+            {
+                Guid.NewGuid().ToString()
+
+            }
+            : new[]
+            {
+                Guid.NewGuid().ToString(),
+                Guid.NewGuid().ToString()
+            };
+        var instanceIds = isSingleInstance
+            ? new[]
+            {
+                Guid.NewGuid()
+            }
+            : new[]
+            {
+                Guid.NewGuid(),
+                Guid.NewGuid()
+            };
         A.CallTo(() => _offerRepository.GetOfferStatusDataByIdAsync(offer.Id, OfferTypeId.APP))
-            .ReturnsLazily(() => (true, offer.Name, companyId, isSingleInstance));
+            .ReturnsLazily(() => (true, offer.Name, companyId, isSingleInstance, clientIds, instanceIds));
         A.CallTo(() => _userRepository.GetCompanyUserIdForIamUserUntrackedAsync(iamUserId))
             .ReturnsLazily(() => (requesterId));
         A.CallTo(() => _offerRepository.AttachAndModifyOffer(offer.Id, A<Action<Offer>>._, A<Action<Offer>?>._))
@@ -763,17 +783,9 @@ public class OfferServiceTests
         {
             { "catenax-portal", new [] { "Sales Manager" } }
         };
-        var serviceAccountRoles = new Dictionary<string, IEnumerable<string>>()
-        {
-            {"sa", new []{"test"}}
-        };
-        var itAdminRoles = new Dictionary<string, IEnumerable<string>>()
-        {
-            {"it", new[] {"test"}}
-        };
 
         //Act
-        await _sut.ApproveOfferRequestAsync(offer.Id, iamUserId, OfferTypeId.APP, approveAppNotificationTypeIds, approveAppUserRoles, serviceAccountRoles).ConfigureAwait(false);
+        await _sut.ApproveOfferRequestAsync(offer.Id, iamUserId, OfferTypeId.APP, approveAppNotificationTypeIds, approveAppUserRoles).ConfigureAwait(false);
 
         //Assert
         A.CallTo(() => _offerRepository.GetOfferStatusDataByIdAsync(offer.Id, OfferTypeId.APP)).MustHaveHappened();
@@ -785,13 +797,13 @@ public class OfferServiceTests
         if (isSingleInstance)
         {
             A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
-            A.CallTo(() => _offerSetupService.ActivateSingleInstanceAppAsync(offer.Id, serviceAccountRoles))
+            A.CallTo(() => _offerSetupService.ActivateSingleInstanceAppAsync(offer.Id))
                 .MustHaveHappenedOnceExactly();    
         }
         else
         {
             A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
-            A.CallTo(() => _offerSetupService.ActivateSingleInstanceAppAsync(offer.Id, serviceAccountRoles))
+            A.CallTo(() => _offerSetupService.ActivateSingleInstanceAppAsync(offer.Id))
                 .MustNotHaveHappened();
         }
     }
@@ -805,7 +817,7 @@ public class OfferServiceTests
         var companyId = _fixture.Create<Guid>();
 
         A.CallTo(() => _offerRepository.GetOfferStatusDataByIdAsync(offerId, OfferTypeId.APP))
-            .ReturnsLazily(() => (true, null, companyId, false));
+            .ReturnsLazily(() => (true, null, companyId, false, new List<string>(), new List<Guid>()));
 
         var approveAppNotificationTypeIds = new []
         {
@@ -815,17 +827,9 @@ public class OfferServiceTests
         {
             { "catenax-portal", new [] { "Sales Manager" } }
         };
-        var serviceAccountRoles = new Dictionary<string, IEnumerable<string>>()
-        {
-            {"sa", new []{"test"}}
-        };
-        var itAdminRoles = new Dictionary<string, IEnumerable<string>>()
-        {
-            {"it", new[] {"test"}}
-        };
 
         //Act
-        Task Act() => _sut.ApproveOfferRequestAsync(offerId, iamUserId, OfferTypeId.APP, approveAppNotificationTypeIds, approveAppUserRoles, serviceAccountRoles);
+        Task Act() => _sut.ApproveOfferRequestAsync(offerId, iamUserId, OfferTypeId.APP, approveAppNotificationTypeIds, approveAppUserRoles);
 
         //Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act).ConfigureAwait(false);
@@ -841,7 +845,7 @@ public class OfferServiceTests
         var iamUserId = _fixture.Create<string>();
 
         A.CallTo(() => _offerRepository.GetOfferStatusDataByIdAsync(offerId, OfferTypeId.APP))
-            .ReturnsLazily(() => (true, "The name", null, false));
+            .ReturnsLazily(() => (true, "The name", null, false, new List<string>(), new List<Guid>()));
 
         var approveAppNotificationTypeIds = new []
         {
@@ -851,17 +855,9 @@ public class OfferServiceTests
         {
             { "catenax-portal", new [] { "Sales Manager" } }
         };
-        var serviceAccountRoles = new Dictionary<string, IEnumerable<string>>()
-        {
-            {"sa", new []{"test"}}
-        };
-        var itAdminRoles = new Dictionary<string, IEnumerable<string>>()
-        {
-            {"it", new[] {"test"}}
-        };
 
         //Act
-        Task Act() => _sut.ApproveOfferRequestAsync(offerId, iamUserId, OfferTypeId.APP, approveAppNotificationTypeIds, approveAppUserRoles, serviceAccountRoles);
+        Task Act() => _sut.ApproveOfferRequestAsync(offerId, iamUserId, OfferTypeId.APP, approveAppNotificationTypeIds, approveAppUserRoles);
 
         //Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act).ConfigureAwait(false);

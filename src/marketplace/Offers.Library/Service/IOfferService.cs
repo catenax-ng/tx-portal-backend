@@ -134,10 +134,8 @@ public interface IOfferService
     /// <param name="offerTypeId"></param>
     /// <param name="notificationTypeIds"></param>
     /// <param name="approveOfferRoles"></param>
-    /// <param name="serviceAccountRoles"></param>
-    /// <param name="itAdminRoles"></param>
     /// <returns></returns>
-    Task ApproveOfferRequestAsync(Guid offerId, string iamUserId, OfferTypeId offerTypeId, IEnumerable<NotificationTypeId> notificationTypeIds, IDictionary<string, IEnumerable<string>> approveOfferRoles, IDictionary<string, IEnumerable<string>> serviceAccountRoles);
+    Task ApproveOfferRequestAsync(Guid offerId, string iamUserId, OfferTypeId offerTypeId, IEnumerable<NotificationTypeId> notificationTypeIds, IDictionary<string, IEnumerable<string>> approveOfferRoles);
 
     /// <summary>
     /// Update offer status and create notification for App 

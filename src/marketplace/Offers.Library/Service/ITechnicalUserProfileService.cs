@@ -18,28 +18,23 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
+using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Models;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
+namespace Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Service;
 
-/// <summary>
-/// Repository for accessing and creating app instances on persistence layer.
-/// </summary>
-public interface IAppInstanceRepository
+public interface ITechnicalUserProfileService
 {
     /// <summary>
-    /// Creates an app instance 
+    ///  Gets the technical user profiles for the specific offer
     /// </summary>
-    /// <param name="appId">Id of the app</param>
-    /// <param name="iamClientId">Id of the iam client</param>
-    /// <returns>The created App Instance</returns>
-    AppInstance CreateAppInstance(Guid appId, Guid iamClientId);
-    
-    /// <summary>
-    /// Removes the app instance
-    /// </summary>
-    /// <param name="appInstanceId">Id of the app instance</param>
-    void RemoveAppInstance(Guid appInstanceId);
+    /// <param name="offerId">Id of the offer</param>
+    /// <returns></returns>
+    Task<IEnumerable<ServiceAccountCreationInfo>> GetTechnicalUserProfilesForOffer(Guid offerId);
 
-    void CreateAppInstanceAssignedServiceAccounts(IEnumerable<(Guid AppInstanceId, Guid CompanyServiceAccountId)> instanceAccounts);
+    /// <summary>
+    ///  Gets the technical user profiles for the specific offer subscription
+    /// </summary>
+    /// <param name="subscriptionId">Id of the offer</param>
+    /// <returns></returns>
+    Task<IEnumerable<ServiceAccountCreationInfo>> GetTechnicalUserProfilesForOfferSubscription(Guid subscriptionId);
 }
