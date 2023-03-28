@@ -71,4 +71,6 @@ public class CompanyServiceAccount : IBaseEntity
     public virtual OfferSubscription? OfferSubscription { get; set; }
     public virtual ICollection<UserRole> UserRoles { get; private set; }
     public virtual ICollection<CompanyServiceAccountAssignedRole> CompanyServiceAccountAssignedRoles { get; private set; }
+    
+    public virtual AppInstance? AppInstance { get; private set; }
 }

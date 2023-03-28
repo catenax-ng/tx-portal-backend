@@ -174,11 +174,10 @@ public class OfferSetupServiceTests
         var appInstances = new List<AppInstance>();
         var appSubscriptionDetails = new List<AppSubscriptionDetail>();
         var notifications = new List<Notification>();
-        A.CallTo(() => _clientRepository.CreateClient(A<string>._, A<Action<IamClient>?>._))
-            .Invokes((string clientName, Action<IamClient> setOptionalParameter) =>
+        A.CallTo(() => _clientRepository.CreateClient(A<string>._))
+            .Invokes((string clientName) =>
             {
                 var client = new IamClient(clientId, clientName);
-                setOptionalParameter.Invoke(client);
                 clients.Add(client);
             })
             .Returns(new IamClient(clientId, "cl1"));
@@ -374,18 +373,9 @@ public class OfferSetupServiceTests
     public async Task ActivateSingleInstanceAppAsync_WithValidData_ReturnsExpected()
     {
         // Arrange
-        var appInstanceSetupId = Guid.NewGuid();
-        var appInstanceSetup = new AppInstanceSetup(appInstanceSetupId, _validOfferId, true)
-        {
-            InstanceUrl = "https://test.de"
-        };
-        var iamClient = new IamClient(Guid.NewGuid(), "test") {Disabled = true};
-        A.CallTo(() => _clientRepository.AttachAndModifyClient(A<Guid>._, A<Action<IamClient>>._))
-            .Invokes((Guid _, Action<IamClient> setOptionalParameter) =>
-            {
-                setOptionalParameter.Invoke(iamClient);
-            });
-        SetupCreateSingleInstance(appInstanceSetup);
+        var appInstanceId = Guid.NewGuid();
+        var appInstance = new AppInstance(appInstanceId, _validOfferId, default);
+        SetupCreateSingleInstance(appInstance);
         var serviceAccountRoles = new Dictionary<string, IEnumerable<string>>
         {
             { "technical_roles_management", new [] { "Digital Twin Management" } }
@@ -396,8 +386,7 @@ public class OfferSetupServiceTests
         
         // Assert
         result.Should().NotBeNull();
-        appInstanceSetup.ServiceAccountId.Should().NotBeNull();
-        iamClient.Disabled.Should().BeFalse();
+        appInstance.ServiceAccountId.Should().NotBeNull();
         A.CallTo(() => _provisioningManager.EnableClient(A<string>._))
             .MustHaveHappenedOnceExactly();
         
@@ -478,11 +467,10 @@ public class OfferSetupServiceTests
         var offerId = Guid.NewGuid();
         var clients = new List<IamClient>();
         var appInstances = new List<AppInstance>();
-        A.CallTo(() => _clientRepository.CreateClient(A<string>._, A<Action<IamClient>?>._))
-            .Invokes((string clientName, Action<IamClient> setOptionalParameter) =>
+        A.CallTo(() => _clientRepository.CreateClient(A<string>._))
+            .Invokes((string clientName) =>
             {
                 var client = new IamClient(clientId, clientName);
-                setOptionalParameter.Invoke(client);
                 clients.Add(client);
             })
             .Returns(new IamClient(clientId, "cl1"));
@@ -622,16 +610,16 @@ public class OfferSetupServiceTests
 
     }
 
-    private void SetupCreateSingleInstance(AppInstanceSetup? appInstanceSetup = null)
+    private void SetupCreateSingleInstance(AppInstance? appInstance = null)
     {
         SetupServices();
 
-        if (appInstanceSetup != null)
+        if (appInstance != null)
         {
-            A.CallTo(() => _offerRepository.AttachAndModifyAppInstanceSetup(A<Guid>._, A<Guid>._, A<Action<AppInstanceSetup>>._, A<Action<AppInstanceSetup>?>._))
-                .Invokes((Guid _, Guid _, Action<AppInstanceSetup> setOptionalFields, Action<AppInstanceSetup>? _) =>
+            A.CallTo(() => _offerRepository.AttachAndModifyAppInstance(A<Guid>._, A<Guid>._, A<Action<AppInstance>>._, A<Action<AppInstance>?>._))
+                .Invokes((Guid _, Guid _, Action<AppInstance> setOptionalFields, Action<AppInstance>? _) =>
                 {
-                    setOptionalFields.Invoke(appInstanceSetup);
+                    setOptionalFields.Invoke(appInstance);
                 });
         }
 

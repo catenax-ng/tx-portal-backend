@@ -750,6 +750,28 @@ public class OfferRepository : IOfferRepository
         return appInstanceSetup;
     }
 
+    public void AttachAndModifyAppInstance(Guid appInstanceId, Guid offerId, Action<AppInstance> setOptionalParameters, Action<AppInstance>? initializeParameter = null)
+    {
+        var entity = new AppInstance(appInstanceId, offerId, default);
+        initializeParameter?.Invoke(entity);
+        var appInstance = _context.Attach(entity).Entity;
+        setOptionalParameters.Invoke(appInstance);
+    }
+
+    /// <inheritdoc />
+    public Task<SingleInstanceOfferData?> GetSingleInstanceOfferData(Guid offerId, OfferTypeId offerTypeId) =>
+        _context.Offers.Where(o => o.Id == offerId && o.OfferTypeId == offerTypeId)
+            .Select(o => new SingleInstanceOfferData(
+                o.ProviderCompany!.Id,
+                o.Name,
+                o.ProviderCompany.BusinessPartnerNumber,
+                o.AppInstances.Select(x => x.IamClient!.ClientClientId).SingleOrDefault(),
+                o.AppInstanceSetup == null ? Guid.Empty : o.AppInstanceSetup.Id,
+                o.AppInstances.Select(x => x.IamClientId).SingleOrDefault()
+            ))
+            .SingleOrDefaultAsync();
+
+    /// <inheritdoc />
     public void AttachAndModifyAppInstanceSetup(Guid appInstanceSetupId, Guid offerId, Action<AppInstanceSetup> setOptionalParameters, Action<AppInstanceSetup>? initializeParameter = null)
     {
         var entity = new AppInstanceSetup(appInstanceSetupId, offerId, default);
@@ -757,24 +779,4 @@ public class OfferRepository : IOfferRepository
         var appInstanceSetup = _context.Attach(entity).Entity;
         setOptionalParameters.Invoke(appInstanceSetup);
     }
-
-    /// <inheritdoc />
-    public Task<SingleInstanceOfferData?> GetSingleInstanceOfferData(Guid offerId, OfferTypeId offerTypeId) =>
-        _context.Offers.Where(o => o.Id == offerId && o.OfferTypeId == offerTypeId)
-            .Select(o => new
-            {
-                Company = o.ProviderCompany, OfferId = o.Id, OfferName = o.Name,
-                InternalClientId = o.AppInstances.Select(x => x.IamClient!.ClientClientId).SingleOrDefault(),
-                ClientId = o.AppInstances.Select(x => x.IamClientId).SingleOrDefault(),
-                InstanceSetupId = o.AppInstanceSetup == null ? Guid.Empty : o.AppInstanceSetup.Id,
-            })
-            .Select(x => new SingleInstanceOfferData(
-                x.Company!.Id,
-                x.OfferName,
-                x.Company.BusinessPartnerNumber,
-                x.InternalClientId,
-                x.InstanceSetupId,
-                x.ClientId
-            ))
-            .SingleOrDefaultAsync();
 }

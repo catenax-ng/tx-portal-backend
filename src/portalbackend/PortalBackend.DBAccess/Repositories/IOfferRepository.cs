@@ -468,13 +468,13 @@ public interface IOfferRepository
     AppInstanceSetup CreateAppInstanceSetup(Guid appId, bool isSingleInstance, Action<AppInstanceSetup>? setOptionalParameter);
 
     /// <summary>
-    /// Updates the <see cref="AppInstanceSetup"/>
+    /// Updates the <see cref="AppInstance"/>
     /// </summary>
-    /// <param name="appInstanceSetupId">Id of the appInstanceSetup that should be updated</param>
+    /// <param name="appInstanceId">Id of the appInstance that should be updated</param>
     /// <param name="offerId">Id of the offer</param>
     /// <param name="setOptionalParameters">Sets the values that should be updated</param>
     /// <param name="initializeParameter">Initializes the parameters</param>
-    void AttachAndModifyAppInstanceSetup(Guid appInstanceSetupId, Guid offerId, Action<AppInstanceSetup> setOptionalParameters, Action<AppInstanceSetup>? initializeParameter = null);
+    void AttachAndModifyAppInstance(Guid appInstanceId, Guid offerId, Action<AppInstance> setOptionalParameters, Action<AppInstance>? initializeParameter = null);
 
     /// <summary>
     /// Gets the single instance offer data
@@ -483,4 +483,13 @@ public interface IOfferRepository
     /// <param name="offerTypeId">id of the offer type</param>
     /// <returns>Returns the single instance offer data</returns>
     Task<SingleInstanceOfferData?> GetSingleInstanceOfferData(Guid offerId, OfferTypeId offerTypeId);
+
+    /// <summary>
+    /// Updates the <see cref="AppInstanceSetup"/>
+    /// </summary>
+    /// <param name="appInstanceSetupId">Id of the appInstanceSetup that should be updated</param>
+    /// <param name="offerId">Id of the offer</param>
+    /// <param name="setOptionalParameters">Sets the values that should be updated</param>
+    /// <param name="initializeParameter">Initializes the parameters</param>
+    void AttachAndModifyAppInstanceSetup(Guid appInstanceSetupId, Guid offerId, Action<AppInstanceSetup> setOptionalParameters, Action<AppInstanceSetup>? initializeParameter = null);
 }

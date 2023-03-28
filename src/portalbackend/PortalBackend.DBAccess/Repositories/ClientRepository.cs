@@ -38,22 +38,10 @@ public class ClientRepository : IClientRepository
     }
 
     /// <inheritdoc />
-    public IamClient CreateClient(string clientId, Action<IamClient>? setOptionalParameter)
-    {
-        var entity = _dbContext.IamClients.Add(new IamClient(Guid.NewGuid(), clientId)).Entity;
-        setOptionalParameter?.Invoke(entity);
-        return entity;
-    }
+    public IamClient CreateClient(string clientId) => 
+        _dbContext.IamClients.Add(new IamClient(Guid.NewGuid(), clientId)).Entity;
 
     /// <inheritdoc />
     public void RemoveClient(Guid clientId) =>
         _dbContext.IamClients.Remove(new IamClient(clientId, null!));
-
-    /// <inheritdoc />
-    public void AttachAndModifyClient(Guid clientId, Action<IamClient> setOptionalParameter)
-    {
-        var entity = new IamClient(clientId, null!);
-        _dbContext.IamClients.Attach(entity);
-        setOptionalParameter.Invoke(entity);
-    }
 }

@@ -40,8 +40,12 @@ public class AppInstance : IBaseEntity
     public Guid AppId { get; set; }
     public Guid IamClientId { get; set; }
 
+    public Guid? ServiceAccountId { get; set; }
+
     // Navigation properties
     public virtual Offer? App { get; private set; }
     public virtual IamClient? IamClient { get; private set; }
     public virtual ICollection<AppSubscriptionDetail> AppSubscriptionDetails { get; private set; }
+    
+    public virtual CompanyServiceAccount? ServiceAccount { get; private set; }
 }

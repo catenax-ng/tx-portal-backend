@@ -176,18 +176,14 @@ public class OfferSetupService : IOfferSetupService
         }
 
         await _provisioningManager.EnableClient(data.InternalClientId).ConfigureAwait(false);
-        _portalRepositories.GetInstance<IClientRepository>().AttachAndModifyClient(data.ClientId, client =>
-        {
-            client.Disabled = false;
-        });
 
         var technicalUserData = new CreateTechnicalUserData(data.CompanyId, data.OfferName, data.Bpn);
-        var (technicalClientId, _, _) = await CreateTechnicalUser(serviceAccountRoles, _portalRepositories.GetInstance<IUserRolesRepository>(), technicalUserData, data.InternalClientId, true, null)
+        var (technicalClientId, _, serviceAccountId) = await CreateTechnicalUser(serviceAccountRoles, _portalRepositories.GetInstance<IUserRolesRepository>(), technicalUserData, data.InternalClientId, true, null)
             .ConfigureAwait(false);
 
-        _portalRepositories.GetInstance<IOfferRepository>().AttachAndModifyAppInstanceSetup(data.InstanceSetupId, offerId, a =>
+        _portalRepositories.GetInstance<IOfferRepository>().AttachAndModifyAppInstance(data.InstanceSetupId, offerId, a =>
         {
-            a.ServiceAccountId = technicalClientId;
+            a.ServiceAccountId = serviceAccountId;
         });
         
         return technicalClientId;
@@ -233,7 +229,7 @@ public class OfferSetupService : IOfferSetupService
 
         var clientId = await _provisioningManager.SetupClientAsync(redirectUrl, offerUrl, userRoles, enabled)
             .ConfigureAwait(false);
-        var iamClient = _portalRepositories.GetInstance<IClientRepository>().CreateClient(clientId, client => { client.Disabled = !enabled;});
+        var iamClient = _portalRepositories.GetInstance<IClientRepository>().CreateClient(clientId);
         return (clientId, iamClient.Id);
     }
 

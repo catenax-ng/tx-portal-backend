@@ -468,12 +468,6 @@ public class OfferService : IOfferService
             offer.OfferStatusId = OfferStatusId.ACTIVE;
             offer.DateReleased = DateTime.UtcNow;
         });
-        
-        string? technicalUserId = null;
-        if (offerDetails.IsSingleInstance)
-        {
-            technicalUserId = await _offerSetupService.ActivateSingleInstanceAppAsync(offerId, serviceAccountRoles).ConfigureAwait(false);
-        }
 
         object notificationContent = offerTypeId switch
         {
@@ -486,7 +480,9 @@ public class OfferService : IOfferService
             {
                 OfferId = offerId,
                 AppName = offerDetails.OfferName,
-                TechnicalUserId = technicalUserId,
+                TechnicalUserId = offerDetails.IsSingleInstance
+                    ? await _offerSetupService.ActivateSingleInstanceAppAsync(offerId, serviceAccountRoles).ConfigureAwait(false)
+                    : null,
             },
             _ => throw new UnexpectedConditionException($"offerTypeId {offerTypeId} is not implemented yet")
         };

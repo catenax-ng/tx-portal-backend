@@ -392,6 +392,11 @@ public class PortalDbContext : DbContext
                 .WithMany(x => x.AppInstances)
                 .HasForeignKey(x => x.IamClientId)
                 .OnDelete(DeleteBehavior.SetNull);
+            
+            entity.HasOne(x => x.ServiceAccount)
+                .WithOne(x => x.AppInstance)
+                .HasForeignKey<AppInstance>(x => x.ServiceAccountId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
         });
 
         modelBuilder.Entity<AppInstanceSetup>(entity =>
@@ -399,11 +404,6 @@ public class PortalDbContext : DbContext
             entity.HasOne(x => x.App)
                 .WithOne(x => x.AppInstanceSetup)
                 .HasForeignKey<AppInstanceSetup>(x => x.AppId)
-                .OnDelete(DeleteBehavior.ClientSetNull);
-
-            entity.HasOne(x => x.ServiceAccount)
-                .WithOne(x => x.AppInstanceSetup)
-                .HasForeignKey<AppInstanceSetup>(x => x.ServiceAccountId)
                 .OnDelete(DeleteBehavior.ClientSetNull);
         });
         

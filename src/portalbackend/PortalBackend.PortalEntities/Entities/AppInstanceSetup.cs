@@ -41,10 +41,6 @@ public class AppInstanceSetup : IBaseEntity
     
     public string? InstanceUrl { get; set; }
 
-    public string? ServiceAccountId { get; set; }
-    
     // Navigation properties
     public virtual Offer? App { get; private set; }
-
-    public virtual IamServiceAccount? ServiceAccount { get; private set; }
 }
