@@ -165,23 +165,24 @@ public class OfferSetupService : IOfferSetupService
             throw new ConflictException($"App {offerId} does not exist.");
         }
 
-        if (string.IsNullOrWhiteSpace(data.InternalClientId))
+        if (data.InternalClientIds.Count() != 1 || string.IsNullOrWhiteSpace(data.InternalClientIds.Single()))
         {
-            throw new ConflictException("ClientId must not be null");
+            throw new ConflictException($"There must exactly be one clientId set for offer {offerId}");
         }
 
-        if (data.InstanceSetupId == Guid.Empty)
+        if (data.InstanceIds.Count() != 1 || data.InstanceIds.Single() == Guid.Empty)
         {
-            throw new ConflictException("Instance must be set");
+            throw new ConflictException($"There must exactly be one instance set for offer {offerId}");
         }
 
-        await _provisioningManager.EnableClient(data.InternalClientId).ConfigureAwait(false);
+        var internalClientId = data.InternalClientIds.Single();
+        await _provisioningManager.EnableClient(internalClientId).ConfigureAwait(false);
 
         var technicalUserData = new CreateTechnicalUserData(data.CompanyId, data.OfferName, data.Bpn);
-        var (technicalClientId, _, serviceAccountId) = await CreateTechnicalUser(serviceAccountRoles, _portalRepositories.GetInstance<IUserRolesRepository>(), technicalUserData, data.InternalClientId, true, null)
+        var (technicalClientId, _, serviceAccountId) = await CreateTechnicalUser(serviceAccountRoles, _portalRepositories.GetInstance<IUserRolesRepository>(), technicalUserData, internalClientId, true, null)
             .ConfigureAwait(false);
 
-        _portalRepositories.GetInstance<IOfferRepository>().AttachAndModifyAppInstance(data.InstanceSetupId, offerId, a =>
+        _portalRepositories.GetInstance<IOfferRepository>().AttachAndModifyAppInstance(data.InstanceIds.Single(), offerId, a =>
         {
             a.ServiceAccountId = serviceAccountId;
         });

@@ -4,7 +4,6 @@ public record SingleInstanceOfferData(
     Guid CompanyId,
     string? OfferName,
     string? Bpn,
-    string? InternalClientId,
-    Guid InstanceSetupId,
-    Guid ClientId
+    IEnumerable<string> InternalClientIds,
+    IEnumerable<Guid> InstanceIds
 );

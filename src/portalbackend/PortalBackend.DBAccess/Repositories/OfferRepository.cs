@@ -765,9 +765,8 @@ public class OfferRepository : IOfferRepository
                 o.ProviderCompany!.Id,
                 o.Name,
                 o.ProviderCompany.BusinessPartnerNumber,
-                o.AppInstances.Select(x => x.IamClient!.ClientClientId).SingleOrDefault(),
-                o.AppInstanceSetup == null ? Guid.Empty : o.AppInstanceSetup.Id,
-                o.AppInstances.Select(x => x.IamClientId).SingleOrDefault()
+                o.AppInstances.Select(x => x.IamClient!.ClientClientId),
+                o.AppInstances.Select(x => x.Id)
             ))
             .SingleOrDefaultAsync();
 
