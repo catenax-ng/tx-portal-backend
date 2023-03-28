@@ -1116,6 +1116,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
 
     [Theory]
     [InlineData(new[] { OfferStatusId.ACTIVE }, OfferSorting.NameDesc,null,"en")]
+    [InlineData(new[] { OfferStatusId.ACTIVE }, OfferSorting.NameAsc,null,"en")]
     public async Task GetAllInReviewStatusServiceAsync_ReturnsExpectedResult(IEnumerable<OfferStatusId> statusids, OfferSorting? sorting,string? serviceName, string? languagename)
     {
         // Arrange
@@ -1128,6 +1129,14 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         result.Should().NotBeNull();
         result!.Data.Should().NotBeEmpty();
         result!.Data.Should().HaveCount(3);
+        if (sorting == OfferSorting.NameAsc)
+        {
+            result.Data.Select(data => data.Provider).Should().BeInAscendingOrder();
+        }
+        if (sorting == OfferSorting.NameDesc)
+        {
+            result.Data.Select(data => data.Provider).Should().BeInDescendingOrder();
+        }
     }
 
 
