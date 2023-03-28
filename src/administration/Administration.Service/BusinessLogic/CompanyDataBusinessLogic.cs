@@ -55,7 +55,7 @@ public class CompanyDataBusinessLogic : ICompanyDataBusinessLogic
         _portalRepositories.GetInstance<ICompanyRepository>().GetCompanyAssigendUseCaseDetailsAsync(iamUserId);
 
     /// <inheritdoc/>
-    public async Task<HttpStatusCode> CreateCompanyAssigneduseCaseDetailsAsync(string iamUserId, Guid useCaseId)
+    public async Task<HttpStatusCode> CreateCompanyAssignedUseCaseDetailsAsync(string iamUserId, Guid useCaseId)
     {
         var companyRepositories = _portalRepositories.GetInstance<ICompanyRepository>();
         var useCaseDetails = await companyRepositories.GetCompanyStatusAndUseCaseIdAsync(iamUserId, useCaseId).ConfigureAwait(false);
@@ -73,7 +73,7 @@ public class CompanyDataBusinessLogic : ICompanyDataBusinessLogic
     }
 
     /// <inheritdoc/>
-    public async Task RemoveCompanyAssigneduseCaseDetailsAsync(string iamUserId, Guid useCaseId)
+    public async Task RemoveCompanyAssignedUseCaseDetailsAsync(string iamUserId, Guid useCaseId)
     {
         var companyRepositories = _portalRepositories.GetInstance<ICompanyRepository>();
         var useCaseDetails = await companyRepositories.GetCompanyStatusAndUseCaseIdAsync(iamUserId, useCaseId).ConfigureAwait(false);

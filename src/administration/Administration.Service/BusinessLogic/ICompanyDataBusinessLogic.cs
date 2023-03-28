@@ -29,7 +29,7 @@ public interface ICompanyDataBusinessLogic
 
     IAsyncEnumerable<CompanyAssignedUseCaseData> GetCompanyAssigendUseCaseDetailsAsync(string iamUserId);
 
-    Task<HttpStatusCode> CreateCompanyAssigneduseCaseDetailsAsync(string iamUserId, Guid useCaseId);
+    Task<HttpStatusCode> CreateCompanyAssignedUseCaseDetailsAsync(string iamUserId, Guid useCaseId);
 
-    Task RemoveCompanyAssigneduseCaseDetailsAsync(string iamUserId, Guid useCaseId);
+    Task RemoveCompanyAssignedUseCaseDetailsAsync(string iamUserId, Guid useCaseId);
 }

@@ -72,52 +72,52 @@ public class CompanyDataControllerTests
     }
 
     [Fact]
-    public async Task CreateCompanyAssigneduseCaseDetailsAsync_NoContent_ReturnsExpectedResult()
+    public async Task CreateCompanyAssignedUseCaseDetailsAsync_NoContent_ReturnsExpectedResult()
     {
         // Arrange
         var useCaseData = _fixture.Create<UseCaseIdDetails>();
-        A.CallTo(() => _logic.CreateCompanyAssigneduseCaseDetailsAsync(IamUserId, useCaseData.useCaseId))
+        A.CallTo(() => _logic.CreateCompanyAssignedUseCaseDetailsAsync(IamUserId, useCaseData.useCaseId))
             .ReturnsLazily(() => System.Net.HttpStatusCode.NoContent);
         
         // Act
-        var result = await this._controller.CreateCompanyAssigneduseCaseDetailsAsync(useCaseData).ConfigureAwait(false);
+        var result = await this._controller.CreateCompanyAssignedUseCaseDetailsAsync(useCaseData).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() => _logic.CreateCompanyAssigneduseCaseDetailsAsync(IamUserId, useCaseData.useCaseId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _logic.CreateCompanyAssignedUseCaseDetailsAsync(IamUserId, useCaseData.useCaseId)).MustHaveHappenedOnceExactly();
         result.Should().BeOfType<StatusCodeResult>();
         result.StatusCode.Should().Be(204);
     }
 
     [Fact]
-    public async Task CreateCompanyAssigneduseCaseDetailsAsync_AlreadyReported_ReturnsExpectedResult()
+    public async Task CreateCompanyAssignedUseCaseDetailsAsync_AlreadyReported_ReturnsExpectedResult()
     {
         // Arrange
         var useCaseData = _fixture.Create<UseCaseIdDetails>();
-        A.CallTo(() => _logic.CreateCompanyAssigneduseCaseDetailsAsync(IamUserId, useCaseData.useCaseId))
+        A.CallTo(() => _logic.CreateCompanyAssignedUseCaseDetailsAsync(IamUserId, useCaseData.useCaseId))
             .ReturnsLazily(() => System.Net.HttpStatusCode.AlreadyReported);
         
         // Act
-        var result = await this._controller.CreateCompanyAssigneduseCaseDetailsAsync(useCaseData).ConfigureAwait(false);
+        var result = await this._controller.CreateCompanyAssignedUseCaseDetailsAsync(useCaseData).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() => _logic.CreateCompanyAssigneduseCaseDetailsAsync(IamUserId, useCaseData.useCaseId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _logic.CreateCompanyAssignedUseCaseDetailsAsync(IamUserId, useCaseData.useCaseId)).MustHaveHappenedOnceExactly();
         result.Should().BeOfType<StatusCodeResult>();
         result.StatusCode.Should().Be(208);
     }
 
     [Fact]
-    public async Task RemoveCompanyAssigneduseCaseDetailsAsync_ReturnsExpectedResult()
+    public async Task RemoveCompanyAssignedUseCaseDetailsAsync_ReturnsExpectedResult()
     {
         // Arrange
         var useCaseData = _fixture.Create<UseCaseIdDetails>();
-        A.CallTo(() => _logic.RemoveCompanyAssigneduseCaseDetailsAsync(IamUserId, useCaseData.useCaseId))
+        A.CallTo(() => _logic.RemoveCompanyAssignedUseCaseDetailsAsync(IamUserId, useCaseData.useCaseId))
             .ReturnsLazily(() => Task.CompletedTask);
         
         // Act
-        var result = await this._controller.RemoveCompanyAssigneduseCaseDetailsAsync(useCaseData).ConfigureAwait(false);
+        var result = await this._controller.RemoveCompanyAssignedUseCaseDetailsAsync(useCaseData).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() => _logic.RemoveCompanyAssigneduseCaseDetailsAsync(IamUserId, useCaseData.useCaseId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _logic.RemoveCompanyAssignedUseCaseDetailsAsync(IamUserId, useCaseData.useCaseId)).MustHaveHappenedOnceExactly();
         result.Should().BeOfType<NoContentResult>();
     }
 }

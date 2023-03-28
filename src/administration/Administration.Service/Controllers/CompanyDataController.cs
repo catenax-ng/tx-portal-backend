@@ -89,9 +89,9 @@ public class CompanyDataController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status208AlreadyReported)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
-    public async Task<StatusCodeResult> CreateCompanyAssigneduseCaseDetailsAsync([FromBody] UseCaseIdDetails data)
+    public async Task<StatusCodeResult> CreateCompanyAssignedUseCaseDetailsAsync([FromBody] UseCaseIdDetails data)
     {
-        var result = await this.WithIamUserId(iamUserId => _logic.CreateCompanyAssigneduseCaseDetailsAsync(iamUserId, data.useCaseId)).ConfigureAwait(false);
+        var result = await this.WithIamUserId(iamUserId => _logic.CreateCompanyAssignedUseCaseDetailsAsync(iamUserId, data.useCaseId)).ConfigureAwait(false);
         return this.StatusCode((int)result);
     }
 
@@ -107,9 +107,9 @@ public class CompanyDataController : ControllerBase
     [Route("preferredUseCases")]
     [ProducesResponseType(typeof(NoContentResult), StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
-    public async Task<NoContentResult> RemoveCompanyAssigneduseCaseDetailsAsync([FromBody] UseCaseIdDetails data)
+    public async Task<NoContentResult> RemoveCompanyAssignedUseCaseDetailsAsync([FromBody] UseCaseIdDetails data)
     {
-        await this.WithIamUserId(iamUserId => _logic.RemoveCompanyAssigneduseCaseDetailsAsync(iamUserId, data.useCaseId)).ConfigureAwait(false);
+        await this.WithIamUserId(iamUserId => _logic.RemoveCompanyAssignedUseCaseDetailsAsync(iamUserId, data.useCaseId)).ConfigureAwait(false);
         return NoContent();
     }
 }

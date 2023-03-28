@@ -113,7 +113,7 @@ public class CompanyDataBusinessLogicTests
     }
 
     [Fact]
-    public async Task CreateCompanyAssigneduseCaseDetailsAsync_NoConent_ReturnsExpected()
+    public async Task CreateCompanyAssignedUseCaseDetailsAsync_NoConent_ReturnsExpected()
     {
         // Arrange
         var useCaseId = _fixture.Create<Guid>();
@@ -124,7 +124,7 @@ public class CompanyDataBusinessLogicTests
         var sut = new CompanyDataBusinessLogic(_portalRepositories);
         
         // Act
-        var result = await sut.CreateCompanyAssigneduseCaseDetailsAsync(IamUserId, useCaseId).ConfigureAwait(false);
+        var result = await sut.CreateCompanyAssignedUseCaseDetailsAsync(IamUserId, useCaseId).ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _companyRepository.CreateCompanyAssignedUseCase(companyId, useCaseId)).MustHaveHappenedOnceExactly();
@@ -133,7 +133,7 @@ public class CompanyDataBusinessLogicTests
     }
 
     [Fact]
-    public async Task CreateCompanyAssigneduseCaseDetailsAsync_AlreadyReported_ReturnsExpected()
+    public async Task CreateCompanyAssignedUseCaseDetailsAsync_AlreadyReported_ReturnsExpected()
     {
         // Arrange
         var useCaseId = _fixture.Create<Guid>();
@@ -144,7 +144,7 @@ public class CompanyDataBusinessLogicTests
         var sut = new CompanyDataBusinessLogic(_portalRepositories);
         
         // Act
-        var result = await sut.CreateCompanyAssigneduseCaseDetailsAsync(IamUserId, useCaseId).ConfigureAwait(false);
+        var result = await sut.CreateCompanyAssignedUseCaseDetailsAsync(IamUserId, useCaseId).ConfigureAwait(false);
 
         // Assert
         result.Should().Be(System.Net.HttpStatusCode.AlreadyReported);
@@ -154,7 +154,7 @@ public class CompanyDataBusinessLogicTests
     }
 
     [Fact]
-    public async Task CreateCompanyAssigneduseCaseDetailsAsync_ThrowsConflictException()
+    public async Task CreateCompanyAssignedUseCaseDetailsAsync_ThrowsConflictException()
     {
         // Arrange
         var useCaseId = _fixture.Create<Guid>();
@@ -165,7 +165,7 @@ public class CompanyDataBusinessLogicTests
         var sut = new CompanyDataBusinessLogic(_portalRepositories);
         
         // Act
-        async Task Act() => await sut.CreateCompanyAssigneduseCaseDetailsAsync(IamUserId, useCaseId).ConfigureAwait(false);
+        async Task Act() => await sut.CreateCompanyAssignedUseCaseDetailsAsync(IamUserId, useCaseId).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -173,7 +173,7 @@ public class CompanyDataBusinessLogicTests
     }
 
     [Fact]
-    public async Task RemoveCompanyAssigneduseCaseDetailsAsync_ReturnsExpected()
+    public async Task RemoveCompanyAssignedUseCaseDetailsAsync_ReturnsExpected()
     {
         // Arrange
         var useCaseId = _fixture.Create<Guid>();
@@ -184,7 +184,7 @@ public class CompanyDataBusinessLogicTests
         var sut = new CompanyDataBusinessLogic(_portalRepositories);
         
         // Act
-        await sut.RemoveCompanyAssigneduseCaseDetailsAsync(IamUserId, useCaseId).ConfigureAwait(false);
+        await sut.RemoveCompanyAssignedUseCaseDetailsAsync(IamUserId, useCaseId).ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _companyRepository.RemoveCompanyAssignedUseCase(companyId, useCaseId)).MustHaveHappenedOnceExactly();
@@ -192,7 +192,7 @@ public class CompanyDataBusinessLogicTests
     }
 
     [Fact]
-    public async Task RemoveCompanyAssigneduseCaseDetailsAsync_companyStatus_ThrowsConflictException()
+    public async Task RemoveCompanyAssignedUseCaseDetailsAsync_companyStatus_ThrowsConflictException()
     {
         // Arrange
         var useCaseId = _fixture.Create<Guid>();
@@ -203,7 +203,7 @@ public class CompanyDataBusinessLogicTests
         var sut = new CompanyDataBusinessLogic(_portalRepositories);
         
         // Act
-        async Task Act() => await sut.RemoveCompanyAssigneduseCaseDetailsAsync(IamUserId, useCaseId).ConfigureAwait(false);
+        async Task Act() => await sut.RemoveCompanyAssignedUseCaseDetailsAsync(IamUserId, useCaseId).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -211,7 +211,7 @@ public class CompanyDataBusinessLogicTests
     }
 
     [Fact]
-    public async Task RemoveCompanyAssigneduseCaseDetailsAsync_useCaseId_ThrowsConflictException()
+    public async Task RemoveCompanyAssignedUseCaseDetailsAsync_useCaseId_ThrowsConflictException()
     {
         // Arrange
         var useCaseId = _fixture.Create<Guid>();
@@ -222,7 +222,7 @@ public class CompanyDataBusinessLogicTests
         var sut = new CompanyDataBusinessLogic(_portalRepositories);
         
         // Act
-        async Task Act() => await sut.RemoveCompanyAssigneduseCaseDetailsAsync(IamUserId, useCaseId).ConfigureAwait(false);
+        async Task Act() => await sut.RemoveCompanyAssignedUseCaseDetailsAsync(IamUserId, useCaseId).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -230,4 +230,5 @@ public class CompanyDataBusinessLogicTests
     }
 
     #endregion
+
 }

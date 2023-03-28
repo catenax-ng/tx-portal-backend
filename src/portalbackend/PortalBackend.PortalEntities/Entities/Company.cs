@@ -94,4 +94,5 @@ public class Company : IBaseEntity
     public virtual ICollection<Connector> ProvidedConnectors { get; private set; }
     public virtual ICollection<CompanyIdentifier> CompanyIdentifiers { get; private set; }
     public virtual ICollection<CompanyAssignedUseCase> CompanyAssignedUseCase { get; private set; }
+
 }
