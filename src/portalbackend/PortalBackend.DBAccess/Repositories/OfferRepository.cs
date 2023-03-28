@@ -752,7 +752,7 @@ public class OfferRepository : IOfferRepository
 
     public void AttachAndModifyAppInstance(Guid appInstanceId, Guid offerId, Action<AppInstance> setOptionalParameters, Action<AppInstance>? initializeParameter = null)
     {
-        var entity = new AppInstance(appInstanceId, offerId, default);
+        var entity = new AppInstance(appInstanceId, offerId, Guid.Empty);
         initializeParameter?.Invoke(entity);
         var appInstance = _context.Attach(entity).Entity;
         setOptionalParameters.Invoke(appInstance);
