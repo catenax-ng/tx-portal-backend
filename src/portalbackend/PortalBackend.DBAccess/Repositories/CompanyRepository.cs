@@ -194,7 +194,7 @@ public class CompanyRepository : ICompanyRepository
         .AsAsyncEnumerable();
 
     /// <inheritdoc />
-    public Task<(bool isUseCaseIdExists, bool isActiveCompanyStatus, Guid companyId)> GetCompanyStatusAndUseCaseIdAsync(string iamUserId, Guid useCaseId) =>
+    public Task<(bool IsUseCaseIdExists, bool IsActiveCompanyStatus, Guid CompanyId)> GetCompanyStatusAndUseCaseIdAsync(string iamUserId, Guid useCaseId) =>
         _context.Companies
         .Where(company => company.CompanyUsers.Any(user => user.IamUser!.UserEntityId == iamUserId))
         .Select(company => new ValueTuple<bool,bool, Guid>(
@@ -213,34 +213,54 @@ public class CompanyRepository : ICompanyRepository
 
     public IAsyncEnumerable<CompanyRoleConsentData> GetCompanyRoleAndConsentAgreementDetailsAsync(string iamUserId) =>
         _context.Companies
-        .AsSplitQuery()
-        .Where(company => company.CompanyUsers.Any(user => user.IamUser!.UserEntityId == iamUserId) && company.CompanyStatusId == CompanyStatusId.ACTIVE)
-        .SelectMany(company => company.CompanyRoles, (company, companyRole) => new { CompanyId = company.Id, CompanyRole = companyRole})
-        .Select(company => new CompanyRoleConsentData(
-            company.CompanyRole.Label,
-            company.CompanyRole.CompanyRoleRegistrationData!.IsRegistrationRole,
-            company.CompanyRole.AgreementAssignedCompanyRoles.Where(c => c.Agreement!.IssuerCompanyId == company.CompanyId)
-                .SelectMany(aacr => aacr.Agreement!.Consents)
-                .Select(consent => new ConsentAgreementData(
-                    consent.AgreementId,
-                    consent.Agreement!.Name,
-                    consent.ConsentStatusId))))
-        .AsAsyncEnumerable();
+            .AsSplitQuery()
+            .Where(company => company.CompanyUsers.Any(user => user.IamUser!.UserEntityId == iamUserId) && company.CompanyStatusId == CompanyStatusId.ACTIVE)
+            .SelectMany(
+                company => company.CompanyRoles,
+                (company, companyRole) => new {
+                    CompanyId = company.Id,
+                    CompanyRole = companyRole
+                })
+            .Select(x => new CompanyRoleConsentData(
+                x.CompanyRole.Label,
+                x.CompanyRole.CompanyRoleRegistrationData!.IsRegistrationRole,
+                x.CompanyRole.AgreementAssignedCompanyRoles
+                    .Where(assigned => assigned.Agreement!.IssuerCompanyId == x.CompanyId)
+                    .SelectMany(assigned => assigned.Agreement!.Consents)
+                    .Select(consent => new ConsentAgreementData(
+                        consent.AgreementId,
+                        consent.Agreement!.Name,
+                        consent.ConsentStatusId))))
+            .AsAsyncEnumerable();
 
     /// <inheritdoc />
-    public Task<(bool isCompanyActive, Guid companyId, IEnumerable<CompanyRoleId> companyRoleId, Guid companyUserId, IEnumerable<CompanyRoleId> agreementAssignedRole, IEnumerable<ConsentStatusDetails> consentStatusDatas)> GetCompanyRolesDataAsync(string iamUserId) =>
-    _context.Companies
-    .Where(company => company.CompanyUsers.Any(user => user.IamUser!.UserEntityId == iamUserId))
-    .Select( company => new ValueTuple<bool,Guid,IEnumerable<CompanyRoleId>,Guid,IEnumerable<CompanyRoleId>,IEnumerable<ConsentStatusDetails>>(
-        company.CompanyStatusId == CompanyStatusId.ACTIVE,
-        company.Id,
-        company.CompanyRoles.Select(cr => cr.Id),
-        company.CompanyUsers.Select(cu => cu.Id).FirstOrDefault(),
-        company.Agreements.SelectMany(agreement => agreement.AgreementAssignedCompanyRoles)
-            .Select(aacr => aacr.CompanyRoleId),
-        company.Consents.Select(consent => new ConsentStatusDetails(
-            consent.Id,
-            consent.AgreementId,
-            consent.ConsentStatusId))))
-    .SingleOrDefaultAsync();
+    public Task<(bool IsCompanyActive, Guid CompanyId, IEnumerable<CompanyRoleId>? CompanyRoleIds, Guid CompanyUserId, IEnumerable<CompanyRoleId>? AgreementAssignedRoles, IEnumerable<ConsentStatusDetails>? ConsentStatusDetails)> GetCompanyRolesDataAsync(string iamUserId) =>
+        _context.CompanyUsers
+            .AsNoTracking()
+            .AsSplitQuery()
+            .Where(user => user.IamUser!.UserEntityId == iamUserId)
+            .Select(user => new {
+                User = user,
+                Company = user.Company,
+                IsActive = user.Company!.CompanyStatusId == CompanyStatusId.ACTIVE
+            })
+            .Select(x => new ValueTuple<bool,Guid,IEnumerable<CompanyRoleId>?,Guid,IEnumerable<CompanyRoleId>?,IEnumerable<ConsentStatusDetails>?>(
+                x.IsActive,
+                x.Company!.Id,
+                x.IsActive
+                    ? x.Company.CompanyRoles.Select(companyRole => companyRole.Id)
+                    : null,
+                x.User.Id,
+                x.IsActive
+                    ? x.Company.Agreements
+                        .SelectMany(agreement => agreement.AgreementAssignedCompanyRoles)
+                        .Select(assigned => assigned.CompanyRoleId)
+                    : null,
+                x.IsActive
+                    ? x.Company.Consents.Select(consent => new ConsentStatusDetails(
+                        consent.Id,
+                        consent.AgreementId,
+                        consent.ConsentStatusId))
+                    : null))
+            .SingleOrDefaultAsync();
 }

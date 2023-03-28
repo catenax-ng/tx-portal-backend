@@ -115,7 +115,7 @@ public interface ICompanyRepository
     /// <param name="iamUserId">Id of the iam user</param>
     /// <param name="useCaseId">Id of the UseCase</param>
     /// <returns>Returns the CompanyActive Status, companyAssigendUeseCase Id and CompanyId</returns>
-    Task<(bool isUseCaseIdExists, bool isActiveCompanyStatus , Guid companyId)> GetCompanyStatusAndUseCaseIdAsync(string iamUserId, Guid useCaseId);
+    Task<(bool IsUseCaseIdExists, bool IsActiveCompanyStatus , Guid CompanyId)> GetCompanyStatusAndUseCaseIdAsync(string iamUserId, Guid useCaseId);
 
     /// <summary>
     /// creates the companyAssigendUeseCase record
@@ -141,5 +141,5 @@ public interface ICompanyRepository
     /// </summary>
     /// <param name="iamUserId">Id of the iam user</param>
     /// <returns>Returns the companyRole</returns>
-    Task<(bool isCompanyActive,Guid companyId, IEnumerable<CompanyRoleId> companyRoleId, Guid companyUserId, IEnumerable<CompanyRoleId> agreementAssignedRole, IEnumerable<ConsentStatusDetails> consentStatusDatas)> GetCompanyRolesDataAsync(string iamUserId);
+    Task<(bool IsCompanyActive, Guid CompanyId, IEnumerable<CompanyRoleId>? CompanyRoleIds, Guid CompanyUserId, IEnumerable<CompanyRoleId>? AgreementAssignedRoles, IEnumerable<ConsentStatusDetails>? ConsentStatusDetails)> GetCompanyRolesDataAsync(string iamUserId);
 }

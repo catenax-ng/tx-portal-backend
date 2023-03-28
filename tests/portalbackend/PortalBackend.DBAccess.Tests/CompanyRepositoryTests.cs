@@ -470,9 +470,9 @@ public class CompanyRepositoryTests : IAssemblyFixture<TestDbFixture>
 
         // Assert
         result.Should().NotBeNull();
-        result.isActiveCompanyStatus.Should().BeFalse();
-        result.isUseCaseIdExists.Should().BeTrue();
-        result.companyId.Should().Be(new Guid("0dcd8209-85e2-4073-b130-ac094fb47106"));
+        result.IsActiveCompanyStatus.Should().BeFalse();
+        result.IsUseCaseIdExists.Should().BeTrue();
+        result.CompanyId.Should().Be(new Guid("0dcd8209-85e2-4073-b130-ac094fb47106"));
     }
 
     [Fact]
@@ -521,6 +521,8 @@ public class CompanyRepositoryTests : IAssemblyFixture<TestDbFixture>
         deletedEntities.Select(x => (x.CompanyId, x.UseCaseId)).Should().Contain((companyId, useCaseId));
     }
 
+    #endregion
+
     #region GetCompanyRoleAndConsentAgreement
 
     [Fact]
@@ -555,12 +557,15 @@ public class CompanyRepositoryTests : IAssemblyFixture<TestDbFixture>
 
         // Assert
         result.Should().NotBeNull();
-        result.companyId.Should().Be(new Guid("3390c2d7-75c1-4169-aa27-6ce00e1f3cdd"));
-        result.companyRoleId.Should().Contain(CompanyRoleId.SERVICE_PROVIDER);
-        result.companyUserId.Should().Be(new Guid("ac1cf001-7fbc-1f2f-817f-bce058020005"));
-        result.isCompanyActive.Should().BeTrue();
-        result.agreementAssignedRole.Should().Contain(CompanyRoleId.SERVICE_PROVIDER);
-        result.consentStatusDatas.Select(x => x.ConsentStatus).Should().Contain(ConsentStatusId.ACTIVE);
+        result.CompanyId.Should().Be(new Guid("3390c2d7-75c1-4169-aa27-6ce00e1f3cdd"));
+        result.CompanyRoleIds.Should().NotBeNull()
+            .And.Contain(CompanyRoleId.SERVICE_PROVIDER);
+        result.CompanyUserId.Should().Be(new Guid("ac1cf001-7fbc-1f2f-817f-bce058020005"));
+        result.IsCompanyActive.Should().BeTrue();
+        result.AgreementAssignedRoles.Should().NotBeNull()
+            .And.Contain(CompanyRoleId.SERVICE_PROVIDER);
+        result.ConsentStatusDetails.Should().NotBeNull()
+            .And.Contain(x => x.ConsentStatusId == ConsentStatusId.ACTIVE);
     }
 
     #endregion

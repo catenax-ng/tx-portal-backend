@@ -22,6 +22,6 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Models;
 
-public record CompanyRoleConsentDetails(CompanyRoleId companyRoles, IEnumerable<ConsentDetails> agreements);
+public record CompanyRoleConsentDetails(CompanyRoleId CompanyRole, IEnumerable<ConsentDetails> Agreements);
 
-public record ConsentDetails(Guid agreementId, ConsentStatusId consentStatus);
+public record ConsentDetails(Guid AgreementId, ConsentStatusId ConsentStatus);

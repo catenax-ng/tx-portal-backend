@@ -164,7 +164,7 @@ public class CompanyDataBusinessLogicTests
         };
 
         A.CallTo(() => _companyRepository.GetCompanyRolesDataAsync(IamUserId))
-            .ReturnsLazily(() => (true, companyId, companyRole, companyUserId, agreementAssignedRole,consentStatusDetails));
+            .Returns((true, companyId, companyRole, companyUserId, agreementAssignedRole, consentStatusDetails));
         
         var sut = new CompanyDataBusinessLogic(_portalRepositories);
         
@@ -185,23 +185,14 @@ public class CompanyDataBusinessLogicTests
         var companyRoleConsentDetails = _fixture.CreateMany<CompanyRoleConsentDetails>(2);
         var companyId = _fixture.Create<Guid>();
         var companyUserId = _fixture.Create<Guid>();
-        var companyRole = new [] { CompanyRoleId.OPERATOR, CompanyRoleId.SERVICE_PROVIDER};
-        var agreementAssignedRole = new []{
-            CompanyRoleId.ACTIVE_PARTICIPANT,
-            CompanyRoleId.APP_PROVIDER,
-            CompanyRoleId.SERVICE_PROVIDER,
-            CompanyRoleId.OPERATOR 
-        };
-        var consentStatusDetails = new []{
-            new ConsentStatusDetails(_fixture.Create<Guid>(),_fixture.Create<Guid>(),ConsentStatusId.ACTIVE)
-        };
+
         A.CallTo(() => _companyRepository.GetCompanyRolesDataAsync(IamUserId))
-            .ReturnsLazily(() => (false,companyId,companyRole,companyUserId,agreementAssignedRole,consentStatusDetails));
+            .Returns((false, companyId, null, companyUserId, null, null));
         
         var sut = new CompanyDataBusinessLogic(_portalRepositories);
 
         // Act
-        async Task Act() => await sut.CreateCompanyRoleAndConsentAgreementDetailsAsync(IamUserId,companyRoleConsentDetails).ConfigureAwait(false);
+        async Task Act() => await sut.CreateCompanyRoleAndConsentAgreementDetailsAsync(IamUserId, companyRoleConsentDetails).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -224,7 +215,7 @@ public class CompanyDataBusinessLogicTests
             new ConsentStatusDetails(_fixture.Create<Guid>(),_fixture.Create<Guid>(),ConsentStatusId.ACTIVE)
         };
         A.CallTo(() => _companyRepository.GetCompanyRolesDataAsync(IamUserId))
-            .ReturnsLazily(() => (true,companyId,companyRole,companyUserId,agreementAssignedRole,consentStatusDetails));
+            .Returns((true, companyId, companyRole, companyUserId, agreementAssignedRole, consentStatusDetails));
         
         var sut = new CompanyDataBusinessLogic(_portalRepositories);
 
@@ -252,7 +243,7 @@ public class CompanyDataBusinessLogicTests
             new ConsentStatusDetails(_fixture.Create<Guid>(),_fixture.Create<Guid>(),ConsentStatusId.ACTIVE)
         };
         A.CallTo(() => _companyRepository.GetCompanyRolesDataAsync(IamUserId))
-            .ReturnsLazily(() => (true,companyId,companyRole,companyUserId,agreementAssignedRole,consentStatusDetails));
+            .Returns((true, companyId, companyRole, companyUserId, agreementAssignedRole, consentStatusDetails));
         
         var sut = new CompanyDataBusinessLogic(_portalRepositories);
 
@@ -280,7 +271,7 @@ public class CompanyDataBusinessLogicTests
             new ConsentStatusDetails(_fixture.Create<Guid>(),_fixture.Create<Guid>(),ConsentStatusId.ACTIVE)
         };
         A.CallTo(() => _companyRepository.GetCompanyRolesDataAsync(IamUserId))
-            .ReturnsLazily(() => (true,companyId,companyRole,companyUserId,agreementAssignedRole,consentStatusDetails));
+            .Returns((true, companyId, companyRole, companyUserId, agreementAssignedRole, consentStatusDetails));
         
         var sut = new CompanyDataBusinessLogic(_portalRepositories);
 
@@ -299,7 +290,7 @@ public class CompanyDataBusinessLogicTests
         var companyRoleConsentDetails = _fixture.CreateMany<CompanyRoleConsentDetails>(2);
 
         A.CallTo(() => _companyRepository.GetCompanyRolesDataAsync(IamUserId))
-            .ReturnsLazily(() => new ValueTuple<bool,Guid,IEnumerable<CompanyRoleId>,Guid,IEnumerable<CompanyRoleId>,IEnumerable<ConsentStatusDetails>>());
+            .Returns(((bool,Guid,IEnumerable<CompanyRoleId>?,Guid,IEnumerable<CompanyRoleId>?,IEnumerable<ConsentStatusDetails>?))default);
         
         var sut = new CompanyDataBusinessLogic(_portalRepositories);
 
@@ -340,7 +331,7 @@ public class CompanyDataBusinessLogicTests
         var useCaseId = _fixture.Create<Guid>();
         var companyId = _fixture.Create<Guid>();
         A.CallTo(() => _companyRepository.GetCompanyStatusAndUseCaseIdAsync(IamUserId,useCaseId))
-            .ReturnsLazily(() => (false, true, companyId));
+            .Returns((false, true, companyId));
 
         var sut = new CompanyDataBusinessLogic(_portalRepositories);
 
@@ -361,7 +352,7 @@ public class CompanyDataBusinessLogicTests
         var companyId = _fixture.Create<Guid>();
 
         A.CallTo(() => _companyRepository.GetCompanyStatusAndUseCaseIdAsync(IamUserId,useCaseId))
-            .ReturnsLazily(() => (true, true, companyId));
+            .Returns((true, true, companyId));
 
         var sut = new CompanyDataBusinessLogic(_portalRepositories);
 
@@ -383,7 +374,7 @@ public class CompanyDataBusinessLogicTests
         var companyId = _fixture.Create<Guid>();
 
         A.CallTo(() => _companyRepository.GetCompanyStatusAndUseCaseIdAsync(IamUserId,useCaseId))
-            .ReturnsLazily(() => (false, false, companyId));
+            .Returns((false, false, companyId));
 
         var sut = new CompanyDataBusinessLogic(_portalRepositories);
 
@@ -403,7 +394,7 @@ public class CompanyDataBusinessLogicTests
         var companyId = _fixture.Create<Guid>();
 
         A.CallTo(() => _companyRepository.GetCompanyStatusAndUseCaseIdAsync(IamUserId,useCaseId))
-            .ReturnsLazily(() => (true, true, companyId));
+            .Returns((true, true, companyId));
 
         var sut = new CompanyDataBusinessLogic(_portalRepositories);
 
@@ -423,7 +414,7 @@ public class CompanyDataBusinessLogicTests
         var companyId = _fixture.Create<Guid>();
 
         A.CallTo(() => _companyRepository.GetCompanyStatusAndUseCaseIdAsync(IamUserId,useCaseId))
-            .ReturnsLazily(() => (true, false, companyId));
+            .Returns((true, false, companyId));
 
         var sut = new CompanyDataBusinessLogic(_portalRepositories);
 
@@ -443,7 +434,7 @@ public class CompanyDataBusinessLogicTests
         var companyId = _fixture.Create<Guid>();
 
         A.CallTo(() => _companyRepository.GetCompanyStatusAndUseCaseIdAsync(IamUserId,useCaseId))
-            .ReturnsLazily(() => (false, true, companyId));
+            .Returns((false, true, companyId));
 
         var sut = new CompanyDataBusinessLogic(_portalRepositories);
 

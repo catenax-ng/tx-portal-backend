@@ -207,7 +207,7 @@ public class ConsentRepositoryTests : IAssemblyFixture<TestDbFixture>
         var (sut, context) = await CreateSut().ConfigureAwait(false);
 
         //Act
-        var result = sut.AddAttachAndModifyConsents(appAgreementConsentStatus, agreementConsentStatus, offerId, companyId, companyUserId, utcNow);
+        var result = sut.AddAttachAndModifyOfferConsents(appAgreementConsentStatus, agreementConsentStatus, offerId, companyId, companyUserId, utcNow);
 
         //Assert
         result.Should().HaveCount(6)

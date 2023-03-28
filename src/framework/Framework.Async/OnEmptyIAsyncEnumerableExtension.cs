@@ -17,11 +17,24 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
-namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 
-public record CompanyRoleConsentData(string CompanyRoles,bool CompanyRolesActive,IEnumerable<ConsentAgreementData> Agreements);
+using System.Runtime.CompilerServices;
 
-public record ConsentAgreementData(Guid AgreementId, string AgreementName, ConsentStatusId ConsentStatus);
+namespace Org.Eclipse.TractusX.Portal.Backend.Framework.Async;
 
-public record ConsentStatusDetails(Guid ConsentId, Guid AgreementId, ConsentStatusId ConsentStatusId);
+public static class OnEmptyIAsyncEnumerableExtension
+{
+    public async static IAsyncEnumerable<TItem> OnEmpty<TItem>(this IAsyncEnumerable<TItem> asyncItems, Action handler, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        await using var enumerator = asyncItems.GetAsyncEnumerator(cancellationToken);
+        if (!await enumerator.MoveNextAsync().ConfigureAwait(false))
+        {
+            handler();
+        }
+        yield return enumerator.Current;
+        while(await enumerator.MoveNextAsync().ConfigureAwait(false))
+        {
+            yield return enumerator.Current;
+        }
+    }
+}

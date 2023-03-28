@@ -113,6 +113,7 @@ public class CompanyDataController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
     /// Gets the companyrole and ConsentAgreement Details
     /// </summary>
     /// <returns>the Companyrole and ConsentAgreement details</returns>
