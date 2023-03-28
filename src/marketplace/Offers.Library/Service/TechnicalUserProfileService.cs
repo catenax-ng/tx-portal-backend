@@ -23,7 +23,6 @@ using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Offers.Library.DependencyInjection;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Models;
 
@@ -55,17 +54,7 @@ public class TechnicalUserProfileService : ITechnicalUserProfileService
             .ConfigureAwait(false);
         if (data == default)
         {
-            throw new ConflictException($"Offer {offerId} does not exists");
-        }
-
-        if (string.IsNullOrWhiteSpace(data.OfferName))
-        {
-            throw new ConflictException("Offer name needs to be set here");
-        }
-
-        if (data is {IsSingleInstance: false, TechnicalUserNeeded: false})
-        {
-            return new List<ServiceAccountCreationInfo>();
+            throw new NotFoundException($"Offer {offerId} does not exists");
         }
 
         return await GetServiceAccountData(data);
@@ -80,9 +69,14 @@ public class TechnicalUserProfileService : ITechnicalUserProfileService
             .ConfigureAwait(false);
         if (data == default)
         {
-            throw new ConflictException($"Offer Subscription {subscriptionId} does not exists");
+            throw new NotFoundException($"Offer Subscription {subscriptionId} does not exists");
         }
 
+        return await GetServiceAccountData(data);
+    }
+
+    private async Task<IEnumerable<ServiceAccountCreationInfo>> GetServiceAccountData((bool IsSingleInstance, bool TechnicalUserNeeded, string? OfferName) data)
+    {
         if (string.IsNullOrWhiteSpace(data.OfferName))
         {
             throw new ConflictException("Offer name needs to be set here");
@@ -93,11 +87,6 @@ public class TechnicalUserProfileService : ITechnicalUserProfileService
             return new List<ServiceAccountCreationInfo>();
         }
 
-        return await GetServiceAccountData(data);
-    }
-
-    private async Task<IEnumerable<ServiceAccountCreationInfo>> GetServiceAccountData((bool IsSingleInstance, bool TechnicalUserNeeded, string? OfferName) data)
-    {
         var serviceAccountUserRoles = await _portalRepositories.GetInstance<IUserRolesRepository>()
             .GetUserRoleDataUntrackedAsync(_settings.ServiceAccountRoles)
             .ToListAsync()
