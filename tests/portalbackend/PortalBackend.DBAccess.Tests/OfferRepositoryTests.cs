@@ -1139,6 +1139,26 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         }
     }
 
+    [Fact]
+    public async Task GetAllInReviewStatusServiceAsync_ReturnsExpectedResult_WithDateSorting()
+    {
+        // Arrange
+        var sut = await CreateSut().ConfigureAwait(false);
+
+        // Act
+        var result = await sut.GetAllInReviewStatusServiceAsync(new[] { OfferStatusId.ACTIVE }, OfferSorting.NameAsc,null, "en")(0, 10).ConfigureAwait(false);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.Data.Should().NotBeEmpty();
+        result!.Data.Should().HaveCount(3);
+        result!.Data.First().Id.Should().Be(new Guid("ac1cf001-7fbc-1f2f-817f-bce0000c0001"));
+        result.Data.First().Title.Should().Be("Consulting Service - Data Readiness");
+        result.Data.First().Status.Should().Be(OfferStatusId.ACTIVE);
+        result.Data.First().Provider.Should().Be("Catena-X");
+        result.Data.First().Description.Should().Be("Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
+    }
+
 
     #region Setup
     
