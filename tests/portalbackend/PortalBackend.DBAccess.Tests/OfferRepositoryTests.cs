@@ -1353,8 +1353,9 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         var (sut, context) = await CreateSutWithContext().ConfigureAwait(false);
 
         // Act
-        var results = sut.CreateAppInstanceSetup(new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4"), true, entity =>
+        var results = sut.CreateAppInstanceSetup(new Guid("99C5FD12-8085-4DE2-ABFD-215E1EE4BAA4"), entity =>
         {
+            entity.IsSingleInstance = true;
             entity.InstanceUrl = "https://www.test.de";
         });
 
@@ -1385,7 +1386,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
 
         // Assert
         result.Should().NotBeNull();
-        result!.InstanceIds.Should().HaveCount(1).And.ContainSingle(x => x == new Guid("b161d570-f6ff-45b4-a077-243f72487af6"));
+        result!.Instances.Should().HaveCount(1).And.ContainSingle(x => x.InstanceId == new Guid("b161d570-f6ff-45b4-a077-243f72487af6"));
         result.OfferName.Should().Be("Trace-X");
     }
 
