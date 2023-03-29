@@ -581,6 +581,30 @@ public class ServiceBusinessLogicTests
     }
     #endregion
     
+    [Fact]
+    public async Task GetCompanyProvidedServiceStatusDataAsync_InActiveRequest()
+    {
+        // Arrange
+        var serviceDetailData = _fixture.CreateMany<AllOfferStatusData>(5);
+        var paginationResult = (int skip, int take) => Task.FromResult(new Pagination.Source<AllOfferStatusData>(serviceDetailData.Count(), serviceDetailData.Skip(skip).Take(take)));
+        
+        A.CallTo(() => _offerRepository.GetCompanyProvidedServiceStatusDataAsync(A<IEnumerable<OfferStatusId>>._, A<string>._, A<OfferSorting>._, A<string>._))
+            .Returns(paginationResult);
+        
+        A.CallTo(() => _portalRepositories.GetInstance<IOfferRepository>()).Returns(_offerRepository);
+        var sut = _fixture.Create<ServiceBusinessLogic>();
+
+        // Act
+        var result = await sut.GetCompanyProvidedServiceStatusDataAsync(0, 5,null!, null, null,null).ConfigureAwait(false);
+
+        // Assert
+        A.CallTo(() => _offerRepository.GetCompanyProvidedServiceStatusDataAsync(A<IEnumerable<OfferStatusId>>
+            .That.Matches(x => x.Count() == 4 && x.All(y => System.Enum.GetValues<OfferStatusId>().Contains(y))),A<string>._, A<OfferSorting>._, A<string>._)).MustHaveHappenedOnceExactly();
+        result.Content.Should().HaveCount(5);
+        result.Content.Should().Contain(x => x.Status == OfferStatusId.INACTIVE);
+        result.Content.Should().Contain(x => x.Status == OfferStatusId.IN_REVIEW);
+    }
+
     #region Setup
 
     private void SetupUpdateService()
