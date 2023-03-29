@@ -19,6 +19,7 @@
  ********************************************************************************/
 
 using Microsoft.AspNetCore.Http;
+using Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
 using Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
@@ -191,4 +192,6 @@ public interface IOfferService
     /// <param name="documentTypeIdSettings"></param>
     /// <param name="contentTypeSettings"></param>
     Task UploadDocumentAsync(Guid Id, DocumentTypeId documentTypeId, IFormFile document, string iamUserId, OfferTypeId offertypeId, IEnumerable<DocumentTypeId> documentTypeIdSettings, IEnumerable<string> contentTypeSettings, CancellationToken cancellationToken);
+
+    void UpsertRemoveKeyFeatures(Guid FeatureId, IEnumerable<Apps.Service.ViewModels.AppKeyFeatureData> UpdateKeyFeature, IEnumerable<AppFeatures> existingKeyFeatures,Guid appId);
 }

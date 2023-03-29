@@ -19,6 +19,7 @@
  ********************************************************************************/
 
 using Microsoft.AspNetCore.Http;
+using Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Mailing.SendMail;
 using Org.Eclipse.TractusX.Portal.Backend.Notifications.Library;
@@ -453,7 +454,7 @@ public class OfferService : IOfferService
             });
         }
     }
-
+        
     public void CreateOrUpdateOfferLicense(Guid offerId, string licenseText, (Guid OfferLicenseId, string LicenseText, bool AssignedToMultipleOffers) offerLicense)
     {
         var offerRepository = _portalRepositories.GetInstance<IOfferRepository>();
@@ -764,4 +765,41 @@ public class OfferService : IOfferService
         _portalRepositories.GetInstance<IOfferRepository>().CreateOfferAssignedDocument(Id, doc.Id);
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
+
+    public void UpsertRemoveKeyFeatures(Guid FeatureId, IEnumerable<Apps.Service.ViewModels.AppKeyFeatureData> UpdateKeyFeature, IEnumerable<AppFeatures> existingKeyFeatures, Guid appId)
+    {
+        var offerRepository = _portalRepositories.GetInstance<IOfferRepository>();
+        offerRepository.AddAppKeyFeaturesByIdAsync(
+            UpdateKeyFeature.ExceptBy(existingKeyFeatures.Select(d => d.Title), updateKeyfeatures => updateKeyfeatures.ShortDescription)
+                .Select(updateKeyfeatures => (FeatureId, updateKeyfeatures.Title, updateKeyfeatures.ShortDescription, updateKeyfeatures.Sequence, appId))
+        );
+
+        offerRepository.RemoveOfferKeyFeature(
+            existingKeyFeatures.ExceptBy(UpdateKeyFeature.Select(d => d.Title), existingKeyFeatures => existingKeyFeatures.ShortDescription)
+                .Select(existingKeyFeatures => (FeatureId, existingKeyFeatures.Title))
+        );
+
+
+        //var innerJoin = from s in existingKeyFeatures.ToList()
+        // join st in UpdateKeyFeature.ToList()
+        // on new (s.Title, s.ShortDescription)   equals (st.Title, st.ShortDescription)
+        
+        //    select new {   };
+
+
+        foreach (var update
+                 in UpdateKeyFeature
+                     .Where(update => existingKeyFeatures.Any(existing =>
+                         existing.Title== update.Title &&
+                         (existing.ShortDescription != update.ShortDescription))))
+                         
+        {
+
+            offerRepository.AttachAndModifyOfferKeyFeature(FeatureId, update.Title, keyfeature =>
+             {
+                 keyfeature.ShortDescription = update.ShortDescription;
+             });
+        }
+    }
+
 }

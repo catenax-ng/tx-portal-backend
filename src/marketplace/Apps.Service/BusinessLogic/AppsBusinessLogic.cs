@@ -81,7 +81,7 @@ public class AppsBusinessLogic : IAppsBusinessLogic
         }
 
         return await _portalRepositories.GetInstance<IOfferRepository>().GetAppFeaturesByIdAsync(appId);
-    }
+    }   
 
     /// <inheritdoc/>
     public async Task<AppPricingResponse> GetAppPricingByIdAsync(Guid appId){
@@ -280,11 +280,10 @@ public class AppsBusinessLogic : IAppsBusinessLogic
             app.ContactNumber = appInputModel.ContactNumber;
             app.ProviderCompanyId = appInputModel.ProviderCompanyId;
             app.OfferStatusId = OfferStatusId.CREATED;
-            app.SalesManagerId = appInputModel.SalesManagerId;
-        }).Id;
+            app.SalesManagerId = appInputModel.SalesManagerId;       
+            
+        }).Id;       
 
-        var licenseId = appRepository.CreateOfferLicenses(appInputModel.Price).Id;
-        appRepository.CreateOfferAssignedLicense(appId, licenseId);
         appRepository.AddAppAssignedUseCases(appInputModel.UseCaseIds.Select(uc =>
             new ValueTuple<Guid, Guid>(appId, uc)));
         appRepository.AddOfferDescriptions(appInputModel.Descriptions.Select(d =>
@@ -292,9 +291,92 @@ public class AppsBusinessLogic : IAppsBusinessLogic
         appRepository.AddAppLanguages(appInputModel.SupportedLanguageCodes.Select(c =>
             new ValueTuple<Guid, string>(appId, c)));
 
-        await _portalRepositories.SaveAsync().ConfigureAwait(false);
+       //To Save keywords for the App
+        appRepository.AddOfferKeyWords(appId, appInputModel.TagNames);
+        //To Save LeadPicture For the App
+        //appRepository.AddLeadPicture(appId, appInputModel.LeadPictureUri);
+
+        //To Save Features and Vedio,Featureimages
+        var featureId = new Guid();
+       appRepository.AddAppFeaturesByIdAsync(appInputModel.FeatureSummary,appInputModel.videoLink, appId);
+
+        var KeyfeatureId = new Guid();
+        appRepository.AddAppKeyFeaturesByIdAsync(appInputModel.KeyFeatures.Select(f =>
+            new ValueTuple<Guid,string,string,int,Guid>(KeyfeatureId, f.Title, f.ShortDescription, f.Sequence, featureId)));
+
+        var licenseId = appRepository.CreateOfferLicenses(appInputModel.Price).Id;
+        appRepository.CreateOfferAssignedLicense(appId, licenseId);
+
+        try
+        {
+            await _portalRepositories.SaveAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        { }
+
 
         return appId;
+    }
+
+    /// <inheritdoc/>
+    public async Task<Guid> CreateAppCardAsync(AppCardInputModel appCardInputModel)
+    {
+        // Add app card to db
+        var appRepository = _portalRepositories.GetInstance<IOfferRepository>();
+
+        var appId = appRepository.CreateOffer(appCardInputModel.Provider, OfferTypeId.APP, app =>
+        {
+            app.Name = appCardInputModel.Title;           
+            app.ProviderCompanyId = appCardInputModel.ProviderCompanyId;
+            app.OfferStatusId = OfferStatusId.CREATED;
+            app.SalesManagerId = appCardInputModel.SalesManagerId;
+
+        }).Id;
+
+        appRepository.AddAppAssignedUseCases(appCardInputModel.UseCaseIds.Select(uc =>
+            new ValueTuple<Guid, Guid>(appId, uc)));
+        appRepository.AddOfferDescriptions(appCardInputModel.Descriptions.Select(d =>
+            new ValueTuple<Guid, string, string, string>(appId, d.LanguageCode, d.LongDescription, d.ShortDescription)));
+        appRepository.AddAppLanguages(appCardInputModel.SupportedLanguageCodes.Select(c =>
+            new ValueTuple<Guid, string>(appId, c)));
+
+        //To Save keywords for the App
+        appRepository.AddOfferKeyWords(appId, appCardInputModel.Tags);
+        //To Save LeadPicture For the App
+        //appRepository.AddLeadPicture(appId, appInputModel.LeadPictureUri);       
+
+        try
+        {
+            await _portalRepositories.SaveAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        { }
+
+
+        return appId;
+    }
+
+    /// <inheritdoc/>
+    public async Task CreateAppCardDetailsAsync(AppCardDeatilsInputModel appCardDeatilsInputModel,Guid appid)
+    {
+        // Add app details to db
+        var appRepository = _portalRepositories.GetInstance<IOfferRepository>();
+
+        //To Save Features and Vedio,Featureimages
+        var feature = appRepository.AddAppFeaturesByIdAsync(appCardDeatilsInputModel.FeatureSummary, appCardDeatilsInputModel.videoLink, appid);
+
+        IEnumerable<(Guid, string, string, int, Guid)> keyfeatureTypes = appCardDeatilsInputModel.KeyFeatures.Select(f =>
+                           new ValueTuple<Guid, string, string, int, Guid>(Guid.NewGuid(), f.Title, f.ShortDescription, f.Sequence, feature.Id));
+        appRepository.AddAppKeyFeaturesByIdAsync(keyfeatureTypes);
+            
+
+        try
+        {
+            await _portalRepositories.SaveAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        { }
+       
     }
 
     /// <inheritdoc/>
@@ -340,4 +422,91 @@ public class AppsBusinessLogic : IAppsBusinessLogic
         }
         return (document.Content, document.FileName.MapToContentType(), document.FileName);
     }
+
+    public Task UpdateCardAppAsync(Guid appId, AppEditableDetail updateModel, string userId)
+    {
+        if (appId == Guid.Empty)
+        {
+            throw new ControllerArgumentException($"AppId must not be empty");
+        }
+        if (updateModel.Descriptions.Any(item => string.IsNullOrWhiteSpace(item.LanguageCode)))
+        {
+            throw new ControllerArgumentException("Language Code must not be empty");
+        }
+
+        return EditAppCardAsync(appId, updateModel, userId);
+    }
+
+    private async Task EditAppCardAsync(Guid appId, AppEditableDetail updateModel, string userId)
+    {
+        var appRepository = _portalRepositories.GetInstance<IOfferRepository>();
+        var appResult = await appRepository.GetOfferDetailsForUpdateAsync(appId, userId, OfferTypeId.APP).ConfigureAwait(false);
+        if (appResult == default)
+        {
+            throw new NotFoundException($"app {appId} does not exist");
+        }
+        if (!appResult.IsProviderUser)
+        {
+            throw new ForbiddenException($"user {userId} is not eligible to edit app {appId}");
+        }
+        if (!appResult.IsAppCreated)
+        {
+            throw new ConflictException($"app {appId} is not in status CREATED");
+        }
+        appRepository.AttachAndModifyOffer(appId, app =>
+        {
+            if (appResult.ContactEmail != updateModel.ContactEmail)
+            {
+                app.ContactEmail = updateModel.ContactEmail;
+            }
+            if (appResult.ContactNumber != updateModel.ContactNumber)
+            {
+                app.ContactNumber = updateModel.ContactNumber;
+            }
+            if (appResult.MarketingUrl != updateModel.ProviderUri)
+            {
+                app.MarketingUrl = updateModel.ProviderUri;
+            }
+        });       
+        _offerService.UpsertRemoveOfferDescription(appId, updateModel.Descriptions, appResult.Descriptions);
+        
+        await _portalRepositories.SaveAsync().ConfigureAwait(false);
+    }
+
+
+    public Task UpdateCardDetailsAppAsync(Guid appId, EditAppCardDetails updateModel)
+    {
+        if (appId == Guid.Empty)
+        {
+            throw new ControllerArgumentException($"AppId must not be empty");
+        }
+        
+        return EditAppCardDetailsAsync(appId, updateModel);
+    }
+
+    private async Task EditAppCardDetailsAsync(Guid appId, EditAppCardDetails updateModel)
+    {
+        var appRepository = _portalRepositories.GetInstance<IOfferRepository>();
+        var appResult = await appRepository.GetAppFeaturesByIdAsync(appId).ConfigureAwait(false);
+        if (appResult == default)
+        {
+            throw new NotFoundException($"app {appId} does not exist");
+        }       
+        appRepository.AttachAndModifyFeature(appResult.Id, app =>
+        {
+            if (appResult.summary != updateModel.FeatureSummary)
+            {
+                app.Summary= updateModel.FeatureSummary;
+            }
+            if (appResult.videoLink != updateModel.Videolink)
+            {
+                app.VideoLink = updateModel.Videolink;                
+            }       
+            
+        });
+       _offerService.UpsertRemoveKeyFeatures(appResult.Id, updateModel.KeyFeature,appResult.Features,appId);
+
+        await _portalRepositories.SaveAsync().ConfigureAwait(false);
+    }
+
 }

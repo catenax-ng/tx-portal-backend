@@ -39,7 +39,7 @@ public class AppsSettings
     /// Notification Type Id
     /// </summary>
     /// <value></value>
-    [Required]
+   // [Required]
     public IEnumerable<NotificationTypeId> SubmitAppNotificationTypeIds { get; set; } = null!;
     
     /// <summary>

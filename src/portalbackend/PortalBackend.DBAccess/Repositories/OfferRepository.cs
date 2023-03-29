@@ -26,6 +26,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using PortalBackend.PortalEntities.Entities;
 using System.Linq.Expressions;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
@@ -95,7 +96,7 @@ public class OfferRepository : IOfferRepository
                  a.OfferLicenses.Select(license => license != null ? license.Licensetext : "").FirstOrDefault(),
                  a.Documents.Where(document => document.DocumentTypeId == DocumentTypeId.APP_LEADIMAGE && document.DocumentStatusId != DocumentStatusId.INACTIVE).Select(document => document.Id).FirstOrDefault(),
                  a.UseCases.Select(uc => uc.Name),
-                 (a.OfferRecommandations.Any(offer => offer.CompanyUser.IamUser.UserEntityId == iamUserId) || a.IsSponsored )
+                 (a.OfferRecommandations.Any(offer => offer.CompanyUser.IamUser.UserEntityId == iamUserId) || a.IsSponsored)
                  ))
              .ToListAsync();
 
@@ -129,20 +130,20 @@ public class OfferRepository : IOfferRepository
     }
 
     /// <inheritdoc />
-    public async Task<AppFeaturesResponse> GetAppFeaturesByIdAsync(Guid appId){
+    public async Task<AppFeaturesResponse> GetAppFeaturesByIdAsync(Guid appId) {
         var result = await _context.Features.AsNoTracking().Where(feature => feature.Offer != null && feature.Offer.Id.Equals(appId))
         .Select(a => new AppFeaturesResponse(
             a.Id,
             a.Summary,
             a.VideoLink,
-            a.KeyFeatures.Where(k => k.Features != null).Select(keyFeature => new AppFeatures(keyFeature.Title,keyFeature.ShortDescription))
+            a.KeyFeatures.Where(k => k.Features != null).Select(keyFeature => new AppFeatures(keyFeature.Title, keyFeature.ShortDescription))
         )).SingleOrDefaultAsync();
 
         return result;
     }
 
     /// <inheritdoc />
-    public async Task<AppPricingResponse> GetAppPricingByIdAsync(Guid appId){
+    public async Task<AppPricingResponse> GetAppPricingByIdAsync(Guid appId) {
         var result = await _context.PricingAdditionalDetail.AsNoTracking().Where(pad => pad.Offer != null && pad.Offer.Id.Equals(appId))
         .Select(a => new AppPricingResponse(
             a.Amount,
@@ -568,4 +569,40 @@ public class OfferRepository : IOfferRepository
             initialPrivacyPolicy,
             modifyPrivacyPolicy,
             privacyPolicy => new OfferAssignedPrivacyPolicy(appId, privacyPolicy));
+
+    public void AddOfferKeyWords(Guid appid, string tagnames) =>
+        _context.OfferTags.Add(new OfferTag(appid, tagnames));
+
+    //public void AddLeadPicture(Guid appid, string LeadPictureUri) =>
+    //    _context.Documents.Add(new Document(Guid.NewGuid(),, LeadPictureUri, DocumentTypeId.APP_LEADIMAGE);
+
+    /// <inheritdoc />
+    public Features AddAppFeaturesByIdAsync(string featureSummary, string videoLink, Guid appId) =>
+        _context.Features.Add(new Features(Guid.NewGuid() , featureSummary, videoLink, appId)).Entity;
+
+
+
+    /// <inheritdoc />   
+    public void AddAppKeyFeaturesByIdAsync(IEnumerable<(Guid Id, string title, string shortDescription, int sequence, Guid featuresId)> keyfeatureTypes)
+    {
+        _context.KeyFeatures.AddRange(keyfeatureTypes.Select(s => new KeyFeatures(s.Id, s.title, s.shortDescription, s.sequence, s.featuresId)));
+
+    }    
+
+    public void AttachAndModifyFeature(Guid FetureId, Action<Features> setOptionalParameters,Action<Features>? initializeParemeters = null)
+    {
+        var entity = new Features(FetureId, null!, null!,default);
+        initializeParemeters?.Invoke(entity);
+        var feature = _context.Attach(entity).Entity;
+        setOptionalParameters.Invoke(feature);
+    }
+
+    public void RemoveOfferKeyFeature(IEnumerable<(Guid featureId, string title)> offerkeyfeatureIds) =>
+      _context.RemoveRange(offerkeyfeatureIds.Select(x => new KeyFeatures(default, x.title, null!, 0, x.featureId)));
+    
+    public void AttachAndModifyOfferKeyFeature(Guid featureId, string title, Action<KeyFeatures> setOptionalParameters)
+    {
+        var keyFeature = _context.Attach(new KeyFeatures(default, title, null!, 0, featureId)).Entity;
+        setOptionalParameters.Invoke(keyFeature);
+    }
 }

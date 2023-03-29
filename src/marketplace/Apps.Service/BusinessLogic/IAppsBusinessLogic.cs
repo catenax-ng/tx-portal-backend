@@ -183,4 +183,40 @@ public interface IAppsBusinessLogic
     /// <param name="appId"></param>
     /// <returns>Application features from marketplace apps.</returns>
     Task<AppPricingResponse> GetAppPricingByIdAsync(Guid appId);
+
+    /// <summary>
+    /// Creates an application and returns its generated ID.
+    /// </summary>
+    /// <param name="appId"></param>
+    /// <param name="updateModel"></param>
+    /// <param name="userId"></param>
+    /// <returns>Guid of the created app.</returns>
+    Task UpdateCardAppAsync(Guid appId, AppEditableDetail updateModel, string userId);
+
+
+    /// <summary>
+    /// Creates an application and returns its generated ID.
+    /// </summary>
+    /// <param name="appId"></param>
+    /// <param name="updateModel"></param>    /// 
+    /// <returns>Guid of the created app.</returns>
+    Task UpdateCardDetailsAppAsync(Guid appId, EditAppCardDetails updateModel);
+
+
+    /// <summary>
+    /// Creates an application and returns its generated ID.
+    /// </summary>
+    /// <param name="appId"></param>
+    /// <param name="appCardInputModel"></param>    /// 
+    /// <returns>Guid of the created app.</returns>
+    Task<Guid> CreateAppCardAsync(AppCardInputModel appCardInputModel);
+
+
+    /// <summary>
+    /// Creates an application details.
+    /// </summary>
+    /// <param name="appid"></param>
+    /// <param name="appCardDeatilsInputModel"></param>    /// 
+    /// <returns>Guid of the created app.</returns>
+    Task CreateAppCardDetailsAsync(AppCardDeatilsInputModel appCardDeatilsInputModel, Guid appid);
 }

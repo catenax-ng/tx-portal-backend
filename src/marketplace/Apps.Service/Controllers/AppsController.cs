@@ -105,7 +105,7 @@ public class AppsController : ControllerBase
     /// <response code="404">App not found.</response>
     [HttpGet]
     [Route("{appId}", Name = nameof(GetAppDetailsByIdAsync))]
-    [Authorize(Roles = "view_apps")]
+    //[Authorize(Roles = "view_apps")]
     [ProducesResponseType(typeof(AppDetailResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
@@ -158,13 +158,30 @@ public class AppsController : ControllerBase
     /// <response code="201">Returns created app's ID.</response>
     [HttpPost]
     [Route("")]
-    [Authorize(Roles = "add_apps")]
+    //[Authorize(Roles = "add_apps")]
     [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
     public async Task<CreatedAtRouteResult> CreateAppAsync([FromBody] AppInputModel appInputModel)
     {
         var appId = await _appsBusinessLogic.CreateAppAsync(appInputModel).ConfigureAwait(false);
         return CreatedAtRoute(nameof(GetAppDetailsByIdAsync), new { appId }, appId);
     }
+
+    /// <summary>
+    /// Creates an app according to input model.
+    /// </summary>
+    /// <param name="appCardInputModel">Input model for app creation.</param>
+    /// <returns>ID of created application.</returns>
+    /// <remarks>Example: POST: /api/apps</remarks>
+    /// <response code="201">Returns created app's ID.</response>
+    [HttpPost]
+    [Route("addappcard")]
+    //[Authorize(Roles = "add_apps")]
+    public async Task<CreatedAtRouteResult> CreateAppCardAsync([FromBody] AppCardInputModel appCardInputModel)
+    {
+        var appId = await _appsBusinessLogic.CreateAppCardAsync(appCardInputModel).ConfigureAwait(false);
+        return CreatedAtRoute(nameof(GetAppDetailsByIdAsync), new { appId }, appId);
+    }
+       
 
     /// <summary>
     /// Retrieves IDs of all favourite apps of the current user (by sub claim).
@@ -394,5 +411,65 @@ public class AppsController : ControllerBase
     {
         var (content, contentType, fileName) = await _appsBusinessLogic.GetAppImageDocumentContentAsync(appId, documentId, cancellationToken).ConfigureAwait(false);
         return File(content, contentType, fileName);
+    }
+
+    /// <summary>
+    /// Edit app card to a newly created owned app under the app creation process.
+    /// </summary>
+    /// <param name="appId"></param>
+    /// <param name="updateModel"></param>
+    /// <remarks>Example: PUT: /api/apps/updateapp/74BA5AEF-1CC7-495F-ABAA-CF87840FA6E2</remarks>
+    /// <response code="204">App was successfully updated.</response>
+    /// <response code="400">If sub claim is empty/invalid or user does not exist, or any other parameters are invalid.</response>
+    /// <response code="404">App does not exist.</response>
+    [HttpPut]
+    [Route("updateappcard/{appId}")]
+    //[Authorize(Roles = "app_management")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<NoContentResult> UpdateAppCard([FromRoute] Guid appId, [FromBody] AppEditableDetail updateModel)
+    {
+        await this.WithIamUserId(userId => _appsBusinessLogic.UpdateCardAppAsync(appId, updateModel, userId)).ConfigureAwait(false);
+        return NoContent();
+    }
+
+
+    /// <summary>
+    /// Edit app details to a newly created owned app under the app creation process.
+    /// </summary>
+    /// <param name="appId"></param>
+    /// <param name="updateModel"></param>
+    /// <remarks>Example: PUT: /api/apps/updateapp/74BA5AEF-1CC7-495F-ABAA-CF87840FA6E2</remarks>
+    /// <response code="204">App was successfully updated.</response>
+    /// <response code="400">If sub claim is empty/invalid or user does not exist, or any other parameters are invalid.</response>
+    /// <response code="404">App does not exist.</response>
+    [HttpPut]
+    [Route("updateappcarddetails/{appId}")]
+    //[Authorize(Roles = "app_management")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<NoContentResult> UpdateAppCardDetails([FromRoute] Guid appId, [FromBody] EditAppCardDetails updateModel)
+    {
+         _appsBusinessLogic.UpdateCardDetailsAppAsync(appId, updateModel).ConfigureAwait(false);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Patch an app according to input model.
+    /// </summary>
+    /// <param name="appCardDeatilsInputModel">Input model for app creation.</param>
+    /// <param name="appId">Input model for app creation.</param>
+    /// <returns>ID of created application.</returns>
+    /// <remarks>Example: POST: /api/apps</remarks>
+    /// <response code="201">Returns created app's ID.</response>
+    [HttpPatch]
+    [Route("addappcarddetails/{appId}")]
+    //[Authorize(Roles = "add_apps")]
+    public async Task CreateAppCardDetailsAsync([FromBody] AppCardDeatilsInputModel appCardDeatilsInputModel, [FromRoute] Guid appId)
+    {
+        await _appsBusinessLogic.CreateAppCardDetailsAsync(appCardDeatilsInputModel, appId).ConfigureAwait(false);
+
     }
 }

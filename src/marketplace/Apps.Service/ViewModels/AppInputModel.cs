@@ -20,6 +20,7 @@
 
 using System.ComponentModel.DataAnnotations;
 using Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Models;
+using PortalBackend.PortalEntities.Entities;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
 
@@ -122,4 +123,33 @@ public class AppInputModel
     /// Pricing information of the app.
     /// </summary>
     public string Price { get; set; }
+
+    /// <summary>
+    /// KeyWords of the app.
+    /// </summary>
+    public string TagNames { get; set; }
+
+    /// <summary>
+    /// Feature Summary of the app.
+    /// </summary>
+    public string FeatureSummary { get; set; }
+
+    /// <summary>
+    /// Feature videoLink of the app.
+    /// </summary>
+    public string videoLink { get; set; }
+
+    /// <summary>
+    /// Feature of the app.
+    /// </summary>
+    public ICollection<AppKeyFeatureData> KeyFeatures { get; set; }
+
+    //public string FeatureShortDescription { get; set; }
+
+    //public int SequenceId { get; set; }
+
+    //public int FeatureTitle { get; set; }
+
+
+
 }

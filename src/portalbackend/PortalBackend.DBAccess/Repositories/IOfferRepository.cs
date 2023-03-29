@@ -23,6 +23,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using PortalBackend.PortalEntities.Entities;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 
@@ -280,6 +281,9 @@ public interface IOfferRepository
     /// </summary>
     /// <param name="serviceAssignedServiceTypes"></param>
     void AddServiceAssignedServiceTypes(IEnumerable<(Guid serviceId, ServiceTypeId serviceTypeId)> serviceAssignedServiceTypes);
+    
+    Features AddAppFeaturesByIdAsync(string featureSummary, string videoLink, Guid appId);
+    void AddAppKeyFeaturesByIdAsync(IEnumerable<(Guid Id, string title, string shortDescription, int sequence, Guid featuresId)> keyfeatureTypes);
 
     /// <summary>
     /// Removes <see cref="ServiceAssignedServiceType"/>s to the database
@@ -359,4 +363,28 @@ public interface IOfferRepository
     /// <param name="appId"></param>
     /// <returns></returns>
     Task<AppPricingResponse> GetAppPricingByIdAsync(Guid appId);
+
+
+    /// <summary>
+    /// Add offer Id and keywords for Offer in OfferTag table 
+    /// </summary>
+    /// <param name="appId"></param>
+    /// <param name="tagnames"></param>    
+    /// <returns></returns>
+    void AddOfferKeyWords(Guid appid, string tagnames);
+
+    /// <summary>
+    /// Add offer Id and keywords for Offer in OfferTag table 
+    /// </summary>
+    /// <param name="appId"></param>
+    /// <param name="tagnames"></param>    
+    /// <returns></returns>
+    //void AddOfferKeyFeatures(Guid appid, string tagnames);
+    
+    void AttachAndModifyFeature(Guid FetureId, Action<Features> setOptionalParameters, Action<Features>? initializeParemeters = null);
+    void RemoveOfferKeyFeature(IEnumerable<(Guid featureId, string title)> offerkeyfeatureIds);
+
+    void AttachAndModifyOfferKeyFeature(Guid featureId, string title, Action<KeyFeatures> setOptionalParameters);
+
+
 }
