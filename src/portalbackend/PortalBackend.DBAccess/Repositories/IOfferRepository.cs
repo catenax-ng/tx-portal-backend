@@ -433,6 +433,7 @@ public interface IOfferRepository
     /// Retrieves all status offer in the marketplace.
     /// </summary>
     /// <param name="offerStatusIds"></param>
+    /// <param name="offerTypeId"></param>
     /// <param name="userId"></param>
     /// <param name="sorting"></param>
     /// <param name="offerName"></param>
@@ -442,8 +443,9 @@ public interface IOfferRepository
     /// Retrieves all in review status offer in the marketplace.
     /// </summary>
     /// <param name="offerStatusIds"></param>
+    /// <param name="offerTypeId"></param>
     /// <param name="sorting"></param>
-    /// <param name="serviceName"></param>
+    /// <param name="offerName"></param>
     /// <param name="languageShortName"></param>
-    Func<int,int,Task<Pagination.Source<InReviewServiceData>?>> GetAllInReviewStatusServiceAsync(IEnumerable<OfferStatusId> offerStatusIds, OfferSorting? sorting, string? serviceName, string? languageShortName);
+    Func<int,int,Task<Pagination.Source<InReviewServiceData>?>> GetAllInReviewStatusServiceAsync(IEnumerable<OfferStatusId> offerStatusIds, OfferTypeId offerTypeId, OfferSorting? sorting, string? offerName, string? languageShortName);
 }

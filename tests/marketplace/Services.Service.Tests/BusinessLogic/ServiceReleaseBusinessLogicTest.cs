@@ -254,7 +254,7 @@ public class ServiceReleaseBusinessLogicTest
             new InReviewServiceData(Guid.NewGuid(),null!, OfferStatusId.ACTIVE,null!,"test data5")
         };
         var paginationResult = (int skip, int take) => Task.FromResult(new Pagination.Source<InReviewServiceData>(5, InReviewData.Skip(skip).Take(take)));
-        A.CallTo(() => _offerRepository.GetAllInReviewStatusServiceAsync(A<IEnumerable<OfferStatusId>>._, A<OfferSorting>._, A<string>._, A<string>._))
+        A.CallTo(() => _offerRepository.GetAllInReviewStatusServiceAsync(A<IEnumerable<OfferStatusId>>._, A<OfferTypeId>._, A<OfferSorting>._, A<string>._, A<string>._))
             .Returns(paginationResult);
 
         // Act
@@ -262,7 +262,7 @@ public class ServiceReleaseBusinessLogicTest
 
         // Assert
         A.CallTo(() => _offerRepository.GetAllInReviewStatusServiceAsync(A<IEnumerable<OfferStatusId>>
-            .That.Matches(x => x.Count() == 2 && x.All(y => _options.Value.OfferStatusIds.Contains(y))), A<OfferSorting>._, A<string>._, A<string>._)).MustHaveHappenedOnceExactly();
+            .That.Matches(x => x.Count() == 2 && x.All(y => _options.Value.OfferStatusIds.Contains(y))), OfferTypeId.SERVICE, A<OfferSorting>._, A<string>._, A<string>._)).MustHaveHappenedOnceExactly();
         Assert.IsType<Pagination.Response<InReviewServiceData>>(result);
         result.Content.Should().HaveCount(5);
         result.Content.Should().Contain(x => x.Status == OfferStatusId.ACTIVE);
@@ -280,7 +280,7 @@ public class ServiceReleaseBusinessLogicTest
             new InReviewServiceData(Guid.NewGuid(),null!, OfferStatusId.IN_REVIEW,null!,"test data5")
         };
         var paginationResult = (int skip, int take) => Task.FromResult(new Pagination.Source<InReviewServiceData>(5, InReviewData.Skip(skip).Take(take)));
-        A.CallTo(() => _offerRepository.GetAllInReviewStatusServiceAsync(A<IEnumerable<OfferStatusId>>._, A<OfferSorting>._, A<string>._, A<string>._))
+        A.CallTo(() => _offerRepository.GetAllInReviewStatusServiceAsync(A<IEnumerable<OfferStatusId>>._, A<OfferTypeId>._, A<OfferSorting>._, A<string>._, A<string>._))
             .Returns(paginationResult);
 
         // Act
@@ -288,7 +288,7 @@ public class ServiceReleaseBusinessLogicTest
 
         // Assert
         A.CallTo(() => _offerRepository.GetAllInReviewStatusServiceAsync(A<IEnumerable<OfferStatusId>>
-            .That.Matches(x => x.Count() == 2 && x.All(y => _options.Value.OfferStatusIds.Contains(y))), A<OfferSorting>._, A<string>._, A<string>._)).MustHaveHappenedOnceExactly();
+            .That.Matches(x => x.Count() == 2 && x.All(y => _options.Value.OfferStatusIds.Contains(y))), OfferTypeId.SERVICE, A<OfferSorting>._, A<string>._, A<string>._)).MustHaveHappenedOnceExactly();
         Assert.IsType<Pagination.Response<InReviewServiceData>>(result);
         result.Content.Should().HaveCount(5);
         result.Content.Should().Contain(x => x.Status == OfferStatusId.IN_REVIEW);

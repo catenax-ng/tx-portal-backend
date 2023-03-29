@@ -131,6 +131,6 @@ public class ServiceReleaseBusinessLogic : IServiceReleaseBusinessLogic
     public Task<Pagination.Response<InReviewServiceData>> GetAllInReviewStatusServiceAsync(int page, int size, OfferSorting? sorting, string? serviceName, string? languageShortName) =>
         Pagination.CreateResponseAsync(page, size, 15,
             _portalRepositories.GetInstance<IOfferRepository>()
-                .GetAllInReviewStatusServiceAsync(_settings.OfferStatusIds, sorting ?? OfferSorting.DateDesc,serviceName, languageShortName));
+                .GetAllInReviewStatusServiceAsync(_settings.OfferStatusIds, OfferTypeId.SERVICE, sorting ?? OfferSorting.DateDesc,serviceName, languageShortName));
 
 }

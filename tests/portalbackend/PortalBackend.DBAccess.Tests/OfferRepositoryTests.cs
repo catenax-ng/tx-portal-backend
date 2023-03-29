@@ -1117,13 +1117,13 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
     [Theory]
     [InlineData(new[] { OfferStatusId.ACTIVE }, OfferSorting.NameDesc,null,"en")]
     [InlineData(new[] { OfferStatusId.ACTIVE }, OfferSorting.NameAsc,null,"en")]
-    public async Task GetAllInReviewStatusServiceAsync_ReturnsExpectedResult(IEnumerable<OfferStatusId> statusids, OfferSorting? sorting,string? serviceName, string? languagename)
+    public async Task GetAllInReviewStatusServiceAsync_ReturnsExpectedResult(IEnumerable<OfferStatusId> statusids, OfferSorting? sorting, string? serviceName, string? languagename)
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
 
         // Act
-        var result = await sut.GetAllInReviewStatusServiceAsync(statusids, sorting,serviceName, languagename)(0, 10).ConfigureAwait(false);
+        var result = await sut.GetAllInReviewStatusServiceAsync(statusids, OfferTypeId.SERVICE, sorting,serviceName, languagename)(0, 10).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
@@ -1146,19 +1146,14 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         var sut = await CreateSut().ConfigureAwait(false);
 
         // Act
-        var result = await sut.GetAllInReviewStatusServiceAsync(new[] { OfferStatusId.ACTIVE }, OfferSorting.NameAsc,null, "en")(0, 10).ConfigureAwait(false);
+        var result = await sut.GetAllInReviewStatusServiceAsync(new[] { OfferStatusId.ACTIVE }, OfferTypeId.SERVICE, OfferSorting.NameAsc, null, "en")(0, 10).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
-        result!.Data.Should().NotBeEmpty();
-        result!.Data.Should().HaveCount(3);
-        result!.Data.First().Id.Should().Be(new Guid("ac1cf001-7fbc-1f2f-817f-bce0000c0001"));
-        result.Data.First().Title.Should().Be("Consulting Service - Data Readiness");
-        result.Data.First().Status.Should().Be(OfferStatusId.ACTIVE);
-        result.Data.First().Provider.Should().Be("Catena-X");
-        result.Data.First().Description.Should().Be("Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
+        result!.Data.Should().NotBeEmpty()
+            .And.HaveCount(3)
+            .And.StartWith(new InReviewServiceData(new Guid("ac1cf001-7fbc-1f2f-817f-bce0000c0001"), "Consulting Service - Data Readiness", OfferStatusId.ACTIVE, "Catena-X", "Lorem ipsum dolor sit amet, consectetur adipiscing elit."));
     }
-
 
     #region Setup
     
