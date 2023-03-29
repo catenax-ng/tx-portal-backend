@@ -672,14 +672,14 @@ public class OfferRepository : IOfferRepository
             .SingleOrDefaultAsync();
 
     /// <inheritdoc />
-    public Func<int,int,Task<Pagination.Source<AllOfferStatusData>?>> GetCompanyProvidedServiceStatusDataAsync(IEnumerable<OfferStatusId> offerStatusIds, string userId, OfferSorting? sorting, string? offerName) =>
+    public Func<int,int,Task<Pagination.Source<AllOfferStatusData>?>> GetCompanyProvidedServiceStatusDataAsync(IEnumerable<OfferStatusId> offerStatusIds, OfferTypeId offerTypeId, string userId, OfferSorting? sorting, string? offerName) =>
         (skip, take) => Pagination.CreateSourceQueryAsync(
             skip,
             take,
             _context.Offers.AsNoTracking()
-                .Where(offer => offer.OfferTypeId == OfferTypeId.SERVICE && 
-                offer.ProviderCompany!.CompanyUsers.Any(companyUser => companyUser.IamUser!.UserEntityId == userId) &&
-                offerStatusIds.Contains(offer.OfferStatusId) && (offerName == null || EF.Functions.ILike(offer.Name!, $"%{offerName!.EscapeForILike()}%")))
+                .Where(offer => offer.OfferTypeId == offerTypeId && 
+                    offer.ProviderCompany!.CompanyUsers.Any(companyUser => companyUser.IamUser!.UserEntityId == userId) &&
+                    offerStatusIds.Contains(offer.OfferStatusId) && (offerName == null || EF.Functions.ILike(offer.Name!, $"%{offerName!.EscapeForILike()}%")))
                 .GroupBy(offer=>offer.OfferTypeId),
             sorting switch
             {

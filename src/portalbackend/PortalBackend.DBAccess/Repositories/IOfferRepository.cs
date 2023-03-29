@@ -436,5 +436,5 @@ public interface IOfferRepository
     /// <param name="userId"></param>
     /// <param name="sorting"></param>
     /// <param name="offerName"></param>
-    Func<int,int,Task<Pagination.Source<AllOfferStatusData>?>> GetCompanyProvidedServiceStatusDataAsync(IEnumerable<OfferStatusId> offerStatusIds, string userId, OfferSorting? sorting, string? offerName);
+    Func<int,int,Task<Pagination.Source<AllOfferStatusData>?>> GetCompanyProvidedServiceStatusDataAsync(IEnumerable<OfferStatusId> offerStatusIds, OfferTypeId offerTypeId, string userId, OfferSorting? sorting, string? offerName);
 }

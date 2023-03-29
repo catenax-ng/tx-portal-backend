@@ -222,9 +222,9 @@ public class ServiceBusinessLogic : IServiceBusinessLogic
     public Task<Pagination.Response<AllOfferStatusData>> GetCompanyProvidedServiceStatusDataAsync(int page, int size, string userId, OfferSorting? sorting, string? offerName,  ServiceStatusIdFilter? statusId) =>
         Pagination.CreateResponseAsync(page, size, 15,
             _portalRepositories.GetInstance<IOfferRepository>()
-                .GetCompanyProvidedServiceStatusDataAsync(GetOfferStatusIds(statusId), userId, sorting ?? OfferSorting.DateDesc,offerName));
+                .GetCompanyProvidedServiceStatusDataAsync(GetOfferStatusIds(statusId), OfferTypeId.SERVICE, userId, sorting ?? OfferSorting.DateDesc, offerName));
 
-    private IEnumerable<OfferStatusId> GetOfferStatusIds(ServiceStatusIdFilter? serviceStatusIdFilter)
+    private static IEnumerable<OfferStatusId> GetOfferStatusIds(ServiceStatusIdFilter? serviceStatusIdFilter)
     {
         switch(serviceStatusIdFilter)
         {
