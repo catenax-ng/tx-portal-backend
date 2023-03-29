@@ -18,7 +18,8 @@ namespace PortalBackend.PortalEntities.Entities
             Summary = summary;
             VideoLink = vidolink;
             OfferId = offerId;
-        }
+        }       
+
         public Guid Id { get; private set; }
 
         [MaxLength(500)]
