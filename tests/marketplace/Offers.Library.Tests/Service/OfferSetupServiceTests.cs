@@ -186,7 +186,7 @@ public class OfferSetupServiceTests
         if (technicalUserRequired)
         {
             A.CallTo(() => _technicalUserProfileService.GetTechnicalUserProfilesForOfferSubscription(A<Guid>._))
-                .ReturnsLazily(() => Enumerable.Repeat(new ServiceAccountCreationInfo(Guid.NewGuid().ToString(), "test", IamClientAuthMethod.SECRET, new List<Guid>()), 1));
+                .Returns(new ServiceAccountCreationInfo[] { new(Guid.NewGuid().ToString(), "test", IamClientAuthMethod.SECRET, new List<Guid>()) }.ToAsyncEnumerable());
         }
         
         A.CallTo(() => _appInstanceRepository.CreateAppInstance(A<Guid>._, A<Guid>._))
@@ -372,7 +372,7 @@ public class OfferSetupServiceTests
         var appInstance = new AppInstance(appInstanceId, _validOfferId, default);
         SetupCreateSingleInstance(appInstance);
         A.CallTo(() => _technicalUserProfileService.GetTechnicalUserProfilesForOffer(_validOfferId))
-            .ReturnsLazily(() => Enumerable.Repeat(new ServiceAccountCreationInfo(Guid.NewGuid().ToString(), "test", IamClientAuthMethod.SECRET, new List<Guid>()), 1));
+            .Returns(new ServiceAccountCreationInfo[] { new(Guid.NewGuid().ToString(), "test", IamClientAuthMethod.SECRET, Enumerable.Empty<Guid>()) }.ToAsyncEnumerable());
         
         // Act
         var result = await _sut.ActivateSingleInstanceAppAsync(_validOfferId).ConfigureAwait(false);
@@ -398,24 +398,13 @@ public class OfferSetupServiceTests
     }
 
     [Fact]
-    public async Task ActivateSingleInstanceAppAsync_WithNoInstanceSetupId_ThrowsConflictException()
-    {
-        SetupCreateSingleInstance();
-        
-        async Task Act() => await _sut.ActivateSingleInstanceAppAsync(_offerIdWithInstanceNotSet).ConfigureAwait(false);
-
-        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
-        ex.Message.Should().Be($"There must exactly be one instance set for offer {_offerIdWithInstanceNotSet}");
-    }
-
-    [Fact]
     public async Task ActivateSingleInstanceAppAsync_WithNoClientSet_ThrowsConflictException()
     {
         SetupCreateSingleInstance();
         async Task Act() => await _sut.ActivateSingleInstanceAppAsync(_offerIdWithoutClient).ConfigureAwait(false);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
-        ex.Message.Should().Be($"There must exactly be one clientId set for offer {_offerIdWithoutClient}");
+        ex.Message.Should().Be($"clientId must not be empty for single instance offer {_offerIdWithoutClient}");
     }
 
     [Fact]
@@ -424,8 +413,8 @@ public class OfferSetupServiceTests
         SetupCreateSingleInstance();
         async Task Act() => await _sut.ActivateSingleInstanceAppAsync(_offerIdWithInstanceNotSet).ConfigureAwait(false);
 
-        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
-        ex.Message.Should().Be($"There must exactly be one instance set for offer {_offerIdWithInstanceNotSet}");
+        var ex = await Assert.ThrowsAsync<UnexpectedConditionException>(Act);
+        ex.Message.Should().Be($"There should always be exactly one instance defined for a single instance offer {_offerIdWithInstanceNotSet}");
     }
 
     #endregion
@@ -604,11 +593,11 @@ public class OfferSetupServiceTests
         }
 
         A.CallTo(() => _offerRepository.GetSingleInstanceOfferData(_validOfferId, OfferTypeId.APP))
-            .ReturnsLazily(() => new SingleInstanceOfferData(_companyUserCompanyId, "app1", Bpn, true, Enumerable.Repeat("cl1", 1),Enumerable.Repeat(_validInstanceSetupId, 1)));
+            .Returns(new SingleInstanceOfferData(_companyUserCompanyId, "app1", Bpn, true, new [] { (_validInstanceSetupId, "cl1") }));
         A.CallTo(() => _offerRepository.GetSingleInstanceOfferData(_offerIdWithoutClient, OfferTypeId.APP))
-            .ReturnsLazily(() => new SingleInstanceOfferData(_companyUserCompanyId, "app1", Bpn, true, Enumerable.Empty<string>(), Enumerable.Repeat(_validInstanceSetupId, 1)));
+            .Returns(new SingleInstanceOfferData(_companyUserCompanyId, "app1", Bpn, true, new [] { (_validInstanceSetupId, string.Empty) }));
         A.CallTo(() => _offerRepository.GetSingleInstanceOfferData(_offerIdWithInstanceNotSet, OfferTypeId.APP))
-            .ReturnsLazily(() => new SingleInstanceOfferData(_companyUserCompanyId, "app1", Bpn, true, Enumerable.Repeat("cl1", 1), Enumerable.Empty<Guid>()));
+            .Returns(new SingleInstanceOfferData(_companyUserCompanyId, "app1", Bpn, true, Enumerable.Empty<(Guid,string)>()));
         A.CallTo(() => _offerRepository.GetSingleInstanceOfferData(A<Guid>.That.Not.Matches(x => x == _offerIdWithoutClient || x == _validOfferId || x == _offerIdWithInstanceNotSet), OfferTypeId.APP))
             .ReturnsLazily(() => (SingleInstanceOfferData?)null);
     }

@@ -5,6 +5,5 @@ public record SingleInstanceOfferData(
     string? OfferName,
     string? Bpn,
     bool IsSingleInstance,
-    IEnumerable<string> InternalClientIds,
-    IEnumerable<Guid> InstanceIds
+    IEnumerable<(Guid InstanceId, string InternalClientId)> Instances
 );

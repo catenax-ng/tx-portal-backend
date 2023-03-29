@@ -364,7 +364,7 @@ public class OfferService : IOfferService
 
     private async Task SubmitAppServiceAsync(Guid offerId, string iamUserId, IEnumerable<NotificationTypeId> notificationTypeIds, IDictionary<string, IEnumerable<string>> catenaAdminRoles, OfferReleaseData offerDetails)
     {
-         GetAndValidateOfferDetails(offerDetails);
+        GetAndValidateOfferDetails(offerDetails);
         if(offerDetails.DocumentStatusDatas.Any())
         {
             var documentRepository = _portalRepositories.GetInstance<IDocumentRepository>();
@@ -456,14 +456,6 @@ public class OfferService : IOfferService
             throw new ConflictException($"Offer {offerId} providing company is not yet set.");
         }
 
-        switch (offerDetails.IsSingleInstance)
-        {
-            case true when (offerDetails.ClientIds.Count() != 1 || string.IsNullOrWhiteSpace(offerDetails.ClientIds.Single())):
-                throw new ConflictException($"There must exactly be one clientId set for offer {offerId}");
-            case true when (offerDetails.InstanceIds.Count() != 1 || offerDetails.InstanceIds.Single() == Guid.Empty):
-                throw new ConflictException($"There must exactly be one instance set for offer {offerId}");
-        }
-
         var requesterId = await _portalRepositories.GetInstance<IUserRepository>()
             .GetCompanyUserIdForIamUserUntrackedAsync(iamUserId).ConfigureAwait(false);
         if (requesterId == Guid.Empty)
@@ -477,6 +469,10 @@ public class OfferService : IOfferService
             offer.DateReleased = DateTime.UtcNow;
         });
 
+        var technicalUserIds = offerTypeId == OfferTypeId.APP && offerDetails.IsSingleInstance
+            ? await _offerSetupService.ActivateSingleInstanceAppAsync(offerId).ConfigureAwait(false)
+            : null;
+
         object notificationContent = offerTypeId switch
         {
             OfferTypeId.SERVICE => new
@@ -488,14 +484,12 @@ public class OfferService : IOfferService
             {
                 OfferId = offerId,
                 AppName = offerDetails.OfferName,
-                TechnicalUserIds = offerDetails.IsSingleInstance
-                    ? await _offerSetupService.ActivateSingleInstanceAppAsync(offerId).ConfigureAwait(false)
-                    : null,
+                TechnicalUserIds = technicalUserIds
             },
             _ => throw new UnexpectedConditionException($"offerTypeId {offerTypeId} is not implemented yet")
         };
         var serializeNotificationContent = JsonSerializer.Serialize(notificationContent);
-        var content = notificationTypeIds.Select(typeId => new ValueTuple<string?, NotificationTypeId>(serializeNotificationContent, typeId));
+        var content = notificationTypeIds.Select(typeId => ((string?)serializeNotificationContent, typeId));
         await _notificationService.CreateNotifications(approveOfferRoles, requesterId, content, offerDetails.ProviderCompanyId.Value).ConfigureAwait(false);
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }

@@ -297,7 +297,7 @@ public interface IOfferRepository
     /// <param name="appId"></param>
     /// <param name="offerTypeId"></param>
     /// <returns></returns>
-    Task<(bool IsStatusInReview, string? OfferName, Guid? ProviderCompanyId, bool IsSingleInstance, IEnumerable<string> ClientIds, IEnumerable<Guid> InstanceIds)> GetOfferStatusDataByIdAsync(Guid appId, OfferTypeId offerTypeId);
+    Task<(bool IsStatusInReview, string? OfferName, Guid? ProviderCompanyId, bool IsSingleInstance, IEnumerable<(Guid InstanceId, string ClientId)> Instances)> GetOfferStatusDataByIdAsync(Guid offerId, OfferTypeId offerTypeId);
 
     /// <summary>
     /// Gets the data needed for declining an offer
@@ -465,7 +465,7 @@ public interface IOfferRepository
     /// <param name="isSingleInstance">defines whether the app is a single instance</param>
     /// <param name="setOptionalParameter">Action to set optional parameters for the app instance setup</param>
     /// <returns>The created entity</returns>
-    AppInstanceSetup CreateAppInstanceSetup(Guid appId, bool isSingleInstance, Action<AppInstanceSetup>? setOptionalParameter);
+    AppInstanceSetup CreateAppInstanceSetup(Guid appId, Action<AppInstanceSetup>? setOptionalParameter);
 
     /// <summary>
     /// Gets the single instance offer data

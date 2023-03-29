@@ -1042,10 +1042,10 @@ public class AppReleaseBusinessLogicTest
         AppInstanceSetup? instanceSetupData = null;
         A.CallTo(() => _offerRepository.GetOfferWithSetupDataById(appId, IamUserId, OfferTypeId.APP))
             .ReturnsLazily(() => new ValueTuple<OfferStatusId, bool, AppInstanceSetupTransferData?, IEnumerable<(Guid, Guid, string)>>(OfferStatusId.CREATED, true, null, new List<(Guid, Guid, string)>()));
-        A.CallTo(() => _offerRepository.CreateAppInstanceSetup(appId, true, A<Action<AppInstanceSetup>>._))
-            .Invokes((Guid callingAppId , bool isSingleInstance, Action<AppInstanceSetup> setOptionalParameters) =>
+        A.CallTo(() => _offerRepository.CreateAppInstanceSetup(appId, A<Action<AppInstanceSetup>>._))
+            .Invokes((Guid callingAppId, Action<AppInstanceSetup> setOptionalParameters) =>
             {
-                instanceSetupData = new AppInstanceSetup(instanceSetupId, callingAppId, isSingleInstance);
+                instanceSetupData = new AppInstanceSetup(instanceSetupId, callingAppId);
                 setOptionalParameters.Invoke(instanceSetupData);
             });
 
@@ -1073,7 +1073,7 @@ public class AppReleaseBusinessLogicTest
         };
         var data = new AppInstanceSetupData(true, "https://new-url.de");
         var instanceSetupTransferData = new AppInstanceSetupTransferData(instanceSetupId, true, "https://test.de");
-        var instanceSetupData = new AppInstanceSetup(instanceSetupId, appId, true);
+        var instanceSetupData = new AppInstanceSetup(instanceSetupId, appId) { IsSingleInstance = true };
         A.CallTo(() => _offerRepository.GetOfferWithSetupDataById(appId, IamUserId, OfferTypeId.APP))
             .ReturnsLazily(() => new ValueTuple<OfferStatusId, bool, AppInstanceSetupTransferData?, IEnumerable<(Guid, Guid, string)>>(OfferStatusId.CREATED, true, instanceSetupTransferData, appInstanceData));
         A.CallTo(() => _offerRepository.AttachAndModifyAppInstanceSetup(instanceSetupId, appId, A<Action<AppInstanceSetup>>._, A<Action<AppInstanceSetup>>._))
@@ -1102,7 +1102,7 @@ public class AppReleaseBusinessLogicTest
         var instanceSetupId = Guid.NewGuid();
         var data = new AppInstanceSetupData(true, "https://test.de");
         var instanceSetupTransferData = new AppInstanceSetupTransferData(instanceSetupId, false, null);
-        var instanceSetupData = new AppInstanceSetup(instanceSetupId, appId, false);
+        var instanceSetupData = new AppInstanceSetup(instanceSetupId, appId) { IsSingleInstance = false };
         A.CallTo(() => _offerRepository.GetOfferWithSetupDataById(appId, IamUserId, OfferTypeId.APP))
             .ReturnsLazily(() => new ValueTuple<OfferStatusId, bool, AppInstanceSetupTransferData?, IEnumerable<(Guid, Guid, string)>>(OfferStatusId.CREATED, true, instanceSetupTransferData, new List<(Guid, Guid, string)>()));
         A.CallTo(() => _offerRepository.AttachAndModifyAppInstanceSetup(instanceSetupId, appId, A<Action<AppInstanceSetup>>._, A<Action<AppInstanceSetup>>._))
@@ -1133,7 +1133,7 @@ public class AppReleaseBusinessLogicTest
         {
             (Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid().ToString())
         };
-        var instanceSetupData = new AppInstanceSetup(instanceSetupId, appId, false);
+        var instanceSetupData = new AppInstanceSetup(instanceSetupId, appId) { IsSingleInstance = false };
         var data = new AppInstanceSetupData(true, "https://test.de");
         var instanceSetupTransferData = new AppInstanceSetupTransferData(instanceSetupId, false, null);
         A.CallTo(() => _offerRepository.GetOfferWithSetupDataById(appId, IamUserId, OfferTypeId.APP))
@@ -1166,7 +1166,7 @@ public class AppReleaseBusinessLogicTest
         {
             (Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid().ToString())
         };
-        var instanceSetupData = new AppInstanceSetup(instanceSetupId, appId, true);
+        var instanceSetupData = new AppInstanceSetup(instanceSetupId, appId) { IsSingleInstance = true };
         var data = new AppInstanceSetupData(false, null);
         var instanceSetupTransferData = new AppInstanceSetupTransferData(instanceSetupId, true, null);
         A.CallTo(() => _offerRepository.GetOfferWithSetupDataById(appId, IamUserId, OfferTypeId.APP))

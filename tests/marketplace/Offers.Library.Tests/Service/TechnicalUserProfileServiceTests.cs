@@ -68,7 +68,7 @@ public class TechnicalUserProfileServiceTests
         A.CallTo(() => _offerRepository.GetServiceAccountProfileData(_offerId))
             .ReturnsLazily(() => new ValueTuple<bool, bool, string?>());
         
-        async Task Act() => await _sut.GetTechnicalUserProfilesForOffer(_offerId).ConfigureAwait(false);
+        async Task Act() => await _sut.GetTechnicalUserProfilesForOffer(_offerId).ToListAsync().ConfigureAwait(false);
 
         var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
         ex.Message.Should().Be($"Offer {_offerId} does not exists");
@@ -80,7 +80,7 @@ public class TechnicalUserProfileServiceTests
         A.CallTo(() => _offerRepository.GetServiceAccountProfileData(_offerId))
             .ReturnsLazily(() => new ValueTuple<bool, bool, string?>(true, false, null));
         
-        async Task Act() => await _sut.GetTechnicalUserProfilesForOffer(_offerId).ConfigureAwait(false);
+        async Task Act() => await _sut.GetTechnicalUserProfilesForOffer(_offerId).ToListAsync().ConfigureAwait(false);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
         ex.Message.Should().Be("Offer name needs to be set here");
@@ -92,7 +92,7 @@ public class TechnicalUserProfileServiceTests
         A.CallTo(() => _offerRepository.GetServiceAccountProfileData(_offerId))
             .ReturnsLazily(() => new ValueTuple<bool, bool, string?>(false, false, OfferName));
         
-        var result = await _sut.GetTechnicalUserProfilesForOffer(_offerId).ConfigureAwait(false);
+        var result = await _sut.GetTechnicalUserProfilesForOffer(_offerId).ToListAsync().ConfigureAwait(false);
         
         result.Should().BeEmpty();
     }
@@ -107,7 +107,7 @@ public class TechnicalUserProfileServiceTests
             {
                 new(Guid.NewGuid(), "cl1", "test role")
             }.ToAsyncEnumerable());
-        var result = await _sut.GetTechnicalUserProfilesForOffer(_offerId).ConfigureAwait(false);
+        var result = await _sut.GetTechnicalUserProfilesForOffer(_offerId).ToListAsync().ConfigureAwait(false);
         
         result.Should().HaveCount(1);
     }
@@ -118,7 +118,7 @@ public class TechnicalUserProfileServiceTests
         A.CallTo(() => _offerRepository.GetServiceAccountProfileDataForSubscription(_offerId))
             .ReturnsLazily(() => new ValueTuple<bool, bool, string?>(true, false, null));
         
-        async Task Act() => await _sut.GetTechnicalUserProfilesForOfferSubscription(_offerId).ConfigureAwait(false);
+        async Task Act() => await _sut.GetTechnicalUserProfilesForOfferSubscription(_offerId).ToListAsync().ConfigureAwait(false);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
         ex.Message.Should().Be("Offer name needs to be set here");
@@ -130,7 +130,7 @@ public class TechnicalUserProfileServiceTests
         A.CallTo(() => _offerRepository.GetServiceAccountProfileDataForSubscription(_offerId))
             .ReturnsLazily(() => new ValueTuple<bool, bool, string?>(false, false, OfferName));
         
-        var result = await _sut.GetTechnicalUserProfilesForOfferSubscription(_offerId).ConfigureAwait(false);
+        var result = await _sut.GetTechnicalUserProfilesForOfferSubscription(_offerId).ToListAsync().ConfigureAwait(false);
         
         result.Should().BeEmpty();
     }
@@ -145,7 +145,7 @@ public class TechnicalUserProfileServiceTests
             {
                 new(Guid.NewGuid(), "cl1", "test role")
             }.ToAsyncEnumerable());
-        var result = await _sut.GetTechnicalUserProfilesForOfferSubscription(_offerId).ConfigureAwait(false);
+        var result = await _sut.GetTechnicalUserProfilesForOfferSubscription(_offerId).ToListAsync().ConfigureAwait(false);
         
         result.Should().HaveCount(1);
     }

@@ -37,8 +37,8 @@ public class AppInstance : IBaseEntity
         IamClientId = iamClientId;
     }
 
-    public Guid Id { get; set; }
-    public Guid AppId { get; set; }
+    public Guid Id { get; private set; }
+    public Guid AppId { get; private set; }
     public Guid IamClientId { get; set; }
 
     // Navigation properties

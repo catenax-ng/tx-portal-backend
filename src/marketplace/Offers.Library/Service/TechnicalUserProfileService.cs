@@ -46,7 +46,7 @@ public class TechnicalUserProfileService : ITechnicalUserProfileService
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<ServiceAccountCreationInfo>> GetTechnicalUserProfilesForOffer(Guid offerId)
+    public async IAsyncEnumerable<ServiceAccountCreationInfo> GetTechnicalUserProfilesForOffer(Guid offerId)
     {
         // TODO (PS): refactor, request technical user profile from database for a specific offer 
         var data = await _portalRepositories.GetInstance<IOfferRepository>()
@@ -57,11 +57,13 @@ public class TechnicalUserProfileService : ITechnicalUserProfileService
             throw new NotFoundException($"Offer {offerId} does not exists");
         }
 
-        return await GetServiceAccountData(data);
+        var serviceAccountData = await GetServiceAccountData(data).ConfigureAwait(false);
+        if (serviceAccountData != null)
+            yield return serviceAccountData;
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<ServiceAccountCreationInfo>> GetTechnicalUserProfilesForOfferSubscription(Guid subscriptionId)
+    public async IAsyncEnumerable<ServiceAccountCreationInfo> GetTechnicalUserProfilesForOfferSubscription(Guid subscriptionId)
     {
         // TODO (PS): refactor, request technical user profile from database for a specific offer 
         var data = await _portalRepositories.GetInstance<IOfferRepository>()
@@ -72,10 +74,12 @@ public class TechnicalUserProfileService : ITechnicalUserProfileService
             throw new NotFoundException($"Offer Subscription {subscriptionId} does not exists");
         }
 
-        return await GetServiceAccountData(data);
+        var serviceAccountData = await GetServiceAccountData(data).ConfigureAwait(false);
+        if (serviceAccountData != null)
+            yield return serviceAccountData;
     }
 
-    private async Task<IEnumerable<ServiceAccountCreationInfo>> GetServiceAccountData((bool IsSingleInstance, bool TechnicalUserNeeded, string? OfferName) data)
+    private async ValueTask<ServiceAccountCreationInfo?> GetServiceAccountData((bool IsSingleInstance, bool TechnicalUserNeeded, string? OfferName) data)
     {
         if (string.IsNullOrWhiteSpace(data.OfferName))
         {
@@ -84,7 +88,7 @@ public class TechnicalUserProfileService : ITechnicalUserProfileService
 
         if (data is {IsSingleInstance: false, TechnicalUserNeeded: false})
         {
-            return new List<ServiceAccountCreationInfo>();
+            return null;
         }
 
         var serviceAccountUserRoles = await _portalRepositories.GetInstance<IUserRolesRepository>()
@@ -99,7 +103,6 @@ public class TechnicalUserProfileService : ITechnicalUserProfileService
             description,
             IamClientAuthMethod.SECRET,
             serviceAccountUserRoles.Select(x => x.UserRoleId));
-        return Enumerable.Repeat(serviceAccountCreationData, 1);
+        return serviceAccountCreationData;
     }
-
 }

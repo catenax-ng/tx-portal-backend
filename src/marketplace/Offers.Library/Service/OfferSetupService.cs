@@ -18,7 +18,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Microsoft.AspNetCore.Mvc.Routing;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.HttpClientExtensions;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.IO;
@@ -137,13 +136,13 @@ public class OfferSetupService : IOfferSetupService
 
     private async Task<TechnicalUserInfoData?> CreateTechnicalUserForSubscription(Guid subscriptionId, CreateTechnicalUserData data)
     {
-        var technicalUserInfoCreations = await _technicalUserProfileService.GetTechnicalUserProfilesForOfferSubscription(subscriptionId).ConfigureAwait(false);
+        var technicalUserInfoCreations = await _technicalUserProfileService.GetTechnicalUserProfilesForOfferSubscription(subscriptionId).ToListAsync().ConfigureAwait(false);
         if (!technicalUserInfoCreations.Any())
         {
             return null;
         }
 
-        if (technicalUserInfoCreations.Count() != 1)
+        if (technicalUserInfoCreations.Count != 1)
         {
             throw new UnexpectedConditionException("There should only be one or none technical user profile configured for ");
         }
@@ -184,25 +183,26 @@ public class OfferSetupService : IOfferSetupService
         {
             throw new ConflictException($"App {offerId} does not exist.");
         }
-
-        if (data.InternalClientIds.Count() != 1 || string.IsNullOrWhiteSpace(data.InternalClientIds.Single()))
+        if (!data.IsSingleInstance)
         {
-            throw new ConflictException($"There must exactly be one clientId set for offer {offerId}");
+            throw new ConflictException($"offer {offerId} is not set up as single instance app");
+        }
+        if (data.Instances.Count() != 1)
+        {
+            throw new UnexpectedConditionException($"There should always be exactly one instance defined for a single instance offer {offerId}");
         }
 
-        if (data.InstanceIds.Count() != 1 || data.InstanceIds.Single() == Guid.Empty)
+        var (instanceId, internalClientId) = data.Instances.Single();
+        if (string.IsNullOrEmpty(internalClientId))
         {
-            throw new ConflictException($"There must exactly be one instance set for offer {offerId}");
+            throw new ConflictException($"clientId must not be empty for single instance offer {offerId}");
         }
-
-        var internalClientId = data.InternalClientIds.Single();
         await _provisioningManager.EnableClient(internalClientId).ConfigureAwait(false);
 
-        var createTechnicalUserData = new CreateTechnicalUserData(data.CompanyId, data.OfferName, data.Bpn, internalClientId, true);
-        var technicalUserData = await CreateTechnicalUserForOffer(offerId, createTechnicalUserData)
+        var technicalUserData = await CreateTechnicalUsersForOffer(offerId, new CreateTechnicalUserData(data.CompanyId, data.OfferName, data.Bpn, internalClientId, true)).ToListAsync()
             .ConfigureAwait(false);
 
-        _portalRepositories.GetInstance<IAppInstanceRepository>().CreateAppInstanceAssignedServiceAccounts(technicalUserData.Select(x => new ValueTuple<Guid, Guid>(data.InstanceIds.Single(), x.TechnicalUserId)));
+        _portalRepositories.GetInstance<IAppInstanceRepository>().CreateAppInstanceAssignedServiceAccounts(technicalUserData.Select(x => new ValueTuple<Guid, Guid>(instanceId, x.TechnicalUserId)));
         
         return technicalUserData.Select(x => x.TechnicalClientId);
     }
@@ -263,26 +263,23 @@ public class OfferSetupService : IOfferSetupService
             });
     }
 
-    private async Task<IEnumerable<TechnicalUserInfoData>> CreateTechnicalUserForOffer(
+    private async IAsyncEnumerable<TechnicalUserInfoData> CreateTechnicalUsersForOffer(
         Guid offerId,
         CreateTechnicalUserData data)
     {
-        var result = new List<TechnicalUserInfoData>();
-        var creationData = await _technicalUserProfileService.GetTechnicalUserProfilesForOffer(offerId).ConfigureAwait(false);
+        var creationData = await _technicalUserProfileService.GetTechnicalUserProfilesForOffer(offerId).ToListAsync().ConfigureAwait(false);
         foreach (var creationInfo in creationData)
         {
             var (technicalClientId, serviceAccountData, serviceAccountId, _) = await _serviceAccountCreation
                 .CreateServiceAccountAsync(
                     creationInfo,
                     data.CompanyId,
-                    data.Bpn == null ? Enumerable.Empty<string>() : Enumerable.Repeat(data.Bpn, 1),
+                    data.Bpn == null ? Enumerable.Empty<string>() : new [] { data.Bpn },
                     CompanyServiceAccountTypeId.MANAGED,
                     data.EnhanceTechnicalUserName)
                 .ConfigureAwait(false);
-            result.Add(new TechnicalUserInfoData(serviceAccountId, serviceAccountData.AuthData.Secret, technicalClientId));
+            yield return new TechnicalUserInfoData(serviceAccountId, serviceAccountData.AuthData.Secret, technicalClientId);
         }
-
-        return result;
     }
 
     private async Task CreateNotifications(

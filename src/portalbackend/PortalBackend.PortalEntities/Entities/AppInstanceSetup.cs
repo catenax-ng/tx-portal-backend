@@ -28,15 +28,14 @@ public class AppInstanceSetup : IBaseEntity
     {
     }
 
-    public AppInstanceSetup(Guid id, Guid appId, bool isSingleInstance) : this()
+    public AppInstanceSetup(Guid id, Guid appId) : this()
     {
         Id = id;
         AppId = appId;
-        IsSingleInstance = isSingleInstance;
     }
 
-    public Guid Id { get; set; }
-    public Guid AppId { get; set; }
+    public Guid Id { get; private set; }
+    public Guid AppId { get; private set; }
     public bool IsSingleInstance { get; set; }
     
     public string? InstanceUrl { get; set; }

@@ -695,10 +695,11 @@ public class OfferServiceTests
         var data = _fixture.Build<OfferReleaseData>()
             .With(x => x.IsDescriptionLongNotSet, false)
             .With(x => x.IsDescriptionShortNotSet, false)
-            .With(x => x.DocumentStatusDatas,new[]{
-                new DocumentStatusData(Guid.NewGuid(), DocumentStatusId.PENDING),
-                new DocumentStatusData(Guid.NewGuid(), DocumentStatusId.INACTIVE)})
-            .With(x=> x.DocumentTypeIds, new [] { DocumentTypeId.CONFORMITY_APPROVAL_BUSINESS_APPS, DocumentTypeId.APP_LEADIMAGE, DocumentTypeId.APP_IMAGE})
+            .With(x => x.DocumentStatusDatas,new DocumentStatusData[] {
+                new(Guid.NewGuid(), DocumentStatusId.PENDING),
+                new(Guid.NewGuid(), DocumentStatusId.INACTIVE)})
+            .With(x => x.HasUserRoles, true)
+            .With(x => x.DocumentTypeIds, new [] { DocumentTypeId.CONFORMITY_APPROVAL_BUSINESS_APPS, DocumentTypeId.APP_LEADIMAGE, DocumentTypeId.APP_IMAGE})
             .Create();
         var userId = _fixture.Create<Guid>();
         A.CallTo(() => _offerRepository.GetOfferReleaseDataByIdAsync(offerId, offerType)).ReturnsLazily(() => data);
@@ -743,31 +744,20 @@ public class OfferServiceTests
         var requesterId = _fixture.Create<Guid>();
         var companyId = _fixture.Create<Guid>();
         var iamUserId = _fixture.Create<string>();
-        var clientIds = isSingleInstance
+        var instances = isSingleInstance
             ? new[]
             {
-                Guid.NewGuid().ToString()
-
+                (Guid.NewGuid(),Guid.NewGuid().ToString())
             }
             : new[]
             {
-                Guid.NewGuid().ToString(),
-                Guid.NewGuid().ToString()
-            };
-        var instanceIds = isSingleInstance
-            ? new[]
-            {
-                Guid.NewGuid()
-            }
-            : new[]
-            {
-                Guid.NewGuid(),
-                Guid.NewGuid()
+                (Guid.NewGuid(),Guid.NewGuid().ToString()),
+                (Guid.NewGuid(),Guid.NewGuid().ToString())
             };
         A.CallTo(() => _offerRepository.GetOfferStatusDataByIdAsync(offer.Id, OfferTypeId.APP))
-            .ReturnsLazily(() => (true, offer.Name, companyId, isSingleInstance, clientIds, instanceIds));
+            .Returns((true, offer.Name, companyId, isSingleInstance, instances));
         A.CallTo(() => _userRepository.GetCompanyUserIdForIamUserUntrackedAsync(iamUserId))
-            .ReturnsLazily(() => (requesterId));
+            .Returns(requesterId);
         A.CallTo(() => _offerRepository.AttachAndModifyOffer(offer.Id, A<Action<Offer>>._, A<Action<Offer>?>._))
             .Invokes((Guid _, Action<Offer> setOptionalParameters, Action<Offer>? initializeParemeters) => 
             {
@@ -817,7 +807,7 @@ public class OfferServiceTests
         var companyId = _fixture.Create<Guid>();
 
         A.CallTo(() => _offerRepository.GetOfferStatusDataByIdAsync(offerId, OfferTypeId.APP))
-            .ReturnsLazily(() => (true, null, companyId, false, new List<string>(), new List<Guid>()));
+            .Returns((true, null, companyId, false, Enumerable.Empty<(Guid,string)>()));
 
         var approveAppNotificationTypeIds = new []
         {
@@ -845,7 +835,7 @@ public class OfferServiceTests
         var iamUserId = _fixture.Create<string>();
 
         A.CallTo(() => _offerRepository.GetOfferStatusDataByIdAsync(offerId, OfferTypeId.APP))
-            .ReturnsLazily(() => (true, "The name", null, false, new List<string>(), new List<Guid>()));
+            .ReturnsLazily(() => (true, "The name", null, false, Enumerable.Empty<(Guid,string)>()));
 
         var approveAppNotificationTypeIds = new []
         {

@@ -24,4 +24,5 @@ public record CreateTechnicalUserData(
     Guid CompanyId,
     string? Bpn,
     string TechnicalUserName,
-    bool EnhanceTechnicalUserName);
+    bool EnhanceTechnicalUserName
+);
