@@ -424,7 +424,7 @@ public class ConnectorsBusinessLogicTests
         // Arrange
         var connectorId = Guid.NewGuid();
         A.CallTo(() => _connectorsRepository.GetSelfDescriptionDocumentDataAsync(connectorId))
-            .ReturnsLazily(() =>new ValueTuple<bool,Guid?,DocumentStatusId?>(true, Guid.Empty,null));
+            .ReturnsLazily(() =>new ValueTuple<bool,Guid?,DocumentStatusId?>(true, null,null));
         
         // Act
         await _logic.DeleteConnectorAsync(connectorId).ConfigureAwait(false);
@@ -440,7 +440,7 @@ public class ConnectorsBusinessLogicTests
         // Arrange
         var connectorId = Guid.NewGuid();
         A.CallTo(() => _connectorsRepository.GetSelfDescriptionDocumentDataAsync(connectorId))
-            .ReturnsLazily(() =>new ValueTuple<bool,Guid?,DocumentStatusId>());
+            .ReturnsLazily(() =>new ValueTuple<bool,Guid?,DocumentStatusId?>());
         
         // Act
         async Task Act() => await _logic.DeleteConnectorAsync(connectorId).ConfigureAwait(false);

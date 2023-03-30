@@ -124,7 +124,7 @@ public class ConnectorsRepository : IConnectorsRepository
         .Where(x => x.Id == connectorId)
         .Select(connector => new ValueTuple<bool,Guid?,DocumentStatusId?>(
             true,
-            connector.SelfDescriptionDocumentId.GetValueOrDefault(),
+            connector.SelfDescriptionDocumentId,
             connector.SelfDescriptionDocument!.DocumentStatusId
         )).SingleOrDefaultAsync();
 }

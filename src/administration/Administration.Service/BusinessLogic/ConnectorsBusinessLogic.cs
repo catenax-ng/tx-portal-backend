@@ -265,10 +265,10 @@ public class ConnectorsBusinessLogic : IConnectorsBusinessLogic
         {
             throw new NotFoundException($"Connector {connectorId} does not exist");
         }
-        if(result.SelfDescriptionDocumentId != Guid.Empty)
+        if(result.SelfDescriptionDocumentId != null)
         {
-            _portalRepositories.GetInstance<IDocumentRepository>().AttachAndModifyDocument((Guid)result.SelfDescriptionDocumentId!,
-            a => { a.DocumentStatusId = (DocumentStatusId)result.documentStatusId!; },
+            _portalRepositories.GetInstance<IDocumentRepository>().AttachAndModifyDocument(result.SelfDescriptionDocumentId.Value!,
+            a => { a.DocumentStatusId = result.documentStatusId!.Value; },
             a => { a.DocumentStatusId = DocumentStatusId.INACTIVE; }
             );
         }

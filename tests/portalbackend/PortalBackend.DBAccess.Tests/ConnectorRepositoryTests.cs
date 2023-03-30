@@ -262,7 +262,7 @@ public class ConnectorRepositoryTests : IAssemblyFixture<TestDbFixture>
         // Assert
         result.Should().NotBeNull();
         result.IsConnectorIdExist.Should().BeTrue();
-        result.SelfDescriptionDocumentId.Should().Be(Guid.Empty);
+        result.SelfDescriptionDocumentId.Should().BeNull();
         result.documentStatusId.Should().BeNull();
     }
 
