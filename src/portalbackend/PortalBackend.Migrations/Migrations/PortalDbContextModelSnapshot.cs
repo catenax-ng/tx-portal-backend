@@ -1611,19 +1611,19 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
 
             modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.CompanyAssignedUseCase", b =>
                 {
-                    b.Property<Guid>("CompanyId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("company_id");
-
                     b.Property<Guid>("UseCaseId")
                         .HasColumnType("uuid")
                         .HasColumnName("use_case_id");
 
-                    b.HasKey("CompanyId", "UseCaseId")
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.HasKey("UseCaseId", "CompanyId")
                         .HasName("pk_company_assigned_use_cases");
 
-                    b.HasIndex("UseCaseId")
-                        .HasDatabaseName("ix_company_assigned_use_cases_use_case_id");
+                    b.HasIndex("CompanyId")
+                        .HasDatabaseName("ix_company_assigned_use_cases_company_id");
 
                     b.ToTable("company_assigned_use_cases", "portal");
                 });
