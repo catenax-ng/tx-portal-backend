@@ -497,4 +497,12 @@ public interface IOfferRepository
     /// <param name="subscriptionId"></param>
     /// <returns></returns>
     Task<(bool IsSingleInstance, bool TechnicalUserNeeded, string? OfferName)> GetServiceAccountProfileDataForSubscription(Guid subscriptionId);
+
+    /// <summary>
+    /// Gets the profile offer data for the given offer id and user
+    /// </summary>
+    /// <param name="offerId">Id of the offer</param>
+    /// <param name="iamUserId">The iam user id</param>
+    /// <returns>Returns the offer profile data</returns>
+    Task<OfferProfileData?> GetOfferProfileData(Guid offerId, string iamUserId);
 }

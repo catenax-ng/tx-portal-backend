@@ -220,4 +220,17 @@ public class ServicesController : ControllerBase
     [ProducesResponseType(typeof(Pagination.Response<AllOfferStatusData>), StatusCodes.Status200OK)]
     public Task<Pagination.Response<AllOfferStatusData>> GetCompanyProvidedServiceStatusDataAsync([FromQuery] int page = 0, [FromQuery] int size = 15, [FromQuery] OfferSorting? sorting = null, [FromQuery] string? offerName = null, [FromQuery] ServiceStatusIdFilter? statusId = null) =>
         this.WithIamUserId(userId =>_serviceBusinessLogic.GetCompanyProvidedServiceStatusDataAsync(page, size, userId, sorting, offerName, statusId));
+    
+    [HttpPut]
+    [Route("{serviceId}/technical-user-profiles")]
+    [Authorize(Roles = "add_service_offering")]
+    [ProducesResponseType(typeof(NoContentResult), StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+    public async Task<NoContentResult> UpdateTechnicalUserProfiles([FromRoute] Guid serviceId, [FromBody] IEnumerable<TechnicalUserProfileData> data)
+    {
+        await this.WithIamUserId(iamUserId => _serviceBusinessLogic.UpdateTechnicalUserProfiles(serviceId, data, iamUserId)).ConfigureAwait(false);
+        return NoContent();
+    }
 }

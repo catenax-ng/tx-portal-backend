@@ -68,4 +68,5 @@ public interface IUserRolesRepository
     IAsyncEnumerable<(string ClientClientId, IEnumerable<(Guid UserRoleId, string UserRoleText)> UserRoles)> GetUserRolesByClientId(IEnumerable<string> iamClientIds);
     
     IAsyncEnumerable<(Guid CompanyUserId, string UserEntityId, IEnumerable<Guid> UserRoleIds)> GetUserWithUserRolesForApplicationId(Guid applicationId, IEnumerable<Guid> userRoleIds);
+    Task<List<Guid>> GetRolesForClient(string technicalUserProfileClient);
 }

@@ -798,4 +798,13 @@ public class OfferRepository : IOfferRepository
                 o.Offer.Name
             ))
             .SingleOrDefaultAsync();
+
+    /// <inheritdoc />
+    public Task<OfferProfileData?> GetOfferProfileData(Guid offerId, string iamUserId) =>
+        _context.Offers.Where(x => x.Id == offerId)
+            .Select(o => new OfferProfileData(
+                o.OfferTypeId,
+                o.OfferTypeId == OfferTypeId.SERVICE ? o.ServiceDetails.Select(sd => sd.ServiceTypeId) : new List<ServiceTypeId>(),
+                o.TechnicalUserProfiles.Select(tup => new ValueTuple<Guid, string, IEnumerable<Guid>>(tup.Id, tup.Name, tup.UserRoles.Select(ur => ur.Id)))))
+            .SingleOrDefaultAsync();
 }

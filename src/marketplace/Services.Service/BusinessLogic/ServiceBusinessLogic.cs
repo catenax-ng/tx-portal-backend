@@ -184,4 +184,8 @@ public class ServiceBusinessLogic : IServiceBusinessLogic
             }
         }       
     }
+
+    /// <inheritdoc />
+    public Task UpdateTechnicalUserProfiles(Guid serviceId, IEnumerable<TechnicalUserProfileData> data, string iamUserId) =>
+        _offerService.UpdateTechnicalUserProfiles(serviceId, data, iamUserId, _settings.TechnicalUserProfileClient);
 }

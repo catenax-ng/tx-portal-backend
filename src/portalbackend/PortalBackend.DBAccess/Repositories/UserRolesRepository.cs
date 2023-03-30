@@ -247,4 +247,12 @@ public class UserRolesRepository : IUserRolesRepository
                 user.IamUser!.UserEntityId,
                 user.CompanyUserAssignedRoles.Where(assigned => userRoleIds.Contains(assigned.UserRoleId)).Select(assigned => assigned.UserRoleId)))
             .ToAsyncEnumerable();
+
+    /// <inheritdoc />
+    public Task<List<Guid>> GetRolesForClient(string technicalUserProfileClient) =>
+        _dbContext.AppInstances
+            .AsNoTracking()
+            .Where(instance => technicalUserProfileClient == instance.IamClient!.ClientClientId)
+            .SelectMany(instance => instance.App!.UserRoles.Select(role => role.Id))
+            .ToListAsync();
 }

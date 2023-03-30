@@ -748,4 +748,33 @@ public class OfferService : IOfferService
         _portalRepositories.GetInstance<IDocumentRepository>().RemoveDocument(documentId);
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
+
+    /// <inheritdoc />
+    public async Task UpdateTechnicalUserProfiles(Guid offerId, IEnumerable<TechnicalUserProfileData> data, string iamUserId, string technicalUserProfileClient)
+    {
+        var offerProfileData = await _portalRepositories.GetInstance<IOfferRepository>().GetOfferProfileData(offerId, iamUserId).ConfigureAwait(false);
+        var roles = await _portalRepositories.GetInstance<IUserRolesRepository>()
+            .GetRolesForClient(technicalUserProfileClient)
+            .ConfigureAwait(false);
+
+        if (offerProfileData == null)
+        {
+            throw new NotFoundException($"Offer {offerId} does not exist");
+        }
+
+        if (offerProfileData.ServiceTypeIds.All(x => x == ServiceTypeId.CONSULTANCE_SERVICE))
+        {
+            throw new ConflictException("Technical User Profiles can't be set for CONSULTANCE_SERVICE");
+        }
+
+        // var notExistingRoles = data.Select(ur => ur.UserRoleId).Except(roles);
+        // if (notExistingRoles.Any())
+        // {
+        //     throw new ConflictException($"Roles {string.Join(",", notExistingRoles)}");
+        // }
+
+        
+        
+        await _portalRepositories.SaveAsync().ConfigureAwait(false);
+    }
 }
