@@ -29,6 +29,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared;
@@ -59,6 +60,7 @@ public class ConnectorsBusinessLogicTests
     private readonly ConnectorsBusinessLogic _logic;
     private readonly IDapsService _dapsService;
     private readonly ConnectorsSettings _settings;
+    private readonly IDocumentRepository _documentRepository;
 
     public ConnectorsBusinessLogicTests()
     {
@@ -86,6 +88,7 @@ public class ConnectorsBusinessLogicTests
                 "application/pkix-cert"
             }
         };
+        _documentRepository = A.Fake<IDocumentRepository>();
         SetupRepositoryMethods();
 
         A.CallTo(() => options.Value).Returns(_settings);
@@ -387,6 +390,69 @@ public class ConnectorsBusinessLogicTests
 
     #endregion
 
+    #region DeleteConnector
+
+    [Fact]
+    public async Task DeleteConnectorAsync_WithDocumentId_ExpectedCalls()
+    {
+        // Arrange
+        var connectorId = Guid.NewGuid();
+        var selfDescriptionDocumentId = Guid.NewGuid();
+        var documentStatusId = DocumentStatusId.LOCKED;
+        A.CallTo(() => _connectorsRepository.GetSelfDescriptionDocumentDataAsync(connectorId))
+            .Returns((true, selfDescriptionDocumentId, documentStatusId));
+        
+        A.CallTo(() => _documentRepository.AttachAndModifyDocument(A<Guid>._,A<Action<Document>>._,A<Action<Document>>._))
+            .Invokes((Guid DocId, Action<Document>? initialize, Action<Document> modify)
+                => {
+                        var document = new Document(DocId, null!, null!, null!, default, default, default, default);
+                        initialize?.Invoke(document);
+                        modify(document);
+                    });
+        // Act
+        await _logic.DeleteConnectorAsync(connectorId).ConfigureAwait(false);
+
+        // Assert
+        A.CallTo(() => _documentRepository.AttachAndModifyDocument(selfDescriptionDocumentId, A<Action<Document>>._, A<Action<Document>>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _connectorsRepository.DeleteConnector(connectorId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task DeleteConnectorAsync_WithOutDocumentId_ExpectedCalls()
+    {
+        // Arrange
+        var connectorId = Guid.NewGuid();
+        A.CallTo(() => _connectorsRepository.GetSelfDescriptionDocumentDataAsync(connectorId))
+            .ReturnsLazily(() =>new ValueTuple<bool,Guid?,DocumentStatusId?>(true, Guid.Empty,null));
+        
+        // Act
+        await _logic.DeleteConnectorAsync(connectorId).ConfigureAwait(false);
+
+        // Assert
+        A.CallTo(() => _documentRepository.AttachAndModifyDocument(A<Guid>._, A<Action<Document>>._, A<Action<Document>>._)).MustNotHaveHappened();
+        A.CallTo(() => _connectorsRepository.DeleteConnector(connectorId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
+    }
+    [Fact]
+    public async Task DeleteConnectorAsync_ThrowsNotFoundException()
+    {
+        // Arrange
+        var connectorId = Guid.NewGuid();
+        A.CallTo(() => _connectorsRepository.GetSelfDescriptionDocumentDataAsync(connectorId))
+            .ReturnsLazily(() =>new ValueTuple<bool,Guid?,DocumentStatusId>());
+        
+        // Act
+        async Task Act() => await _logic.DeleteConnectorAsync(connectorId).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
+        ex.Message.Should().Be($"Connector {connectorId} does not exist");
+
+    }
+
+    #endregion
+
     #region Setup
 
     private void SetupRepositoryMethods()
@@ -451,6 +517,7 @@ public class ConnectorsBusinessLogicTests
         A.CallTo(() => _portalRepositories.GetInstance<ICompanyRepository>()).Returns(_companyRepository);
         A.CallTo(() => _portalRepositories.GetInstance<IConnectorsRepository>()).Returns(_connectorsRepository);
         A.CallTo(() => _portalRepositories.GetInstance<IUserRepository>()).Returns(_userRepository);
+        A.CallTo(() => _portalRepositories.GetInstance<IDocumentRepository>()).Returns(_documentRepository);
     }
 
     #endregion

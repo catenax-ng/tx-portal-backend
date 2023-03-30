@@ -225,6 +225,81 @@ public class ConnectorRepositoryTests : IAssemblyFixture<TestDbFixture>
 
     #endregion
     
+    #region DeleteConnector
+
+    [Fact]
+    public async Task DeleteConnector_ReturnsExpected()
+    {
+        // Arrange
+        var(sut, dbContext) = await CreateSut().ConfigureAwait(false);
+
+        // Act
+        sut.DeleteConnector(new Guid("5aea3711-cc54-47b4-b7eb-ba9f3bf1cb15"));
+
+        // Assert
+        var changeTracker = dbContext.ChangeTracker;
+        var changedEntries = changeTracker.Entries().ToList();
+        changeTracker.HasChanges().Should().BeTrue();
+        changedEntries.Should().NotBeEmpty();
+        changedEntries.Should().HaveCount(1);
+        var changedEntity = changedEntries.Single();
+        changedEntity.State.Should().Be(EntityState.Deleted);
+    }
+
+    #endregion
+
+    #region GetSelfDescriptionDocumentData
+
+    [Fact]
+    public async Task GetSelfDescriptionDocumentDataAsync_WithoutDocumentId_ReturnsExpected()
+    {
+        // Arrange
+        var (sut, _) = await CreateSut().ConfigureAwait(false);
+
+        // Act
+        var result = await sut.GetSelfDescriptionDocumentDataAsync(new Guid("7e86a0b8-6903-496b-96d1-0ef508206833")).ConfigureAwait(false);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsConnectorIdExist.Should().BeTrue();
+        result.SelfDescriptionDocumentId.Should().Be(Guid.Empty);
+        result.documentStatusId.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetSelfDescriptionDocumentDataAsync_WithDocumentId_ReturnsExpected()
+    {
+        // Arrange
+        var (sut, _) = await CreateSut().ConfigureAwait(false);
+
+        // Act
+        var result = await sut.GetSelfDescriptionDocumentDataAsync(new Guid("7e86a0b8-6903-496b-96d1-0ef508206839")).ConfigureAwait(false);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsConnectorIdExist.Should().BeTrue();
+        result.SelfDescriptionDocumentId.Should().Be(new Guid("e020787d-1e04-4c0b-9c06-bd1cd44724b3"));
+        result.documentStatusId.Should().Be(DocumentStatusId.LOCKED);
+    }
+
+        [Fact]
+    public async Task GetSelfDescriptionDocumentDataAsync_WithoutExistingConnectorId_ReturnsExpected()
+    {
+        // Arrange
+        var (sut, _) = await CreateSut().ConfigureAwait(false);
+
+        // Act
+        var result = await sut.GetSelfDescriptionDocumentDataAsync(new Guid()).ConfigureAwait(false);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsConnectorIdExist.Should().BeFalse();
+        result.SelfDescriptionDocumentId.Should().BeNull();
+        result.documentStatusId.Should().BeNull();
+    }
+
+    #endregion
+
     private async Task<(ConnectorsRepository, PortalDbContext)> CreateSut()
     {
         var context = await _dbTestDbFixture.GetPortalDbContext().ConfigureAwait(false);
