@@ -18,9 +18,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using System.Text.Json.Serialization;
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 
-public record CompanyRoleConsentData(string CompanyRoles,bool CompanyRolesActive,IEnumerable<ConsentAgreementData> Agreements);
+public record CompanyRoleConsentData(
+    [property: JsonPropertyName("companyRoles")]
+    CompanyRoleId CompanyRoleId,
+    bool CompanyRolesActive,
+    IEnumerable<ConsentAgreementData> Agreements
+);
 
 public record ConsentAgreementData(Guid AgreementId, string AgreementName, ConsentStatusId ConsentStatus);
 

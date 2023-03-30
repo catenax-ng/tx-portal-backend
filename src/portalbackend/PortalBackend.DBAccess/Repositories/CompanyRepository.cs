@@ -222,7 +222,7 @@ public class CompanyRepository : ICompanyRepository
                     CompanyRole = companyRole
                 })
             .Select(x => new CompanyRoleConsentData(
-                x.CompanyRole.Label,
+                x.CompanyRole.Id,
                 x.CompanyRole.CompanyRoleRegistrationData!.IsRegistrationRole,
                 x.CompanyRole.AgreementAssignedCompanyRoles
                     .Where(assigned => assigned.Agreement!.IssuerCompanyId == x.CompanyId)
