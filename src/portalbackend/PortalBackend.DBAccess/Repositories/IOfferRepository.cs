@@ -261,6 +261,20 @@ public interface IOfferRepository
         string iamUserId,
         IEnumerable<string> languageCodes);
 
+
+    /// <summary>
+    /// Gets all data needed for the app update
+    /// </summary>
+    /// <param name="appId">Id of the requested app</param>
+    /// <param name="iamUserId">Id of the current IamUser</param>
+    /// <param name="languageCodes">the languageCodes for the app</param>
+    /// <param name="useCaseIds">ids of the usecases</param>
+    /// <returns></returns>
+    Task<AppCardUpdateData?> GetAppCardUpdateData(
+        Guid appId,
+        string iamUserId,
+        IEnumerable<string> languageCodes);
+
     /// <summary>
     /// Updates the licenseText of the given offerLicense
     /// </summary>

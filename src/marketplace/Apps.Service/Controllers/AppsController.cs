@@ -417,7 +417,7 @@ public class AppsController : ControllerBase
     /// Edit app card to a newly created owned app under the app creation process.
     /// </summary>
     /// <param name="appId"></param>
-    /// <param name="updateModel"></param>
+    /// <param name="appRequestModel"></param>
     /// <remarks>Example: PUT: /api/apps/updateapp/74BA5AEF-1CC7-495F-ABAA-CF87840FA6E2</remarks>
     /// <response code="204">App was successfully updated.</response>
     /// <response code="400">If sub claim is empty/invalid or user does not exist, or any other parameters are invalid.</response>
@@ -428,9 +428,9 @@ public class AppsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    public async Task<NoContentResult> UpdateAppCard([FromRoute] Guid appId, [FromBody] AppEditableDetail updateModel)
+    public async Task<NoContentResult> UpdateAppCard([FromRoute] Guid appId, [FromBody] AppRequestModel appRequestModel)
     {
-        await this.WithIamUserId(userId => _appsBusinessLogic.UpdateCardAppAsync(appId, updateModel, userId)).ConfigureAwait(false);
+        _appsBusinessLogic.UpdateCardAppAsync(appId, appRequestModel, "" ).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -471,5 +471,34 @@ public class AppsController : ControllerBase
     {
         await _appsBusinessLogic.CreateAppCardDetailsAsync(appCardDeatilsInputModel, appId).ConfigureAwait(false);
 
+    }
+
+    /// <summary>
+    /// Upload document for active service in the marketplace for given serviceId for same company as user
+    /// </summary>
+    /// <param name="appId"></param>
+    /// <param name="documentTypeId"></param>
+    /// <param name="document"></param>
+    /// <param name="cancellationToken"></param>
+    /// <remarks>Example: PUT: /api/services/updateservicedoc/{serviceId}/documentType/{documentTypeId}/documents</remarks>
+    /// <response code="204">Successfully uploaded the document</response>
+    /// <response code="400">If sub claim is empty/invalid or user does not exist, or any other parameters are invalid.</response>
+    /// <response code="404">service does not exist.</response>
+    /// <response code="403">The user is not assigned with the service.</response>
+    /// <response code="415">Only PDF files are supported.</response>
+    [HttpPut]
+    [Route("uploadDocument/{appId}/documentType/{documentTypeId}/documents")]
+    [Authorize(Roles = "add_service_offering")]
+    [Consumes("multipart/form-data")]
+    [RequestFormLimits(ValueLengthLimit = 819200, MultipartBodyLengthLimit = 819200)]
+    [ProducesResponseType(typeof(NoContentResult), StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status415UnsupportedMediaType)]
+    public async Task<NoContentResult> UploadDocumentAsync([FromRoute] Guid appId, [FromRoute] DocumentTypeId documentTypeId, [FromForm(Name = "document")] IFormFile document, CancellationToken cancellationToken)
+    {
+        _appsBusinessLogic.CreateAppDocumentAsync(appId, documentTypeId, document, "", cancellationToken);
+        return NoContent();
     }
 }

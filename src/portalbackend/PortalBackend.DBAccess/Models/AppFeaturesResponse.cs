@@ -35,3 +35,11 @@ public record AppFeaturesResponse(
     string? videoLink,
     IEnumerable<AppFeatures>? Features
 );
+
+public record AppFeaturesResponseWithKeyFeature(
+
+    Guid Id,
+    string? summary,
+    string? videoLink,
+    IEnumerable<AppKeyFeatureData>? KeyFeatures
+); 

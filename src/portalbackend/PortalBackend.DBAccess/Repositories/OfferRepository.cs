@@ -130,7 +130,8 @@ public class OfferRepository : IOfferRepository
     }
 
     /// <inheritdoc />
-    public async Task<AppFeaturesResponse> GetAppFeaturesByIdAsync(Guid appId) {
+    public async Task<AppFeaturesResponse> GetAppFeaturesByIdAsync(Guid appId)
+    {
         var result = await _context.Features.AsNoTracking().Where(feature => feature.Offer != null && feature.Offer.Id.Equals(appId))
         .Select(a => new AppFeaturesResponse(
             a.Id,
@@ -143,7 +144,8 @@ public class OfferRepository : IOfferRepository
     }
 
     /// <inheritdoc />
-    public async Task<AppPricingResponse> GetAppPricingByIdAsync(Guid appId) {
+    public async Task<AppPricingResponse> GetAppPricingByIdAsync(Guid appId)
+    {
         var result = await _context.PricingAdditionalDetail.AsNoTracking().Where(pad => pad.Offer != null && pad.Offer.Id.Equals(appId))
         .Select(a => new AppPricingResponse(
             a.Amount,
@@ -502,6 +504,32 @@ public class OfferRepository : IOfferRepository
             .SingleOrDefaultAsync();
 
     /// <inheritdoc />
+    public async Task<AppCardUpdateData?> GetAppCardUpdateData(
+        Guid appId,
+        string iamUserId,
+        IEnumerable<string> languageCodes) =>
+        _context.Offers
+            .AsNoTracking()
+            //.AsSplitQuery()
+            .Where(offer => offer.Id == appId && offer.OfferTypeId == OfferTypeId.APP)
+            .Select(x => new AppCardUpdateData
+            (
+                x.OfferStatusId,
+                true,
+                //x.ProviderCompany!.CompanyUsers.Any(cu => cu.IamUser!.UserEntityId == iamUserId),
+                x.OfferDescriptions.Select(description => new ValueTuple<string, string, string>(description.LanguageShortName, description.DescriptionLong, description.DescriptionShort)),
+                x.SupportedLanguages.Select(sl => new ValueTuple<string, bool>(sl.ShortName, languageCodes.Any(lc => lc == sl.ShortName))),
+                x.UseCases.Select(uc => uc.Id),
+                x.SalesManagerId
+            ))
+            .SingleOrDefault();
+
+   
+  
+
+
+
+    /// <inheritdoc />
     public Task<ServiceUpdateData?> GetServiceUpdateData(Guid serviceId, IEnumerable<ServiceTypeId> serviceTypeIds, string iamUserId) =>
         _context.Offers
             .AsNoTracking()
@@ -578,20 +606,26 @@ public class OfferRepository : IOfferRepository
 
     /// <inheritdoc />
     public Features AddAppFeaturesByIdAsync(string featureSummary, string videoLink, Guid appId) =>
-        _context.Features.Add(new Features(Guid.NewGuid() , featureSummary, videoLink, appId)).Entity;
+        _context.Features.Add(new Features(Guid.NewGuid(), featureSummary, videoLink, appId)).Entity;
 
 
 
     /// <inheritdoc />   
     public void AddAppKeyFeaturesByIdAsync(IEnumerable<(Guid Id, string title, string shortDescription, int sequence, Guid featuresId)> keyfeatureTypes)
     {
-        _context.KeyFeatures.AddRange(keyfeatureTypes.Select(s => new KeyFeatures(s.Id, s.title, s.shortDescription, s.sequence, s.featuresId)));
+        //TODO: Take feature from caller
+        var feature = _context.Features.FirstOrDefault();
+        IEnumerable<KeyFeatures> keyFeatures = keyfeatureTypes.Select(s => new KeyFeatures(s.Id, s.title, s.shortDescription, s.sequence, s.featuresId));
+        foreach (var _keyFeature in keyFeatures)
+        {
+            feature.KeyFeatures.Add(_keyFeature);
+        }
 
-    }    
+    }
 
-    public void AttachAndModifyFeature(Guid FetureId, Action<Features> setOptionalParameters,Action<Features>? initializeParemeters = null)
+    public void AttachAndModifyFeature(Guid FetureId, Action<Features> setOptionalParameters, Action<Features>? initializeParemeters = null)
     {
-        var entity = new Features(FetureId, null!, null!,default);
+        var entity = new Features(FetureId, null!, null!, default);
         initializeParemeters?.Invoke(entity);
         var feature = _context.Attach(entity).Entity;
         setOptionalParameters.Invoke(feature);
@@ -599,7 +633,7 @@ public class OfferRepository : IOfferRepository
 
     public void RemoveOfferKeyFeature(IEnumerable<(Guid featureId, string title)> offerkeyfeatureIds) =>
       _context.RemoveRange(offerkeyfeatureIds.Select(x => new KeyFeatures(default, x.title, null!, 0, x.featureId)));
-    
+
     public void AttachAndModifyOfferKeyFeature(Guid featureId, string title, Action<KeyFeatures> setOptionalParameters)
     {
         var keyFeature = _context.Attach(new KeyFeatures(default, title, null!, 0, featureId)).Entity;

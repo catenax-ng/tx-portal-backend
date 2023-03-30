@@ -138,9 +138,8 @@ public class PortalDbContext : DbContext
     public virtual DbSet<Features> Features { get; set; } = default!;
 
     public virtual DbSet<Plans> Plans { get; set; } = default!;
-    public virtual DbSet<PricingAdditionalDetail> PricingAdditionalDetail { get; set; } = default!;
-    
-    public virtual DbSet<KeyFeatures> KeyFeatures { get; set; } = default!;
+    public virtual DbSet<PricingAdditionalDetail> PricingAdditionalDetail { get; set; } = default!;   
+  
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.UseSnakeCaseNamingConvention();

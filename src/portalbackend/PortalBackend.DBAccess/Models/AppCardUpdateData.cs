@@ -1,4 +1,4 @@
-/********************************************************************************
+﻿/********************************************************************************
  * Copyright (c) 2021, 2023 BMW Group AG
  * Copyright (c) 2021, 2023 Contributors to the Eclipse Foundation
  *
@@ -18,18 +18,16 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 
+namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
-
-/// <summary>
-/// View model of an application's detailed data.
-/// </summary>
-
-/// <param name="Title">Title or name of the app.</param>
-/// <param name="ShortDescription">Uri to app's lead picture.</param>
-public record AppFeatures(
-    
-    string? Title,
-    string? ShortDescription    
+public record AppCardUpdateData(
+    OfferStatusId OfferState,
+    bool IsUserOfProvider,
+    IEnumerable<(string, string, string)> OfferDescriptions,
+    IEnumerable<(string Shortname, bool IsMatch)> Languages,
+    IEnumerable<Guid> MatchingUseCases,    
+    Guid? SalesManagerId
+   
 );

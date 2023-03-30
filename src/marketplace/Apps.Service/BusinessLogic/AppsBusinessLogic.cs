@@ -68,20 +68,20 @@ public class AppsBusinessLogic : IAppsBusinessLogic
     public async Task<List<AppData>> GetAllActiveAppsAsync(string iamUserId, string? languageShortName = null) =>
         await _portalRepositories.GetInstance<IOfferRepository>().GetAllActiveAppsAsync(iamUserId,languageShortName);
 
-   /// <inheritdoc/>
+    /// <inheritdoc/>
     public async Task<List<SponsoredAppData>> GetAllSponsoredAppsAsync(string? languageShortName = null) =>
       await _portalRepositories.GetInstance<IOfferRepository>().GetAllSponsoredAppsAsync(languageShortName);
 
     /// <inheritdoc/>
     public async Task<AppFeaturesResponse> GetAppFeaturesByIdAsync(Guid appId) {
-          var appRepository = _portalRepositories.GetInstance<IOfferRepository>();
+        var appRepository = _portalRepositories.GetInstance<IOfferRepository>();
         if (!await appRepository.CheckAppExistsById(appId).ConfigureAwait(false))
         {
             throw new NotFoundException($"app {appId} does not found");
         }
 
         return await _portalRepositories.GetInstance<IOfferRepository>().GetAppFeaturesByIdAsync(appId);
-    }   
+    }
 
     /// <inheritdoc/>
     public async Task<AppPricingResponse> GetAppPricingByIdAsync(Guid appId){
@@ -98,7 +98,7 @@ public class AppsBusinessLogic : IAppsBusinessLogic
     public IAsyncEnumerable<BusinessAppData> GetAllUserUserBusinessAppsAsync(string userId) =>
         _portalRepositories.GetInstance<IOfferSubscriptionsRepository>()
             .GetAllBusinessAppDataForUserIdAsync(userId)
-            .Select(x => 
+            .Select(x =>
                 new BusinessAppData(
                     x.SubscriptionId,
                     x.OfferName ?? Constants.ErrorString,
@@ -211,7 +211,7 @@ public class AppsBusinessLogic : IAppsBusinessLogic
         {
             throw new ControllerArgumentException($"subscription for app {appId}, company {subscribingCompanyId} is not in status PENDING");
         }
-        
+
         if (appName is null)
         {
             throw new ConflictException("App Name is not yet set.");
@@ -231,7 +231,7 @@ public class AppsBusinessLogic : IAppsBusinessLogic
                 });
             });
 
-        var userName = string.Join(" ", new[] { requesterData.Firstname, requesterData.Lastname }); 
+        var userName = string.Join(" ", new[] { requesterData.Firstname, requesterData.Lastname });
 
         if (!string.IsNullOrWhiteSpace(requesterData.Email))
         {
@@ -280,9 +280,9 @@ public class AppsBusinessLogic : IAppsBusinessLogic
             app.ContactNumber = appInputModel.ContactNumber;
             app.ProviderCompanyId = appInputModel.ProviderCompanyId;
             app.OfferStatusId = OfferStatusId.CREATED;
-            app.SalesManagerId = appInputModel.SalesManagerId;       
-            
-        }).Id;       
+            app.SalesManagerId = appInputModel.SalesManagerId;
+
+        }).Id;
 
         appRepository.AddAppAssignedUseCases(appInputModel.UseCaseIds.Select(uc =>
             new ValueTuple<Guid, Guid>(appId, uc)));
@@ -291,14 +291,14 @@ public class AppsBusinessLogic : IAppsBusinessLogic
         appRepository.AddAppLanguages(appInputModel.SupportedLanguageCodes.Select(c =>
             new ValueTuple<Guid, string>(appId, c)));
 
-       //To Save keywords for the App
+        //To Save keywords for the App
         appRepository.AddOfferKeyWords(appId, appInputModel.TagNames);
         //To Save LeadPicture For the App
         //appRepository.AddLeadPicture(appId, appInputModel.LeadPictureUri);
 
         //To Save Features and Vedio,Featureimages
         var featureId = new Guid();
-       appRepository.AddAppFeaturesByIdAsync(appInputModel.FeatureSummary,appInputModel.videoLink, appId);
+        appRepository.AddAppFeaturesByIdAsync(appInputModel.FeatureSummary,appInputModel.videoLink, appId);
 
         var KeyfeatureId = new Guid();
         appRepository.AddAppKeyFeaturesByIdAsync(appInputModel.KeyFeatures.Select(f =>
@@ -306,16 +306,8 @@ public class AppsBusinessLogic : IAppsBusinessLogic
 
         var licenseId = appRepository.CreateOfferLicenses(appInputModel.Price).Id;
         appRepository.CreateOfferAssignedLicense(appId, licenseId);
-
-        try
-        {
-            await _portalRepositories.SaveAsync().ConfigureAwait(false);
-        }
-        catch (Exception ex)
-        { }
-
-
-        return appId;
+                            await _portalRepositories.SaveAsync().ConfigureAwait(false);
+         return appId;
     }
 
     /// <inheritdoc/>
@@ -326,7 +318,7 @@ public class AppsBusinessLogic : IAppsBusinessLogic
 
         var appId = appRepository.CreateOffer(appCardInputModel.Provider, OfferTypeId.APP, app =>
         {
-            app.Name = appCardInputModel.Title;           
+            app.Name = appCardInputModel.Title;
             app.ProviderCompanyId = appCardInputModel.ProviderCompanyId;
             app.OfferStatusId = OfferStatusId.CREATED;
             app.SalesManagerId = appCardInputModel.SalesManagerId;
@@ -368,7 +360,7 @@ public class AppsBusinessLogic : IAppsBusinessLogic
         IEnumerable<(Guid, string, string, int, Guid)> keyfeatureTypes = appCardDeatilsInputModel.KeyFeatures.Select(f =>
                            new ValueTuple<Guid, string, string, int, Guid>(Guid.NewGuid(), f.Title, f.ShortDescription, f.Sequence, feature.Id));
         appRepository.AddAppKeyFeaturesByIdAsync(keyfeatureTypes);
-            
+
 
         try
         {
@@ -376,13 +368,13 @@ public class AppsBusinessLogic : IAppsBusinessLogic
         }
         catch (Exception ex)
         { }
-       
+
     }
 
     /// <inheritdoc/>
     public IAsyncEnumerable<AllOfferData> GetCompanyProvidedAppsDataForUserAsync(string userId) =>
         _portalRepositories.GetInstance<IOfferRepository>().GetProvidedOffersData(OfferTypeId.APP, userId);
-    
+
     /// <inheritdoc />
     public Task<OfferAutoSetupResponseData> AutoSetupAppAsync(OfferAutoSetupData data, string iamUserId) =>
         _offerService.AutoSetupServiceAsync(data, _settings.ServiceAccountRoles, _settings.ITAdminRoles, iamUserId, OfferTypeId.APP, _settings.UserManagementAddress);
@@ -423,54 +415,71 @@ public class AppsBusinessLogic : IAppsBusinessLogic
         return (document.Content, document.FileName.MapToContentType(), document.FileName);
     }
 
-    public Task UpdateCardAppAsync(Guid appId, AppEditableDetail updateModel, string userId)
+    public Task UpdateCardAppAsync(Guid appId, AppRequestModel appRequestModel, string userId)
     {
         if (appId == Guid.Empty)
         {
             throw new ControllerArgumentException($"AppId must not be empty");
-        }
-        if (updateModel.Descriptions.Any(item => string.IsNullOrWhiteSpace(item.LanguageCode)))
-        {
-            throw new ControllerArgumentException("Language Code must not be empty");
-        }
+        }        
 
-        return EditAppCardAsync(appId, updateModel, userId);
+        return EditAppCardAsync(appId, appRequestModel, userId);
     }
 
-    private async Task EditAppCardAsync(Guid appId, AppEditableDetail updateModel, string userId)
+    private async Task EditAppCardAsync(Guid appId, AppRequestModel appRequestModel, string userId)
     {
+        var appData = await _portalRepositories.GetInstance<IOfferRepository>()
+            .GetAppCardUpdateData(
+                appId,
+                userId,
+                appRequestModel.SupportedLanguageCodes)
+            .ConfigureAwait(false);
+        if (appData is null)
+        {
+            throw new NotFoundException($"app {appId} does not exists");
+        }
+
+        if (appData.OfferState != OfferStatusId.CREATED)
+        {
+            throw new ConflictException($"Apps in State {appData.OfferState} can't be updated");
+        }
+        var newSupportedLanguages = appRequestModel.SupportedLanguageCodes.Except(appData.Languages.Where(x => x.IsMatch).Select(x => x.Shortname));
+        var existingLanguageCodes = await _portalRepositories.GetInstance<ILanguageRepository>().GetLanguageCodesUntrackedAsync(newSupportedLanguages).ToListAsync().ConfigureAwait(false);
+        if (newSupportedLanguages.Except(existingLanguageCodes).Any())
+        {
+            throw new ControllerArgumentException($"The language(s) {string.Join(",", newSupportedLanguages.Except(existingLanguageCodes))} do not exist in the database.",
+                nameof(appRequestModel.SupportedLanguageCodes));
+        }
         var appRepository = _portalRepositories.GetInstance<IOfferRepository>();
-        var appResult = await appRepository.GetOfferDetailsForUpdateAsync(appId, userId, OfferTypeId.APP).ConfigureAwait(false);
-        if (appResult == default)
+        appRepository.AttachAndModifyOffer(
+        appId,
+        app =>
         {
-            throw new NotFoundException($"app {appId} does not exist");
-        }
-        if (!appResult.IsProviderUser)
+            app.Name = appRequestModel.Title;
+            app.OfferStatusId = OfferStatusId.CREATED;
+            app.Provider = appRequestModel.Provider;
+            app.SalesManagerId = appRequestModel.SalesManagerId;
+        },
+        app =>
         {
-            throw new ForbiddenException($"user {userId} is not eligible to edit app {appId}");
-        }
-        if (!appResult.IsAppCreated)
-        {
-            throw new ConflictException($"app {appId} is not in status CREATED");
-        }
-        appRepository.AttachAndModifyOffer(appId, app =>
-        {
-            if (appResult.ContactEmail != updateModel.ContactEmail)
-            {
-                app.ContactEmail = updateModel.ContactEmail;
-            }
-            if (appResult.ContactNumber != updateModel.ContactNumber)
-            {
-                app.ContactNumber = updateModel.ContactNumber;
-            }
-            if (appResult.MarketingUrl != updateModel.ProviderUri)
-            {
-                app.MarketingUrl = updateModel.ProviderUri;
-            }
-        });       
-        _offerService.UpsertRemoveOfferDescription(appId, updateModel.Descriptions, appResult.Descriptions);
-        
+            app.SalesManagerId = appData.SalesManagerId;
+        });
+
+        _offerService.UpsertRemoveOfferDescription(appId, appRequestModel.Descriptions.Select(x => new Localization(x.LanguageCode, x.LongDescription, x.ShortDescription)), appData.OfferDescriptions);
+        UpdateAppSupportedLanguages(appId, newSupportedLanguages, appData.Languages.Where(x => !x.IsMatch).Select(x => x.Shortname), appRepository);
+
+        appRepository.CreateDeleteAppAssignedUseCases(appId, appData.MatchingUseCases, appRequestModel.UseCaseIds);
+
+        // appRepository.CreateDeleteAppAssignedPrivacyPolicies(appId, appData.MatchingPrivacyPolicies, appRequestModel.PrivacyPolicies);
+
+        //_offerService.CreateOrUpdateOfferLicense(appId, appRequestModel.Provider, appData.OfferLicense);
+
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
+    }
+
+    private static void UpdateAppSupportedLanguages(Guid appId, IEnumerable<string> newSupportedLanguages, IEnumerable<string> languagesToRemove, IOfferRepository appRepository)
+    {
+        appRepository.AddAppLanguages(newSupportedLanguages.Select(language => (appId, language)));
+        appRepository.RemoveAppLanguages(languagesToRemove.Select(language => (appId, language)));
     }
 
 
@@ -480,7 +489,7 @@ public class AppsBusinessLogic : IAppsBusinessLogic
         {
             throw new ControllerArgumentException($"AppId must not be empty");
         }
-        
+
         return EditAppCardDetailsAsync(appId, updateModel);
     }
 
@@ -491,7 +500,7 @@ public class AppsBusinessLogic : IAppsBusinessLogic
         if (appResult == default)
         {
             throw new NotFoundException($"app {appId} does not exist");
-        }       
+        }
         appRepository.AttachAndModifyFeature(appResult.Id, app =>
         {
             if (appResult.summary != updateModel.FeatureSummary)
@@ -500,13 +509,20 @@ public class AppsBusinessLogic : IAppsBusinessLogic
             }
             if (appResult.videoLink != updateModel.Videolink)
             {
-                app.VideoLink = updateModel.Videolink;                
-            }       
-            
+                app.VideoLink = updateModel.Videolink;
+            }
+
         });
-       _offerService.UpsertRemoveKeyFeatures(appResult.Id, updateModel.KeyFeature,appResult.Features,appId);
+        _offerService.UpsertRemoveKeyFeatures(appResult.Id, updateModel.KeyFeature,appResult.Features,appId);
 
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
+
+    /// <inheritdoc />
+    public Task CreateAppDocumentAsync(Guid appId, DocumentTypeId documentTypeId, IFormFile document, string iamUserId, CancellationToken cancellationToken) =>
+        UploadAppDoc(appId, documentTypeId, document, iamUserId, OfferTypeId.SERVICE, cancellationToken);
+
+    private async Task UploadAppDoc(Guid appId, DocumentTypeId documentTypeId, IFormFile document, string iamUserId, OfferTypeId offerTypeId, CancellationToken cancellationToken) =>
+        await _offerService.UploadDocumentForAppAsync(appId, documentTypeId, document, iamUserId, offerTypeId, _settings.DocumentTypeIds, _settings.ContentTypeSettings, cancellationToken).ConfigureAwait(false);
 
 }

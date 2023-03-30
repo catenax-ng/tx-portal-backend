@@ -188,10 +188,10 @@ public interface IAppsBusinessLogic
     /// Creates an application and returns its generated ID.
     /// </summary>
     /// <param name="appId"></param>
-    /// <param name="updateModel"></param>
+    /// <param name="appRequestModel"></param>
     /// <param name="userId"></param>
     /// <returns>Guid of the created app.</returns>
-    Task UpdateCardAppAsync(Guid appId, AppEditableDetail updateModel, string userId);
+    Task UpdateCardAppAsync(Guid appId, AppRequestModel appRequestModel, string userId);
 
 
     /// <summary>
@@ -219,4 +219,14 @@ public interface IAppsBusinessLogic
     /// <param name="appCardDeatilsInputModel"></param>    /// 
     /// <returns>Guid of the created app.</returns>
     Task CreateAppCardDetailsAsync(AppCardDeatilsInputModel appCardDeatilsInputModel, Guid appid);
+
+    /// <summary>
+    /// Upload document for given company user for App
+    /// </summary>
+    /// <param name="appId"></param>
+    /// <param name="documentTypeId"></param>
+    /// <param name="document"></param>    
+    /// <returns></returns>
+    Task CreateAppDocumentAsync(Guid appId, DocumentTypeId documentTypeId, IFormFile document, string iamUserId, CancellationToken cancellationToken);
+       
 }

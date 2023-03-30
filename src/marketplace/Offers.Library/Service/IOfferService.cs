@@ -194,4 +194,6 @@ public interface IOfferService
     Task UploadDocumentAsync(Guid Id, DocumentTypeId documentTypeId, IFormFile document, string iamUserId, OfferTypeId offertypeId, IEnumerable<DocumentTypeId> documentTypeIdSettings, IEnumerable<string> contentTypeSettings, CancellationToken cancellationToken);
 
     void UpsertRemoveKeyFeatures(Guid FeatureId, IEnumerable<Apps.Service.ViewModels.AppKeyFeatureData> UpdateKeyFeature, IEnumerable<AppFeatures> existingKeyFeatures,Guid appId);
+
+    Task UploadDocumentForAppAsync(Guid Id, DocumentTypeId documentTypeId, IFormFile document, string iamUserId, OfferTypeId offertypeId, IEnumerable<DocumentTypeId> documentTypeIdSettings, IEnumerable<string> contentTypeSettings, CancellationToken cancellationToken);
 }
