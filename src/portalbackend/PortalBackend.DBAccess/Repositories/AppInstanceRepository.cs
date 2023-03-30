@@ -57,12 +57,19 @@ public class AppInstanceRepository : IAppInstanceRepository
     public Task<bool> CheckInstanceExistsForOffer(Guid offerId) =>
         _portalDbContext.AppInstances.AnyAsync(ai => ai.AppId == offerId);
 
-    public Task<List<Guid>> GetAssignedServiceAccounts(Guid appInstanceId) =>
+    /// <inheritdoc />
+    public IAsyncEnumerable<Guid> GetAssignedServiceAccounts(Guid appInstanceId) =>
         _portalDbContext.AppInstanceAssignedServiceAccounts
             .Where(x => x.AppInstanceId == appInstanceId)
             .Select(x => x.CompanyServiceAccountId)
-            .ToListAsync();
-    
+            .ToAsyncEnumerable();
+
+    /// <inheritdoc />
+    public Task<bool> CheckInstanceHasAssignedSubscriptions(Guid appInstanceId) =>
+        _portalDbContext.AppSubscriptionDetails
+            .Where(detail => detail.AppInstanceId == appInstanceId)
+            .AnyAsync();
+
     /// <inheritdoc />
     public void RemoveAppInstanceAssignedServiceAccounts(Guid appInstanceId, IEnumerable<Guid> serviceAccountIds) => 
         _portalDbContext.AppInstanceAssignedServiceAccounts

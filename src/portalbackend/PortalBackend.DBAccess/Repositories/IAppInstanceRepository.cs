@@ -55,7 +55,14 @@ public interface IAppInstanceRepository
     /// </summary>
     /// <param name="appInstanceId">Id of the app instance</param>
     /// <returns>A list of the service account ids</returns>
-    Task<List<Guid>> GetAssignedServiceAccounts(Guid appInstanceId);
+    IAsyncEnumerable<Guid> GetAssignedServiceAccounts(Guid appInstanceId);
+
+    /// <summary>
+    /// Checks whether an appinstance has any assigned subscriptions
+    /// </summary>
+    /// <param name="appInstanceId">Id of the app instance</param>
+    /// <returns><c>true</c> if subscriptions exists for this instance, otherwise <c>false</c></returns>
+    Task<bool> CheckInstanceHasAssignedSubscriptions(Guid appInstanceId);
 
     /// <summary>
     /// Removes the app instance assigned service accounts

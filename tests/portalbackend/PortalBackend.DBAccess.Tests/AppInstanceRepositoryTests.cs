@@ -124,10 +124,10 @@ public class AppInstanceRepositoryTests : IAssemblyFixture<TestDbFixture>
         var instanceId = new Guid("ab25c218-9ab3-4f1a-b6f4-6394fbc33c5a");
         var sut = await CreateSut().ConfigureAwait(false);
 
-        var result = await sut.GetAssignedServiceAccounts(instanceId).ConfigureAwait(false);
+        var result = await sut.GetAssignedServiceAccounts(instanceId).ToListAsync().ConfigureAwait(false);
 
-        result.Should().HaveCount(1);
-        result.Should().ContainSingle().Which.Should().Be(new Guid("7e85a0b8-0001-ab67-10d1-0ef508201006"));
+        result.Should().HaveCount(1)
+            .And.ContainSingle().Which.Should().Be(new Guid("7e85a0b8-0001-ab67-10d1-0ef508201006"));
     }
 
     [Fact]
@@ -135,9 +135,25 @@ public class AppInstanceRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         var sut = await CreateSut().ConfigureAwait(false);
 
-        var result = await sut.GetAssignedServiceAccounts(Guid.NewGuid()).ConfigureAwait(false);
+        var result = await sut.GetAssignedServiceAccounts(Guid.NewGuid()).ToListAsync().ConfigureAwait(false);
 
         result.Should().BeEmpty();
+    }
+
+    #endregion
+
+    #region CheckInstanceHasAssignedSubscriptions
+
+    [Theory]
+    [InlineData("e080bb4b-567b-477e-adcf-080efc457d38", false)]
+    [InlineData("ab25c218-9ab3-4f1a-b6f4-6394fbc33c5a", true)]
+    public async Task CheckInstanceHasAssignedSubscriptions_WithExistingAppInstance_ReturnsExpected(Guid instanceId, bool expected)
+    {
+        var sut = await CreateSut().ConfigureAwait(false);
+
+        var result = await sut.CheckInstanceHasAssignedSubscriptions(instanceId).ConfigureAwait(false);
+
+        result.Should().Be(expected);
     }
 
     #endregion

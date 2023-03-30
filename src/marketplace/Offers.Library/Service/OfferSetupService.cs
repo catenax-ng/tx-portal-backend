@@ -177,12 +177,16 @@ public class OfferSetupService : IOfferSetupService
     /// <inheritdoc />
     public async Task DeleteSingleInstance(Guid appInstanceId, Guid clientId, string clientClientId)
     {
+        var appInstanceRepository = _portalRepositories.GetInstance<IAppInstanceRepository>();
+        if (await appInstanceRepository.CheckInstanceHasAssignedSubscriptions(appInstanceId))
+        {
+            throw new ConflictException($"The app instance {appInstanceId} is associated with exiting subscriptions");
+        }
         await _provisioningManager.DeleteCentralClientAsync(clientClientId)
             .ConfigureAwait(false);
 
         _portalRepositories.GetInstance<IClientRepository>().RemoveClient(clientId);
-        var appInstanceRepository = _portalRepositories.GetInstance<IAppInstanceRepository>();
-        var serviceAccountIds = await appInstanceRepository.GetAssignedServiceAccounts(appInstanceId).ConfigureAwait(false);
+        var serviceAccountIds = await appInstanceRepository.GetAssignedServiceAccounts(appInstanceId).ToListAsync().ConfigureAwait(false);
         if (serviceAccountIds.Any())
         {
             appInstanceRepository.RemoveAppInstanceAssignedServiceAccounts(appInstanceId, serviceAccountIds);

@@ -18,8 +18,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using System.Net;
-using Microsoft.EntityFrameworkCore.Storage;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Mailing.SendMail;
 using Org.Eclipse.TractusX.Portal.Backend.Notifications.Library;
@@ -33,6 +31,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Service;
 using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared;
+using System.Net;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Tests.Service;
 
@@ -505,13 +504,16 @@ public class OfferSetupServiceTests
         var clientId = Guid.NewGuid();
         var clientClientId = Guid.NewGuid().ToString();
         var serviceAccountId = Guid.NewGuid();
+        A.CallTo(() => _appInstanceRepository.CheckInstanceHasAssignedSubscriptions(appInstanceId))
+            .Returns(false);
         A.CallTo(() => _appInstanceRepository.GetAssignedServiceAccounts(appInstanceId))
-            .ReturnsLazily(() => new List<Guid>{serviceAccountId});
+            .Returns(new []{ serviceAccountId }.ToAsyncEnumerable());
 
         // Act
         await _sut.DeleteSingleInstance(appInstanceId, clientId, clientClientId).ConfigureAwait(false);
         
         // Assert
+        A.CallTo(() => _appInstanceRepository.CheckInstanceHasAssignedSubscriptions(appInstanceId)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _provisioningManager.DeleteCentralClientAsync(clientClientId)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _clientRepository.RemoveClient(clientId)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _appInstanceRepository.RemoveAppInstance(appInstanceId)).MustHaveHappenedOnceExactly();
@@ -526,18 +528,46 @@ public class OfferSetupServiceTests
         var appInstanceId = Guid.NewGuid();
         var clientId = Guid.NewGuid();
         var clientClientId = Guid.NewGuid().ToString();
+        A.CallTo(() => _appInstanceRepository.CheckInstanceHasAssignedSubscriptions(appInstanceId))
+            .Returns(false);
         A.CallTo(() => _appInstanceRepository.GetAssignedServiceAccounts(appInstanceId))
-            .ReturnsLazily(() => new List<Guid>());
+            .Returns(Enumerable.Empty<Guid>().ToAsyncEnumerable());
 
         // Act
         await _sut.DeleteSingleInstance(appInstanceId, clientId, clientClientId).ConfigureAwait(false);
         
         // Assert
+        A.CallTo(() => _appInstanceRepository.CheckInstanceHasAssignedSubscriptions(appInstanceId)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _provisioningManager.DeleteCentralClientAsync(clientClientId)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _clientRepository.RemoveClient(clientId)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _appInstanceRepository.RemoveAppInstance(appInstanceId)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _appInstanceRepository.RemoveAppInstanceAssignedServiceAccounts(appInstanceId, A<IEnumerable<Guid>>._))
             .MustNotHaveHappened();
+    }
+
+    [Fact]
+    public async Task DeleteSingleInstance_WithExistingSubscriptions_Throws()
+    {
+        // Arrange
+        var appInstanceId = Guid.NewGuid();
+        var clientId = Guid.NewGuid();
+        var clientClientId = Guid.NewGuid().ToString();
+        A.CallTo(() => _appInstanceRepository.CheckInstanceHasAssignedSubscriptions(appInstanceId))
+            .Returns(true);
+
+        var Act = () => _sut.DeleteSingleInstance(appInstanceId, clientId, clientClientId);
+
+        // Act
+        var result = await Assert.ThrowsAsync<ConflictException>(Act).ConfigureAwait(false);
+
+        // Assert
+        A.CallTo(() => _provisioningManager.DeleteCentralClientAsync(A<string>._)).MustNotHaveHappened();
+        A.CallTo(() => _clientRepository.RemoveClient(A<Guid>._)).MustNotHaveHappened();
+        A.CallTo(() => _appInstanceRepository.RemoveAppInstance(A<Guid>._)).MustNotHaveHappened();
+        A.CallTo(() => _appInstanceRepository.RemoveAppInstanceAssignedServiceAccounts(A<Guid>._, A<IEnumerable<Guid>>._))
+            .MustNotHaveHappened();
+
+        result.Message.Should().Be($"The app instance {appInstanceId} is associated with exiting subscriptions");
     }
 
     #endregion
