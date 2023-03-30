@@ -99,7 +99,8 @@ public class CompanyDataBusinessLogic : ICompanyDataBusinessLogic
     /// <inheritdoc/>
     public async Task CreateCompanyRoleAndConsentAgreementDetailsAsync(string iamUserId, IEnumerable<CompanyRoleConsentDetails> companyRoleConsentDetails)
     {
-        var result = await _portalRepositories.GetInstance<ICompanyRepository>().GetCompanyRolesDataAsync(iamUserId).ConfigureAwait(false);
+        var companyRepositories = _portalRepositories.GetInstance<ICompanyRepository>();
+        var result = await companyRepositories.GetCompanyRolesDataAsync(iamUserId, companyRoleConsentDetails.Select(x => x.CompanyRole)).ConfigureAwait(false);
         if(result == default)
         {
             throw new NotFoundException($"user {iamUserId} is not associated with any company");
@@ -108,35 +109,33 @@ public class CompanyDataBusinessLogic : ICompanyDataBusinessLogic
         {
             throw new ConflictException("Company Status is Incorrect");
         }
-        if (result.AgreementAssignedRoles == null || result.CompanyRoleIds == null || result.ConsentStatusDetails == null)
+        var agreementAssignedRoleData = await companyRepositories.GetAgreementAssignedRolesDataAsync(companyRoleConsentDetails.Select(x => x.CompanyRole))
+                .PreSortedGroupBy(x => x.agreementAssignedRole, x => x.agreemantId)
+                .ToDictionaryAsync(g => g.Key, g => g.AsEnumerable()).ConfigureAwait(false);
+        
+        if (agreementAssignedRoleData.Count() < 1 || result.CompanyRoleIds == null || result.ConsentStatusDetails == null)
         {
             throw new UnexpectedConditionException("none of AgreementAssignedRoles, CompanyRoleIds, ConsentStatusDetails should ever be null here");
         }
         foreach(var data in companyRoleConsentDetails)
         {
-            if(!result.AgreementAssignedRoles.Contains(data.CompanyRole) || data.Agreements.Any(x => x.ConsentStatus != ConsentStatusId.ACTIVE))
-            {
-                throw new ConflictException("All agreement need to get signed");
-            }
-            if(result.CompanyRoleIds.Contains(data.CompanyRole))
+            if(result.CompanyRoleIds!.Contains(data.CompanyRole))
             {
                 throw new ConflictException("companyRole already exists");   
             }
             _portalRepositories.GetInstance<ICompanyRolesRepository>().CreateCompanyAssignedRole(result.CompanyId, data.CompanyRole);
 
-            var consentRepository = _portalRepositories.GetInstance<IConsentRepository>();
             foreach(var agreementData in data.Agreements)
             {
-                if(result.ConsentStatusDetails.Any(csd => csd.AgreementId == agreementData.AgreementId))
+                var IsAgreemantAssignedRole = agreementAssignedRoleData.Any(x => x.Value.Contains(agreementData.AgreementId) && x.Key == data.CompanyRole);
+                if( !IsAgreemantAssignedRole || agreementData.ConsentStatus!= ConsentStatusId.ACTIVE)
                 {
-                    consentRepository.AttachAndModifiesConsents(result.ConsentStatusDetails.Select(csd => csd.ConsentId), consent =>
-                        consent.ConsentStatusId = agreementData.ConsentStatus);
-                }
-                else
-                {
-                    consentRepository.CreateConsent(agreementData.AgreementId, result.CompanyId, result.CompanyUserId, agreementData.ConsentStatus);
+                    throw new ControllerArgumentException("All agreement need to get signed");
                 }
             }
+            var consentRepository = _portalRepositories.GetInstance<IConsentRepository>();
+            var modifyItems = data.Agreements.Select(x => (x.AgreementId,x.ConsentStatus));
+            consentRepository.AddAttachAndModifyConsents(result.ConsentStatusDetails!, modifyItems, result.CompanyId,result.CompanyUserId,DateTimeOffset.UtcNow);
         }
         await _portalRepositories.SaveAsync();
     }

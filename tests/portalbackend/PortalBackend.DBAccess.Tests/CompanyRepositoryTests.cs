@@ -550,10 +550,11 @@ public class CompanyRepositoryTests : IAssemblyFixture<TestDbFixture>
     public async Task GetCompanyRolesDataAsync_ReturnsExpected()
     {
         // Arrange
+        var companyRoleIds = new []{ CompanyRoleId.SERVICE_PROVIDER , CompanyRoleId.ACTIVE_PARTICIPANT};
         var (sut, context) = await CreateSut().ConfigureAwait(false);
 
         // Act
-        var result = await sut.GetCompanyRolesDataAsync("8be5ee49-4b9c-4008-b641-138305430cc4").ConfigureAwait(false);
+        var result = await sut.GetCompanyRolesDataAsync("8be5ee49-4b9c-4008-b641-138305430cc4",companyRoleIds).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
@@ -562,10 +563,26 @@ public class CompanyRepositoryTests : IAssemblyFixture<TestDbFixture>
             .And.Contain(CompanyRoleId.SERVICE_PROVIDER);
         result.CompanyUserId.Should().Be(new Guid("ac1cf001-7fbc-1f2f-817f-bce058020005"));
         result.IsCompanyActive.Should().BeTrue();
-        result.AgreementAssignedRoles.Should().NotBeNull()
-            .And.Contain(CompanyRoleId.SERVICE_PROVIDER);
         result.ConsentStatusDetails.Should().NotBeNull()
             .And.Contain(x => x.ConsentStatusId == ConsentStatusId.ACTIVE);
+    }
+
+    [Fact]
+    public async Task GetAgreementAssignedRolesDataAsync_ReturnsExpected()
+    {
+        // Arrange
+        var companyRoleIds = new []{ CompanyRoleId.SERVICE_PROVIDER };
+        var (sut, context) = await CreateSut().ConfigureAwait(false);
+
+        // Act
+        var result = await sut.GetAgreementAssignedRolesDataAsync(companyRoleIds).ToListAsync().ConfigureAwait(false);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Should().HaveCount(2);
+        var data = result.FirstOrDefault();
+        data.agreemantId.Should().Be(new Guid("aa0a0000-7fbc-1f2f-817f-bce0502c1094"));
+        data.agreementAssignedRole.Should().Be(CompanyRoleId.SERVICE_PROVIDER);
     }
 
     #endregion
