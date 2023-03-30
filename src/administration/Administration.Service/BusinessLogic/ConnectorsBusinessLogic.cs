@@ -267,10 +267,10 @@ public class ConnectorsBusinessLogic : IConnectorsBusinessLogic
         }
         if(result.SelfDescriptionDocumentId != null)
         {
-            _portalRepositories.GetInstance<IDocumentRepository>().AttachAndModifyDocument(result.SelfDescriptionDocumentId.Value!,
-            a => { a.DocumentStatusId = result.documentStatusId!.Value; },
-            a => { a.DocumentStatusId = DocumentStatusId.INACTIVE; }
-            );
+            _portalRepositories.GetInstance<IDocumentRepository>().AttachAndModifyDocument(
+                result.SelfDescriptionDocumentId.Value,
+                a => { a.DocumentStatusId = result.DocumentStatusId!.Value; },
+                a => { a.DocumentStatusId = DocumentStatusId.INACTIVE; });
         }
         connectorsRepository.DeleteConnector(connectorId);
         await _portalRepositories.SaveAsync();

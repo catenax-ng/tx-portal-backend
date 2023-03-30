@@ -83,5 +83,5 @@ public interface IConnectorsRepository
     /// </summary>
     /// <param name="connectorId">Id of the connector</param>
     /// <returns>returns SelfDescriptionDocument Data/c></returns>
-    Task<(bool IsConnectorIdExist, Guid? SelfDescriptionDocumentId, DocumentStatusId? documentStatusId)> GetSelfDescriptionDocumentDataAsync(Guid connectorId);
+    Task<(bool IsConnectorIdExist, Guid? SelfDescriptionDocumentId, DocumentStatusId? DocumentStatusId)> GetSelfDescriptionDocumentDataAsync(Guid connectorId);
 }

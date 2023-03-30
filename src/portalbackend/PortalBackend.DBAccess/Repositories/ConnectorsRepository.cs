@@ -18,11 +18,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Microsoft.EntityFrameworkCore;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
-using Microsoft.EntityFrameworkCore;
-using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
@@ -119,12 +118,12 @@ public class ConnectorsRepository : IConnectorsRepository
             .SingleOrDefaultAsync();
     
     /// <inheritdoc>
-    public Task<(bool IsConnectorIdExist, Guid? SelfDescriptionDocumentId, DocumentStatusId? documentStatusId)> GetSelfDescriptionDocumentDataAsync(Guid connectorId) =>
+    public Task<(bool IsConnectorIdExist, Guid? SelfDescriptionDocumentId, DocumentStatusId? DocumentStatusId)> GetSelfDescriptionDocumentDataAsync(Guid connectorId) =>
         _context.Connectors
-        .Where(x => x.Id == connectorId)
-        .Select(connector => new ValueTuple<bool,Guid?,DocumentStatusId?>(
-            true,
-            connector.SelfDescriptionDocumentId,
-            connector.SelfDescriptionDocument!.DocumentStatusId
-        )).SingleOrDefaultAsync();
+            .Where(x => x.Id == connectorId)
+            .Select(connector => new ValueTuple<bool,Guid?,DocumentStatusId?>(
+                true,
+                connector.SelfDescriptionDocumentId,
+                connector.SelfDescriptionDocument!.DocumentStatusId
+            )).SingleOrDefaultAsync();
 }

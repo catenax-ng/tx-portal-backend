@@ -18,16 +18,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using AutoFixture;
-using AutoFixture.AutoFakeItEasy;
+using Microsoft.EntityFrameworkCore;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Tests.Setup;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
-using FluentAssertions;
-using Microsoft.EntityFrameworkCore;
-using Xunit;
 using Xunit.Extensions.AssemblyFixture;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Tests;
@@ -263,7 +259,7 @@ public class ConnectorRepositoryTests : IAssemblyFixture<TestDbFixture>
         result.Should().NotBeNull();
         result.IsConnectorIdExist.Should().BeTrue();
         result.SelfDescriptionDocumentId.Should().BeNull();
-        result.documentStatusId.Should().BeNull();
+        result.DocumentStatusId.Should().BeNull();
     }
 
     [Fact]
@@ -279,7 +275,7 @@ public class ConnectorRepositoryTests : IAssemblyFixture<TestDbFixture>
         result.Should().NotBeNull();
         result.IsConnectorIdExist.Should().BeTrue();
         result.SelfDescriptionDocumentId.Should().Be(new Guid("e020787d-1e04-4c0b-9c06-bd1cd44724b3"));
-        result.documentStatusId.Should().Be(DocumentStatusId.LOCKED);
+        result.DocumentStatusId.Should().Be(DocumentStatusId.LOCKED);
     }
 
         [Fact]
@@ -295,7 +291,7 @@ public class ConnectorRepositoryTests : IAssemblyFixture<TestDbFixture>
         result.Should().NotBeNull();
         result.IsConnectorIdExist.Should().BeFalse();
         result.SelfDescriptionDocumentId.Should().BeNull();
-        result.documentStatusId.Should().BeNull();
+        result.DocumentStatusId.Should().BeNull();
     }
 
     #endregion
