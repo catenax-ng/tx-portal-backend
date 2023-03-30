@@ -19,6 +19,7 @@
  ********************************************************************************/
 
 using System.Net;
+using Microsoft.EntityFrameworkCore.Storage;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Mailing.SendMail;
 using Org.Eclipse.TractusX.Portal.Backend.Notifications.Library;
@@ -431,6 +432,8 @@ public class OfferSetupServiceTests
         var offerId = Guid.NewGuid();
         var clients = new List<IamClient>();
         var appInstances = new List<AppInstance>();
+        A.CallTo(() => _appInstanceRepository.CheckInstanceExistsForOffer(offerId))
+            .ReturnsLazily(() => true);
         A.CallTo(() => _clientRepository.CreateClient(A<string>._))
             .Invokes((string clientName) =>
             {
@@ -455,6 +458,23 @@ public class OfferSetupServiceTests
         clients.Should().ContainSingle();
     }
     
+    [Fact]
+    public async Task SetupSingleInstance_WithExistingAppInstance_ThrowsConflictException()
+    {
+        // Arrange
+        SetupServices();
+        var offerId = Guid.NewGuid();
+        A.CallTo(() => _appInstanceRepository.CheckInstanceExistsForOffer(offerId))
+            .ReturnsLazily(() => false);
+
+        // Act
+        async Task Act() => await _sut.SetupSingleInstance(offerId, "https://base-address.com").ConfigureAwait(false);
+        
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be($"The app instance for offer {offerId} already exist");
+    }
+
     #endregion
     
     #region UpdateSingleInstance
@@ -478,12 +498,15 @@ public class OfferSetupServiceTests
     #region DeleteSingleInstance
     
     [Fact]
-    public async Task DeleteSingleInstance_CallsExpected()
+    public async Task DeleteSingleInstance_WithExistingServiceAccountsAssigned_CallsExpected()
     {
         // Arrange
         var appInstanceId = Guid.NewGuid();
         var clientId = Guid.NewGuid();
         var clientClientId = Guid.NewGuid().ToString();
+        var serviceAccountId = Guid.NewGuid();
+        A.CallTo(() => _appInstanceRepository.GetAssignedServiceAccounts(appInstanceId))
+            .ReturnsLazily(() => new List<Guid>{serviceAccountId});
 
         // Act
         await _sut.DeleteSingleInstance(appInstanceId, clientId, clientClientId).ConfigureAwait(false);
@@ -492,8 +515,31 @@ public class OfferSetupServiceTests
         A.CallTo(() => _provisioningManager.DeleteCentralClientAsync(clientClientId)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _clientRepository.RemoveClient(clientId)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _appInstanceRepository.RemoveAppInstance(appInstanceId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _appInstanceRepository.RemoveAppInstanceAssignedServiceAccounts(appInstanceId, A<IEnumerable<Guid>>.That.Matches(x => x.Count() == 1 && x.Single() == serviceAccountId)))
+            .MustHaveHappenedOnceExactly();
     }
-    
+
+    [Fact]
+    public async Task DeleteSingleInstance_WithNonExistingServiceAccounts_CallsExpected()
+    {
+        // Arrange
+        var appInstanceId = Guid.NewGuid();
+        var clientId = Guid.NewGuid();
+        var clientClientId = Guid.NewGuid().ToString();
+        A.CallTo(() => _appInstanceRepository.GetAssignedServiceAccounts(appInstanceId))
+            .ReturnsLazily(() => new List<Guid>());
+
+        // Act
+        await _sut.DeleteSingleInstance(appInstanceId, clientId, clientClientId).ConfigureAwait(false);
+        
+        // Assert
+        A.CallTo(() => _provisioningManager.DeleteCentralClientAsync(clientClientId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _clientRepository.RemoveClient(clientId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _appInstanceRepository.RemoveAppInstance(appInstanceId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _appInstanceRepository.RemoveAppInstanceAssignedServiceAccounts(appInstanceId, A<IEnumerable<Guid>>._))
+            .MustNotHaveHappened();
+    }
+
     #endregion
     
     #region Setup

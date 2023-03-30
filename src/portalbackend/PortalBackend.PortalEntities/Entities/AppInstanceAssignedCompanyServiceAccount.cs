@@ -27,6 +27,7 @@ public class AppInstanceAssignedCompanyServiceAccount
     }
 
     public AppInstanceAssignedCompanyServiceAccount(Guid appInstanceId, Guid companyServiceAccountId)
+        :this()
     {
         AppInstanceId = appInstanceId;
         CompanyServiceAccountId = companyServiceAccountId;

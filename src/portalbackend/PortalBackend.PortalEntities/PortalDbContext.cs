@@ -52,7 +52,7 @@ public class PortalDbContext : DbContext
     public virtual DbSet<AgreementCategory> AgreementCategories { get; set; } = default!;
     public virtual DbSet<AppInstance> AppInstances { get; set; } = default!;
     
-    public virtual DbSet<AppInstanceAssignedCompanyServiceAccount> AppInstancesAssignedServiceAccounts { get; set; } = default!;
+    public virtual DbSet<AppInstanceAssignedCompanyServiceAccount> AppInstanceAssignedServiceAccounts { get; set; } = default!;
     public virtual DbSet<AppInstanceSetup> AppInstanceSetups { get; set; } = default!;
     public virtual DbSet<AppAssignedUseCase> AppAssignedUseCases { get; set; } = default!;
     public virtual DbSet<AppLanguage> AppLanguages { get; set; } = default!;

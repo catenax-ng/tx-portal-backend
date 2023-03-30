@@ -18,6 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Microsoft.EntityFrameworkCore;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 
@@ -47,8 +48,23 @@ public class AppInstanceRepository : IAppInstanceRepository
     /// <inheritdoc />
     public void CreateAppInstanceAssignedServiceAccounts(
         IEnumerable<(Guid AppInstanceId, Guid CompanyServiceAccountId)> instanceAccounts) =>
-        _portalDbContext.AppInstancesAssignedServiceAccounts.AddRange(instanceAccounts
+        _portalDbContext.AppInstanceAssignedServiceAccounts.AddRange(instanceAccounts
             .Select(x => new AppInstanceAssignedCompanyServiceAccount(
                 x.AppInstanceId,
                 x.CompanyServiceAccountId)));
+
+    /// <inheritdoc />
+    public Task<bool> CheckInstanceExistsForOffer(Guid offerId) =>
+        _portalDbContext.AppInstances.AnyAsync(ai => ai.AppId == offerId);
+
+    public Task<List<Guid>> GetAssignedServiceAccounts(Guid appInstanceId) =>
+        _portalDbContext.AppInstanceAssignedServiceAccounts
+            .Where(x => x.AppInstanceId == appInstanceId)
+            .Select(x => x.CompanyServiceAccountId)
+            .ToListAsync();
+    
+    /// <inheritdoc />
+    public void RemoveAppInstanceAssignedServiceAccounts(Guid appInstanceId, IEnumerable<Guid> serviceAccountIds) => 
+        _portalDbContext.AppInstanceAssignedServiceAccounts
+            .RemoveRange(serviceAccountIds.Select(x => new AppInstanceAssignedCompanyServiceAccount(appInstanceId, x)));
 }

@@ -162,6 +162,13 @@ public class OfferSetupService : IOfferSetupService
     /// <inheritdoc />
     public async Task SetupSingleInstance(Guid offerId, string instanceUrl)
     {
+        if(!await _portalRepositories.GetInstance<IAppInstanceRepository>()
+               .CheckInstanceExistsForOffer(offerId)
+               .ConfigureAwait(false))
+        {
+            throw new ConflictException($"The app instance for offer {offerId} already exist");
+        }
+
         var userRolesRepository = _portalRepositories.GetInstance<IUserRolesRepository>();
         var (_, iamClientId) = await CreateClient(instanceUrl, offerId, false, userRolesRepository);
         _portalRepositories.GetInstance<IAppInstanceRepository>().CreateAppInstance(offerId, iamClientId);
@@ -172,8 +179,15 @@ public class OfferSetupService : IOfferSetupService
     {
         await _provisioningManager.DeleteCentralClientAsync(clientClientId)
             .ConfigureAwait(false);
+
         _portalRepositories.GetInstance<IClientRepository>().RemoveClient(clientId);
-        _portalRepositories.GetInstance<IAppInstanceRepository>().RemoveAppInstance(appInstanceId);
+        var appInstanceRepository = _portalRepositories.GetInstance<IAppInstanceRepository>();
+        var serviceAccountIds = await appInstanceRepository.GetAssignedServiceAccounts(appInstanceId).ConfigureAwait(false);
+        if (serviceAccountIds.Any())
+        {
+            appInstanceRepository.RemoveAppInstanceAssignedServiceAccounts(appInstanceId, serviceAccountIds);
+        }
+        appInstanceRepository.RemoveAppInstance(appInstanceId);
     }
 
     public async Task<IEnumerable<string?>> ActivateSingleInstanceAppAsync(Guid offerId)

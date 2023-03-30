@@ -19,13 +19,10 @@
  ********************************************************************************/
 
 using Microsoft.EntityFrameworkCore;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Tests.Setup;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
-using System.Collections.Immutable;
 using Xunit.Extensions.AssemblyFixture;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Tests;
@@ -94,6 +91,82 @@ public class AppInstanceRepositoryTests : IAssemblyFixture<TestDbFixture>
 
     #endregion
 
+    #region CheckInstanceExistsForOffer
+
+    [Fact]
+    public async Task CheckInstanceExistsForOffer_WithExistingAppInstance_ReturnsTrue()
+    {
+        var offerId = new Guid("ac1cf001-7fbc-1f2f-817f-bce0572c0007");
+        var sut = await CreateSut().ConfigureAwait(false);
+
+        var result = await sut.CheckInstanceExistsForOffer(offerId).ConfigureAwait(false);
+
+        result.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task CheckInstanceExistsForOffer_WithoutExisting_ReturnsFalse()
+    {
+        var sut = await CreateSut().ConfigureAwait(false);
+
+        var result = await sut.CheckInstanceExistsForOffer(Guid.NewGuid()).ConfigureAwait(false);
+
+        result.Should().BeFalse();
+    }
+
+    #endregion
+    
+    #region GetAssignedServiceAccounts
+
+    [Fact]
+    public async Task GetAssignedServiceAccounts_WithExistingAppInstance_ReturnsExpected()
+    {
+        var instanceId = new Guid("ab25c218-9ab3-4f1a-b6f4-6394fbc33c5a");
+        var sut = await CreateSut().ConfigureAwait(false);
+
+        var result = await sut.GetAssignedServiceAccounts(instanceId).ConfigureAwait(false);
+
+        result.Should().HaveCount(1);
+        result.Should().ContainSingle().Which.Should().Be(new Guid("7e85a0b8-0001-ab67-10d1-0ef508201006"));
+    }
+
+    [Fact]
+    public async Task GetAssignedServiceAccounts_WithoutExisting_ReturnsEmpty()
+    {
+        var sut = await CreateSut().ConfigureAwait(false);
+
+        var result = await sut.GetAssignedServiceAccounts(Guid.NewGuid()).ConfigureAwait(false);
+
+        result.Should().BeEmpty();
+    }
+
+    #endregion
+
+    #region RemoveAppInstance
+
+    [Fact]
+
+    public async Task RemoveAppInstanceAssignedServiceAccounts_Success()
+    {
+        var appInstanceId = new Guid("ab25c218-9ab3-4f1a-b6f4-6394fbc33c5a");
+        var serviceAccountId = new Guid("7e85a0b8-0001-ab67-10d1-0ef508201006");
+        var (sut, context) = await CreateSutWithContext().ConfigureAwait(false);
+
+        sut.RemoveAppInstanceAssignedServiceAccounts(appInstanceId, Enumerable.Repeat(serviceAccountId, 1));
+
+        // Assert
+        var changeTracker = context.ChangeTracker;
+        var changedEntries = changeTracker.Entries().ToList();
+        changeTracker.HasChanges().Should().BeTrue();
+        changedEntries.Should().NotBeEmpty();
+        changedEntries.Should().HaveCount(1);
+        var entry = changedEntries.Single();
+        entry.Entity.Should().BeOfType<AppInstanceAssignedCompanyServiceAccount>();
+        entry.State.Should().Be(EntityState.Deleted);
+    }
+
+    #endregion
+
     #region Setup
     
     private async Task<(AppInstanceRepository repo, PortalDbContext context)> CreateSutWithContext()
@@ -101,6 +174,13 @@ public class AppInstanceRepositoryTests : IAssemblyFixture<TestDbFixture>
         var context = await _dbTestDbFixture.GetPortalDbContext().ConfigureAwait(false);
         var sut = new AppInstanceRepository(context);
         return (sut, context);
+    }
+
+    private async Task<AppInstanceRepository> CreateSut()
+    {
+        var context = await _dbTestDbFixture.GetPortalDbContext().ConfigureAwait(false);
+        var sut = new AppInstanceRepository(context);
+        return sut;
     }
 
     #endregion
