@@ -248,7 +248,7 @@ public class CompanyRepository : ICompanyRepository
                 x.IsActive,
                 x.Company!.Id,
                 x.IsActive
-                    ? x.Company.CompanyRoles.Select(companyRole => companyRole.Id)
+                    ? x.Company.CompanyRoles.Where(companyRole => companyRoleIds.Contains(companyRole.Id)).Select(companyRole => companyRole.Id)
                     : null,
                 x.User.Id,
                 x.IsActive
@@ -262,11 +262,12 @@ public class CompanyRepository : ICompanyRepository
             .SingleOrDefaultAsync();
 
     /// <inheritdoc />
-    public IAsyncEnumerable<(Guid agreemantId, CompanyRoleId agreementAssignedRole)> GetAgreementAssignedRolesDataAsync (IEnumerable<CompanyRoleId> companyRoleIds) =>
-        _context.CompanyRoles
-        .SelectMany(companyRole => companyRole.AgreementAssignedCompanyRoles.Where(x => companyRoleIds.Contains(x.CompanyRoleId)))
-        .Select(aacr => new ValueTuple<Guid,CompanyRoleId>(
-            aacr.AgreementId,
-            aacr.CompanyRoleId
-        )).AsAsyncEnumerable();
+    public IAsyncEnumerable<(Guid AgreementId, CompanyRoleId CompanyRoleId)> GetAgreementAssignedRolesDataAsync (IEnumerable<CompanyRoleId> companyRoleIds) =>
+        _context.AgreementAssignedCompanyRoles
+            .Where(assigned => companyRoleIds.Contains(assigned.CompanyRoleId))
+            .OrderBy(assigned => assigned.CompanyRoleId)
+            .Select(assigned => new ValueTuple<Guid,CompanyRoleId>(
+                assigned.AgreementId,
+                assigned.CompanyRoleId))
+            .AsAsyncEnumerable();
 }

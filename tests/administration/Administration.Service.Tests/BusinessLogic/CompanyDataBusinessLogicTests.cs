@@ -146,41 +146,53 @@ public class CompanyDataBusinessLogicTests
         var companyUserId = _fixture.Create<Guid>();
         var agreementId1 = _fixture.Create<Guid>();
         var agreementId2 = _fixture.Create<Guid>();
-        var companyRole = new [] { CompanyRoleId.OPERATOR, CompanyRoleId.SERVICE_PROVIDER};
+        var agreementId3 = _fixture.Create<Guid>();
+        var agreementId4 = _fixture.Create<Guid>();
+        var agreementId5 = _fixture.Create<Guid>();
+        
+        var utcNow = DateTimeOffset.UtcNow;
 
-        var consentStatusDetails = new []{
-            new ConsentStatusDetails(_fixture.Create<Guid>(),agreementId1,ConsentStatusId.INACTIVE)
+        var consentStatusDetails = new ConsentStatusDetails[] {
+            new (_fixture.Create<Guid>(), agreementId1, ConsentStatusId.INACTIVE),
+            new (_fixture.Create<Guid>(), agreementId5, ConsentStatusId.ACTIVE),
         };
-        var companyRoleConsentDetails = new []{
-            new CompanyRoleConsentDetails( CompanyRoleId.ACTIVE_PARTICIPANT,
-                new []{new ConsentDetails(agreementId1, ConsentStatusId.ACTIVE)}),
-            
-            new CompanyRoleConsentDetails( CompanyRoleId.APP_PROVIDER,
-                new []{new ConsentDetails(agreementId2, ConsentStatusId.ACTIVE)})
+        var companyRoleConsentDetails = new CompanyRoleConsentDetails[] {
+            new (CompanyRoleId.ACTIVE_PARTICIPANT,
+                new ConsentDetails[] {
+                    new (agreementId1, ConsentStatusId.ACTIVE),
+                    new (agreementId2, ConsentStatusId.ACTIVE),
+                    new (agreementId3, ConsentStatusId.ACTIVE),
+                }),
+            new (CompanyRoleId.APP_PROVIDER,
+                new ConsentDetails[] {
+                    new (agreementId3, ConsentStatusId.ACTIVE),
+                    new (agreementId4, ConsentStatusId.ACTIVE),
+                    new (agreementId5, ConsentStatusId.ACTIVE),
+                }),
         };
-        var data = companyRoleConsentDetails.Select(x => x.CompanyRole);
 
         var agreementData = new (Guid, CompanyRoleId)[]{
             new (agreementId1, CompanyRoleId.ACTIVE_PARTICIPANT),
-            new (agreementId2, CompanyRoleId.APP_PROVIDER),
-            new (_fixture.Create<Guid>(), CompanyRoleId.APP_PROVIDER),
-            new (_fixture.Create<Guid>(), CompanyRoleId.APP_PROVIDER),
-            new (_fixture.Create<Guid>(), CompanyRoleId.SERVICE_PROVIDER),
-            new (_fixture.Create<Guid>(), CompanyRoleId.SERVICE_PROVIDER),
-            new (agreementId1, CompanyRoleId.OPERATOR)
-
+            new (agreementId2, CompanyRoleId.ACTIVE_PARTICIPANT),
+            new (agreementId3, CompanyRoleId.ACTIVE_PARTICIPANT),
+            new (agreementId3, CompanyRoleId.APP_PROVIDER),
+            new (agreementId4, CompanyRoleId.APP_PROVIDER),
+            new (agreementId5, CompanyRoleId.APP_PROVIDER),
         }.ToAsyncEnumerable();
 
         A.CallTo(() => _companyRepository.GetCompanyRolesDataAsync(IamUserId, A<IEnumerable<CompanyRoleId>>._))
-            .Returns((true, companyId, companyRole, companyUserId, consentStatusDetails));
+            .Returns((true, companyId, Enumerable.Empty<CompanyRoleId>(), companyUserId, consentStatusDetails));
         
         A.CallTo(() => _companyRepository.GetAgreementAssignedRolesDataAsync(A<IEnumerable<CompanyRoleId>>._))
             .Returns(agreementData);
         
         A.CallTo(() => _consentRepository.AddAttachAndModifyConsents(A<IEnumerable<ConsentStatusDetails>>._,A<IEnumerable<(Guid, ConsentStatusId)>>._,A<Guid>._,A<Guid>._,A<DateTimeOffset>._))
             .Returns(new Consent[] {
-                new(_fixture.Create<Guid>(), agreementId1, companyId, companyUserId, ConsentStatusId.INACTIVE, DateTimeOffset.UtcNow),
-                new(_fixture.Create<Guid>(), agreementId2, companyId, companyUserId, ConsentStatusId.ACTIVE, DateTimeOffset.UtcNow)
+                new(_fixture.Create<Guid>(), agreementId1, companyId, companyUserId, ConsentStatusId.ACTIVE, utcNow),
+                new(_fixture.Create<Guid>(), agreementId2, companyId, companyUserId, ConsentStatusId.ACTIVE, utcNow),
+                new(_fixture.Create<Guid>(), agreementId3, companyId, companyUserId, ConsentStatusId.ACTIVE, utcNow),
+                new(_fixture.Create<Guid>(), agreementId4, companyId, companyUserId, ConsentStatusId.ACTIVE, utcNow),
+                new(_fixture.Create<Guid>(), agreementId5, companyId, companyUserId, ConsentStatusId.ACTIVE, utcNow)
             });
 
         var sut = new CompanyDataBusinessLogic(_portalRepositories);
@@ -189,9 +201,28 @@ public class CompanyDataBusinessLogicTests
         await sut.CreateCompanyRoleAndConsentAgreementDetailsAsync(IamUserId,companyRoleConsentDetails).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() => _companyRolesRepository.CreateCompanyAssignedRole(companyId, A<CompanyRoleId>._)).MustHaveHappenedTwiceExactly();
-        A.CallTo(() => _consentRepository.AddAttachAndModifyConsents( A<IEnumerable<ConsentStatusDetails>>._,
-            A<IEnumerable<(Guid, ConsentStatusId)>>._, A<Guid>._, A<Guid>._, A<DateTimeOffset>._)).MustHaveHappenedTwiceExactly();
+        A.CallTo(() => _companyRolesRepository.CreateCompanyAssignedRoles(
+                companyId,
+                A<IEnumerable<CompanyRoleId>>.That.Matches(x =>
+                    x.Count() == 2 &&
+                    x.Contains(CompanyRoleId.ACTIVE_PARTICIPANT) &&
+                    x.Contains(CompanyRoleId.APP_PROVIDER))))
+            .MustHaveHappenedOnceExactly();
+
+        A.CallTo(() => _consentRepository.AddAttachAndModifyConsents(
+                consentStatusDetails,
+                A<IEnumerable<(Guid, ConsentStatusId)>>.That.Matches(x =>
+                    x.Count() == 5 &&
+                    x.Contains(new (agreementId1, ConsentStatusId.ACTIVE)) &&
+                    x.Contains(new (agreementId2, ConsentStatusId.ACTIVE)) &&
+                    x.Contains(new (agreementId3, ConsentStatusId.ACTIVE)) &&
+                    x.Contains(new (agreementId4, ConsentStatusId.ACTIVE)) &&
+                    x.Contains(new (agreementId5, ConsentStatusId.ACTIVE))),
+                companyId,
+                companyUserId,
+                A<DateTimeOffset>._))
+            .MustHaveHappenedOnceExactly();
+
         A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
     }
 
@@ -217,28 +248,49 @@ public class CompanyDataBusinessLogicTests
     }
 
     [Fact]
-    public async Task CreateCompanyRoleAndConsentAgreementDetailsAsync_AgreementAssignedRole_ThrowsControllerArgumentException()
+    public async Task CreateCompanyRoleAndConsentAgreementDetailsAsync_MissingAgreementAssignedRole_ThrowsControllerArgumentException()
     {
+        // Arrange
         // Arrange
         var companyId = _fixture.Create<Guid>();
         var companyUserId = _fixture.Create<Guid>();
-        var companyRole = new [] { CompanyRoleId.OPERATOR, CompanyRoleId.SERVICE_PROVIDER};
-        var companyRoleConsentDetails = new []{
-            new CompanyRoleConsentDetails( CompanyRoleId.ACTIVE_PARTICIPANT,
-                new []{ new ConsentDetails(_fixture.Create<Guid>(), ConsentStatusId.ACTIVE) })};
+        var agreementId1 = _fixture.Create<Guid>();
+        var agreementId2 = _fixture.Create<Guid>();
+        var agreementId3 = _fixture.Create<Guid>();
+        var agreementId4 = _fixture.Create<Guid>();
+        var agreementId5 = _fixture.Create<Guid>();
+        
+        var utcNow = DateTimeOffset.UtcNow;
 
-        var consentStatusDetails = new []{
-            new ConsentStatusDetails(_fixture.Create<Guid>(),_fixture.Create<Guid>(),ConsentStatusId.ACTIVE)
+        var consentStatusDetails = new ConsentStatusDetails[] {
+            new (_fixture.Create<Guid>(), agreementId1, ConsentStatusId.INACTIVE),
+            new (_fixture.Create<Guid>(), agreementId5, ConsentStatusId.ACTIVE),
+        };
+        var companyRoleConsentDetails = new CompanyRoleConsentDetails[] {
+            new (CompanyRoleId.ACTIVE_PARTICIPANT,
+                new ConsentDetails[] {
+                    new (agreementId1, ConsentStatusId.ACTIVE),
+                    new (agreementId2, ConsentStatusId.INACTIVE),
+                }),
+            new (CompanyRoleId.APP_PROVIDER,
+                new ConsentDetails[] {
+                    new (agreementId4, ConsentStatusId.ACTIVE),
+                    new (agreementId5, ConsentStatusId.ACTIVE),
+                }),
         };
 
         var agreementData = new (Guid, CompanyRoleId)[]{
-            new (_fixture.Create<Guid>(), CompanyRoleId.SERVICE_PROVIDER),
-            new (_fixture.Create<Guid>(), CompanyRoleId.OPERATOR),
+            new (agreementId1, CompanyRoleId.ACTIVE_PARTICIPANT),
+            new (agreementId2, CompanyRoleId.ACTIVE_PARTICIPANT),
+            new (agreementId3, CompanyRoleId.ACTIVE_PARTICIPANT),
+            new (agreementId3, CompanyRoleId.APP_PROVIDER),
+            new (agreementId4, CompanyRoleId.APP_PROVIDER),
+            new (agreementId5, CompanyRoleId.APP_PROVIDER),
         }.ToAsyncEnumerable();
 
-        A.CallTo(() => _companyRepository.GetCompanyRolesDataAsync(IamUserId,A<IEnumerable<CompanyRoleId>>._))
-            .Returns((true, companyId, companyRole, companyUserId, consentStatusDetails));
-
+        A.CallTo(() => _companyRepository.GetCompanyRolesDataAsync(IamUserId, A<IEnumerable<CompanyRoleId>>._))
+            .Returns((true, companyId, Enumerable.Empty<CompanyRoleId>(), companyUserId, consentStatusDetails));
+        
         A.CallTo(() => _companyRepository.GetAgreementAssignedRolesDataAsync(A<IEnumerable<CompanyRoleId>>._))
             .Returns(agreementData);
         
@@ -249,35 +301,58 @@ public class CompanyDataBusinessLogicTests
 
         // Assert
         var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Act);
-        ex.Message.Should().Be("All agreement need to get signed");
+        ex.Message.Should().Be($"All agreements need to get signed. Missing active consents: [ACTIVE_PARTICIPANT: [{agreementId2}, {agreementId3}], APP_PROVIDER: [{agreementId3}]]");
     }
 
     [Fact]
-    public async Task CreateCompanyRoleAndConsentAgreementDetailsAsync_ConsentStatus_ThrowsConflictException()
+    public async Task CreateCompanyRoleAndConsentAgreementDetailsAsync_ExtraAgreementAssignedRole_ThrowsControllerArgumentException()
     {
         // Arrange
+        // Arrange
         var companyId = _fixture.Create<Guid>();
-        var agreementId = _fixture.Create<Guid>();
         var companyUserId = _fixture.Create<Guid>();
-        var companyRole = new [] { CompanyRoleId.OPERATOR, CompanyRoleId.SERVICE_PROVIDER};
-        var agreementAssignedRole = new []{ CompanyRoleId.APP_PROVIDER };
-        var companyRoleConsentDetails = new []{
-            new CompanyRoleConsentDetails( CompanyRoleId.APP_PROVIDER,
-                new []{ new ConsentDetails(_fixture.Create<Guid>(), ConsentStatusId.INACTIVE) })};
+        var agreementId1 = _fixture.Create<Guid>();
+        var agreementId2 = _fixture.Create<Guid>();
+        var agreementId3 = _fixture.Create<Guid>();
+        var agreementId4 = _fixture.Create<Guid>();
+        var agreementId5 = _fixture.Create<Guid>();
+        
+        var utcNow = DateTimeOffset.UtcNow;
 
-        var consentStatusDetails = new []{
-            new ConsentStatusDetails(_fixture.Create<Guid>(),_fixture.Create<Guid>(),ConsentStatusId.ACTIVE)
+        var consentStatusDetails = new ConsentStatusDetails[] {
+            new (_fixture.Create<Guid>(), agreementId1, ConsentStatusId.INACTIVE),
+            new (_fixture.Create<Guid>(), agreementId5, ConsentStatusId.ACTIVE),
+        };
+        var companyRoleConsentDetails = new CompanyRoleConsentDetails[] {
+            new (CompanyRoleId.ACTIVE_PARTICIPANT,
+                new ConsentDetails[] {
+                    new (agreementId1, ConsentStatusId.ACTIVE),
+                    new (agreementId2, ConsentStatusId.ACTIVE),
+                    new (agreementId3, ConsentStatusId.ACTIVE),
+                    new (agreementId4, ConsentStatusId.ACTIVE),
+                }),
+            new (CompanyRoleId.APP_PROVIDER,
+                new ConsentDetails[] {
+                    new (agreementId1, ConsentStatusId.INACTIVE),
+                    new (agreementId2, ConsentStatusId.INACTIVE),
+                    new (agreementId3, ConsentStatusId.ACTIVE),
+                    new (agreementId4, ConsentStatusId.ACTIVE),
+                    new (agreementId5, ConsentStatusId.ACTIVE),
+                }),
         };
 
-        var agreementData = new (Guid,CompanyRoleId)[]{
-            new (agreementId, CompanyRoleId.SERVICE_PROVIDER),
-            new (_fixture.Create<Guid>(), CompanyRoleId.OPERATOR),
-            new (agreementId, CompanyRoleId.APP_PROVIDER)
+        var agreementData = new (Guid, CompanyRoleId)[]{
+            new (agreementId1, CompanyRoleId.ACTIVE_PARTICIPANT),
+            new (agreementId2, CompanyRoleId.ACTIVE_PARTICIPANT),
+            new (agreementId3, CompanyRoleId.ACTIVE_PARTICIPANT),
+            new (agreementId3, CompanyRoleId.APP_PROVIDER),
+            new (agreementId4, CompanyRoleId.APP_PROVIDER),
+            new (agreementId5, CompanyRoleId.APP_PROVIDER),
         }.ToAsyncEnumerable();
 
-        A.CallTo(() => _companyRepository.GetCompanyRolesDataAsync(IamUserId,A<IEnumerable<CompanyRoleId>>._))
-            .Returns((true, companyId, companyRole, companyUserId, consentStatusDetails));
-
+        A.CallTo(() => _companyRepository.GetCompanyRolesDataAsync(IamUserId, A<IEnumerable<CompanyRoleId>>._))
+            .Returns((true, companyId, Enumerable.Empty<CompanyRoleId>(), companyUserId, consentStatusDetails));
+        
         A.CallTo(() => _companyRepository.GetAgreementAssignedRolesDataAsync(A<IEnumerable<CompanyRoleId>>._))
             .Returns(agreementData);
         
@@ -288,35 +363,23 @@ public class CompanyDataBusinessLogicTests
 
         // Assert
         var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Act);
-        ex.Message.Should().Be("All agreement need to get signed");
+        ex.Message.Should().Be($"Agreements not associated with requested companyRoles: [ACTIVE_PARTICIPANT: [{agreementId4}], APP_PROVIDER: [{agreementId1}, {agreementId2}]]");
     }
 
     [Fact]
     public async Task CreateCompanyRoleAndConsentAgreementDetailsAsync_CompanyRoleId_ThrowsConflictException()
     {
         // Arrange
+        // Arrange
         var companyId = _fixture.Create<Guid>();
         var companyUserId = _fixture.Create<Guid>();
-        var agreementId = _fixture.Create<Guid>();
-        var companyRole = new [] { CompanyRoleId.APP_PROVIDER, CompanyRoleId.ACTIVE_PARTICIPANT};
-        var companyRoleConsentDetails = new []{
-            new CompanyRoleConsentDetails( CompanyRoleId.APP_PROVIDER,
-                new []{ new ConsentDetails(agreementId, ConsentStatusId.ACTIVE) })};
 
-        var consentStatusDetails = new []{
-            new ConsentStatusDetails(_fixture.Create<Guid>(),_fixture.Create<Guid>(),ConsentStatusId.ACTIVE)
-        };
-        var agreementData = new (Guid, CompanyRoleId)[]{
-            new (_fixture.Create<Guid>(), CompanyRoleId.SERVICE_PROVIDER),
-            new (_fixture.Create<Guid>(), CompanyRoleId.OPERATOR),
-            new (agreementId, CompanyRoleId.APP_PROVIDER)
-        }.ToAsyncEnumerable();
+        var companyRoleConsentDetails = _fixture.CreateMany<CompanyRoleConsentDetails>();
+        var consentStatusDetails = _fixture.CreateMany<ConsentStatusDetails>();
+        var companyRoles = new [] { CompanyRoleId.APP_PROVIDER, CompanyRoleId.ACTIVE_PARTICIPANT };
 
         A.CallTo(() => _companyRepository.GetCompanyRolesDataAsync(IamUserId,A<IEnumerable<CompanyRoleId>>._))
-            .Returns((true, companyId, companyRole, companyUserId, consentStatusDetails));
-        
-        A.CallTo(() => _companyRepository.GetAgreementAssignedRolesDataAsync(A<IEnumerable<CompanyRoleId>>._))
-            .Returns(agreementData);
+            .Returns((true, companyId, companyRoles, companyUserId, consentStatusDetails));
         
         var sut = new CompanyDataBusinessLogic(_portalRepositories);
 
@@ -325,11 +388,11 @@ public class CompanyDataBusinessLogicTests
 
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
-        ex.Message.Should().Be("companyRole already exists");
+        ex.Message.Should().Be($"companyRoles [APP_PROVIDER, ACTIVE_PARTICIPANT] are already assigned to company {companyId}");
     }
 
     [Fact]
-    public async Task CreateCompanyRoleAndConsentAgreementDetailsAsync_ThrowsNotFoundException()
+    public async Task CreateCompanyRoleAndConsentAgreementDetailsAsync_ThrowsForbiddenException()
     {
         // Arrange
         var companyRoleConsentDetails = _fixture.CreateMany<CompanyRoleConsentDetails>(2);
@@ -342,7 +405,7 @@ public class CompanyDataBusinessLogicTests
         async Task Act() => await sut.CreateCompanyRoleAndConsentAgreementDetailsAsync(IamUserId,companyRoleConsentDetails).ConfigureAwait(false);
 
         // Assert
-        var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
+        var ex = await Assert.ThrowsAsync<ForbiddenException>(Act);
         ex.Message.Should().Be($"user {IamUserId} is not associated with any company");
     }
 
@@ -361,27 +424,16 @@ public class CompanyDataBusinessLogicTests
 
         // Assert
         var ex = await Assert.ThrowsAsync<UnexpectedConditionException>(Act);
-        ex.Message.Should().Be($"none of AgreementAssignedRoles, CompanyRoleIds, ConsentStatusDetails should ever be null here");
+        ex.Message.Should().Be($"neither CompanyRoleIds nor ConsentStatusDetails should ever be null here");
     }
 
     [Fact]
     public async Task CreateCompanyRoleAndConsentAgreementDetailsAsync_AgreementAssignedrole_ThrowsUnexpectedConditionException()
     {
         // Arrange
-        var companyRoleConsentDetails = new []{
-            new CompanyRoleConsentDetails( CompanyRoleId.APP_PROVIDER,
-                new []{ new ConsentDetails(_fixture.Create<Guid>(), ConsentStatusId.INACTIVE) })};
-        var companyRole = new []{CompanyRoleId.ACTIVE_PARTICIPANT, CompanyRoleId.SERVICE_PROVIDER};
-        var consentStatusDetails = new []{
-            new ConsentStatusDetails(_fixture.Create<Guid>(),_fixture.Create<Guid>(),ConsentStatusId.ACTIVE)
-        };
-        var agreementAssignedRole = _fixture.CreateMany<(Guid,CompanyRoleId)>(0).ToAsyncEnumerable();
-
+        var companyRoleConsentDetails = _fixture.CreateMany<CompanyRoleConsentDetails>(2);
         A.CallTo(() => _companyRepository.GetCompanyRolesDataAsync(IamUserId,A<IEnumerable<CompanyRoleId>>._))
-            .Returns((true, Guid.NewGuid(), companyRole, Guid.NewGuid(), consentStatusDetails));
-
-        A.CallTo(() => _companyRepository.GetAgreementAssignedRolesDataAsync(A<IEnumerable<CompanyRoleId>>._))
-            .Returns(agreementAssignedRole);
+            .Returns((true, Guid.NewGuid(), Enumerable.Empty<CompanyRoleId>(), Guid.NewGuid(), null!));
         
         var sut = new CompanyDataBusinessLogic(_portalRepositories);
 
@@ -390,7 +442,7 @@ public class CompanyDataBusinessLogicTests
 
         // Assert
         var ex = await Assert.ThrowsAsync<UnexpectedConditionException>(Act);
-        ex.Message.Should().Be($"none of AgreementAssignedRoles, CompanyRoleIds, ConsentStatusDetails should ever be null here");
+        ex.Message.Should().Be($"neither CompanyRoleIds nor ConsentStatusDetails should ever be null here");
     }
 
     #endregion
