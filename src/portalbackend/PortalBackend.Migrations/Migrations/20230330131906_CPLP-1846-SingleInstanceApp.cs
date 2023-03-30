@@ -17,7 +17,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
- 
+
 using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
@@ -29,22 +29,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropPrimaryKey(
-                name: "pk_company_assigned_use_cases",
-                schema: "portal",
-                table: "company_assigned_use_cases");
-
-            migrationBuilder.DropIndex(
-                name: "ix_company_assigned_use_cases_use_case_id",
-                schema: "portal",
-                table: "company_assigned_use_cases");
-
-            migrationBuilder.AddPrimaryKey(
-                name: "pk_company_assigned_use_cases",
-                schema: "portal",
-                table: "company_assigned_use_cases",
-                columns: new[] { "use_case_id", "company_id" });
-
             migrationBuilder.CreateTable(
                 name: "app_instance_assigned_service_accounts",
                 schema: "portal",
@@ -92,12 +76,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 });
 
             migrationBuilder.CreateIndex(
-                name: "ix_company_assigned_use_cases_company_id",
-                schema: "portal",
-                table: "company_assigned_use_cases",
-                column: "company_id");
-
-            migrationBuilder.CreateIndex(
                 name: "ix_app_instance_assigned_service_accounts_company_service_acco",
                 schema: "portal",
                 table: "app_instance_assigned_service_accounts",
@@ -120,28 +98,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
             migrationBuilder.DropTable(
                 name: "app_instance_setups",
                 schema: "portal");
-
-            migrationBuilder.DropPrimaryKey(
-                name: "pk_company_assigned_use_cases",
-                schema: "portal",
-                table: "company_assigned_use_cases");
-
-            migrationBuilder.DropIndex(
-                name: "ix_company_assigned_use_cases_company_id",
-                schema: "portal",
-                table: "company_assigned_use_cases");
-
-            migrationBuilder.AddPrimaryKey(
-                name: "pk_company_assigned_use_cases",
-                schema: "portal",
-                table: "company_assigned_use_cases",
-                columns: new[] { "company_id", "use_case_id" });
-
-            migrationBuilder.CreateIndex(
-                name: "ix_company_assigned_use_cases_use_case_id",
-                schema: "portal",
-                table: "company_assigned_use_cases",
-                column: "use_case_id");
         }
     }
 }
