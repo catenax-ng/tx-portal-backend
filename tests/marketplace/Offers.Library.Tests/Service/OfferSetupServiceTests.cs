@@ -167,7 +167,8 @@ public class OfferSetupServiceTests
     {
         // Arrange
         var offerSubscription = new OfferSubscription(Guid.NewGuid(), Guid.Empty, Guid.Empty, OfferSubscriptionStatusId.PENDING, Guid.Empty, Guid.Empty);
-        SetupAutoSetup(technicalUserRequired, offerSubscription, isSingleInstance);
+        var companyServiceAccount = new CompanyServiceAccount(Guid.NewGuid(), Guid.Empty, CompanyServiceAccountStatusId.ACTIVE, "test", "test", DateTimeOffset.UtcNow, CompanyServiceAccountTypeId.OWN);
+        SetupAutoSetup(technicalUserRequired, offerSubscription, isSingleInstance, companyServiceAccount);
         var clientId = Guid.NewGuid();
         var appInstanceId = Guid.NewGuid();
         var appSubscriptionDetailId = Guid.NewGuid();
@@ -235,6 +236,7 @@ public class OfferSetupServiceTests
             result.TechnicalUserInfo.Should().NotBeNull();
             result.TechnicalUserInfo!.TechnicalUserId.Should().Be(_technicalUserId);
             result.TechnicalUserInfo.TechnicalUserSecret.Should().Be("katze!1234");
+            companyServiceAccount.OfferSubscriptionId.Should().Be(_pendingSubscriptionId);
         }
 
         if (isSingleInstance)
@@ -574,12 +576,19 @@ public class OfferSetupServiceTests
     
     #region Setup
 
-    private void SetupServices()
+    private void SetupServices(CompanyServiceAccount? companyServiceAccount = null)
     {
         A.CallTo(() => _provisioningManager.SetupClientAsync(A<string>._, A<string>._, A<IEnumerable<string>?>._, A<bool>._))
             .ReturnsLazily(() => "cl1");
         
         A.CallTo(() => _serviceAccountCreation.CreateServiceAccountAsync(A<ServiceAccountCreationInfo>._, A<Guid>._, A<IEnumerable<string>>.That.Matches(x => x.Any(y => y == "CAXSDUMMYCATENAZZ")), CompanyServiceAccountTypeId.MANAGED, A<bool>._, A<Action<CompanyServiceAccount>?>._))
+            .Invokes((ServiceAccountCreationInfo _, Guid _, IEnumerable<string> _, CompanyServiceAccountTypeId _, bool _, Action<CompanyServiceAccount>? setOptionalParameter) =>
+            {
+                if (companyServiceAccount != null)
+                {
+                    setOptionalParameter?.Invoke(companyServiceAccount);
+                }
+            })
             .ReturnsLazily(() => new ValueTuple<string, ServiceAccountData, Guid, List<UserRoleData>>(
                 "sa2",
                 new ServiceAccountData(Guid.NewGuid().ToString(), "cl1", new ClientAuthData(IamClientAuthMethod.SECRET)
@@ -594,9 +603,9 @@ public class OfferSetupServiceTests
             .ReturnsLazily(() => Task.CompletedTask);
     }
 
-    private void SetupAutoSetup(bool technicalUserRequired = false, OfferSubscription? offerSubscription = null, bool isSingleInstance = false)
+    private void SetupAutoSetup(bool technicalUserRequired = false, OfferSubscription? offerSubscription = null, bool isSingleInstance = false, CompanyServiceAccount? companyServiceAccount = null)
     {
-        SetupServices();
+        SetupServices(companyServiceAccount);
 
         if (offerSubscription != null)
         {
