@@ -152,12 +152,12 @@ public class OfferRepository : IOfferRepository
         _context.OfferAssignedLicenses.Remove(new OfferAssignedLicense(offerId, offerLicenseId));
 
     /// <inheritdoc />
-    public void AddServiceAssignedServiceTypes(IEnumerable<(Guid serviceId, ServiceTypeId serviceTypeId, bool technicalUserNeeded)> serviceAssignedServiceTypes) =>
-        _context.ServiceDetails.AddRange(serviceAssignedServiceTypes.Select(s => new ServiceDetail(s.serviceId, s.serviceTypeId, s.technicalUserNeeded)));
+    public void AddServiceAssignedServiceTypes(IEnumerable<(Guid serviceId, ServiceTypeId serviceTypeId)> serviceAssignedServiceTypes) =>
+        _context.ServiceDetails.AddRange(serviceAssignedServiceTypes.Select(s => new ServiceDetail(s.serviceId, s.serviceTypeId)));
 
     /// <inheritdoc />
     public void RemoveServiceAssignedServiceTypes(IEnumerable<(Guid serviceId, ServiceTypeId serviceTypeId)> serviceAssignedServiceTypes) =>
-        _context.ServiceDetails.RemoveRange(serviceAssignedServiceTypes.Select(s => new ServiceDetail(s.serviceId, s.serviceTypeId, default)));
+        _context.ServiceDetails.RemoveRange(serviceAssignedServiceTypes.Select(s => new ServiceDetail(s.serviceId, s.serviceTypeId)));
 
     /// <inheritdoc />
     public OfferAssignedLicense CreateOfferAssignedLicense(Guid appId, Guid appLicenseId) =>
@@ -780,31 +780,22 @@ public class OfferRepository : IOfferRepository
     }
 
     /// <inheritdoc />
-    public Task<(bool IsSingleInstance, bool TechnicalUserNeeded, string? OfferName)> GetServiceAccountProfileData(Guid offerId) =>
+    public Task<(bool IsSingleInstance, IEnumerable<IEnumerable<UserRoleData>> ServiceAccountProfiles, string? OfferName)> GetServiceAccountProfileData(Guid offerId) =>
         _context.Offers.Where(x => x.Id == offerId)
-            .Select(o => new ValueTuple<bool, bool, string?>(
+            .Select(o => new ValueTuple<bool, IEnumerable<IEnumerable<UserRoleData>>, string?>(
                 o.AppInstanceSetup != null && o.AppInstanceSetup.IsSingleInstance,
-                o.ServiceDetails.Any(x => x.TechnicalUserNeeded),
+                o.TechnicalUserProfiles.Select(tup => tup.UserRoles.Select(ur => new UserRoleData(ur.Id, ur.Offer!.AppInstances.First().IamClient!.ClientClientId, ur.UserRoleText))),
                 o.Name
             ))
             .SingleOrDefaultAsync();
 
     /// <inheritdoc />
-    public Task<(bool IsSingleInstance, bool TechnicalUserNeeded, string? OfferName)> GetServiceAccountProfileDataForSubscription(Guid subscriptionId) =>
+    public Task<(bool IsSingleInstance, IEnumerable<IEnumerable<UserRoleData>> ServiceAccountProfiles, string? OfferName)> GetServiceAccountProfileDataForSubscription(Guid subscriptionId) =>
         _context.OfferSubscriptions.Where(x => x.Id == subscriptionId)
-            .Select(o => new ValueTuple<bool, bool, string?>(
+            .Select(o => new ValueTuple<bool, IEnumerable<IEnumerable<UserRoleData>>, string?>(
                 o.Offer!.AppInstanceSetup != null && o.Offer.AppInstanceSetup.IsSingleInstance,
-                o.Offer.ServiceDetails.Any(x => x.TechnicalUserNeeded),
+                o.Offer.TechnicalUserProfiles.Select(tup => tup.UserRoles.Select(ur => new UserRoleData(ur.Id, ur.Offer!.AppInstances.First().IamClient!.ClientClientId, ur.UserRoleText))),
                 o.Offer.Name
             ))
-            .SingleOrDefaultAsync();
-
-    /// <inheritdoc />
-    public Task<OfferProfileData?> GetOfferProfileData(Guid offerId, string iamUserId) =>
-        _context.Offers.Where(x => x.Id == offerId)
-            .Select(o => new OfferProfileData(
-                o.OfferTypeId,
-                o.OfferTypeId == OfferTypeId.SERVICE ? o.ServiceDetails.Select(sd => sd.ServiceTypeId) : new List<ServiceTypeId>(),
-                o.TechnicalUserProfiles.Select(tup => new ValueTuple<Guid, string, IEnumerable<Guid>>(tup.Id, tup.Name, tup.UserRoles.Select(ur => ur.Id)))))
             .SingleOrDefaultAsync();
 }

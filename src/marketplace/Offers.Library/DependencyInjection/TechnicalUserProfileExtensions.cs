@@ -28,10 +28,6 @@ public static class TechnicalUserProfileExtensions
 {
     public static IServiceCollection AddTechnicalUserProfile(this IServiceCollection services, IConfigurationSection section)
     {
-        services.AddOptions<TechnicalUserProfileSettings>()
-            .Bind(section)
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
         return services.AddTransient<ITechnicalUserProfileService, TechnicalUserProfileService>();
     }
 }

@@ -23,7 +23,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 
 public record OfferProfileData(
-    OfferTypeId OfferTypeId,
+    bool IsProvidingCompanyUser,
     IEnumerable<ServiceTypeId> ServiceTypeIds,
-    IEnumerable<(Guid TechnicalUserProfileId, string TechnicalUserName, IEnumerable<Guid> UserRoleIds)> ProfileData
+    IEnumerable<(Guid TechnicalUserProfileId, IEnumerable<Guid> UserRoleIds)> ProfileData
 );

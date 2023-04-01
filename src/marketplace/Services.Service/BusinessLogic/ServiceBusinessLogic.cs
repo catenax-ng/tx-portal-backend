@@ -186,6 +186,10 @@ public class ServiceBusinessLogic : IServiceBusinessLogic
     }
 
     /// <inheritdoc />
+    public Task<IEnumerable<TechnicalUserProfileInformation>> GetTechnicalUserProfilesForOffer(Guid offerId, string iamUserId) =>
+        _offerService.GetTechnicalUserProfilesForOffer(offerId, iamUserId);
+    
+    /// <inheritdoc />
     public Task UpdateTechnicalUserProfiles(Guid serviceId, IEnumerable<TechnicalUserProfileData> data, string iamUserId) =>
         _offerService.UpdateTechnicalUserProfiles(serviceId, data, iamUserId, _settings.TechnicalUserProfileClient);
 }

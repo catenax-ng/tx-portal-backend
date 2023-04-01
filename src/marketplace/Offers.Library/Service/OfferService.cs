@@ -231,7 +231,7 @@ public class OfferService : IOfferService
         var licenseId = offerRepository.CreateOfferLicenses(data.Price).Id;
         offerRepository.CreateOfferAssignedLicense(service.Id, licenseId);
         
-        offerRepository.AddServiceAssignedServiceTypes(data.ServiceTypeIds.Select(id => (service.Id, id, id == ServiceTypeId.DATASPACE_SERVICE))); // TODO (PS): Must be refactored, customer needs to define whether the service needs a technical User
+        offerRepository.AddServiceAssignedServiceTypes(data.ServiceTypeIds.Select(id => (service.Id, id)));
         offerRepository.AddOfferDescriptions(data.Descriptions.Select(d =>
             new ValueTuple<Guid, string, string, string>(service.Id, d.LanguageCode, d.LongDescription, d.ShortDescription)));
 
@@ -749,10 +749,23 @@ public class OfferService : IOfferService
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
 
+    public async Task<IEnumerable<TechnicalUserProfileInformation>> GetTechnicalUserProfilesForOffer(Guid offerId, string iamUserId)
+    {
+        var result = await _portalRepositories.GetInstance<ITechnicalUserProfileRepository>()
+            .GetTechnicalUserProfileInformation(offerId, iamUserId).ConfigureAwait(false);
+        if (result.Any(x => !x.IsUserOfProvidingCompany))
+        {
+            throw new ForbiddenException($"User {iamUserId} is not in providing company");
+        }
+
+        return result.Select(x => x.Information);
+    }
+
     /// <inheritdoc />
     public async Task UpdateTechnicalUserProfiles(Guid offerId, IEnumerable<TechnicalUserProfileData> data, string iamUserId, string technicalUserProfileClient)
     {
-        var offerProfileData = await _portalRepositories.GetInstance<IOfferRepository>().GetOfferProfileData(offerId, iamUserId).ConfigureAwait(false);
+        var technicalUserProfileRepository = _portalRepositories.GetInstance<ITechnicalUserProfileRepository>();
+        var offerProfileData = await technicalUserProfileRepository.GetOfferProfileData(offerId, iamUserId).ConfigureAwait(false);
         var roles = await _portalRepositories.GetInstance<IUserRolesRepository>()
             .GetRolesForClient(technicalUserProfileClient)
             .ConfigureAwait(false);
@@ -762,18 +775,42 @@ public class OfferService : IOfferService
             throw new NotFoundException($"Offer {offerId} does not exist");
         }
 
+        if (offerProfileData.IsProvidingCompanyUser)
+        {
+            throw new ForbiddenException($"User {iamUserId} is not in providing company");
+        }
+
         if (offerProfileData.ServiceTypeIds.All(x => x == ServiceTypeId.CONSULTANCE_SERVICE))
         {
             throw new ConflictException("Technical User Profiles can't be set for CONSULTANCE_SERVICE");
         }
 
-        // var notExistingRoles = data.Select(ur => ur.UserRoleId).Except(roles);
-        // if (notExistingRoles.Any())
-        // {
-        //     throw new ConflictException($"Roles {string.Join(",", notExistingRoles)}");
-        // }
+        var notExistingRoles = data.SelectMany(ur => ur.UserRoleIds).Except(roles);
+        if (notExistingRoles.Any())
+        {
+            throw new ConflictException($"Roles {string.Join(",", notExistingRoles)}");
+        }
 
-        
+        var profilesToDelete = offerProfileData.ProfileData
+            .ExceptBy(data
+                    .Where(x => x.TechnicalUserProfileId != null)
+                    .Select(x => x.TechnicalUserProfileId!.Value),
+                x => x.TechnicalUserProfileId);
+        technicalUserProfileRepository.RemoveTechnicalUserProfileWithAssignedRoles(profilesToDelete);        
+        foreach (var profileData in data)
+        {
+            var technicalUserProfileId = profileData.TechnicalUserProfileId ?? Guid.Empty;
+            var isNew = profileData.TechnicalUserProfileId == null;
+            if (isNew)
+            {
+                technicalUserProfileId = technicalUserProfileRepository.CreateTechnicalUserProfiles(Guid.NewGuid(), offerId).Id;
+            }
+
+            var existingUserRoles = data.SingleOrDefault(x => x.TechnicalUserProfileId == profileData.TechnicalUserProfileId) == default ?
+                Enumerable.Empty<Guid>() : 
+                data.Single(x => x.TechnicalUserProfileId == profileData.TechnicalUserProfileId).UserRoleIds;
+            technicalUserProfileRepository.CreateDeleteTechnicalUserProfileAssignedRoles(technicalUserProfileId, existingUserRoles, profileData.UserRoleIds);
+        }
         
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }

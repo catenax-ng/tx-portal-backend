@@ -265,7 +265,7 @@ public interface IOfferRepository
     /// Adds the service types to the service
     /// </summary>
     /// <param name="serviceAssignedServiceTypes"></param>
-    void AddServiceAssignedServiceTypes(IEnumerable<(Guid serviceId, ServiceTypeId serviceTypeId, bool technicalUserNeeded)> serviceAssignedServiceTypes);
+    void AddServiceAssignedServiceTypes(IEnumerable<(Guid serviceId, ServiceTypeId serviceTypeId)> serviceAssignedServiceTypes);
 
     /// <summary>
     /// Removes <see cref="ServiceDetail"/>s to the databasethe database
@@ -489,20 +489,12 @@ public interface IOfferRepository
     /// </summary>
     /// <param name="offerId"></param>
     /// <returns></returns>
-    Task<(bool IsSingleInstance, bool TechnicalUserNeeded, string? OfferName)> GetServiceAccountProfileData(Guid offerId);
+    Task<(bool IsSingleInstance, IEnumerable<IEnumerable<UserRoleData>> ServiceAccountProfiles, string? OfferName)> GetServiceAccountProfileData(Guid offerId);
 
     /// <summary>
     /// Gets the related service account data
     /// </summary>
     /// <param name="subscriptionId"></param>
     /// <returns></returns>
-    Task<(bool IsSingleInstance, bool TechnicalUserNeeded, string? OfferName)> GetServiceAccountProfileDataForSubscription(Guid subscriptionId);
-
-    /// <summary>
-    /// Gets the profile offer data for the given offer id and user
-    /// </summary>
-    /// <param name="offerId">Id of the offer</param>
-    /// <param name="iamUserId">The iam user id</param>
-    /// <returns>Returns the offer profile data</returns>
-    Task<OfferProfileData?> GetOfferProfileData(Guid offerId, string iamUserId);
+    Task<(bool IsSingleInstance, IEnumerable<IEnumerable<UserRoleData>> ServiceAccountProfiles, string? OfferName)> GetServiceAccountProfileDataForSubscription(Guid subscriptionId);
 }

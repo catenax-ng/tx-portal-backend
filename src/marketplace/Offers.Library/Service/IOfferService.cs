@@ -219,6 +219,14 @@ public interface IOfferService
     Task DeleteDocumentsAsync(Guid documentId, string iamUserId, IEnumerable<DocumentTypeId> documentTypeIdSettings, OfferTypeId offerTypeId);
 
     /// <summary>
+    /// Get technical user profiles for a specific offer
+    /// </summary>
+    /// <param name="offerId">Id of the offer</param>
+    /// <param name="iamUserId">Id of the iam User</param>
+    /// <returns>List with the technical user profile information</returns>
+    Task<IEnumerable<TechnicalUserProfileInformation>> GetTechnicalUserProfilesForOffer(Guid offerId, string iamUserId);
+    
+    /// <summary>
     /// Creates or updates the technical user profiles
     /// </summary>
     /// <param name="offerId">Id of the service</param>

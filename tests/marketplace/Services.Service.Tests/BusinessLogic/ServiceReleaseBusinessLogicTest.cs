@@ -464,7 +464,7 @@ public class ServiceReleaseBusinessLogicTest
             .MustHaveHappenedOnceExactly();
         A.CallTo(() => _offerService.CreateOrUpdateOfferLicense(A<Guid>._, A<string>._, A<(Guid offerLicenseId, string price, bool assignedToMultipleOffers)>._))
             .MustHaveHappenedOnceExactly();
-        A.CallTo(() => _offerRepository.AddServiceAssignedServiceTypes(A<IEnumerable<(Guid serviceId, ServiceTypeId serviceTypeId, bool technicalUserNeeded)>>._))
+        A.CallTo(() => _offerRepository.AddServiceAssignedServiceTypes(A<IEnumerable<(Guid serviceId, ServiceTypeId serviceTypeId)>>._))
             .MustHaveHappenedOnceExactly();
         A.CallTo(() => _offerRepository.RemoveServiceAssignedServiceTypes(A<IEnumerable<(Guid serviceId, ServiceTypeId serviceTypeId)>>._))
             .MustHaveHappenedOnceExactly();
