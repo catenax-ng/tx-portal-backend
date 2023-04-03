@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2021, 2023 BMW Group AG
  * Copyright (c) 2021, 2023 Contributors to the Eclipse Foundation
  *
@@ -18,9 +18,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Base;
+
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 
-public class TechnicalUserProfile
+public class TechnicalUserProfile : IBaseEntity
 {
     private TechnicalUserProfile()
     {
@@ -38,7 +40,7 @@ public class TechnicalUserProfile
 
     public Guid OfferId { get; private set; }
 
-    public virtual Offer? Offer { get; set; }
+    public virtual Offer? Offer { get; private set; }
 
-    public ICollection<UserRole> UserRoles { get; set; }
+    public virtual ICollection<UserRole> UserRoles { get; private set; }
 }

@@ -18,6 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using System.Collections;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Notifications.Library;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
@@ -61,6 +62,7 @@ public class OfferServiceTests
     private readonly IDocumentRepository _documentRepository;
     private readonly OfferService _sut;
     private readonly IOfferSetupService _offerSetupService;
+    private readonly ITechnicalUserProfileRepository _technicalUserProfileRepository;
 
     public OfferServiceTests()
     {
@@ -83,6 +85,7 @@ public class OfferServiceTests
         _userRepository = A.Fake<IUserRepository>();
         _userRolesRepository = A.Fake<IUserRolesRepository>();
         _languageRepository = A.Fake<ILanguageRepository>();
+        _technicalUserProfileRepository = A.Fake<ITechnicalUserProfileRepository>();
         _notificationService = A.Fake<INotificationService>();
         _mailingService = A.Fake<IMailingService>();
         _iamUser = _fixture.Build<IamUser>()
@@ -1844,6 +1847,235 @@ public class OfferServiceTests
 
     #endregion
     
+    #region GetTechnicalUserProfileData
+
+    [Theory]
+    [InlineData(OfferTypeId.APP)]
+    [InlineData(OfferTypeId.SERVICE)]
+    public async Task GetTechnicalUserProfileData_ReturnsExpectedResult(OfferTypeId offerTypeId)
+    {
+        // Arrange
+        var offerId = _fixture.Create<Guid>();
+        var data = _fixture.CreateMany<TechnicalUserProfileInformation>(5);
+        A.CallTo(() => _technicalUserProfileRepository.GetTechnicalUserProfileInformation(offerId, _iamUserId, offerTypeId))
+            .ReturnsLazily(() => new ValueTuple<bool, IEnumerable<TechnicalUserProfileInformation>>(true, data));
+
+        // Act
+        var result = await _sut.GetTechnicalUserProfilesForOffer(offerId, _iamUserId, offerTypeId).ConfigureAwait(false);
+
+        // Assert
+        result.Should().HaveCount(5);
+        A.CallTo(() => _technicalUserProfileRepository.GetTechnicalUserProfileInformation(offerId, _iamUserId, offerTypeId)).MustHaveHappenedOnceExactly();
+    }
+
+    [Theory]
+    [InlineData(OfferTypeId.APP)]
+    [InlineData(OfferTypeId.SERVICE)]
+    public async Task GetTechnicalUserProfileData_WithoutOffer_ThrowsNotFoundException(OfferTypeId offerTypeId)
+    {
+        // Arrange
+        var offerId = _fixture.Create<Guid>();
+        var data = _fixture.CreateMany<TechnicalUserProfileInformation>(5);
+        A.CallTo(() => _technicalUserProfileRepository.GetTechnicalUserProfileInformation(offerId, _iamUserId, offerTypeId))
+            .ReturnsLazily(() => new ValueTuple<bool, IEnumerable<TechnicalUserProfileInformation>>());
+
+        // Act
+        async Task Act() => await _sut.GetTechnicalUserProfilesForOffer(offerId, _iamUserId, offerTypeId).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
+        ex.Message.Should().Be($"Offer {offerId} does not exist");
+        A.CallTo(() => _technicalUserProfileRepository.GetTechnicalUserProfileInformation(offerId, _iamUserId, offerTypeId)).MustHaveHappenedOnceExactly();
+    }
+
+    [Theory]
+    [InlineData(OfferTypeId.APP)]
+    [InlineData(OfferTypeId.SERVICE)]
+    public async Task GetTechnicalUserProfileData_WithUserNotInProvidingCompany_ThrowsForbiddenException(OfferTypeId offerTypeId)
+    {
+        // Arrange
+        var offerId = _fixture.Create<Guid>();
+        A.CallTo(() => _technicalUserProfileRepository.GetTechnicalUserProfileInformation(offerId, _iamUserId, offerTypeId))
+            .ReturnsLazily(() => new ValueTuple<bool, IEnumerable<TechnicalUserProfileInformation>>(false, new List<TechnicalUserProfileInformation>()));
+
+        // Act
+        async Task Act() => await _sut.GetTechnicalUserProfilesForOffer(offerId, _iamUserId, offerTypeId).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ForbiddenException>(Act);
+        ex.Message.Should().Be($"User {_iamUserId} is not in providing company");
+        A.CallTo(() => _technicalUserProfileRepository.GetTechnicalUserProfileInformation(offerId, _iamUserId, offerTypeId)).MustHaveHappenedOnceExactly();
+    }
+
+    #endregion
+    
+    #region UpdateTechnicalUserProfiles
+
+    [Fact]
+    public async Task UpdateTechnicalUserProfiles_ReturnsExpectedResult()
+    {
+        // Arrange
+        var offerId = _fixture.Create<Guid>();
+        var technicalUserProfile1 = _fixture.Create<Guid>();
+        var technicalUserProfile2 = _fixture.Create<Guid>();
+        var newProfileId = _fixture.Create<Guid>();
+        var userRole1Id = _fixture.Create<Guid>();
+        var userRole2Id = _fixture.Create<Guid>();
+        var data = new []
+        {
+            new TechnicalUserProfileData(null, new []
+            {
+                userRole1Id,
+                userRole2Id
+            }),
+            new TechnicalUserProfileData(technicalUserProfile1, new []
+            {
+                userRole2Id
+            }),
+        };
+        var profileData = new[]
+        {
+            new ValueTuple<Guid, IEnumerable<Guid>>(technicalUserProfile1, new[] {userRole1Id}),
+            new ValueTuple<Guid, IEnumerable<Guid>>(technicalUserProfile2, new[] {userRole1Id, userRole2Id})
+        };
+        A.CallTo(() => _technicalUserProfileRepository.GetOfferProfileData(offerId, _iamUserId))
+            .ReturnsLazily(() => new OfferProfileData(true, new [] {ServiceTypeId.DATASPACE_SERVICE}, profileData));
+        A.CallTo(() => _userRolesRepository.GetRolesForClient("cl1"))
+            .ReturnsLazily(() => new List<Guid>{ userRole1Id, userRole2Id});
+        A.CallTo(() => _technicalUserProfileRepository.CreateTechnicalUserProfiles(A<Guid>._, offerId))
+            .Returns(new TechnicalUserProfile(newProfileId, offerId));
+
+        // Act
+        await _sut.UpdateTechnicalUserProfiles(offerId, data, _iamUserId, "cl1").ConfigureAwait(false);
+
+        // Assert
+        A.CallTo(() => _technicalUserProfileRepository.RemoveTechnicalUserProfilesWithAssignedRoles(A<IEnumerable<(Guid, IEnumerable<Guid>)>>.That.Matches(x => x.Count() == 1 && x.Single().Item1 == technicalUserProfile2 && x.Single().Item2.Count() == 2)))
+            .MustHaveHappenedOnceExactly();
+        A.CallTo(() => _technicalUserProfileRepository.CreateTechnicalUserProfiles(A<Guid>._, offerId))
+            .MustHaveHappenedOnceExactly();
+        A.CallTo(() => _technicalUserProfileRepository.CreateDeleteTechnicalUserProfileAssignedRoles(newProfileId, A<IEnumerable<Guid>>.That.Matches(x => !x.Any()), A<IEnumerable<Guid>>.That.Matches(x => x.Count() == 2)))
+            .MustHaveHappenedOnceExactly();
+        A.CallTo(() => _technicalUserProfileRepository.CreateDeleteTechnicalUserProfileAssignedRoles(technicalUserProfile1, A<IEnumerable<Guid>>.That.Matches(x => x.Count() == 1 && x.Single() == userRole1Id), A<IEnumerable<Guid>>.That.Matches(x => x.Count() == 1 && x.Single() == userRole2Id)))
+            .MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task UpdateTechnicalUserProfiles_WithNotExistingRoles_ThrowsException()
+    {
+        // Arrange
+        var offerId = _fixture.Create<Guid>();
+        var missingRoleId = _fixture.Create<Guid>();
+        var userRole1Id = _fixture.Create<Guid>();
+        var userRole2Id = _fixture.Create<Guid>();
+        var data = new []
+        {
+            new TechnicalUserProfileData(null, new []
+            {
+                userRole1Id,
+                userRole2Id,
+                missingRoleId
+            }),
+        };
+        A.CallTo(() => _technicalUserProfileRepository.GetOfferProfileData(offerId, _iamUserId))
+            .ReturnsLazily(() => new OfferProfileData(true, new [] {ServiceTypeId.DATASPACE_SERVICE}, new List<(Guid TechnicalUserProfileId, IEnumerable<Guid> UserRoleIds)>()));
+        A.CallTo(() => _userRolesRepository.GetRolesForClient("cl1"))
+            .ReturnsLazily(() => new List<Guid>{ userRole1Id, userRole2Id});
+
+        // Act
+        async Task Act() => await _sut.UpdateTechnicalUserProfiles(offerId, data, _iamUserId, "cl1").ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<UnexpectedConditionException>(Act);
+        ex.Message.Should().Be($"Roles {missingRoleId} do not exist");
+    }
+
+    [Fact]
+    public async Task UpdateTechnicalUserProfiles_ForConsultancyService_ThrowsException()
+    {
+        // Arrange
+        var offerId = _fixture.Create<Guid>();
+        var userRole1Id = _fixture.Create<Guid>();
+        var userRole2Id = _fixture.Create<Guid>();
+        var data = new []
+        {
+            new TechnicalUserProfileData(null, new []
+            {
+                userRole1Id,
+                userRole2Id,
+            }),
+        };
+        A.CallTo(() => _technicalUserProfileRepository.GetOfferProfileData(offerId, _iamUserId))
+            .ReturnsLazily(() => new OfferProfileData(true, new [] {ServiceTypeId.CONSULTANCE_SERVICE}, new List<(Guid TechnicalUserProfileId, IEnumerable<Guid> UserRoleIds)>()));
+        A.CallTo(() => _userRolesRepository.GetRolesForClient("cl1"))
+            .ReturnsLazily(() => new List<Guid>{ userRole1Id, userRole2Id});
+
+        // Act
+        async Task Act() => await _sut.UpdateTechnicalUserProfiles(offerId, data, _iamUserId, "cl1").ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be("Technical User Profiles can't be set for CONSULTANCE_SERVICE");
+    }
+
+    [Fact]
+    public async Task UpdateTechnicalUserProfiles_WithUserNotInProvidingCompany_ThrowsException()
+    {
+        // Arrange
+        var offerId = _fixture.Create<Guid>();
+        var userRole1Id = _fixture.Create<Guid>();
+        var userRole2Id = _fixture.Create<Guid>();
+        var data = new []
+        {
+            new TechnicalUserProfileData(null, new []
+            {
+                userRole1Id,
+                userRole2Id,
+            }),
+        };
+        A.CallTo(() => _technicalUserProfileRepository.GetOfferProfileData(offerId, _iamUserId))
+            .ReturnsLazily(() => new OfferProfileData(false, new [] {ServiceTypeId.DATASPACE_SERVICE}, new List<(Guid TechnicalUserProfileId, IEnumerable<Guid> UserRoleIds)>()));
+        A.CallTo(() => _userRolesRepository.GetRolesForClient("cl1"))
+            .ReturnsLazily(() => new List<Guid>{ userRole1Id, userRole2Id});
+
+        // Act
+        async Task Act() => await _sut.UpdateTechnicalUserProfiles(offerId, data, _iamUserId, "cl1").ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ForbiddenException>(Act);
+        ex.Message.Should().Be($"User {_iamUserId} is not in providing company");
+    }
+
+    [Fact]
+    public async Task UpdateTechnicalUserProfiles_WithoutOffer_ThrowsException()
+    {
+        // Arrange
+        var offerId = _fixture.Create<Guid>();
+        var userRole1Id = _fixture.Create<Guid>();
+        var userRole2Id = _fixture.Create<Guid>();
+        var data = new []
+        {
+            new TechnicalUserProfileData(null, new []
+            {
+                userRole1Id,
+                userRole2Id,
+            }),
+        };
+        A.CallTo(() => _technicalUserProfileRepository.GetOfferProfileData(offerId, _iamUserId))
+            .ReturnsLazily(() => (OfferProfileData?)null);
+        A.CallTo(() => _userRolesRepository.GetRolesForClient("cl1"))
+            .ReturnsLazily(() => new List<Guid>{ userRole1Id, userRole2Id});
+
+        // Act
+        async Task Act() => await _sut.UpdateTechnicalUserProfiles(offerId, data, _iamUserId, "cl1").ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
+        ex.Message.Should().Be($"Offer {offerId} does not exist");
+    }
+
+    #endregion
+    
     #region Setup
 
     private void SetupValidateSalesManager()
@@ -1933,6 +2165,7 @@ public class OfferServiceTests
         A.CallTo(() => _portalRepositories.GetInstance<IUserRolesRepository>()).Returns(_userRolesRepository);
         A.CallTo(() => _portalRepositories.GetInstance<ILanguageRepository>()).Returns(_languageRepository);
         A.CallTo(() => _portalRepositories.GetInstance<IDocumentRepository>()).Returns(_documentRepository);
+        A.CallTo(() => _portalRepositories.GetInstance<ITechnicalUserProfileRepository>()).Returns(_technicalUserProfileRepository);
         _fixture.Inject(_portalRepositories);
     }
 

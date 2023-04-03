@@ -237,10 +237,10 @@ public class ServicesController : ControllerBase
         this.WithIamUserId(iamUserId => _serviceBusinessLogic.GetTechnicalUserProfilesForOffer(serviceId, iamUserId));
 
     /// <summary>
-    /// Retrieve the technical user profile information
+    /// Creates and updates the technical user profiles
     /// </summary>
     /// <param name="serviceId">id of the service to receive the technical user profiles for</param>
-    /// <param name="data">Technical user profiles</param>
+    /// <param name="data">The data for the update of the technical user profile</param>
     /// <remarks>Example: GET: /api/services/{serviceId}/technical-user-profiles</remarks>
     /// <response code="200">Returns a list of profiles</response>
     /// <response code="403">Requesting user is not part of the providing company for the service.</response>
@@ -251,7 +251,7 @@ public class ServicesController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
-    public async Task<NoContentResult> UpdateTechnicalUserProfiles([FromRoute] Guid serviceId, [FromBody] IEnumerable<TechnicalUserProfileData> data)
+    public async Task<NoContentResult> CreateAndUpdateTechnicalUserProfiles([FromRoute] Guid serviceId, [FromBody] IEnumerable<TechnicalUserProfileData> data)
     {
         await this.WithIamUserId(iamUserId => _serviceBusinessLogic.UpdateTechnicalUserProfiles(serviceId, data, iamUserId)).ConfigureAwait(false);
         return NoContent();

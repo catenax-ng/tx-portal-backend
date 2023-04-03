@@ -58,20 +58,21 @@ public class TechnicalUserProfileRepository : ITechnicalUserProfileRepository
             userRoleId => new TechnicalUserProfileAssignedUserRole(technicalUserProfileId, userRoleId));
 
     /// <inheritdoc />
-    public void RemoveTechnicalUserProfileWithAssignedRoles(IEnumerable<(Guid TechnicalUserProfileId, IEnumerable<Guid> UserRoleIds)> profilesToDelete)
+    public void RemoveTechnicalUserProfilesWithAssignedRoles(IEnumerable<(Guid TechnicalUserProfileId, IEnumerable<Guid> UserRoleIds)> profilesToDelete)
     {
         _context.TechnicalUserProfileAssignedUserRoles.RemoveRange(profilesToDelete.SelectMany(p => p.UserRoleIds.Select(ur => new TechnicalUserProfileAssignedUserRole(p.TechnicalUserProfileId, ur))));
         _context.TechnicalUserProfiles.RemoveRange(profilesToDelete.Select(x => new TechnicalUserProfile(x.TechnicalUserProfileId, Guid.Empty)));
     }
 
     /// <inheritdoc />
-    public Task<List<(bool IsUserOfProvidingCompany, TechnicalUserProfileInformation Information)>> GetTechnicalUserProfileInformation(Guid offerId, string iamUserId) =>
-        _context.TechnicalUserProfiles
-            .Where(x => x.OfferId == offerId)
-            .Select(x => new ValueTuple<bool, TechnicalUserProfileInformation>(
-                x.Offer!.ProviderCompany!.CompanyUsers.Any(x => x.IamUser!.UserEntityId == iamUserId),
-                new TechnicalUserProfileInformation(
-                    x.Id, 
-                    x.UserRoles.Select(ur => new UserRoleInformation(ur.Id, ur.UserRoleText)))))
-            .ToListAsync();
+    public Task<(bool IsUserOfProvidingCompany, IEnumerable<TechnicalUserProfileInformation> Information)>
+        GetTechnicalUserProfileInformation(Guid offerId, string iamUserId, OfferTypeId offerTypeId) =>
+        _context.Offers
+            .Where(x => x.Id == offerId && x.OfferTypeId == offerTypeId)
+            .Select(x => new ValueTuple<bool, IEnumerable<TechnicalUserProfileInformation>>(
+                x.ProviderCompany!.CompanyUsers.Any(cu => cu.IamUser!.UserEntityId == iamUserId),
+                x.TechnicalUserProfiles.Select(tup => new TechnicalUserProfileInformation(
+                    tup.Id, 
+                    tup.UserRoles.Select(ur => new UserRoleInformation(ur.Id, ur.UserRoleText))))))
+            .SingleOrDefaultAsync();
 }

@@ -20,6 +20,7 @@
 
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 
@@ -52,13 +53,14 @@ public interface ITechnicalUserProfileRepository
     /// Removes the technical user profiles and the assigned roles
     /// </summary>
     /// <param name="profilesToDelete">The profiles with there assigned userRoles</param>
-    void RemoveTechnicalUserProfileWithAssignedRoles(IEnumerable<(Guid TechnicalUserProfileId, IEnumerable<Guid> UserRoleIds)> profilesToDelete);
+    void RemoveTechnicalUserProfilesWithAssignedRoles(IEnumerable<(Guid TechnicalUserProfileId, IEnumerable<Guid> UserRoleIds)> profilesToDelete);
 
     /// <summary>
     /// Gets the technical user profiles for a given offer
     /// </summary>
     /// <param name="offerId">Id of the offer</param>
     /// <param name="iamUserId">Id of the iam user</param>
+    /// <param name="offerTypeId">Id of the offertype</param>
     /// <returns>List of the technical user profile information</returns>
-    Task<List<(bool IsUserOfProvidingCompany, TechnicalUserProfileInformation Information)>> GetTechnicalUserProfileInformation(Guid offerId, string iamUserId);
+    Task<(bool IsUserOfProvidingCompany, IEnumerable<TechnicalUserProfileInformation> Information)> GetTechnicalUserProfileInformation(Guid offerId, string iamUserId, OfferTypeId offerTypeId);
 }

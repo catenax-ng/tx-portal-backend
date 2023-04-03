@@ -508,6 +508,47 @@ public class ServiceBusinessLogicTests
 
     #endregion
 
+    #region GetTechnicalUserProfilesForOffer
+
+    [Fact]
+    public async Task GetTechnicalUserProfilesForOffer_ReturnsExpected()
+    {
+        // Arrange
+        A.CallTo(() => _offerService.GetTechnicalUserProfilesForOffer(_existingServiceId, _iamUser.UserEntityId, OfferTypeId.SERVICE))
+            .ReturnsLazily(() => _fixture.CreateMany<TechnicalUserProfileInformation>(5));
+        var sut = new ServiceBusinessLogic(null!, _offerService, null!, null!, Options.Create(new ServiceSettings()));
+
+        // Act
+        var result = await sut.GetTechnicalUserProfilesForOffer(_existingServiceId, _iamUser.UserEntityId)
+            .ConfigureAwait(false);
+
+        result.Should().HaveCount(5);
+    }
+
+    #endregion
+
+    #region UpdateTechnicalUserProfiles
+
+    [Fact]
+    public async Task UpdateTechnicalUserProfiles_ReturnsExpected()
+    {
+        // Arrange
+        const string clientProfile = "cl";
+        var data = _fixture.CreateMany<TechnicalUserProfileData>(5);
+        var sut = new ServiceBusinessLogic(null!, _offerService, null!, null!, Options.Create(new ServiceSettings{TechnicalUserProfileClient = clientProfile}));
+
+        // Act
+        await sut
+            .UpdateTechnicalUserProfiles(_existingServiceId, data, _iamUser.UserEntityId)
+            .ConfigureAwait(false);
+
+        A.CallTo(() => _offerService.UpdateTechnicalUserProfiles(_existingServiceId,
+                A<IEnumerable<TechnicalUserProfileData>>.That.Matches(x => x.Count() == 5), _iamUser.UserEntityId, clientProfile))
+            .MustHaveHappenedOnceExactly();
+    }
+
+    #endregion
+    
     #region Setup
 
     private void SetupPagination(int count = 5)

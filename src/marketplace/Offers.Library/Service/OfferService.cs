@@ -749,16 +749,21 @@ public class OfferService : IOfferService
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
 
-    public async Task<IEnumerable<TechnicalUserProfileInformation>> GetTechnicalUserProfilesForOffer(Guid offerId, string iamUserId)
+    public async Task<IEnumerable<TechnicalUserProfileInformation>> GetTechnicalUserProfilesForOffer(Guid offerId, string iamUserId, OfferTypeId offerTypeId)
     {
         var result = await _portalRepositories.GetInstance<ITechnicalUserProfileRepository>()
-            .GetTechnicalUserProfileInformation(offerId, iamUserId).ConfigureAwait(false);
-        if (result.Any(x => !x.IsUserOfProvidingCompany))
+            .GetTechnicalUserProfileInformation(offerId, iamUserId, offerTypeId).ConfigureAwait(false);
+        if (result == default)
+        {
+            throw new NotFoundException($"Offer {offerId} does not exist");
+        }
+
+        if (!result.IsUserOfProvidingCompany)
         {
             throw new ForbiddenException($"User {iamUserId} is not in providing company");
         }
 
-        return result.Select(x => x.Information);
+        return result.Information;
     }
 
     /// <inheritdoc />
@@ -775,7 +780,7 @@ public class OfferService : IOfferService
             throw new NotFoundException($"Offer {offerId} does not exist");
         }
 
-        if (offerProfileData.IsProvidingCompanyUser)
+        if (!offerProfileData.IsProvidingCompanyUser)
         {
             throw new ForbiddenException($"User {iamUserId} is not in providing company");
         }
@@ -788,7 +793,7 @@ public class OfferService : IOfferService
         var notExistingRoles = data.SelectMany(ur => ur.UserRoleIds).Except(roles);
         if (notExistingRoles.Any())
         {
-            throw new ConflictException($"Roles {string.Join(",", notExistingRoles)}");
+            throw new UnexpectedConditionException($"Roles {string.Join(",", notExistingRoles)} do not exist");
         }
 
         var profilesToDelete = offerProfileData.ProfileData
@@ -796,7 +801,11 @@ public class OfferService : IOfferService
                     .Where(x => x.TechnicalUserProfileId != null)
                     .Select(x => x.TechnicalUserProfileId!.Value),
                 x => x.TechnicalUserProfileId);
-        technicalUserProfileRepository.RemoveTechnicalUserProfileWithAssignedRoles(profilesToDelete);        
+        if (profilesToDelete.Any())
+        {
+            technicalUserProfileRepository.RemoveTechnicalUserProfilesWithAssignedRoles(profilesToDelete);
+        }
+
         foreach (var profileData in data)
         {
             var technicalUserProfileId = profileData.TechnicalUserProfileId ?? Guid.Empty;
@@ -806,9 +815,9 @@ public class OfferService : IOfferService
                 technicalUserProfileId = technicalUserProfileRepository.CreateTechnicalUserProfiles(Guid.NewGuid(), offerId).Id;
             }
 
-            var existingUserRoles = data.SingleOrDefault(x => x.TechnicalUserProfileId == profileData.TechnicalUserProfileId) == default ?
+            var existingUserRoles = isNew ?
                 Enumerable.Empty<Guid>() : 
-                data.Single(x => x.TechnicalUserProfileId == profileData.TechnicalUserProfileId).UserRoleIds;
+                offerProfileData.ProfileData.Single(x => x.TechnicalUserProfileId == technicalUserProfileId).UserRoleIds;
             technicalUserProfileRepository.CreateDeleteTechnicalUserProfileAssignedRoles(technicalUserProfileId, existingUserRoles, profileData.UserRoleIds);
         }
         
