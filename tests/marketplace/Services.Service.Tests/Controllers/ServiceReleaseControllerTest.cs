@@ -238,7 +238,22 @@ public class ServiceReleaseControllerTest
         //Assert
         A.CallTo(() => _logic.SubmitServiceAsync(ServiceId, IamUserId)).MustHaveHappenedOnceExactly();
     }
-        
+    
+
+    [Fact]
+    public async Task ApproveServiceRequest_ReturnsNoContent()
+    {
+        //Arrange
+        var serviceId = _fixture.Create<Guid>();
+
+        //Act
+        var result = await this._controller.ApproveServiceRequest(serviceId).ConfigureAwait(false);
+
+        //Assert
+        A.CallTo(() => _logic.ApproveServiceRequestAsync(serviceId, IamUserId)).MustHaveHappenedOnceExactly();
+        result.Should().BeOfType<NoContentResult>();
+    }
+
     [Fact]
     public async Task DeclineServiceRequest_ReturnsNoContent()
     {
