@@ -194,6 +194,7 @@ public class ConnectorsController : ControllerBase
     /// Removes a connector from persistence layer by id.
     /// </summary>
     /// <param name="connectorId" example="5636F9B9-C3DE-4BA5-8027-00D17A2FECFB">ID of the connector to be deleted.</param>
+    /// <param name="cancellationToken">cancellation token</param>
     /// <remarks>Example: DELETE: /api/administration/connectors/5636F9B9-C3DE-4BA5-8027-00D17A2FECFB</remarks>
     /// <response code="204">Empty response on success.</response>
     /// <response code="404">Record not found.</response>
@@ -202,9 +203,9 @@ public class ConnectorsController : ControllerBase
     [Authorize(Roles = "delete_connectors")]
     [ProducesResponseType(typeof(IActionResult), StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeleteConnectorAsync([FromRoute] Guid connectorId)
+    public async Task<IActionResult> DeleteConnectorAsync([FromRoute] Guid connectorId, CancellationToken cancellationToken)
     {
-        await _businessLogic.DeleteConnectorAsync(connectorId);
+        await this.WithIamUserId(iamUserId => _businessLogic.DeleteConnectorAsync(connectorId, iamUserId, cancellationToken));
         return NoContent();
     }
 
@@ -238,7 +239,7 @@ public class ConnectorsController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<NoContentResult> ProcessClearinghouseSelfDescription([FromBody] SelfDescriptionResponseData data, CancellationToken cancellationToken)
     {
-        await _businessLogic.ProcessClearinghouseSelfDescription(data, cancellationToken).ConfigureAwait(false);
+        await this.WithIamUserId(iamUserId => _businessLogic.ProcessClearinghouseSelfDescription(data, iamUserId, cancellationToken).ConfigureAwait(false));
         return NoContent();
     }
 }

@@ -347,10 +347,10 @@ public class UserRepository : IUserRepository
             .ToAsyncEnumerable();
 
     /// <inheritdoc />
-    public Task<Guid> GetServiceAccountCompany(string iamUserId) =>
+    public Task<(Guid CompanyId, Guid CompanyServiceAccountId)> GetServiceAccountCompany(string iamUserId) =>
         _dbContext.IamServiceAccounts
             .Where(x => x.UserEntityId == iamUserId)
-            .Select(x => x.CompanyServiceAccount!.ServiceAccountOwnerId)
+            .Select(x => new ValueTuple<Guid, Guid>(x.CompanyServiceAccount!.ServiceAccountOwnerId, x.CompanyServiceAccountId))
             .SingleOrDefaultAsync();
 
     /// <inheritdoc />

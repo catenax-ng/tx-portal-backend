@@ -44,12 +44,12 @@ public class ConnectorsRepository : IConnectorsRepository
     public IQueryable<Connector> GetAllCompanyConnectorsForIamUser(string iamUserId) =>
         _context.IamUsers.AsNoTracking()
             .Where(u => u.UserEntityId == iamUserId)
-            .SelectMany(u => u.CompanyUser!.Company!.ProvidedConnectors);
+            .SelectMany(u => u.CompanyUser!.Company!.ProvidedConnectors.Where(c => c.StatusId != ConnectorStatusId.INACTIVE));
 
     public Task<(ConnectorData ConnectorData, bool IsProviderUser)> GetConnectorByIdForIamUser(Guid connectorId, string iamUser) =>
         _context.Connectors
             .AsNoTracking()
-            .Where(connector => connector.Id == connectorId)
+            .Where(connector => connector.Id == connectorId && connector.StatusId != ConnectorStatusId.INACTIVE)
             .Select(connector => new ValueTuple<ConnectorData, bool>(
                 new ConnectorData(
                     connector.Name,
@@ -70,7 +70,7 @@ public class ConnectorsRepository : IConnectorsRepository
     public Task<(ConnectorInformationData ConnectorInformationData, bool IsProviderUser)> GetConnectorInformationByIdForIamUser(Guid connectorId, string iamUser) =>
         _context.Connectors
             .AsNoTracking()
-            .Where(connector => connector.Id == connectorId)
+            .Where(connector => connector.Id == connectorId && connector.StatusId != ConnectorStatusId.INACTIVE)
             .Select(connector => new ValueTuple<ConnectorInformationData, bool>(
                 new ConnectorInformationData(connector.Name, connector.Provider!.BusinessPartnerNumber!, connector.Id, connector.ConnectorUrl),
                 connector.Provider!.CompanyUsers.Any(companyUser => companyUser.IamUser!.UserEntityId == iamUser)
@@ -84,10 +84,6 @@ public class ConnectorsRepository : IConnectorsRepository
         setupOptionalFields?.Invoke(connector);
         return _context.Connectors.Add(connector).Entity;
     }
-
-    /// <inheritdoc/>
-    public void DeleteConnector(Guid connectorId) =>
-        _context.Connectors.Remove(new Connector(connectorId, null!, null!, null!));
     
     /// <inheritdoc/>
     public IAsyncEnumerable<(string BusinessPartnerNumber, string ConnectorEndpoint)> GetConnectorEndPointDataAsync(IEnumerable<string> bpns) =>
@@ -113,17 +109,23 @@ public class ConnectorsRepository : IConnectorsRepository
     /// <inheritdoc />
     public Task<(Guid ConnectorId, Guid? SelfDescriptionDocumentId)> GetConnectorDataById(Guid connectorId) =>
         _context.Connectors
-            .Where(x => x.Id == connectorId)
+            .Where(x => x.Id == connectorId && x.StatusId != ConnectorStatusId.INACTIVE)
             .Select(x => new ValueTuple<Guid, Guid?>(x.Id, x.SelfDescriptionDocumentId))
             .SingleOrDefaultAsync();
     
     /// <inheritdoc>
-    public Task<(bool IsConnectorIdExist, Guid? SelfDescriptionDocumentId, DocumentStatusId? DocumentStatusId)> GetSelfDescriptionDocumentDataAsync(Guid connectorId) =>
+    public Task<(bool IsConnectorIdExist, string? DapsClientId, Guid? SelfDescriptionDocumentId, DocumentStatusId? DocumentStatusId, ConnectorStatusId ConnectorStatus)> GetConnectorDeleteDataAsync(Guid connectorId) =>
         _context.Connectors
             .Where(x => x.Id == connectorId)
-            .Select(connector => new ValueTuple<bool,Guid?,DocumentStatusId?>(
+            .Select(connector => new ValueTuple<bool, string?, Guid?,DocumentStatusId?, ConnectorStatusId>(
                 true,
+                connector.ClientDetails == null ? null : connector.ClientDetails!.ClientId,
                 connector.SelfDescriptionDocumentId,
-                connector.SelfDescriptionDocument!.DocumentStatusId
+                connector.SelfDescriptionDocument!.DocumentStatusId,
+                connector.StatusId
             )).SingleOrDefaultAsync();
+
+    /// <inheritdoc />
+    public void CreateConnectorClientDetails(Guid connectorId, string dapsClientId) =>
+        _context.ConnectorClientDetails.Add(new ConnectorClientDetail(connectorId, dapsClientId));
 }

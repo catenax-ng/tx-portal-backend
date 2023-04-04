@@ -221,29 +221,6 @@ public class ConnectorRepositoryTests : IAssemblyFixture<TestDbFixture>
 
     #endregion
     
-    #region DeleteConnector
-
-    [Fact]
-    public async Task DeleteConnector_ReturnsExpected()
-    {
-        // Arrange
-        var(sut, dbContext) = await CreateSut().ConfigureAwait(false);
-
-        // Act
-        sut.DeleteConnector(new Guid("5aea3711-cc54-47b4-b7eb-ba9f3bf1cb15"));
-
-        // Assert
-        var changeTracker = dbContext.ChangeTracker;
-        var changedEntries = changeTracker.Entries().ToList();
-        changeTracker.HasChanges().Should().BeTrue();
-        changedEntries.Should().NotBeEmpty();
-        changedEntries.Should().HaveCount(1);
-        var changedEntity = changedEntries.Single();
-        changedEntity.State.Should().Be(EntityState.Deleted);
-    }
-
-    #endregion
-
     #region GetSelfDescriptionDocumentData
 
     [Fact]
@@ -253,7 +230,7 @@ public class ConnectorRepositoryTests : IAssemblyFixture<TestDbFixture>
         var (sut, _) = await CreateSut().ConfigureAwait(false);
 
         // Act
-        var result = await sut.GetSelfDescriptionDocumentDataAsync(new Guid("7e86a0b8-6903-496b-96d1-0ef508206833")).ConfigureAwait(false);
+        var result = await sut.GetConnectorDeleteDataAsync(new Guid("7e86a0b8-6903-496b-96d1-0ef508206833")).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
@@ -269,7 +246,7 @@ public class ConnectorRepositoryTests : IAssemblyFixture<TestDbFixture>
         var (sut, _) = await CreateSut().ConfigureAwait(false);
 
         // Act
-        var result = await sut.GetSelfDescriptionDocumentDataAsync(new Guid("7e86a0b8-6903-496b-96d1-0ef508206839")).ConfigureAwait(false);
+        var result = await sut.GetConnectorDeleteDataAsync(new Guid("7e86a0b8-6903-496b-96d1-0ef508206839")).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
@@ -285,7 +262,7 @@ public class ConnectorRepositoryTests : IAssemblyFixture<TestDbFixture>
         var (sut, _) = await CreateSut().ConfigureAwait(false);
 
         // Act
-        var result = await sut.GetSelfDescriptionDocumentDataAsync(new Guid()).ConfigureAwait(false);
+        var result = await sut.GetConnectorDeleteDataAsync(new Guid()).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();

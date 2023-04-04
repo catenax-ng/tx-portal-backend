@@ -63,7 +63,9 @@ public interface IConnectorsBusinessLogic
     /// Remove a connector from persistence layer by id.
     /// </summary>
     /// <param name="connectorId">ID of the connector to be deleted.</param>
-    Task DeleteConnectorAsync(Guid connectorId);
+    /// <param name="iamUserId">Id of the iam user</param>
+    /// <param name="cancellationToken">Cancellation Token</param>
+    Task DeleteConnectorAsync(Guid connectorId, string iamUserId, CancellationToken cancellationToken);
     
     /// <summary>
     /// Retrieve connector end point along with bpns
@@ -87,6 +89,7 @@ public interface IConnectorsBusinessLogic
     /// Processes the clearinghouse self description
     /// </summary>
     /// <param name="data">The response data</param>
+    /// <param name="iamUserId">Id of the iam user</param>
     /// <param name="cancellationToken">CancellationToken</param>
-    Task ProcessClearinghouseSelfDescription(SelfDescriptionResponseData data, CancellationToken cancellationToken);
+    Task ProcessClearinghouseSelfDescription(SelfDescriptionResponseData data, string iamUserId, CancellationToken cancellationToken);
 }

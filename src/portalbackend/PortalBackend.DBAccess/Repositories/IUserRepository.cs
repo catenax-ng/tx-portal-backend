@@ -110,7 +110,7 @@ public interface IUserRepository
     /// </summary>
     /// <param name="iamUserId">Id of the service account</param>
     /// <returns>The Id of the company</returns>
-    Task<Guid> GetServiceAccountCompany(string iamUserId);
+    Task<(Guid CompanyId, Guid CompanyServiceAccountId)> GetServiceAccountCompany(string iamUserId);
 
     Task<OfferIamUserData?> GetAppAssignedIamClientUserDataUntrackedAsync(Guid offerId, Guid companyUserId, string iamUserId);
     Task<OfferIamUserData?> GetCoreOfferAssignedIamClientUserDataUntrackedAsync(Guid offerId, Guid companyUserId, string iamUserId);

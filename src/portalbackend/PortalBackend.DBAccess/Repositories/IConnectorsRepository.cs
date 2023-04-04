@@ -49,12 +49,6 @@ public interface IConnectorsRepository
     /// <param name="setupOptionalFields">Action to setup optional fields.</param>
     /// <returns>Created and persisted connector.</returns>
     Connector CreateConnector(string name, string location, string connectorUrl, Action<Connector>? setupOptionalFields);
-
-    /// <summary>
-    /// Removes a connector from persistence layer by id.
-    /// </summary>
-    /// <param name="connectorId">ID of the connector to be deleted.</param>
-    void DeleteConnector(Guid connectorId);
     
     /// <summary>
     /// Get Connector End Point Grouped By Business Partner Number
@@ -83,5 +77,12 @@ public interface IConnectorsRepository
     /// </summary>
     /// <param name="connectorId">Id of the connector</param>
     /// <returns>returns SelfDescriptionDocument Data/c></returns>
-    Task<(bool IsConnectorIdExist, Guid? SelfDescriptionDocumentId, DocumentStatusId? DocumentStatusId)> GetSelfDescriptionDocumentDataAsync(Guid connectorId);
+    Task<(bool IsConnectorIdExist, string? DapsClientId, Guid? SelfDescriptionDocumentId, DocumentStatusId? DocumentStatusId, ConnectorStatusId ConnectorStatus)> GetConnectorDeleteDataAsync(Guid connectorId);
+
+    /// <summary>
+    /// Creates the connector details
+    /// </summary>
+    /// <param name="connectorId">Id of the connector</param>
+    /// <param name="dapsClientId">client id of daps</param>
+    void CreateConnectorClientDetails(Guid connectorId, string dapsClientId);
 }
