@@ -253,8 +253,6 @@ public class ServiceReleaseBusinessLogicTest
 
     #region GetAllInReviewStatusApps
 
-    #region GetAllInReviewStatusApps
-
     [Fact]
     public async Task GetAllInReviewStatusServiceAsync_InActiveRequest()
     {
