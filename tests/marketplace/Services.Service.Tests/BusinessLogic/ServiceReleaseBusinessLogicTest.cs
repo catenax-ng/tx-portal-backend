@@ -269,7 +269,7 @@ public class ServiceReleaseBusinessLogicTest
             .Returns(paginationResult);
 
         // Act
-        var result = await _sut.GetAllInReviewStatusServiceAsync(0, 5, OfferSorting.DateAsc, null, "en").ConfigureAwait(false);
+        var result = await _sut.GetAllInReviewStatusServiceAsync(0, 5, OfferSorting.DateAsc, null, "en", null).ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _offerRepository.GetAllInReviewStatusServiceAsync(A<IEnumerable<OfferStatusId>>
@@ -295,7 +295,7 @@ public class ServiceReleaseBusinessLogicTest
             .Returns(paginationResult);
 
         // Act
-        var result = await _sut.GetAllInReviewStatusServiceAsync(0, 5, OfferSorting.DateAsc, null, "en").ConfigureAwait(false);
+        var result = await _sut.GetAllInReviewStatusServiceAsync(0, 5, OfferSorting.DateAsc, null, "en", null).ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _offerRepository.GetAllInReviewStatusServiceAsync(A<IEnumerable<OfferStatusId>>

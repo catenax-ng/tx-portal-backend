@@ -156,6 +156,7 @@ public class ServiceReleaseController : ControllerBase
     /// <param name="sorting">sort by</param>
     /// <param name="serviceName">search by service name</param>
     /// <param name="languageShortName">Filter by language shortname</param>
+    /// <param name="status">Filter by status</param>
     /// <returns>Collection of all in review status marketplace service.</returns>
     /// <remarks>Example: GET: /api/services/servicerelease/inReview</remarks>
     /// <response code="200">Returns the list of all in review status marketplace service.</response>
