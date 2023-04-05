@@ -41,7 +41,6 @@ public class AppChangeBusinessLogic : IAppChangeBusinessLogic
     private readonly AppsSettings _settings;
     private readonly INotificationService _notificationService;
     private readonly IProvisioningManager _provisioningManager;
-    private readonly IAppBusinessValidation _appBusinessValidation;
 
     /// <summary>
     /// Constructor.
@@ -50,14 +49,12 @@ public class AppChangeBusinessLogic : IAppChangeBusinessLogic
     /// <param name="notificationService">the notification service</param>
     /// <param name="provisioningManager">The provisioning manager</param>
     /// <param name="settings">Settings for the app change bl</param>
-    /// <param name="appBusinessValidation">business validation service</param>
-    public AppChangeBusinessLogic(IPortalRepositories portalRepositories, INotificationService notificationService, IProvisioningManager provisioningManager, IOptions<AppsSettings> settings, IAppBusinessValidation appBusinessValidation)
+    public AppChangeBusinessLogic(IPortalRepositories portalRepositories, INotificationService notificationService, IProvisioningManager provisioningManager, IOptions<AppsSettings> settings)
     {
         _portalRepositories = portalRepositories;
         _notificationService = notificationService;
         _provisioningManager = provisioningManager;
         _settings = settings.Value;
-        _appBusinessValidation = appBusinessValidation;
     }
 
     /// <inheritdoc/>
@@ -107,6 +104,43 @@ public class AppChangeBusinessLogic : IAppChangeBusinessLogic
     public async Task<IEnumerable<LocalizedDescription>> GetAppUpdateDescriptionByIdAsync(Guid appId, string iamUserId)
     {        
         var offerRepository = _portalRepositories.GetInstance<IOfferRepository>();
-        return await _appBusinessValidation.ValidateAndGetAppDescription(appId, iamUserId, offerRepository);        
+        return await ValidateAndGetAppDescription(appId, iamUserId, offerRepository);        
+    }
+    
+    /// <inheritdoc />
+    public async Task CreateOrUpdateAppDescriptionByIdAsync(Guid appId, string iamUserId, IEnumerable<LocalizedDescription> offerDescriptionDatas)
+    {
+        var offerRepository = _portalRepositories.GetInstance<IOfferRepository>();
+
+        offerRepository.CreateUpdateDeleteOfferDescriptions(appId,
+            await ValidateAndGetAppDescription(appId, iamUserId, offerRepository),
+            offerDescriptionDatas.Select(od => new ValueTuple<string,string, string>(od.LanguageCode,od.LongDescription,od.ShortDescription)));
+
+        await _portalRepositories.SaveAsync().ConfigureAwait(false);
+    }
+    
+    private static async Task<IEnumerable<LocalizedDescription>> ValidateAndGetAppDescription(Guid appId, string iamUserId, IOfferRepository offerRepository)
+    {
+        var result = await offerRepository.GetActiveOfferDescriptionDataByIdAsync(appId, OfferTypeId.APP, iamUserId).ConfigureAwait(false);
+        if(result == default)
+        {
+            throw new NotFoundException($"App {appId} does not exist.");
+        }
+
+        if(!result.IsStatusActive)
+        {
+            throw new ConflictException($"App {appId} is in InCorrect Status");
+        }
+
+        if(!result.IsProviderCompanyUser)
+        {
+            throw new ForbiddenException($"user {iamUserId} is not a member of the providercompany of App {appId}");
+        }
+
+        if (result.OfferDescriptionDatas == null)
+        {
+            throw new UnexpectedConditionException("offerDescriptionDatas should never be null here");
+        }
+        return result.OfferDescriptionDatas;
     }
 }

@@ -328,24 +328,6 @@ public class AppsControllerTests
     }
 
     [Fact]
-    public async Task CreateOrUpdateAppDescriptionsAsync_ReturnsExpected()
-    {
-        //Arrange
-        var appId = _fixture.Create<Guid>();
-        var offerDescriptionData = _fixture.CreateMany<LocalizedDescription>(3);
-
-        A.CallTo(() => _logic.CreateOrUpdateAppDescriptionByIdAsync(A<Guid>._, A<string>._, A<IEnumerable<LocalizedDescription>>._))
-            .ReturnsLazily(() => Task.CompletedTask);
-        
-        //Act
-        var result = await this._controller.CreateOrUpdateAppDescriptionsByIdAsync(appId,offerDescriptionData).ConfigureAwait(false);
-
-        //Assert
-        A.CallTo(() => _logic.CreateOrUpdateAppDescriptionByIdAsync(A<Guid>._, A<string>._, A<IEnumerable<LocalizedDescription>>._)).MustHaveHappened();
-        result.Should().BeOfType<NoContentResult>(); 
-    }
-
-    [Fact]
     public async Task GetAppDocumentTypePdfContentAsync_ReturnsExpected()
     {
         //Arrange

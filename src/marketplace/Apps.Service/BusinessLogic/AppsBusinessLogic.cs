@@ -48,7 +48,6 @@ public class AppsBusinessLogic : IAppsBusinessLogic
     private readonly IOfferService _offerService;
     private readonly IOfferSetupService _offerSetupService;
     private readonly IMailingService _mailingService;
-    private readonly IAppBusinessValidation _appBusinessValidation;
 
     /// <summary>
     /// Constructor.
@@ -59,15 +58,13 @@ public class AppsBusinessLogic : IAppsBusinessLogic
     /// <param name="offerSetupService">Offer Setup Service</param>
     /// <param name="settings">Settings</param>
     /// <param name="mailingService">Mailing service</param>
-    /// <param name="appBusinessValidation">business Validation service</param>
     public AppsBusinessLogic(
         IPortalRepositories portalRepositories,
         IOfferSubscriptionService offerSubscriptionService,
         IOfferService offerService,
         IOfferSetupService offerSetupService,
         IOptions<AppsSettings> settings,
-        IMailingService mailingService,
-        IAppBusinessValidation appBusinessValidation)
+        IMailingService mailingService)
     {
         _portalRepositories = portalRepositories;
         _offerSubscriptionService = offerSubscriptionService;
@@ -75,7 +72,6 @@ public class AppsBusinessLogic : IAppsBusinessLogic
         _offerSetupService = offerSetupService;
         _mailingService = mailingService;
         _settings = settings.Value;
-        _appBusinessValidation = appBusinessValidation;
     }
 
     /// <inheritdoc/>
@@ -282,18 +278,6 @@ public class AppsBusinessLogic : IAppsBusinessLogic
     /// <inheritdoc />
     public Task<(byte[] Content, string ContentType, string FileName)> GetAppDocumentContentAsync(Guid appId, Guid documentId, CancellationToken cancellationToken) =>
         _offerService.GetOfferDocumentContentAsync(appId, documentId, _settings.AppImageDocumentTypeIds, OfferTypeId.APP, cancellationToken);
-
-    /// <inheritdoc />
-    public async Task CreateOrUpdateAppDescriptionByIdAsync(Guid appId, string iamUserId, IEnumerable<LocalizedDescription> offerDescriptionDatas)
-    {
-        var offerRepository = _portalRepositories.GetInstance<IOfferRepository>();
-
-        offerRepository.CreateUpdateDeleteOfferDescriptions(appId,
-            await _appBusinessValidation.ValidateAndGetAppDescription(appId, iamUserId, offerRepository),
-            offerDescriptionDatas.Select(od => new ValueTuple<string,string, string>(od.LanguageCode,od.LongDescription,od.ShortDescription)));
-
-        await _portalRepositories.SaveAsync().ConfigureAwait(false);
-    }
 
     /// <inheritdoc />
     public async Task CreatOfferAssignedAppLeadImageDocumentByIdAsync(Guid appId, string iamUserId, IFormFile document, CancellationToken cancellationToken)

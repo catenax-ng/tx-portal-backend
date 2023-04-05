@@ -86,4 +86,24 @@ public class AppChangeController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
     public async Task<IEnumerable<LocalizedDescription>> GetAppUpdateDescriptionsAsync([FromRoute] Guid appId) =>
         await this.WithIamUserId(userId => _businessLogic.GetAppUpdateDescriptionByIdAsync(appId, userId)).ConfigureAwait(false);
+
+    /// <summary>
+    /// Create or Update description of the app by Id.
+    /// </summary>
+    /// <param name="appId" example="092bdae3-a044-4314-94f4-85c65a09e31b">Id for the app description to create or update.</param>
+    /// <param name="offerDescriptionDatas">app description data to create or update.</param>
+    /// <remarks>Example: Put: /api/apps/appchanges/092bdae3-a044-4314-94f4-85c65a09e31b/appupdate/description</remarks>
+    /// <response code="204">The app description succesFully created or updated</response>
+    [HttpPut]
+    [Route("{appId}/appupdate/description")]
+    [Authorize(Roles = "edit_apps")]
+    [ProducesResponseType(typeof(NoContentResult), StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
+    public async Task<NoContentResult> CreateOrUpdateAppDescriptionsByIdAsync([FromRoute] Guid appId, [FromBody] IEnumerable<LocalizedDescription> offerDescriptionDatas)
+    {
+        await this.WithIamUserId(userId => _businessLogic.CreateOrUpdateAppDescriptionByIdAsync(appId, userId, offerDescriptionDatas)).ConfigureAwait(false);
+        return NoContent();
+    }
 }
