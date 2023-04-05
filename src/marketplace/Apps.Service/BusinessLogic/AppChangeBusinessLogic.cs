@@ -122,17 +122,17 @@ public class AppChangeBusinessLogic : IAppChangeBusinessLogic
     private static async Task<IEnumerable<LocalizedDescription>> ValidateAndGetAppDescription(Guid appId, string iamUserId, IOfferRepository offerRepository)
     {
         var result = await offerRepository.GetActiveOfferDescriptionDataByIdAsync(appId, OfferTypeId.APP, iamUserId).ConfigureAwait(false);
-        if(result == default)
+        if (result == default)
         {
             throw new NotFoundException($"App {appId} does not exist.");
         }
 
-        if(!result.IsStatusActive)
+        if (!result.IsStatusActive)
         {
             throw new ConflictException($"App {appId} is in InCorrect Status");
         }
 
-        if(!result.IsProviderCompanyUser)
+        if (!result.IsProviderCompanyUser)
         {
             throw new ForbiddenException($"user {iamUserId} is not a member of the providercompany of App {appId}");
         }
@@ -141,6 +141,7 @@ public class AppChangeBusinessLogic : IAppChangeBusinessLogic
         {
             throw new UnexpectedConditionException("offerDescriptionDatas should never be null here");
         }
+
         return result.OfferDescriptionDatas;
     }
 }
