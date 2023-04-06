@@ -119,6 +119,24 @@ public class ConnectorsBusinessLogicTests
     }
 
     [Fact]
+    public async Task CreateConnectorAsync_WithClientIdNull_DoesntSaveData()
+    {
+        // Arrange
+        var file = FormFileHelper.GetFormFile("Content of the super secure certificate", "test.pem", "application/x-pem-file");
+        var connectorInput = new ConnectorInputModel("connectorName", "https://test.de", "de", file);
+        A.CallTo(() => _dapsService.EnableDapsAuthAsync(A<string>._, A<string>._, A<string>._, A<IFormFile>._, A<CancellationToken>._))
+            .ReturnsLazily(() => (DapsResponse?)null);
+
+        // Act
+        var result = await _logic.CreateConnectorAsync(connectorInput, IamUserId, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        result.Should().NotBeEmpty();
+        _connectors.Should().HaveCount(1);
+        A.CallTo(() => _dapsService.EnableDapsAuthAsync(A<string>._, A<string>._, A<string>._, A<IFormFile>._, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
     public async Task CreateConnectorAsync_WithoutSelfDescriptionDocument_ThrowsUnexpectedException()
     {
         // Arrange
@@ -314,6 +332,25 @@ public class ConnectorsBusinessLogicTests
     }
 
     [Fact]
+    public async Task TriggerDaps_WithFailingDapsCall_ThrowsConflictException()
+    {
+        // Arrange
+        _connectors.Add(new Connector(ExistingConnectorId, "test", "de", "https://www.api.connector.com"));
+        var file = FormFileHelper.GetFormFile("Content of the super secure certificate", "test.pem", "application/x-pem-file");
+        A.CallTo(() => _dapsService.EnableDapsAuthAsync(A<string>._, A<string>._, A<string>._, A<IFormFile>._, A<CancellationToken>._))
+            .ReturnsLazily(() => (DapsResponse?)null);
+
+        // Act
+        async Task Act() => await _logic.TriggerDapsAsync(ExistingConnectorId, file, AccessToken, IamUserId, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be("Client Id should be set here");
+        A.CallTo(() => _dapsService.EnableDapsAuthAsync(A<string>._, A<string>._, A<string>._, A<IFormFile>._, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustNotHaveHappened();
+    }
+
+    [Fact]
     public async Task TriggerDaps_WithNotExistingConnector_ThrowsNotFoundException()
     {
         // Arrange
@@ -456,6 +493,38 @@ public class ConnectorsBusinessLogicTests
         connector.StatusId.Should().Be(ConnectorStatusId.INACTIVE);
         A.CallTo(() => _documentRepository.AttachAndModifyDocument(A<Guid>._, A<Action<Document>>._, A<Action<Document>>._)).MustNotHaveHappened();
         A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task DeleteConnectorAsync_WithInactiveConnector_ThrowsConflictException()
+    {
+        // Arrange
+        var connectorId = Guid.NewGuid();
+        A.CallTo(() => _connectorsRepository.GetConnectorDeleteDataAsync(connectorId))
+            .ReturnsLazily(() => new ValueTuple<bool,string?,Guid?,DocumentStatusId?, ConnectorStatusId>(true, "1234", null, null, ConnectorStatusId.INACTIVE));
+
+        // Act
+        async Task Act() => await _logic.DeleteConnectorAsync(connectorId, IamUserId, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be("INACTIVE Connector can not be deleted");
+    }
+
+    [Fact]
+    public async Task DeleteConnectorAsync_WithEmptyDapsClientId_ThrowsUnexpectedConditionException()
+    {
+        // Arrange
+        var connectorId = Guid.NewGuid();
+        A.CallTo(() => _connectorsRepository.GetConnectorDeleteDataAsync(connectorId))
+            .ReturnsLazily(() => new ValueTuple<bool,string?,Guid?,DocumentStatusId?, ConnectorStatusId>(true, null, null, null, ConnectorStatusId.ACTIVE));
+
+        // Act
+        async Task Act() => await _logic.DeleteConnectorAsync(connectorId, IamUserId, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<UnexpectedConditionException>(Act);
+        ex.Message.Should().Be("DapsClientId must be set");
     }
 
     [Fact]

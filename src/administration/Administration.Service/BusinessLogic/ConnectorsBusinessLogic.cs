@@ -245,7 +245,7 @@ public class ConnectorsBusinessLogic : IConnectorsBusinessLogic
                     .ConfigureAwait(false);
                 if (string.IsNullOrWhiteSpace(response?.ClientId))
                 {
-                    throw new ConflictException("Client Id should be set here");
+                    throw new ServiceException("Client Id should be set here");
                 }
 
                 connectorsRepository.CreateConnectorClientDetails(createdConnector.Id, response.ClientId);
@@ -286,7 +286,7 @@ public class ConnectorsBusinessLogic : IConnectorsBusinessLogic
 
         if (string.IsNullOrWhiteSpace(result.DapsClientId))
         {
-            throw new UnexpectedConditionException("DapsClientId must be set.");
+            throw new UnexpectedConditionException("DapsClientId must be set");
         }
 
         if(result.SelfDescriptionDocumentId != null)

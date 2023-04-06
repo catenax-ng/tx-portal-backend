@@ -6,6 +6,13 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Audit
 
 public class AuditConnector20230405 : IAuditEntityV1
 {
+    public AuditConnector20230405()
+    {
+        Name = null!;
+        ConnectorUrl = null!;
+        LocationId = null!;
+    }
+    
     /// <inheritdoc />
     [Key]
     public Guid AuditV1Id { get; set; }

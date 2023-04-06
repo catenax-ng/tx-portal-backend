@@ -138,4 +138,68 @@ public class DapsServiceTests
     }
 
     #endregion
+    
+    #region DeleteDapsAuth
+    
+    [Fact]
+    public async Task DeleteDapsAuth_WithValidCall_ReturnsExpected()
+    {
+        // Arrange
+        var httpMessageHandlerMock = new HttpMessageHandlerMock(HttpStatusCode.OK);
+        var httpClient = new HttpClient(httpMessageHandlerMock)
+        {
+            BaseAddress = new Uri("https://base.address.com")
+        };
+        A.CallTo(() => _tokenService.GetAuthorizedClient<DapsService>(_options.Value, A<CancellationToken>._))
+            .Returns(httpClient);
+        var service = new DapsService(_tokenService, _options);
+
+        // Act
+        var result = await service.DeleteDapsClient("1234", CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        result.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task DeleteDapsClient_WithUnsuccessfulStatusCode_ThrowsException()
+    {
+        // Arrange
+        var httpMessageHandlerMock = new HttpMessageHandlerMock(HttpStatusCode.BadRequest);
+        var httpClient = new HttpClient(httpMessageHandlerMock)
+        {
+            BaseAddress = new Uri("https://base.address.com")
+        };
+        A.CallTo(() => _tokenService.GetAuthorizedClient<DapsService>(_options.Value, A<CancellationToken>._))
+            .Returns(httpClient);
+        var service = new DapsService(_tokenService, _options);
+
+        // Act
+        async Task Act() => await service.DeleteDapsClient("1234", CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        await Assert.ThrowsAsync<ServiceException>(Act).ConfigureAwait(false);
+    }
+
+    [Fact]
+    public async Task DeleteDapsClient_WithException_ThrowsException()
+    {
+        // Arrange
+        var httpMessageHandlerMock = new HttpMessageHandlerMock(HttpStatusCode.BadRequest, ex:  new HttpRequestException ("DNS Error"));
+        var httpClient = new HttpClient(httpMessageHandlerMock)
+        {
+            BaseAddress = new Uri("https://base.address.com")
+        };
+        A.CallTo(() => _tokenService.GetAuthorizedClient<DapsService>(_options.Value, A<CancellationToken>._))
+            .Returns(httpClient);
+        var service = new DapsService(_tokenService, _options);
+
+        // Act
+        async Task Act() => await service.DeleteDapsClient("12345", CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        await Assert.ThrowsAsync<ServiceException>(Act).ConfigureAwait(false);
+    }
+
+    #endregion
 }
