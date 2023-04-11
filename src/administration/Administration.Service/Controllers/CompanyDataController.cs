@@ -126,8 +126,8 @@ public class CompanyDataController : ControllerBase
     [ProducesResponseType(typeof(CompanyRoleConsentData), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
-    public IAsyncEnumerable<CompanyRoleConsentData> GetCompanyRoleAndConsentAgreementDetailsAsync() =>
-        this.WithIamUserId(iamUserId => _logic.GetCompanyRoleAndConsentAgreementDetailsAsync(iamUserId));
+    public async Task<IAsyncEnumerable<CompanyRoleConsentData>> GetCompanyRoleAndConsentAgreementDetailsAsync() =>
+        await this.WithIamUserId(iamUserId => _logic.GetCompanyRoleAndConsentAgreementDetailsAsync(iamUserId)).ConfigureAwait(false);
 
     /// <summary>
     /// Post the companyrole and Consent Details

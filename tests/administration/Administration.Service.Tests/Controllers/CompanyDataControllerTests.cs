@@ -129,7 +129,7 @@ public class CompanyDataControllerTests
             .Returns(companyRoleConsentDatas);
         
         // Act
-        await this._controller.GetCompanyRoleAndConsentAgreementDetailsAsync().ToListAsync();
+        await this._controller.GetCompanyRoleAndConsentAgreementDetailsAsync();
 
         // Assert
         A.CallTo(() => _logic.GetCompanyRoleAndConsentAgreementDetailsAsync(IamUserId)).MustHaveHappenedOnceExactly();

@@ -102,36 +102,59 @@ public class CompanyDataBusinessLogicTests
     {
         // Arrange
         var companyRoleConsentDatas = _fixture.CreateMany<CompanyRoleConsentData>(2).ToAsyncEnumerable();
-        A.CallTo(() => _companyRepository.GetCompanyRoleAndConsentAgreementDetailsAsync(IamUserId))
+        var companyId = _fixture.Create<Guid>();
+
+        A.CallTo(() => _companyRepository.GetCompanyStatusDataAsync(IamUserId))
+            .Returns((true, companyId));
+
+        A.CallTo(() => _companyRepository.GetCompanyRoleAndConsentAgreementDetailsAsync(companyId))
             .ReturnsLazily(() => companyRoleConsentDatas);
 
         var sut = new CompanyDataBusinessLogic(_portalRepositories);
 
         // Act
-        var result = await sut.GetCompanyRoleAndConsentAgreementDetailsAsync(IamUserId).ToListAsync().ConfigureAwait(false);
+        var result = await sut.GetCompanyRoleAndConsentAgreementDetailsAsync(IamUserId).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
-        result.Should().HaveCount(2);
-        A.CallTo(() => _companyRepository.GetCompanyRoleAndConsentAgreementDetailsAsync(A<string>._)).MustHaveHappenedOnceExactly();
+        result.Should().BeSameAs(companyRoleConsentDatas);
+        A.CallTo(() => _companyRepository.GetCompanyRoleAndConsentAgreementDetailsAsync(companyId)).MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task GetCompanyRoleAndConsentAgreementDetails_ThrowsNotFoundException()
+    {
+        // Arrange
+        A.CallTo(() => _companyRepository.GetCompanyStatusDataAsync(IamUserId))
+            .Returns(((bool,Guid))default);
+
+        var sut = new CompanyDataBusinessLogic(_portalRepositories);
+
+        // Act
+        async Task Act() => await sut.GetCompanyRoleAndConsentAgreementDetailsAsync(IamUserId).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
+        ex.Message.Should().Be($"User {IamUserId} is not associated with any company");
     }
 
     [Fact]
     public async Task GetCompanyRoleAndConsentAgreementDetails_ThrowsConflictException()
     {
         // Arrange
-        var companyRoleConsentDatas = _fixture.CreateMany<CompanyRoleConsentData>(0).ToAsyncEnumerable();
-        A.CallTo(() => _companyRepository.GetCompanyRoleAndConsentAgreementDetailsAsync(IamUserId))
-            .Returns(companyRoleConsentDatas);
+        var companyId = _fixture.Create<Guid>();
+
+        A.CallTo(() => _companyRepository.GetCompanyStatusDataAsync(IamUserId))
+            .Returns((false, companyId));
 
         var sut = new CompanyDataBusinessLogic(_portalRepositories);
 
         // Act
-        async Task Act() => await sut.GetCompanyRoleAndConsentAgreementDetailsAsync(IamUserId).ToListAsync().ConfigureAwait(false);
+        async Task Act() => await sut.GetCompanyRoleAndConsentAgreementDetailsAsync(IamUserId).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
-        ex.Message.Should().Be($"user {IamUserId} is not associated with any company or Incorrect Status");
+        ex.Message.Should().Be($"Company Status is Incorrect");
     }
 
     #endregion

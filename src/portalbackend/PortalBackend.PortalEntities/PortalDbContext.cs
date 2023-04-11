@@ -597,6 +597,13 @@ public class PortalDbContext : DbContext
 
         modelBuilder.Entity<CompanyRoleRegistrationData>();
 
+        modelBuilder.Entity<CompanyAssignedRole>(entity => {
+            entity.HasKey(e => new { e.CompanyRoleId , e.CompanyId});
+            entity.HasOne(p => p.CompanyRole)
+            .WithMany(p => p.CompanyAssignedRole)
+            .HasForeignKey(d => d.CompanyRoleId);
+        });
+
         modelBuilder.Entity<CompanyServiceAccount>(entity =>
         {
             entity.HasOne(d => d.ServiceAccountOwner)

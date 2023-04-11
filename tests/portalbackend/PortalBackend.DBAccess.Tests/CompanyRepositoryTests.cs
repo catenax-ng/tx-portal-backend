@@ -529,17 +529,20 @@ public class CompanyRepositoryTests : IAssemblyFixture<TestDbFixture>
     public async Task GetCompanyRoleAndConsentAgreementDetailsAsync_ReturnsExpected()
     {
         var (sut, context) = await CreateSut().ConfigureAwait(false);
+        var companyId = new Guid("3390c2d7-75c1-4169-aa27-6ce00e1f3cdd");
 
-        var result = sut.GetCompanyRoleAndConsentAgreementDetailsAsync("8be5ee49-4b9c-4008-b641-138305430cc4");
+        var result = await sut.GetCompanyRoleAndConsentAgreementDetailsAsync(companyId).ToListAsync().ConfigureAwait(false);
 
-        result.Should().NotBeNull();
-        var data = await result.FirstAsync();
-        var companyRole = data!.CompanyRoleId;
-        var isActiveCompanyRole = data.CompanyRolesActive;
-        var agreement = data.Agreements.FirstOrDefault();
-        companyRole.Should().Be(CompanyRoleId.SERVICE_PROVIDER);
-        isActiveCompanyRole.Should().BeTrue();
-        agreement!.AgreementId.Should().Be(new Guid("aa0a0000-7fbc-1f2f-817f-bce0502c1094"));
+        result.Should().NotBeNull()
+            .And.HaveCount(3)
+            .And.Satisfy(
+                x => x.CompanyRoleId == CompanyRoleId.ACTIVE_PARTICIPANT && x.CompanyRolesActive == false && x.Agreements.Count() == 0,
+                x => x.CompanyRoleId == CompanyRoleId.APP_PROVIDER && x.CompanyRolesActive == false && x.Agreements.Count() == 0,
+                x => x.CompanyRoleId == CompanyRoleId.SERVICE_PROVIDER && x.CompanyRolesActive == true && x.Agreements.Count() != 0
+                  && x.Agreements.Select(agr => agr.AgreementId).Contains(new Guid("aa0a0000-7fbc-1f2f-817f-bce0502c1094"))
+                  && x.Agreements.Select(agr => agr.AgreementName).Contains("Terms & Conditions - Consultant")
+                  && x.Agreements.Select(agr => agr.ConsentStatus).Contains(ConsentStatusId.ACTIVE)
+            );
     }
 
     #endregion
@@ -611,6 +614,21 @@ public class CompanyRepositoryTests : IAssemblyFixture<TestDbFixture>
                 x => x.AgreementId == new Guid("aa0a0000-7fbc-1f2f-817f-bce0502c1011") && x.CompanyRoleId == CompanyRoleId.APP_PROVIDER
             );
         result.Select(x => x.CompanyRoleId).Should().BeInAscendingOrder();
+    }
+
+    [Fact]
+    public async Task GetCompanyStatusDataAsync()
+    {
+        // Arrange
+        var (sut, context) = await CreateSut().ConfigureAwait(false);
+
+        // Act
+        var result = await sut.GetCompanyStatusDataAsync("8be5ee49-4b9c-4008-b641-138305430cc4").ConfigureAwait(false);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.companyId.Should().Be(new Guid("3390c2d7-75c1-4169-aa27-6ce00e1f3cdd"));
+        result.IsActive.Should().BeTrue();
     }
 
     #endregion

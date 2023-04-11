@@ -92,9 +92,20 @@ public class CompanyDataBusinessLogic : ICompanyDataBusinessLogic
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
 
-    public IAsyncEnumerable<CompanyRoleConsentData> GetCompanyRoleAndConsentAgreementDetailsAsync(string iamUserId) =>
-        _portalRepositories.GetInstance<ICompanyRepository>().GetCompanyRoleAndConsentAgreementDetailsAsync(iamUserId)
-            .OnEmpty(() => throw new ConflictException($"user {iamUserId} is not associated with any company or Incorrect Status"));
+    public async Task<IAsyncEnumerable<CompanyRoleConsentData>> GetCompanyRoleAndConsentAgreementDetailsAsync(string iamUserId)
+    {
+        var companyRepositories = _portalRepositories.GetInstance<ICompanyRepository>();
+        var companyData = await companyRepositories.GetCompanyStatusDataAsync(iamUserId).ConfigureAwait(false);
+        if(companyData == default)
+        {
+            throw new NotFoundException($"User {iamUserId} is not associated with any company");
+        }
+        if(!companyData.IsActive)
+        {
+            throw new ConflictException("Company Status is Incorrect");
+        }
+        return companyRepositories.GetCompanyRoleAndConsentAgreementDetailsAsync(companyData.companyId);
+    }
 
     /// <inheritdoc/>
     public async Task CreateCompanyRoleAndConsentAgreementDetailsAsync(string iamUserId, IEnumerable<CompanyRoleConsentDetails> companyRoleConsentDetails)
