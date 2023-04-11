@@ -50,7 +50,7 @@ public class ConnectorsControllerTests
     public async Task GetManagedConnectorsForCurrentUserAsync_WithValidData_ReturnsExpectedResult()
     {
         //Arrange
-        var paginationResponse = new Pagination.Response<ConnectorData>(new Pagination.Metadata(15, 1, 1, 15), _fixture.CreateMany<ConnectorData>(5));
+        var paginationResponse = new Pagination.Response<ManagedConnectorData>(new Pagination.Metadata(15, 1, 1, 15), _fixture.CreateMany<ManagedConnectorData>(5));
         A.CallTo(() => _logic.GetManagedConnectorForIamUserAsync(IamUserId, 0, 15))
             .Returns(paginationResponse);
 

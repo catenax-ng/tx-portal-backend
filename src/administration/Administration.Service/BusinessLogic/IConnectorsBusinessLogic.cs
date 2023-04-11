@@ -46,7 +46,7 @@ public interface IConnectorsBusinessLogic
     /// <param name="page"></param>
     /// <param name="size"></param>
     /// <returns>AsyncEnumerable of the result connectors.</returns>
-    Task<Pagination.Response<ConnectorData>> GetManagedConnectorForIamUserAsync(string iamUserId, int page, int size);
+    Task<Pagination.Response<ManagedConnectorData>> GetManagedConnectorForIamUserAsync(string iamUserId, int page, int size);
 
     Task<ConnectorData> GetCompanyConnectorDataForIdIamUserAsync(Guid connectorId, string iamUserId);
 

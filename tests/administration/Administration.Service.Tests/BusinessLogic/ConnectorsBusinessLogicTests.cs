@@ -553,7 +553,7 @@ public class ConnectorsBusinessLogicTests
     public async Task GetManagedConnectorForIamUserAsync_GetExpected()
     {
         // Arrange
-        var data = new AsyncEnumerableStub<ConnectorData>(_fixture.CreateMany<ConnectorData>(5));
+        var data = new AsyncEnumerableStub<ManagedConnectorData>(_fixture.CreateMany<ManagedConnectorData>(5));
         A.CallTo(() => _connectorsRepository.GetManagedConnectorsForIamUser(IamUserId))
             .Returns(data);
 

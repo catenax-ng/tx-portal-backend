@@ -90,12 +90,12 @@ public class ConnectorsBusinessLogic : IConnectorsBusinessLogic
     }
 
     /// <inheritdoc/>
-    public Task<Pagination.Response<ConnectorData>> GetManagedConnectorForIamUserAsync(string iamUserId, int page, int size)
+    public Task<Pagination.Response<ManagedConnectorData>> GetManagedConnectorForIamUserAsync(string iamUserId, int page, int size)
     {
         var connectors = _portalRepositories.GetInstance<IConnectorsRepository>().GetManagedConnectorsForIamUser(iamUserId);
 
         return Pagination.CreateResponseAsync(page, size, _settings.MaxPageSize, (skip, take) =>
-            new Pagination.AsyncSource<ConnectorData>
+            new Pagination.AsyncSource<ManagedConnectorData>
             (
                 connectors.CountAsync(),
                 connectors.OrderByDescending(connector => connector.Name)

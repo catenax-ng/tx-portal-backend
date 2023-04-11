@@ -47,22 +47,20 @@ public class ConnectorsRepository : IConnectorsRepository
             .SelectMany(u => u.CompanyUser!.Company!.ProvidedConnectors.Where(c => c.StatusId != ConnectorStatusId.INACTIVE));
 
     /// <inheritdoc/>
-    public IQueryable<ConnectorData> GetManagedConnectorsForIamUser(string iamUserId) =>
+    public IQueryable<ManagedConnectorData> GetManagedConnectorsForIamUser(string iamUserId) =>
         _context.Connectors
             .AsNoTracking()
-            .Where(c => c.Host!.CompanyUsers.Any(cu => cu.IamUser!.UserEntityId == iamUserId) && c.StatusId != ConnectorStatusId.INACTIVE)
-            .Select(c =>
-                new ConnectorData(
+            .Where(c => c.Host!.CompanyUsers.Any(cu => cu.IamUser!.UserEntityId == iamUserId) &&
+                        c.StatusId != ConnectorStatusId.INACTIVE)
+            .Select(c => new ManagedConnectorData(
                     c.Name,
                     c.Location!.Alpha2Code,
                     c.Id,
                     c.TypeId,
                     c.StatusId,
                     c.DapsRegistrationSuccessful,
-                    c.HostId,
-                    c.Host!.Name,
-                    c.SelfDescriptionDocumentId,
-                    c.SelfDescriptionDocument!.DocumentName)
+                    c.Provider!.Name,
+                    c.SelfDescriptionDocumentId)
             );
 
     public Task<(ConnectorData ConnectorData, bool IsProviderUser)> GetConnectorByIdForIamUser(Guid connectorId, string iamUser) =>

@@ -41,7 +41,7 @@ public interface IConnectorsRepository
     /// </summary>
     /// <param name="iamUserId">ID of the iam user used to determine company's connectors for.</param>
     /// <returns>Queryable of connectors that allows transformation.</returns>
-    IQueryable<ConnectorData> GetManagedConnectorsForIamUser(string iamUserId);
+    IQueryable<ManagedConnectorData> GetManagedConnectorsForIamUser(string iamUserId);
     
     Task<(ConnectorData ConnectorData, bool IsProviderUser)> GetConnectorByIdForIamUser(Guid connectorId, string iamUser);
 
