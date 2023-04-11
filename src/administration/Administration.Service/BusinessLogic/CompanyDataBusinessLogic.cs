@@ -25,7 +25,6 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
-using System.Net;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
 
@@ -58,7 +57,7 @@ public class CompanyDataBusinessLogic : ICompanyDataBusinessLogic
         _portalRepositories.GetInstance<ICompanyRepository>().GetCompanyAssigendUseCaseDetailsAsync(iamUserId);
 
     /// <inheritdoc/>
-    public async Task<HttpStatusCode> CreateCompanyAssignedUseCaseDetailsAsync(string iamUserId, Guid useCaseId)
+    public async Task<bool> CreateCompanyAssignedUseCaseDetailsAsync(string iamUserId, Guid useCaseId)
     {
         var companyRepositories = _portalRepositories.GetInstance<ICompanyRepository>();
         var useCaseDetails = await companyRepositories.GetCompanyStatusAndUseCaseIdAsync(iamUserId, useCaseId).ConfigureAwait(false);
@@ -68,11 +67,11 @@ public class CompanyDataBusinessLogic : ICompanyDataBusinessLogic
         }
         if(useCaseDetails.IsUseCaseIdExists)
         {
-            return HttpStatusCode.AlreadyReported;
+            return false;
         }
         companyRepositories.CreateCompanyAssignedUseCase(useCaseDetails.CompanyId, useCaseId);
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
-        return HttpStatusCode.NoContent;
+        return true;
     }
 
     /// <inheritdoc/>
@@ -92,7 +91,7 @@ public class CompanyDataBusinessLogic : ICompanyDataBusinessLogic
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
 
-    public async Task<IAsyncEnumerable<CompanyRoleConsentData>> GetCompanyRoleAndConsentAgreementDetailsAsync(string iamUserId)
+    public async IAsyncEnumerable<CompanyRoleConsentViewData> GetCompanyRoleAndConsentAgreementDetailsAsync(string iamUserId)
     {
         var companyRepositories = _portalRepositories.GetInstance<ICompanyRepository>();
         var companyData = await companyRepositories.GetCompanyStatusDataAsync(iamUserId).ConfigureAwait(false);
@@ -104,7 +103,20 @@ public class CompanyDataBusinessLogic : ICompanyDataBusinessLogic
         {
             throw new ConflictException("Company Status is Incorrect");
         }
-        return companyRepositories.GetCompanyRoleAndConsentAgreementDetailsAsync(companyData.companyId);
+        await foreach (var data in companyRepositories.GetCompanyRoleAndConsentAgreementDataAsync(companyData.CompanyId).ConfigureAwait(false))
+        {
+            yield return new CompanyRoleConsentViewData(
+                data.CompanyRoleId,
+                data.CompanyRolesActive,
+                data.Agreements.Select(x => new ConsentAgreementViewData(
+                    x.AgreementId,
+                    x.AgreementName,
+                    x.ConsentStatus == 0
+                        ? null
+                        : x.ConsentStatus
+                ))
+            );
+        }
     }
 
     /// <inheritdoc/>

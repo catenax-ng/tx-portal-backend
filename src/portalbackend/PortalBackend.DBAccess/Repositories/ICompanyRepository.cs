@@ -134,7 +134,7 @@ public interface ICompanyRepository
     /// </summary>
     /// <param name="iamUserId">Id of the iam user</param>
     /// <returns>Returns the companyRole and ConsentAgreemnet</returns>
-    IAsyncEnumerable<CompanyRoleConsentData> GetCompanyRoleAndConsentAgreementDetailsAsync(Guid companyId);
+    IAsyncEnumerable<CompanyRoleConsentData> GetCompanyRoleAndConsentAgreementDataAsync(Guid companyId);
 
     /// <summary>
     /// Gets the the companyRole
@@ -155,5 +155,5 @@ public interface ICompanyRepository
     /// </summary>
     /// <param name="iamUserId">Id of the iam user</param>
     /// <returns>Returns the CompanyStatus Data</returns>
-    Task<(bool IsActive, Guid companyId)> GetCompanyStatusDataAsync(string iamUserId);
+    Task<(bool IsActive, Guid CompanyId)> GetCompanyStatusDataAsync(string iamUserId);
 }

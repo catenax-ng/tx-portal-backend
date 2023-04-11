@@ -25,6 +25,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Authentication;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Controllers;
 
@@ -86,14 +87,13 @@ public class CompanyDataController : ControllerBase
     [HttpPost]
     [Authorize(Roles = "set_company_use_cases")]
     [Route("preferredUseCases")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status208AlreadyReported)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
-    public async Task<StatusCodeResult> CreateCompanyAssignedUseCaseDetailsAsync([FromBody] UseCaseIdDetails data)
-    {
-        var result = await this.WithIamUserId(iamUserId => _logic.CreateCompanyAssignedUseCaseDetailsAsync(iamUserId, data.useCaseId)).ConfigureAwait(false);
-        return this.StatusCode((int)result);
-    }
+    public async Task<StatusCodeResult> CreateCompanyAssignedUseCaseDetailsAsync([FromBody] UseCaseIdDetails data) =>
+        await this.WithIamUserId(iamUserId => _logic.CreateCompanyAssignedUseCaseDetailsAsync(iamUserId, data.useCaseId)).ConfigureAwait(false)
+            ? StatusCode((int)HttpStatusCode.Created)
+            : NoContent();
 
     /// <summary>
     /// Remove the CompanyAssigned UseCase details by UseCaseId
@@ -123,11 +123,11 @@ public class CompanyDataController : ControllerBase
     [HttpGet]
     [Authorize(Roles = "view_company_data")]
     [Route("companyRolesAndConsents")]
-    [ProducesResponseType(typeof(CompanyRoleConsentData), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CompanyRoleConsentViewData), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
-    public async Task<IAsyncEnumerable<CompanyRoleConsentData>> GetCompanyRoleAndConsentAgreementDetailsAsync() =>
-        await this.WithIamUserId(iamUserId => _logic.GetCompanyRoleAndConsentAgreementDetailsAsync(iamUserId)).ConfigureAwait(false);
+    public IAsyncEnumerable<CompanyRoleConsentViewData> GetCompanyRoleAndConsentAgreementDetailsAsync() =>
+        this.WithIamUserId(iamUserId => _logic.GetCompanyRoleAndConsentAgreementDetailsAsync(iamUserId));
 
     /// <summary>
     /// Post the companyrole and Consent Details

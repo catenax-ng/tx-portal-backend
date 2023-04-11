@@ -531,18 +531,16 @@ public class CompanyRepositoryTests : IAssemblyFixture<TestDbFixture>
         var (sut, context) = await CreateSut().ConfigureAwait(false);
         var companyId = new Guid("3390c2d7-75c1-4169-aa27-6ce00e1f3cdd");
 
-        var result = await sut.GetCompanyRoleAndConsentAgreementDetailsAsync(companyId).ToListAsync().ConfigureAwait(false);
+        var result = await sut.GetCompanyRoleAndConsentAgreementDataAsync(companyId).ToListAsync().ConfigureAwait(false);
 
         result.Should().NotBeNull()
             .And.HaveCount(3)
             .And.Satisfy(
-                x => x.CompanyRoleId == CompanyRoleId.ACTIVE_PARTICIPANT && x.CompanyRolesActive == false && x.Agreements.Count() == 0,
-                x => x.CompanyRoleId == CompanyRoleId.APP_PROVIDER && x.CompanyRolesActive == false && x.Agreements.Count() == 0,
-                x => x.CompanyRoleId == CompanyRoleId.SERVICE_PROVIDER && x.CompanyRolesActive == true && x.Agreements.Count() != 0
-                  && x.Agreements.Select(agr => agr.AgreementId).Contains(new Guid("aa0a0000-7fbc-1f2f-817f-bce0502c1094"))
-                  && x.Agreements.Select(agr => agr.AgreementName).Contains("Terms & Conditions - Consultant")
-                  && x.Agreements.Select(agr => agr.ConsentStatus).Contains(ConsentStatusId.ACTIVE)
-            );
+                x => x.CompanyRoleId == CompanyRoleId.ACTIVE_PARTICIPANT && x.CompanyRolesActive == false && x.Agreements.Count() == 3 && x.Agreements.All(agreement => agreement.ConsentStatus == 0),
+                x => x.CompanyRoleId == CompanyRoleId.APP_PROVIDER && x.CompanyRolesActive == false && x.Agreements.Count() == 1 && x.Agreements.All(agreement => agreement.ConsentStatus == 0),
+                x => x.CompanyRoleId == CompanyRoleId.SERVICE_PROVIDER && x.CompanyRolesActive == true && x.Agreements.Count() == 2
+                    && x.Agreements.Any(agr => agr.AgreementId == new Guid("aa0a0000-7fbc-1f2f-817f-bce0502c1094") && agr.AgreementName == "Terms & Conditions - Consultant" && agr.ConsentStatus == ConsentStatusId.ACTIVE)
+                    && x.Agreements.Any(agr => agr.AgreementId == new Guid("aa0a0000-7fbc-1f2f-817f-bce0502c1017") && agr.AgreementName == "Terms & Conditions Service Provider" && agr.ConsentStatus == 0));
     }
 
     #endregion
@@ -627,7 +625,7 @@ public class CompanyRepositoryTests : IAssemblyFixture<TestDbFixture>
 
         // Assert
         result.Should().NotBeNull();
-        result.companyId.Should().Be(new Guid("3390c2d7-75c1-4169-aa27-6ce00e1f3cdd"));
+        result.CompanyId.Should().Be(new Guid("3390c2d7-75c1-4169-aa27-6ce00e1f3cdd"));
         result.IsActive.Should().BeTrue();
     }
 

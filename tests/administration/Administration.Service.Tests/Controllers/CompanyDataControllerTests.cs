@@ -23,6 +23,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Controllers;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared.Extensions;
+using System.Net;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Tests.Controllers;
 
@@ -77,7 +78,7 @@ public class CompanyDataControllerTests
         // Arrange
         var useCaseData = _fixture.Create<UseCaseIdDetails>();
         A.CallTo(() => _logic.CreateCompanyAssignedUseCaseDetailsAsync(IamUserId, useCaseData.useCaseId))
-            .Returns(System.Net.HttpStatusCode.NoContent);
+            .Returns(true);
         
         // Act
         var result = await this._controller.CreateCompanyAssignedUseCaseDetailsAsync(useCaseData).ConfigureAwait(false);
@@ -85,7 +86,7 @@ public class CompanyDataControllerTests
         // Assert
         A.CallTo(() => _logic.CreateCompanyAssignedUseCaseDetailsAsync(IamUserId, useCaseData.useCaseId)).MustHaveHappenedOnceExactly();
         result.Should().BeOfType<StatusCodeResult>();
-        result.StatusCode.Should().Be(204);
+        result.StatusCode.Should().Be((int)HttpStatusCode.Created);
     }
 
     [Fact]
@@ -94,15 +95,15 @@ public class CompanyDataControllerTests
         // Arrange
         var useCaseData = _fixture.Create<UseCaseIdDetails>();
         A.CallTo(() => _logic.CreateCompanyAssignedUseCaseDetailsAsync(IamUserId, useCaseData.useCaseId))
-            .Returns(System.Net.HttpStatusCode.AlreadyReported);
+            .Returns(false);
         
         // Act
         var result = await this._controller.CreateCompanyAssignedUseCaseDetailsAsync(useCaseData).ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _logic.CreateCompanyAssignedUseCaseDetailsAsync(IamUserId, useCaseData.useCaseId)).MustHaveHappenedOnceExactly();
-        result.Should().BeOfType<StatusCodeResult>();
-        result.StatusCode.Should().Be(208);
+        result.Should().BeOfType<NoContentResult>();
+        result.StatusCode.Should().Be((int)HttpStatusCode.NoContent);
     }
 
     [Fact]
@@ -121,15 +122,16 @@ public class CompanyDataControllerTests
         result.Should().BeOfType<NoContentResult>();
     }
 
+    [Fact]
     public async Task GetCompanyRoleAndConsentAgreementDetailsAsync_ReturnsExpectedResult()
     {
         // Arrange
-        var companyRoleConsentDatas = _fixture.CreateMany<CompanyRoleConsentData>(2).ToAsyncEnumerable();
+        var companyRoleConsentDatas = _fixture.CreateMany<CompanyRoleConsentViewData>(2).ToAsyncEnumerable();
         A.CallTo(() => _logic.GetCompanyRoleAndConsentAgreementDetailsAsync(IamUserId))
             .Returns(companyRoleConsentDatas);
         
         // Act
-        await this._controller.GetCompanyRoleAndConsentAgreementDetailsAsync();
+        await this._controller.GetCompanyRoleAndConsentAgreementDetailsAsync().ToListAsync().ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _logic.GetCompanyRoleAndConsentAgreementDetailsAsync(IamUserId)).MustHaveHappenedOnceExactly();
