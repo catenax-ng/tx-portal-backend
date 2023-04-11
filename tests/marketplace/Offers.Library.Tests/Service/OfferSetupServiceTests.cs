@@ -600,7 +600,7 @@ public class OfferSetupServiceTests
 
         A.CallTo(() => _notificationService.CreateNotifications(A<IDictionary<string, IEnumerable<string>>>._,
                 A<Guid>._, A<IEnumerable<(string?, NotificationTypeId)>>._, A<Guid>._))
-            .ReturnsLazily(() => Task.CompletedTask);
+            .Returns(new List<Guid>{Guid.NewGuid()}.ToAsyncEnumerable());
     }
 
     private void SetupAutoSetup(bool technicalUserRequired = false, OfferSubscription? offerSubscription = null, bool isSingleInstance = false, CompanyServiceAccount? companyServiceAccount = null)

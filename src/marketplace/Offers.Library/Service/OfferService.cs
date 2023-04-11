@@ -491,8 +491,8 @@ public class OfferService : IOfferService
             _ => throw new UnexpectedConditionException($"offerTypeId {offerTypeId} is not implemented yet")
         };
         var serializeNotificationContent = JsonSerializer.Serialize(notificationContent);
-        var content = notificationTypeIds.Select(typeId => ((string?)serializeNotificationContent, typeId));
-        await _notificationService.CreateNotifications(approveOfferRoles, requesterId, content, offerDetails.ProviderCompanyId.Value).ConfigureAwait(false);
+        var content = notificationTypeIds.Select(typeId => new ValueTuple<string?, NotificationTypeId>(serializeNotificationContent, typeId));
+        await _notificationService.CreateNotifications(approveOfferRoles, requesterId, content, offerDetails.ProviderCompanyId.Value).ToListAsync().ConfigureAwait(false);
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
 
@@ -539,7 +539,7 @@ public class OfferService : IOfferService
         
         var serializeNotificationContent = JsonSerializer.Serialize(notificationContent);
         var content = Enumerable.Repeat(notificationTypeId, 1).Select(typeId => new ValueTuple<string?, NotificationTypeId>(serializeNotificationContent, typeId));
-        await _notificationService.CreateNotifications(notificationRecipients, requesterId, content, declineData.CompanyId.Value).ConfigureAwait(false);
+        await _notificationService.CreateNotifications(notificationRecipients, requesterId, content, declineData.CompanyId.Value).ToListAsync().ConfigureAwait(false);
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
         
         await SendMail(notificationRecipients, declineData.OfferName, basePortalAddress, data.Message, declineData.CompanyId.Value);
