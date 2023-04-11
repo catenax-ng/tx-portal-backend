@@ -94,6 +94,7 @@ public class ConnectorsController : ControllerBase
     /// <response code="201">Returns a view model of the created connector.</response>
     /// <response code="400">Input parameter are invalid.</response>
     /// <response code="503">Access to SD factory failed with the given status code.</response>
+    [Obsolete("Please use the /api/administration/connectors/daps endpoint instead. This Endpoint will be removed in a future release.")]
     [HttpPost]
     [Route("")]
     [Authorize(Roles = "add_connectors")]
@@ -135,6 +136,7 @@ public class ConnectorsController : ControllerBase
     /// <response code="201">Returns a view model of the created connector.</response>
     /// <response code="400">Input parameter are invalid.</response>
     /// <response code="503">Access to SD factory failed with the given status code.</response>
+    [Obsolete("Please use the /api/administration/connectors/managed-daps endpoint instead. This Endpoint will be removed in a future release.")]
     [HttpPost]
     [Route("managed")]
     [Authorize(Roles = "add_connectors")]
