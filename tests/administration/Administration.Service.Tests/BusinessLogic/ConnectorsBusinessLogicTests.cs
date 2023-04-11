@@ -443,10 +443,10 @@ public class ConnectorsBusinessLogicTests
     public async Task DeleteConnectorAsync_WithDocumentId_ExpectedCalls()
     {
         // Arrange
+        const DocumentStatusId documentStatusId = DocumentStatusId.LOCKED;
         var connectorId = Guid.NewGuid();
         var connector = new Connector(connectorId, null!, null!, null!);
         var selfDescriptionDocumentId = Guid.NewGuid();
-        var documentStatusId = DocumentStatusId.LOCKED;
         A.CallTo(() => _connectorsRepository.GetConnectorDeleteDataAsync(connectorId))
             .Returns((true, "123", selfDescriptionDocumentId, documentStatusId, ConnectorStatusId.ACTIVE));
 
@@ -469,6 +469,8 @@ public class ConnectorsBusinessLogicTests
         // Assert
         connector.StatusId.Should().Be(ConnectorStatusId.INACTIVE);
         A.CallTo(() => _documentRepository.AttachAndModifyDocument(selfDescriptionDocumentId, A<Action<Document>>._, A<Action<Document>>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _connectorsRepository.DeleteConnectorClientDetails(connectorId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _dapsService.DeleteDapsClient("123", A<CancellationToken>._)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
     }
 

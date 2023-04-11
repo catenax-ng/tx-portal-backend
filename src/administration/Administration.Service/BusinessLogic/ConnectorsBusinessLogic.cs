@@ -298,6 +298,7 @@ public class ConnectorsBusinessLogic : IConnectorsBusinessLogic
         }
 
         var companyUserId = await _portalRepositories.GetInstance<IUserRepository>().GetCompanyUserIdForIamUserUntrackedAsync(iamUserId).ConfigureAwait(false); 
+        connectorsRepository.DeleteConnectorClientDetails(connectorId);
         connectorsRepository.AttachAndModifyConnector(connectorId, con =>
         {
             con.StatusId = ConnectorStatusId.INACTIVE;

@@ -85,4 +85,10 @@ public interface IConnectorsRepository
     /// <param name="connectorId">Id of the connector</param>
     /// <param name="dapsClientId">client id of daps</param>
     void CreateConnectorClientDetails(Guid connectorId, string dapsClientId);
+
+    /// <summary>
+    /// Deletes the connector client details
+    /// </summary>
+    /// <param name="connectorId">Id of the connector</param>
+    void DeleteConnectorClientDetails(Guid connectorId);
 }
