@@ -36,6 +36,13 @@ public interface IConnectorsRepository
     /// <returns>Queryable of connectors that allows transformation.</returns>
     IQueryable<Connector> GetAllCompanyConnectorsForIamUser(string iamUserId);
 
+    /// <summary>
+    /// Get all managed connectors of a user's company by iam user ID.
+    /// </summary>
+    /// <param name="iamUserId">ID of the iam user used to determine company's connectors for.</param>
+    /// <returns>Queryable of connectors that allows transformation.</returns>
+    IQueryable<ConnectorData> GetManagedConnectorsForIamUser(string iamUserId);
+    
     Task<(ConnectorData ConnectorData, bool IsProviderUser)> GetConnectorByIdForIamUser(Guid connectorId, string iamUser);
 
     Task<(ConnectorInformationData ConnectorInformationData, bool IsProviderUser)> GetConnectorInformationByIdForIamUser(Guid connectorId, string iamUser);

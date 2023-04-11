@@ -65,7 +65,25 @@ public class ConnectorsController : ControllerBase
     [Authorize(Roles = "view_connectors")]
     [ProducesResponseType(typeof(Pagination.Response<ConnectorData>), StatusCodes.Status200OK)]
     public Task<Pagination.Response<ConnectorData>> GetCompanyConnectorsForCurrentUserAsync([FromQuery] int page = 0, [FromQuery] int size = 15) =>
-        this.WithIamUserId(iamUserId => _businessLogic.GetAllCompanyConnectorDatasForIamUserAsyncEnum(iamUserId, page, size));
+        this.WithIamUserId(iamUserId => _businessLogic.GetAllCompanyConnectorDatasForIamUserAsync(iamUserId, page, size));
+
+    /// <summary>
+    /// Retrieves all company connectors for currently logged in user.
+    /// </summary>
+    /// <param name="page" example="0">Optional query parameter defining the requested page number.</param>
+    /// <param name="size" example="15">Optional query parameter defining the number of connectors listed per page.</param>
+    /// <returns>Paginated result of connector view models.</returns>
+    /// <remarks>
+    /// Example: GET: /api/administration/connectors <br />
+    /// Example: GET: /api/administration/connectors?page=0&amp;size=15
+    /// </remarks>
+    /// <response code="200">Returns a list of all of the current user's company's connectors.</response>
+    [HttpGet]
+    [Route("managed")]
+    [Authorize(Roles = "view_connectors")]
+    [ProducesResponseType(typeof(Pagination.Response<ConnectorData>), StatusCodes.Status200OK)]
+    public Task<Pagination.Response<ConnectorData>> GetManagedConnectorsForCurrentUserAsync([FromQuery] int page = 0, [FromQuery] int size = 15) =>
+        this.WithIamUserId(iamUserId => _businessLogic.GetManagedConnectorForIamUserAsync(iamUserId, page, size));
 
     /// <summary>
     /// Retrieves company connector details for the given connetor id.

@@ -47,6 +47,22 @@ public class ConnectorsControllerTests
     }
 
     [Fact]
+    public async Task GetManagedConnectorsForCurrentUserAsync_WithValidData_ReturnsExpectedResult()
+    {
+        //Arrange
+        var paginationResponse = new Pagination.Response<ConnectorData>(new Pagination.Metadata(15, 1, 1, 15), _fixture.CreateMany<ConnectorData>(5));
+        A.CallTo(() => _logic.GetManagedConnectorForIamUserAsync(IamUserId, 0, 15))
+            .Returns(paginationResponse);
+
+        //Act
+        var result = await this._controller.GetManagedConnectorsForCurrentUserAsync().ConfigureAwait(false);
+
+        //Assert
+        A.CallTo(() => _logic.GetManagedConnectorForIamUserAsync(IamUserId, 0, 15)).MustHaveHappenedOnceExactly();
+        result.Content.Should().HaveCount(5);
+    }
+
+    [Fact]
     public async Task CreateConnectorAsync_WithValidData_ReturnsExpectedResult()
     {
         //Arrange
@@ -113,14 +129,14 @@ public class ConnectorsControllerTests
     {
         //Arrange
         var paginationResponse = new Pagination.Response<ConnectorData>(new Pagination.Metadata(15, 1, 1, 15), _fixture.CreateMany<ConnectorData>(5));
-        A.CallTo(() => _logic.GetAllCompanyConnectorDatasForIamUserAsyncEnum(IamUserId, 0, 15))
+        A.CallTo(() => _logic.GetAllCompanyConnectorDatasForIamUserAsync(IamUserId, 0, 15))
             .Returns(paginationResponse);
 
         //Act
         var result = await this._controller.GetCompanyConnectorsForCurrentUserAsync().ConfigureAwait(false);
 
         //Assert
-        A.CallTo(() => _logic.GetAllCompanyConnectorDatasForIamUserAsyncEnum(IamUserId, 0, 15)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _logic.GetAllCompanyConnectorDatasForIamUserAsync(IamUserId, 0, 15)).MustHaveHappenedOnceExactly();
         result.Content.Should().HaveCount(5);
     }
     

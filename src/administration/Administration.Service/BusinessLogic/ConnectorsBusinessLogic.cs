@@ -61,7 +61,7 @@ public class ConnectorsBusinessLogic : IConnectorsBusinessLogic
     }
 
     /// <inheritdoc/>
-    public Task<Pagination.Response<ConnectorData>> GetAllCompanyConnectorDatasForIamUserAsyncEnum(string iamUserId, int page, int size)
+    public Task<Pagination.Response<ConnectorData>> GetAllCompanyConnectorDatasForIamUserAsync(string iamUserId, int page, int size)
     {
         var connectors = _portalRepositories.GetInstance<IConnectorsRepository>().GetAllCompanyConnectorsForIamUser(iamUserId);
 
@@ -85,6 +85,23 @@ public class ConnectorsBusinessLogic : IConnectorsBusinessLogic
                             c.SelfDescriptionDocumentId,
                             c.SelfDescriptionDocument!.DocumentName)
                     ).AsAsyncEnumerable()
+            )
+        );
+    }
+
+    /// <inheritdoc/>
+    public Task<Pagination.Response<ConnectorData>> GetManagedConnectorForIamUserAsync(string iamUserId, int page, int size)
+    {
+        var connectors = _portalRepositories.GetInstance<IConnectorsRepository>().GetManagedConnectorsForIamUser(iamUserId);
+
+        return Pagination.CreateResponseAsync(page, size, _settings.MaxPageSize, (skip, take) =>
+            new Pagination.AsyncSource<ConnectorData>
+            (
+                connectors.CountAsync(),
+                connectors.OrderByDescending(connector => connector.Name)
+                    .Skip(skip)
+                    .Take(take)
+                    .AsAsyncEnumerable()
             )
         );
     }

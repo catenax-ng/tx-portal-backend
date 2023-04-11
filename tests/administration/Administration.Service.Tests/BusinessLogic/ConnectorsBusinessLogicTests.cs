@@ -547,6 +547,26 @@ public class ConnectorsBusinessLogicTests
 
     #endregion
 
+    #region GetManagedConnectorForIamUserAsync
+
+    [Fact]
+    public async Task GetManagedConnectorForIamUserAsync_GetExpected()
+    {
+        // Arrange
+        var data = new AsyncEnumerableStub<ConnectorData>(_fixture.CreateMany<ConnectorData>(5));
+        A.CallTo(() => _connectorsRepository.GetManagedConnectorsForIamUser(IamUserId))
+            .Returns(data);
+
+        // Act
+        var result  = await _logic.GetManagedConnectorForIamUserAsync(IamUserId, 0, 10);
+        
+        // Assert
+        result.Should().NotBeNull();
+        result.Content.Should().NotBeEmpty().And.HaveCount(5);
+    }
+
+    #endregion
+    
     #region Setup
 
     private void SetupRepositoryMethods()
