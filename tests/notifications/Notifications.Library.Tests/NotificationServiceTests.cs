@@ -325,7 +325,7 @@ public class NotificationServiceTests
         var not2 = Guid.NewGuid();
         var not3 = Guid.NewGuid();
         var not4 = Guid.NewGuid();
-        var notifications = new List<Notification>()
+        var notifications = new List<Notification>
         {
             new(not1, Guid.Empty, DateTimeOffset.UtcNow, NotificationTypeId.APP_RELEASE_REQUEST, false),
             new(not2, Guid.Empty, DateTimeOffset.UtcNow, NotificationTypeId.APP_RELEASE_REQUEST, false),
@@ -340,6 +340,12 @@ public class NotificationServiceTests
         var appId = new Guid("5cf74ef8-e0b7-4984-a872-474828beb5d2");
         A.CallTo(() => _notificationRepository.GetUpdateData(A<IEnumerable<Guid>>._, A<IEnumerable<NotificationTypeId>>._, appId))
             .Returns(notifications.Select(x => x.Id).ToAsyncEnumerable());
+        A.CallTo(() => _notificationRepository.AttachAndModifyNotification(A<Guid>._, A<Action<Notification>>._))
+            .Invokes((Guid notificationId, Action<Notification> setOptionalFields) =>
+            {
+                var notification = notifications.Single(x => x.Id == notificationId);
+                setOptionalFields.Invoke(notification);
+            });
 
         // Act
         await sut.SetNotificationsForOfferToDone(userRoles, Enumerable.Repeat(NotificationTypeId.APP_RELEASE_REQUEST,1), appId).ConfigureAwait(false);
@@ -349,6 +355,7 @@ public class NotificationServiceTests
         A.CallTo(() => _notificationRepository.AttachAndModifyNotification(not2, A<Action<Notification>>._)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _notificationRepository.AttachAndModifyNotification(not3, A<Action<Notification>>._)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _notificationRepository.AttachAndModifyNotification(not4, A<Action<Notification>>._)).MustHaveHappenedOnceExactly();
+        notifications.Should().AllSatisfy(x => x.Done.Should().BeTrue());
     }
 
     [Fact]
