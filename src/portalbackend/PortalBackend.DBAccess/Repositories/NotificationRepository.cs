@@ -89,7 +89,8 @@ public class NotificationRepository : INotificationRepository
                 notification.NotificationType!.NotificationTypeAssignedTopic!.NotificationTopicId,
                 notification.IsRead,
                 notification.Content,
-                notification.DueDate))
+                notification.DueDate,
+                notification.Done))
             .SingleOrDefaultAsync();
 
     /// <inheritdoc />
@@ -106,7 +107,8 @@ public class NotificationRepository : INotificationRepository
                     notification.NotificationType!.NotificationTypeAssignedTopic!.NotificationTopicId,
                     notification.IsRead,
                     notification.Content,
-                    notification.DueDate)))
+                    notification.DueDate,
+                    notification.Done)))
             .SingleOrDefaultAsync();
 
     /// <inheritdoc />
@@ -128,6 +130,32 @@ public class NotificationRepository : INotificationRepository
             .GroupBy(not => new { not.IsRead, not.NotificationType!.NotificationTypeAssignedTopic!.NotificationTopicId },
                 (key, element) => new ValueTuple<bool,NotificationTopicId,int>(key.IsRead, key.NotificationTopicId, element.Count()))
             .AsAsyncEnumerable();
+
+    /// <inheritdoc />
+    public IAsyncEnumerable<Guid> GetUpdateData(IEnumerable<Guid> userRoleIds, IEnumerable<NotificationTypeId> notificationTypeIds, Guid offerId) =>
+        _dbContext.CompanyUsers
+            .Where(x => 
+                x.CompanyUserStatusId == CompanyUserStatusId.ACTIVE && 
+                x.UserRoles.Any(ur => userRoleIds.Contains(ur.Id)))
+            .SelectMany(x => x.Notifications
+                .Where(n =>
+                    notificationTypeIds.Contains(n.NotificationTypeId) &&
+                    n.Content!.Contains($"\"offerId\":\"{offerId}\"")
+                )
+                // notificationsToSetToDone.Any(nc => 
+                //     nc.TypeId == n.NotificationTypeId &&
+                //     n.Content != null &&
+                //     n.Content.Contains(nc.Content)))
+                .Select(n => n.Id))
+            .ToAsyncEnumerable();
+
+    /// <inheritdoc />
+    public void SetNotificationToDone(Guid notificationId)
+    {
+        var notification = new Notification(notificationId, Guid.Empty, default!, default!, default!);
+        _dbContext.Notifications.Attach(notification);
+        notification.Done = true;
+    }
 
     /// <inheritdoc />
     public Task<(bool IsUserReceiver, bool IsNotificationExisting)> CheckNotificationExistsByIdAndIamUserIdAsync(Guid notificationId, string iamUserId) =>

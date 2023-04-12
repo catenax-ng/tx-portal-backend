@@ -69,7 +69,18 @@ public class NotificationService : INotificationService
             CreateNotification(receiver, creatorId, notifications, notificationRepository);
         }
     }
-    
+
+    /// <inheritdoc />
+    public async Task SetNotificationsForOfferToDone(IDictionary<string, IEnumerable<string>> roles, IEnumerable<NotificationTypeId> notificationTypeIds, Guid offerId)
+    {
+        var roleData = await ValidateRoleData(roles);
+        var notificationRepository = _portalRepositories.GetInstance<INotificationRepository>();
+        foreach (var notificationId in await notificationRepository.GetUpdateData(roleData, notificationTypeIds, offerId).ToListAsync())
+        {
+            notificationRepository.SetNotificationToDone(notificationId);
+        }
+    }
+
     private async Task<IEnumerable<Guid>> ValidateRoleData(IDictionary<string, IEnumerable<string>> receiverUserRoles)
     {
         var userRolesRepository = _portalRepositories.GetInstance<IUserRolesRepository>();
@@ -88,16 +99,16 @@ public class NotificationService : INotificationService
     {
         var notificationList = notifications.ToList();
         foreach (var notificationData in notificationList)
-            {
-                notificationRepository.CreateNotification(
-                    receiver,
-                    notificationData.notificationTypeId,
-                    false,
-                    notification =>
-                    {
-                        notification.CreatorUserId = creatorId;
-                        notification.Content = notificationData.content;
-                    });
-            }
+        {
+            notificationRepository.CreateNotification(
+                receiver,
+                notificationData.notificationTypeId,
+                false,
+                notification =>
+                {
+                    notification.CreatorUserId = creatorId;
+                    notification.Content = notificationData.content;
+                });
+        }
     }
 }
