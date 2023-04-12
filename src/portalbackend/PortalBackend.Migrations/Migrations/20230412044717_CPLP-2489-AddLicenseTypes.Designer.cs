@@ -32,8 +32,8 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migrations
 {
     [DbContext(typeof(PortalDbContext))]
-    [Migration("20230406095655_CPLP-2489-AddLicenseType")]
-    partial class CPLP2489AddLicenseType
+    [Migration("20230412044717_CPLP-2489-AddLicenseTypes")]
+    partial class CPLP2489AddLicenseTypes
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -335,6 +335,88 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         .HasName("pk_audit_company_user_assigned_role20221018");
 
                     b.ToTable("audit_company_user_assigned_role20221018", "portal");
+                });
+
+            modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.AuditEntities.AuditOffer20230119", b =>
+                {
+                    b.Property<Guid>("AuditV1Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("audit_v1id");
+
+                    b.Property<DateTimeOffset>("AuditV1DateLastChanged")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("audit_v1date_last_changed");
+
+                    b.Property<Guid?>("AuditV1LastEditorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("audit_v1last_editor_id");
+
+                    b.Property<int>("AuditV1OperationId")
+                        .HasColumnType("integer")
+                        .HasColumnName("audit_v1operation_id");
+
+                    b.Property<string>("ContactEmail")
+                        .HasColumnType("text")
+                        .HasColumnName("contact_email");
+
+                    b.Property<string>("ContactNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("contact_number");
+
+                    b.Property<DateTimeOffset>("DateCreated")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_created");
+
+                    b.Property<DateTimeOffset?>("DateLastChanged")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_last_changed");
+
+                    b.Property<DateTimeOffset?>("DateReleased")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_released");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("LastEditorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("last_editor_id");
+
+                    b.Property<string>("MarketingUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("marketing_url");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<int>("OfferStatusId")
+                        .HasColumnType("integer")
+                        .HasColumnName("offer_status_id");
+
+                    b.Property<int>("OfferTypeId")
+                        .HasColumnType("integer")
+                        .HasColumnName("offer_type_id");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("provider");
+
+                    b.Property<Guid?>("ProviderCompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("provider_company_id");
+
+                    b.Property<Guid?>("SalesManagerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("sales_manager_id");
+
+                    b.HasKey("AuditV1Id")
+                        .HasName("pk_audit_offer20230119");
+
+                    b.ToTable("audit_offer20230119", "portal");
                 });
 
             modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.AuditEntities.AuditOffer20230406", b =>
