@@ -1835,7 +1835,7 @@ public class OfferServiceTests
 
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
-        ex.Message.Should().Be($"Document in State {DocumentStatusId.LOCKED} can't be updated");
+        ex.Message.Should().Be($"Document in State {DocumentStatusId.LOCKED} can't be deleted");
     }
 
     #endregion

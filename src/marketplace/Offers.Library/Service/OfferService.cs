@@ -735,7 +735,7 @@ public class OfferService : IOfferService
 
         if (result.DocumentStatusId == DocumentStatusId.LOCKED)
         {
-            throw new ConflictException($"Document in State {result.DocumentStatusId} can't be updated");
+            throw new ConflictException($"Document in State {result.DocumentStatusId} can't be deleted");
         }
 
         _portalRepositories.GetInstance<IOfferRepository>().RemoveOfferAssignedDocument(offer.OfferId, documentId);
