@@ -94,10 +94,4 @@ public interface INotificationRepository
     /// <param name="offerId">id of the offer to get the notifications for</param>
     /// <returns>List of the notification ids that should be updated</returns>
     IAsyncEnumerable<Guid> GetUpdateData(IEnumerable<Guid> userRoleIds, IEnumerable<NotificationTypeId> notificationTypeIds, Guid offerId);
-
-    /// <summary>
-    /// Sets the notifications with the given ids to done
-    /// </summary>
-    /// <param name="notificationId">Id of the notification which should be set to done</param>
-    void SetNotificationToDone(Guid notificationId);
 }

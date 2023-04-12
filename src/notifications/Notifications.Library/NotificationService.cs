@@ -77,7 +77,10 @@ public class NotificationService : INotificationService
         var notificationRepository = _portalRepositories.GetInstance<INotificationRepository>();
         foreach (var notificationId in await notificationRepository.GetUpdateData(roleData, notificationTypeIds, offerId).ToListAsync())
         {
-            notificationRepository.SetNotificationToDone(notificationId);
+            notificationRepository.AttachAndModifyNotification(notificationId, not =>
+            {
+                not.Done = true;
+            });
         }
     }
 

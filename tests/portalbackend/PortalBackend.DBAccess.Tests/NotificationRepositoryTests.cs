@@ -20,6 +20,7 @@
 
 using AutoFixture;
 using AutoFixture.AutoFakeItEasy;
+using Castle.Components.DictionaryAdapter;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
@@ -380,6 +381,27 @@ public class NotificationRepositoryTests : IAssemblyFixture<TestDbFixture>
         results.IsNotificationExisting.Should().BeTrue();
     }
     
+    #endregion
+
+    #region GetUpdateData
+
+    [Fact]
+    public async Task GetUpdateData_ReturnsExpectedCount()
+    {
+        // Arrange
+        var sut = await CreateSut().ConfigureAwait(false);
+
+        // Act
+        var results = await sut
+            .GetUpdateData(Enumerable.Repeat(new Guid("efc20368-9e82-46ff-b88f-6495b9810253"), 1), Enumerable.Repeat(NotificationTypeId.APP_RELEASE_REQUEST, 1), new Guid("0fc768e5-d4cf-4d3d-a0db-379efedd60f5"))
+            .ToListAsync()
+            .ConfigureAwait(false);
+
+        // Assert
+        results.Should().HaveCount(1);
+        results.Single().Should().Be(new Guid("1836bbf6-b067-4126-9745-a22a098d3486"));
+    }
+
     #endregion
     
     #region Setup

@@ -142,20 +142,8 @@ public class NotificationRepository : INotificationRepository
                     notificationTypeIds.Contains(n.NotificationTypeId) &&
                     n.Content!.Contains($"\"offerId\":\"{offerId}\"")
                 )
-                // notificationsToSetToDone.Any(nc => 
-                //     nc.TypeId == n.NotificationTypeId &&
-                //     n.Content != null &&
-                //     n.Content.Contains(nc.Content)))
                 .Select(n => n.Id))
             .ToAsyncEnumerable();
-
-    /// <inheritdoc />
-    public void SetNotificationToDone(Guid notificationId)
-    {
-        var notification = new Notification(notificationId, Guid.Empty, default!, default!, default!);
-        _dbContext.Notifications.Attach(notification);
-        notification.Done = true;
-    }
 
     /// <inheritdoc />
     public Task<(bool IsUserReceiver, bool IsNotificationExisting)> CheckNotificationExistsByIdAndIamUserIdAsync(Guid notificationId, string iamUserId) =>
