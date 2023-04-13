@@ -624,7 +624,7 @@ public class ConnectorsBusinessLogicTests
             .ReturnsLazily(() => (ConnectorUpdateInformation?)null);
 
         // Act
-        async Task Act() => await _logic.UpdateConnectorUrl(connectorId, _fixture.Create<ConnectorUpdateRequest>(), IamUserId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _logic.UpdateConnectorUrl(connectorId, new ConnectorUpdateRequest("https://test.de"), IamUserId, CancellationToken.None).ConfigureAwait(false);
         
         // Assert
         var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
