@@ -18,10 +18,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using AutoFixture;
-using AutoFixture.AutoFakeItEasy;
-using Castle.Components.DictionaryAdapter;
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
@@ -29,7 +25,6 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Tests.Setup;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
-using Xunit;
 using Xunit.Extensions.AssemblyFixture;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Tests;
@@ -393,13 +388,13 @@ public class NotificationRepositoryTests : IAssemblyFixture<TestDbFixture>
 
         // Act
         var results = await sut
-            .GetUpdateData(Enumerable.Repeat(new Guid("efc20368-9e82-46ff-b88f-6495b9810253"), 1), Enumerable.Repeat(NotificationTypeId.APP_RELEASE_REQUEST, 1), new Guid("0fc768e5-d4cf-4d3d-a0db-379efedd60f5"))
+            .GetUpdateData(new [] { new Guid("efc20368-9e82-46ff-b88f-6495b9810253") }, new [] { NotificationTypeId.APP_RELEASE_REQUEST }, new Guid("0fc768e5-d4cf-4d3d-a0db-379efedd60f5"))
             .ToListAsync()
             .ConfigureAwait(false);
 
         // Assert
-        results.Should().HaveCount(1);
-        results.Single().Should().Be(new Guid("1836bbf6-b067-4126-9745-a22a098d3486"));
+        results.Should().HaveCount(1)
+            .And.Contain(new Guid("1836bbf6-b067-4126-9745-a22a098d3486"));
     }
 
     #endregion
