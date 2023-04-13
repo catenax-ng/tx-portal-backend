@@ -25,7 +25,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migrations
 {
-    public partial class CPLP2496AddConnectorMigrations : Migration
+    public partial class CPLP2496AddConnectorClientDetails : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
