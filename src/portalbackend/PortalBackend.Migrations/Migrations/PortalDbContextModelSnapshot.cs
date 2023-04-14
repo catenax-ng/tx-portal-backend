@@ -335,73 +335,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                     b.ToTable("audit_company_user_assigned_role20221018", "portal");
                 });
 
-            modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.AuditEntities.AuditConsent20230412", b =>
-                {
-                    b.Property<Guid>("AuditV1Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("audit_v1id");
-
-                    b.Property<Guid>("AgreementId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("agreement_id");
-
-                    b.Property<DateTimeOffset>("AuditV1DateLastChanged")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("audit_v1date_last_changed");
-
-                    b.Property<Guid?>("AuditV1LastEditorId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("audit_v1last_editor_id");
-
-                    b.Property<int>("AuditV1OperationId")
-                        .HasColumnType("integer")
-                        .HasColumnName("audit_v1operation_id");
-
-                    b.Property<string>("Comment")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("comment");
-
-                    b.Property<Guid>("CompanyId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("company_id");
-
-                    b.Property<Guid>("CompanyUserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("company_user_id");
-
-                    b.Property<int>("ConsentStatusId")
-                        .HasColumnType("integer")
-                        .HasColumnName("consent_status_id");
-
-                    b.Property<DateTimeOffset>("DateCreated")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_created");
-
-                    b.Property<Guid?>("DocumentId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("document_id");
-
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<Guid?>("LastEditorId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("last_editor_id");
-
-                    b.Property<string>("Target")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("target");
-
-                    b.HasKey("AuditV1Id")
-                        .HasName("pk_audit_consent20230412");
-
-                    b.ToTable("audit_consent20230412", "portal");
-                });
-
             modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.AuditEntities.AuditConnector20230405", b =>
                 {
                     b.Property<Guid>("AuditV1Id")
@@ -483,6 +416,73 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         .HasName("pk_audit_connector20230405");
 
                     b.ToTable("audit_connector20230405", "portal");
+                });
+
+            modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.AuditEntities.AuditConsent20230412", b =>
+                {
+                    b.Property<Guid>("AuditV1Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("audit_v1id");
+
+                    b.Property<Guid>("AgreementId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("agreement_id");
+
+                    b.Property<DateTimeOffset>("AuditV1DateLastChanged")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("audit_v1date_last_changed");
+
+                    b.Property<Guid?>("AuditV1LastEditorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("audit_v1last_editor_id");
+
+                    b.Property<int>("AuditV1OperationId")
+                        .HasColumnType("integer")
+                        .HasColumnName("audit_v1operation_id");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("comment");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.Property<Guid>("CompanyUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_user_id");
+
+                    b.Property<int>("ConsentStatusId")
+                        .HasColumnType("integer")
+                        .HasColumnName("consent_status_id");
+
+                    b.Property<DateTimeOffset>("DateCreated")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_created");
+
+                    b.Property<Guid?>("DocumentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("document_id");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("LastEditorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("last_editor_id");
+
+                    b.Property<string>("Target")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("target");
+
+                    b.HasKey("AuditV1Id")
+                        .HasName("pk_audit_consent20230412");
+
+                    b.ToTable("audit_consent20230412", "portal");
                 });
 
             modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.AuditEntities.AuditOffer20230119", b =>
