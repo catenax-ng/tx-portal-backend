@@ -703,7 +703,13 @@ public class ApplicationActivationTests
                     };
                     _notifications.Add(notification);
                 }
-            });
+            })
+            .Returns(new List<Guid>
+            {
+                CompanyUserId1,
+                CompanyUserId2,
+                CompanyUserId3
+            }.ToAsyncEnumerable());
     }
 
     private void SetupForDelete()

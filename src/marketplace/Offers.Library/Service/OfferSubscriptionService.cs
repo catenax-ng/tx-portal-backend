@@ -261,7 +261,7 @@ public class OfferSubscriptionService : IOfferSubscriptionService
         
         await foreach (var receiver in _portalRepositories.GetInstance<IUserRepository>().GetServiceProviderCompanyUserWithRoleIdAsync(offerId, roleData))
         {
-            if (!offerProviderDetails.SalesManagerId.HasValue || receiver != offerProviderDetails.SalesManagerId.Value)
+            if (offerProviderDetails.SalesManagerId.HasValue && receiver == offerProviderDetails.SalesManagerId.Value)
             {
                 continue;
             }
