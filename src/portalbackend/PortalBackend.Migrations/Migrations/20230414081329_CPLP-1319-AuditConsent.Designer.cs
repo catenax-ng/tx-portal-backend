@@ -32,7 +32,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migrations
 {
     [DbContext(typeof(PortalDbContext))]
-    [Migration("20230412132846_CPLP-1319-AuditConsent")]
+    [Migration("20230414081329_CPLP-1319-AuditConsent")]
     partial class CPLP1319AuditConsent
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -2944,6 +2944,10 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("date_created");
 
+                    b.Property<bool>("Done")
+                        .HasColumnType("boolean")
+                        .HasColumnName("done");
+
                     b.Property<DateTimeOffset?>("DueDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("due_date");
@@ -4427,7 +4431,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         .HasConstraintName("fk_company_assigned_roles_companies_company_id");
 
                     b.HasOne("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.CompanyRole", "CompanyRole")
-                        .WithMany()
+                        .WithMany("CompanyAssignedRoles")
                         .HasForeignKey("CompanyRoleId")
                         .IsRequired()
                         .HasConstraintName("fk_company_assigned_roles_company_roles_company_role_id");
@@ -5380,6 +5384,8 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
             modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.CompanyRole", b =>
                 {
                     b.Navigation("AgreementAssignedCompanyRoles");
+
+                    b.Navigation("CompanyAssignedRoles");
 
                     b.Navigation("CompanyRoleAssignedRoleCollection");
 
