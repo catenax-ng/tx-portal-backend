@@ -249,21 +249,22 @@ public class ConnectorsBusinessLogic : IConnectorsBusinessLogic
                 response = await _dapsService
                     .EnableDapsAuthAsync(name, connectorUrl, businessPartnerNumber, file, cancellationToken)
                     .ConfigureAwait(false);
-                if (string.IsNullOrWhiteSpace(response?.ClientId))
-                {
-                    throw new ServiceException("Client Id should be set here");
-                }
-
-                connectorsRepository.CreateConnectorClientDetails(createdConnector.Id, response.ClientId);
             }
             catch (ServiceException)
             {
                 // No error should be visible for the user
             }
-
-            var dapsCallSuccessful = !string.IsNullOrWhiteSpace(response?.ClientId);
-            createdConnector.DapsRegistrationSuccessful = dapsCallSuccessful;
-            createdConnector.StatusId = dapsCallSuccessful ? ConnectorStatusId.ACTIVE : ConnectorStatusId.PENDING;
+            if (!string.IsNullOrWhiteSpace(response?.ClientId))
+            {
+                connectorsRepository.CreateConnectorClientDetails(createdConnector.Id, response!.ClientId);
+                createdConnector.DapsRegistrationSuccessful = true;
+                createdConnector.StatusId = ConnectorStatusId.ACTIVE;
+            }
+            else
+            {
+                createdConnector.DapsRegistrationSuccessful = false;
+                createdConnector.StatusId = ConnectorStatusId.PENDING;
+            }
         }
 
         var selfDescriptionDocumentUrl = $"{_settings.SelfDescriptionDocumentUrl}/{selfDescriptionDocumentId}";
@@ -292,7 +293,7 @@ public class ConnectorsBusinessLogic : IConnectorsBusinessLogic
 
         if (string.IsNullOrWhiteSpace(result.DapsClientId))
         {
-            throw new UnexpectedConditionException("DapsClientId must be set");
+            throw new ConflictException("DapsClientId must be set");
         }
 
         if(result.SelfDescriptionDocumentId != null)
@@ -304,6 +305,12 @@ public class ConnectorsBusinessLogic : IConnectorsBusinessLogic
         }
 
         var companyUserId = await _portalRepositories.GetInstance<IUserRepository>().GetCompanyUserIdForIamUserUntrackedAsync(iamUserId).ConfigureAwait(false); 
+        
+        if(companyUserId == Guid.Empty)
+        {
+            throw new ConflictException($"user {iamUserId} is not mapped to a valid companyUser");
+        }
+
         connectorsRepository.DeleteConnectorClientDetails(connectorId);
         connectorsRepository.AttachAndModifyConnector(connectorId, con =>
         {
@@ -355,6 +362,12 @@ public class ConnectorsBusinessLogic : IConnectorsBusinessLogic
 
         var companyUserId = await _portalRepositories.GetInstance<IUserRepository>()
             .GetCompanyUserIdForIamUserUntrackedAsync(iamUserId).ConfigureAwait(false);
+
+        if(companyUserId == Guid.Empty)
+        {
+            throw new ConflictException($"user {iamUserId} is not mapped to a valid companyUser");
+        }
+
         connectorsRepository.AttachAndModifyConnector(connectorId, con =>
         {
             con.DapsRegistrationSuccessful = true;
@@ -376,8 +389,6 @@ public class ConnectorsBusinessLogic : IConnectorsBusinessLogic
             .GetConnectorDataById(data.ExternalId)
             .ConfigureAwait(false);
 
-        var companyUserId = await _portalRepositories.GetInstance<IUserRepository>().GetCompanyUserIdForIamUserUntrackedAsync(iamUserId)
-            .ConfigureAwait(false);
         if (result == default)
         {
             throw new NotFoundException($"Connector {data.ExternalId} does not exist");
@@ -386,6 +397,14 @@ public class ConnectorsBusinessLogic : IConnectorsBusinessLogic
         if (result.SelfDescriptionDocumentId != null)
         {
             throw new ConflictException($"Connector {data.ExternalId} already has a document assigned");
+        }
+
+        var companyUserId = await _portalRepositories.GetInstance<IUserRepository>().GetCompanyUserIdForIamUserUntrackedAsync(iamUserId)
+            .ConfigureAwait(false);
+        
+        if(companyUserId == Guid.Empty)
+        {
+            throw new ConflictException($"user {iamUserId} is not mapped to a valid companyUser");
         }
 
         await _sdFactoryBusinessLogic.ProcessFinishSelfDescriptionLpForConnector(data, companyUserId, cancellationToken).ConfigureAwait(false);

@@ -139,7 +139,7 @@ public class ConnectorsRepository : IConnectorsRepository
     public Task<(bool IsConnectorIdExist, string? DapsClientId, Guid? SelfDescriptionDocumentId, DocumentStatusId? DocumentStatusId, ConnectorStatusId ConnectorStatus)> GetConnectorDeleteDataAsync(Guid connectorId) =>
         _context.Connectors
             .Where(x => x.Id == connectorId)
-            .Select(connector => new ValueTuple<bool, string?, Guid?,DocumentStatusId?, ConnectorStatusId>(
+            .Select(connector => new ValueTuple<bool, string?, Guid?, DocumentStatusId?, ConnectorStatusId>(
                 true,
                 connector.ClientDetails == null ? null : connector.ClientDetails!.ClientId,
                 connector.SelfDescriptionDocumentId,
