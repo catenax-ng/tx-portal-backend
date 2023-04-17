@@ -2182,6 +2182,9 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                     b.HasIndex("HostId")
                         .HasDatabaseName("ix_connectors_host_id");
 
+                    b.HasIndex("LastEditorId")
+                        .HasDatabaseName("ix_connectors_last_editor_id");
+
                     b.HasIndex("LocationId")
                         .HasDatabaseName("ix_connectors_location_id");
 
@@ -4800,6 +4803,11 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         .HasForeignKey("HostId")
                         .HasConstraintName("fk_connectors_companies_host_id");
 
+                    b.HasOne("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.CompanyUser", "LastEditor")
+                        .WithMany()
+                        .HasForeignKey("LastEditorId")
+                        .HasConstraintName("fk_connectors_company_users_last_editor_id");
+
                     b.HasOne("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities.Country", "Location")
                         .WithMany("Connectors")
                         .HasForeignKey("LocationId")
@@ -4832,6 +4840,8 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         .HasConstraintName("fk_connectors_connector_types_type_id");
 
                     b.Navigation("Host");
+
+                    b.Navigation("LastEditor");
 
                     b.Navigation("Location");
 
