@@ -543,7 +543,7 @@ public class ConnectorsBusinessLogicTests
         async Task Act() => await _logic.DeleteConnectorAsync(connectorId, IamUserId, CancellationToken.None).ConfigureAwait(false);
 
         // Assert
-        var ex = await Assert.ThrowsAsync<UnexpectedConditionException>(Act);
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
         ex.Message.Should().Be("DapsClientId must be set");
     }
 
