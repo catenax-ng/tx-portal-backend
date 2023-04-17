@@ -152,6 +152,22 @@ public class ConnectorsBusinessLogicTests
     }
 
     [Fact]
+    public async Task CreateConnectorAsync_WithNotExistingUser_ThrowsConflictException()
+    {
+        // Arrange
+        var iamUserId = Guid.NewGuid().ToString();
+        var file = FormFileHelper.GetFormFile("Content of the super secure certificate", "test.pem", "application/x-pem-file");
+        var connectorInput = new ConnectorInputModel("connectorName", "https://test.de", "de", file);
+
+        // Act
+        async Task Act() => await _logic.CreateConnectorAsync(connectorInput, iamUserId, CancellationToken.None).ConfigureAwait(false);
+
+        // Assert
+        var exception = await Assert.ThrowsAsync<ConflictException>(Act);
+        exception.Message.Should().Be($"No company found for user {iamUserId}");
+    }
+
+    [Fact]
     public async Task CreateConnectorAsync_WithInvalidLocation_ThrowsControllerArgumentException()
     {
         // Arrange
@@ -619,19 +635,20 @@ public class ConnectorsBusinessLogicTests
         A.CallTo(() => _userRepository.GetOwnCompanyId(A<string>.That.Matches(x => x == UserWithoutBpn)))
             .Returns(CompanyWithoutBpnId);
 
-        A.CallTo(() => _userRepository.GetOwnCompanyAndCompanyUserId(IamUserId))
+        A.CallTo(() => _companyRepository.GetCompanyIdAndUserIdForUserOrTechnicalUser(IamUserId))
             .ReturnsLazily(() => (ValidCompanyId, CompanyUserId));
-        A.CallTo(() => _userRepository.GetOwnCompanyAndCompanyUserId(A<string>.That.Matches(x => x == UserWithoutBpn)))
+        A.CallTo(() => _companyRepository.GetCompanyIdAndUserIdForUserOrTechnicalUser(A<string>.That.Matches(x => x == UserWithoutBpn)))
             .Returns((CompanyWithoutBpnId, CompanyUserId));
-        A.CallTo(() => _userRepository.GetOwnCompanyAndCompanyUserId(A<string>.That.Matches(x => x == IamUserWithoutSdDocumentId)))
+        A.CallTo(() => _companyRepository.GetCompanyIdAndUserIdForUserOrTechnicalUser(A<string>.That.Matches(x => x == IamUserWithoutSdDocumentId)))
             .Returns((CompanyIdWithoutSdDocument, CompanyUserId));
+        A.CallTo(() => _companyRepository.GetCompanyIdAndUserIdForUserOrTechnicalUser(A<string>.That.Matches(x => x == TechnicalUserId)))
+            .Returns((ValidCompanyId, Guid.Empty));
+        A.CallTo(() => _companyRepository.GetCompanyIdAndUserIdForUserOrTechnicalUser(A<string>.That.Not.Matches(x => x == TechnicalUserId || x == IamUserId || x == UserWithoutBpn || x == IamUserWithoutSdDocumentId)))
+            .Returns(new ValueTuple<Guid, Guid>());
+
         A.CallTo(() => _userRepository.GetCompanyUserIdForIamUserUntrackedAsync(IamUserId))
             .ReturnsLazily(() => CompanyUserId);
 
-        A.CallTo(() => _userRepository.GetServiceAccountCompany(A<string>.That.Matches(x => x == TechnicalUserId)))
-            .Returns((ValidCompanyId, ServiceAccountUserId));
-        A.CallTo(() => _userRepository.GetServiceAccountCompany(A<string>.That.Not.Matches(x => x == TechnicalUserId)))
-            .Returns(new ValueTuple<Guid, Guid>());
 
         A.CallTo(() => _sdFactoryBusinessLogic.RegisterConnectorAsync(A<Guid>._, A<string>._, A<string>._, A<CancellationToken>._))
             .Returns(Task.CompletedTask);

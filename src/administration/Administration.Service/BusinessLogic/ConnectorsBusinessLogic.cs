@@ -204,19 +204,17 @@ public class ConnectorsBusinessLogic : IConnectorsBusinessLogic
             cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<(Guid CompanyId, Guid UserId)> GetCompanyOfUserOrTechnicalUser(string iamUserId)
+    private async Task<(Guid CompanyId, Guid? UserId)> GetCompanyOfUserOrTechnicalUser(string iamUserId)
     {
-        var result = await _portalRepositories.GetInstance<IUserRepository>().GetOwnCompanyAndCompanyUserId(iamUserId)
+        var result = await _portalRepositories.GetInstance<ICompanyRepository>()
+            .GetCompanyIdAndUserIdForUserOrTechnicalUser(iamUserId)
             .ConfigureAwait(false);
-        // if not check for technical user
         if (result == default)
         {
-            result = await _portalRepositories.GetInstance<IUserRepository>()
-                .GetServiceAccountCompany(iamUserId)
-                .ConfigureAwait(false);
+            throw new ConflictException($"No company found for user {iamUserId}");
         }
 
-        return result;
+        return (result.CompanyId, result.CompanyUserId == Guid.Empty ? null : result.CompanyUserId);
     }
 
     private async Task CheckLocationExists(string location)
@@ -233,7 +231,7 @@ public class ConnectorsBusinessLogic : IConnectorsBusinessLogic
         string businessPartnerNumber,
         Guid selfDescriptionDocumentId,
         IFormFile? file,
-        Guid companyUserId,
+        Guid? companyUserId,
         CancellationToken cancellationToken)
     {
         var (name, connectorUrl, type, location, provider, host) = connectorInputModel;
