@@ -19,6 +19,7 @@
  ********************************************************************************/
 
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Daps.Library.Models;
@@ -31,6 +32,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Daps.Library;
 public class DapsService : IDapsService
 {
     private const string BaseSecurityProfile = "BASE_SECURITY_PROFILE";
+    private static readonly JsonSerializerOptions Options = new (){ PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
     private readonly ITokenService _tokenService;
     private readonly DapsSettings _settings;
 
@@ -57,7 +59,7 @@ public class DapsService : IDapsService
     {
         var httpClient = await _tokenService.GetAuthorizedClient<DapsService>(_settings, cancellationToken).ConfigureAwait(false);
         await httpClient.DeleteAsync(dapsClientId, cancellationToken)
-            .CatchingIntoServiceExceptionFor("daps-post", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE).ConfigureAwait(false);
+            .CatchingIntoServiceExceptionFor("daps-delete", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE).ConfigureAwait(false);
 
         return true;
     }
@@ -77,7 +79,7 @@ public class DapsService : IDapsService
 
         var result = await httpClient.PostAsync(string.Empty, multiPartStream, cancellationToken)
             .CatchingIntoServiceExceptionFor("daps-post", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE).ConfigureAwait(false);
-        return await result.Content.ReadFromJsonAsync<DapsResponse>(cancellationToken: cancellationToken)
+        return await result.Content.ReadFromJsonAsync<DapsResponse>(Options, cancellationToken)
             .ConfigureAwait(false); 
     }
 }
