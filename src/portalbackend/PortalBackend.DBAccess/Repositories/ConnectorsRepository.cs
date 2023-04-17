@@ -19,6 +19,7 @@
  ********************************************************************************/
 
 using Microsoft.EntityFrameworkCore;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
@@ -47,12 +48,16 @@ public class ConnectorsRepository : IConnectorsRepository
             .SelectMany(u => u.CompanyUser!.Company!.ProvidedConnectors.Where(c => c.StatusId != ConnectorStatusId.INACTIVE));
 
     /// <inheritdoc/>
-    public IQueryable<ManagedConnectorData> GetManagedConnectorsForIamUser(string iamUserId) =>
-        _context.Connectors
-            .AsNoTracking()
-            .Where(c => c.Host!.CompanyUsers.Any(cu => cu.IamUser!.UserEntityId == iamUserId) &&
-                        c.StatusId != ConnectorStatusId.INACTIVE)
-            .Select(c => new ManagedConnectorData(
+    public Func<int,int,Task<Pagination.Source<ManagedConnectorData>?>> GetManagedConnectorsForIamUser(string iamUserId) =>
+        (skip, take) => Pagination.CreateSourceQueryAsync(
+            skip,
+            take,
+            _context.Connectors.AsNoTracking()
+                .Where(c => c.Host!.CompanyUsers.Any(cu => cu.IamUser!.UserEntityId == iamUserId) &&
+                            c.StatusId != ConnectorStatusId.INACTIVE)
+                .GroupBy(c => c.HostId),
+            connectors => connectors.OrderByDescending(connector => connector.Name),
+            c => new ManagedConnectorData(
                     c.Name,
                     c.Location!.Alpha2Code,
                     c.Id,
@@ -61,7 +66,7 @@ public class ConnectorsRepository : IConnectorsRepository
                     c.DapsRegistrationSuccessful,
                     c.Provider!.Name,
                     c.SelfDescriptionDocumentId)
-            );
+        ).SingleOrDefaultAsync();
 
     public Task<(ConnectorData ConnectorData, bool IsProviderUser)> GetConnectorByIdForIamUser(Guid connectorId, string iamUser) =>
         _context.Connectors

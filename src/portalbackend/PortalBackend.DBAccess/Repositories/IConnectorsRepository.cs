@@ -18,6 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
@@ -40,9 +41,9 @@ public interface IConnectorsRepository
     /// Get all managed connectors of a user's company by iam user ID.
     /// </summary>
     /// <param name="iamUserId">ID of the iam user used to determine company's connectors for.</param>
-    /// <returns>Queryable of connectors that allows transformation.</returns>
-    IQueryable<ManagedConnectorData> GetManagedConnectorsForIamUser(string iamUserId);
-    
+    /// <returns>Pagination.Source of connectors that allows transformation.</returns>
+    Func<int,int,Task<Pagination.Source<ManagedConnectorData>?>> GetManagedConnectorsForIamUser(string iamUserId);
+
     Task<(ConnectorData ConnectorData, bool IsProviderUser)> GetConnectorByIdForIamUser(Guid connectorId, string iamUser);
 
     Task<(ConnectorInformationData ConnectorInformationData, bool IsProviderUser)> GetConnectorInformationByIdForIamUser(Guid connectorId, string iamUser);

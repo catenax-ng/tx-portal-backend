@@ -25,6 +25,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Daps.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Daps.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
@@ -33,6 +34,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared;
+using System.Collections.Immutable;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Tests.BusinessLogic;
 
@@ -565,20 +567,49 @@ public class ConnectorsBusinessLogicTests
 
     #region GetManagedConnectorForIamUserAsync
 
-    [Fact]
-    public async Task GetManagedConnectorForIamUserAsync_GetExpected()
+    [Theory]
+    [InlineData(0,10,5,1,0,5)]
+    [InlineData(1,10,5,1,1,0)]
+    [InlineData(0,10,20,2,0,10)]
+    [InlineData(1,10,20,2,1,10)]
+    [InlineData(1,15,20,2,1,5)]
+    public async Task GetManagedConnectorForIamUserAsync_GetExpected(int page, int size, int numberOfElements, int numberOfPages, int resultPage, int resultPageSize)
     {
         // Arrange
-        var data = new AsyncEnumerableStub<ManagedConnectorData>(_fixture.CreateMany<ManagedConnectorData>(5));
+        var data = _fixture.CreateMany<ManagedConnectorData>(numberOfElements).ToImmutableArray();
+
         A.CallTo(() => _connectorsRepository.GetManagedConnectorsForIamUser(IamUserId))
-            .Returns(data);
+            .Returns((int skip, int take) => Task.FromResult((Pagination.Source<ManagedConnectorData>?)new Pagination.Source<ManagedConnectorData>(data.Length, data.Skip(skip).Take(take))));
+
+        // Act
+        var result  = await _logic.GetManagedConnectorForIamUserAsync(IamUserId, page, size);
+        
+        // Assert
+        result.Should().NotBeNull();
+        result.Meta.NumberOfElements.Should().Be(numberOfElements);
+        result.Meta.NumberOfPages.Should().Be(numberOfPages);
+        result.Meta.Page.Should().Be(resultPage);
+        result.Meta.PageSize.Should().Be(resultPageSize);
+        result.Content.Should().HaveCount(resultPageSize);
+    }
+
+    [Fact]
+    public async Task GetManagedConnectorForIamUserAsync_EmptyResult_GetExpected()
+    {
+        // Arrange
+        A.CallTo(() => _connectorsRepository.GetManagedConnectorsForIamUser(IamUserId))
+            .Returns((int _, int _) => Task.FromResult((Pagination.Source<ManagedConnectorData>?)null));
 
         // Act
         var result  = await _logic.GetManagedConnectorForIamUserAsync(IamUserId, 0, 10);
         
         // Assert
         result.Should().NotBeNull();
-        result.Content.Should().NotBeEmpty().And.HaveCount(5);
+        result.Meta.NumberOfElements.Should().Be(0);
+        result.Meta.NumberOfPages.Should().Be(0);
+        result.Meta.Page.Should().Be(0);
+        result.Meta.PageSize.Should().Be(0);
+        result.Content.Should().BeEmpty();
     }
 
     #endregion

@@ -328,11 +328,11 @@ public class ConnectorRepositoryTests : IAssemblyFixture<TestDbFixture>
         var (sut, _) = await CreateSut().ConfigureAwait(false);
 
         // Act
-        var result = await sut.GetManagedConnectorsForIamUser("502dabcf-01c7-47d9-a88e-0be4279097b5").ToListAsync().ConfigureAwait(false);
+        var result = await sut.GetManagedConnectorsForIamUser("502dabcf-01c7-47d9-a88e-0be4279097b5").Invoke(0,10).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
-        result.Should().HaveCount(2);
+        result!.Count.Should().Be(2);
     }
 
     [Fact]
@@ -342,11 +342,10 @@ public class ConnectorRepositoryTests : IAssemblyFixture<TestDbFixture>
         var (sut, _) = await CreateSut().ConfigureAwait(false);
 
         // Act
-        var result = await sut.GetManagedConnectorsForIamUser(Guid.NewGuid().ToString()).ToListAsync().ConfigureAwait(false);
+        var result = await sut.GetManagedConnectorsForIamUser(Guid.NewGuid().ToString()).Invoke(0,10).ConfigureAwait(false);
 
         // Assert
-        result.Should().NotBeNull();        
-        result.Should().BeEmpty();
+        result.Should().BeNull();        
     }
 
     #endregion
