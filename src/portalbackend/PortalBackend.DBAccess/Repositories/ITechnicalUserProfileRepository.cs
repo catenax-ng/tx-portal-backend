@@ -56,6 +56,12 @@ public interface ITechnicalUserProfileRepository
     void RemoveTechnicalUserProfilesWithAssignedRoles(IEnumerable<(Guid TechnicalUserProfileId, IEnumerable<Guid> UserRoleIds)> profilesToDelete);
 
     /// <summary>
+    /// Removes the technical user profiles and the assigned roles
+    /// </summary>
+    /// <param name="offerId">The id of the offer to remove the technical user profiles for</param>
+    void RemoveTechnicalUserProfilesForOffer(Guid offerId);
+
+    /// <summary>
     /// Gets the technical user profiles for a given offer
     /// </summary>
     /// <param name="offerId">Id of the offer</param>

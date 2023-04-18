@@ -182,6 +182,31 @@ public class TechnicalUserProfileRepositoryTests : IAssemblyFixture<TestDbFixtur
 
     #endregion
 
+    #region RemoveTechnicalUserProfilesForOffer
+
+    [Fact]
+    public async Task RemoveTechnicalUserProfilesForOffer_ReturnsExpectedResult()
+    {
+        // Arrange
+        var (sut, context) = await CreateSutWithContext().ConfigureAwait(false);
+
+        // Act
+        sut.RemoveTechnicalUserProfilesForOffer(_validOfferId);
+
+        // Assert
+        var changeTracker = context.ChangeTracker;
+        var changedEntries = changeTracker.Entries().ToList();
+        changeTracker.HasChanges().Should().BeTrue();
+        changedEntries.Should().NotBeEmpty();
+        changedEntries.Should().HaveCount(5);
+        var removedEntries = changedEntries.Where(x => x.State == EntityState.Deleted);
+        removedEntries.Should().HaveCount(5);
+        removedEntries.Where(x => x.Entity.GetType() == typeof(TechnicalUserProfile)).Should().HaveCount(2);
+        removedEntries.Where(x => x.Entity.GetType() == typeof(TechnicalUserProfileAssignedUserRole)).Should().HaveCount(3);
+    }
+
+    #endregion
+
     #region GetOfferProfileData
 
     [Fact]

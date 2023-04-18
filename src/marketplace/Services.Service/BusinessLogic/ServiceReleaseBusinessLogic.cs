@@ -197,6 +197,11 @@ public class ServiceReleaseBusinessLogic : IServiceReleaseBusinessLogic
             newServiceTypes, 
             serviceTypeIdsToRemove,
             offerRepository);
+        if (data.ServiceTypeIds.All(x => x == ServiceTypeId.CONSULTANCE_SERVICE))
+        {
+            _portalRepositories.GetInstance<ITechnicalUserProfileRepository>()
+                .RemoveTechnicalUserProfilesForOffer(serviceId);
+        }
 
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }

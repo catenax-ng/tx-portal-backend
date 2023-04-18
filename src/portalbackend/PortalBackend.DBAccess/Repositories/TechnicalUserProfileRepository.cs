@@ -65,6 +65,13 @@ public class TechnicalUserProfileRepository : ITechnicalUserProfileRepository
     }
 
     /// <inheritdoc />
+    public void RemoveTechnicalUserProfilesForOffer(Guid offerId)
+    {
+        _context.TechnicalUserProfileAssignedUserRoles.RemoveRange(_context.TechnicalUserProfileAssignedUserRoles.AsNoTracking().Where(x => x.TechnicalUserProfile!.OfferId == offerId));
+        _context.TechnicalUserProfiles.RemoveRange(_context.TechnicalUserProfiles.AsNoTracking().Where(x => x.OfferId == offerId));
+    }
+
+    /// <inheritdoc />
     public Task<(bool IsUserOfProvidingCompany, IEnumerable<TechnicalUserProfileInformation> Information)>
         GetTechnicalUserProfileInformation(Guid offerId, string iamUserId, OfferTypeId offerTypeId) =>
         _context.Offers
