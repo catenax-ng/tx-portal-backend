@@ -489,7 +489,7 @@ public interface IOfferRepository
     /// </summary>
     /// <param name="offerId"></param>
     /// <returns></returns>
-    Task<(bool IsSingleInstance, IEnumerable<IEnumerable<UserRoleData>> ServiceAccountProfiles, string? OfferName)> GetServiceAccountProfileData(Guid offerId);
+    Task<(bool IsSingleInstance, IEnumerable<IEnumerable<UserRoleData>> ServiceAccountProfiles, string? OfferName)> GetServiceAccountProfileData(Guid offerId, OfferTypeId offerTypeId);
 
     /// <summary>
     /// Gets the related service account data

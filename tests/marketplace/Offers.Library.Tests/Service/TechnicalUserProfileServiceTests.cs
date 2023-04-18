@@ -22,6 +22,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Tests.Service;
 
@@ -53,26 +54,26 @@ public class TechnicalUserProfileServiceTests
     public async Task GetTechnicalUserProfilesForOffer_WithoutOffer_ThrowsException()
     {
         // Arrange
-        A.CallTo(() => _offerRepository.GetServiceAccountProfileData(_offerId))
-            .ReturnsLazily(() => new ValueTuple<bool, IEnumerable<IEnumerable<UserRoleData>>, string?>());
+        A.CallTo(() => _offerRepository.GetServiceAccountProfileData(_offerId, A<OfferTypeId>._))
+            .Returns(((bool,IEnumerable<IEnumerable<UserRoleData>>,string?))default);
         
         // Act
-        async Task Act() => await _sut.GetTechnicalUserProfilesForOffer(_offerId).ToListAsync().ConfigureAwait(false);
+        async Task Act() => await _sut.GetTechnicalUserProfilesForOffer(_offerId, OfferTypeId.APP).ToListAsync().ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
-        ex.Message.Should().Be($"Offer {_offerId} does not exists");
+        ex.Message.Should().Be($"Offer APP {_offerId} does not exists");
     }
     
     [Fact]
     public async Task GetTechnicalUserProfilesForOffer_WithoutOfferName_ThrowsException()
     {
         // Arrange
-        A.CallTo(() => _offerRepository.GetServiceAccountProfileData(_offerId))
-            .ReturnsLazily(() => new ValueTuple<bool, IEnumerable<IEnumerable<UserRoleData>>, string?>(true, Enumerable.Empty<IEnumerable<UserRoleData>>(), null));
+        A.CallTo(() => _offerRepository.GetServiceAccountProfileData(_offerId, A<OfferTypeId>._))
+            .Returns((true, Enumerable.Empty<IEnumerable<UserRoleData>>(), null));
         
         // Act
-        async Task Act() => await _sut.GetTechnicalUserProfilesForOffer(_offerId).ToListAsync().ConfigureAwait(false);
+        async Task Act() => await _sut.GetTechnicalUserProfilesForOffer(_offerId, OfferTypeId.APP).ToListAsync().ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -83,11 +84,11 @@ public class TechnicalUserProfileServiceTests
     public async Task GetTechnicalUserProfilesForOffer_WithWithoutTechnicalUserNeededAndSingleInstance_ReturnsExpected()
     {
         // Arrange
-        A.CallTo(() => _offerRepository.GetServiceAccountProfileData(_offerId))
-            .ReturnsLazily(() => new ValueTuple<bool, IEnumerable<IEnumerable<UserRoleData>>, string?>(false, Enumerable.Empty<IEnumerable<UserRoleData>>(), OfferName));
+        A.CallTo(() => _offerRepository.GetServiceAccountProfileData(_offerId, A<OfferTypeId>._))
+            .Returns((false, Enumerable.Empty<IEnumerable<UserRoleData>>(), OfferName));
         
         // Act
-        var result = await _sut.GetTechnicalUserProfilesForOffer(_offerId).ToListAsync().ConfigureAwait(false);
+        var result = await _sut.GetTechnicalUserProfilesForOffer(_offerId, OfferTypeId.APP).ToListAsync().ConfigureAwait(false);
         
         // Assert
         result.Should().BeEmpty();
@@ -97,13 +98,14 @@ public class TechnicalUserProfileServiceTests
     public async Task GetTechnicalUserProfilesForOffer_WithValidData_ReturnsExpected()
     {
         // Arrange
-        var userRoleData = Enumerable.Repeat(new UserRoleData(Guid.NewGuid(), "cl1", "test role"), 1);
-        var serviceProfiles = Enumerable.Repeat(userRoleData, 1);
-        A.CallTo(() => _offerRepository.GetServiceAccountProfileData(_offerId))
-            .ReturnsLazily(() => new ValueTuple<bool, IEnumerable<IEnumerable<UserRoleData>>, string?>(true, serviceProfiles, OfferName));
+        var serviceProfiles = new IEnumerable<UserRoleData> [] {
+            new UserRoleData [] { new (Guid.NewGuid(), "cl1", "test role") }
+        };
+        A.CallTo(() => _offerRepository.GetServiceAccountProfileData(_offerId, A<OfferTypeId>._))
+            .Returns((true, serviceProfiles, OfferName));
 
         // Act
-        var result = await _sut.GetTechnicalUserProfilesForOffer(_offerId).ToListAsync().ConfigureAwait(false);
+        var result = await _sut.GetTechnicalUserProfilesForOffer(_offerId, OfferTypeId.APP).ToListAsync().ConfigureAwait(false);
         
         // Assert
         result.Should().HaveCount(1);
@@ -114,7 +116,7 @@ public class TechnicalUserProfileServiceTests
     {
         // Arrange
         A.CallTo(() => _offerRepository.GetServiceAccountProfileDataForSubscription(_offerSubscriptionId))
-            .ReturnsLazily(() => new ValueTuple<bool, IEnumerable<IEnumerable<UserRoleData>>, string?>(true, Enumerable.Empty<IEnumerable<UserRoleData>>(), null));
+            .Returns((true, Enumerable.Empty<IEnumerable<UserRoleData>>(), (string?)null));
         
         // Act
         async Task Act() => await _sut.GetTechnicalUserProfilesForOfferSubscription(_offerSubscriptionId).ToListAsync().ConfigureAwait(false);
@@ -129,7 +131,7 @@ public class TechnicalUserProfileServiceTests
     {
         // Arrange
         A.CallTo(() => _offerRepository.GetServiceAccountProfileDataForSubscription(_offerSubscriptionId))
-            .ReturnsLazily(() => new ValueTuple<bool, IEnumerable<IEnumerable<UserRoleData>>, string?>(false, Enumerable.Empty<IEnumerable<UserRoleData>>(), OfferName));
+            .Returns((false, Enumerable.Empty<IEnumerable<UserRoleData>>(), OfferName));
         
         // Act
         var result = await _sut.GetTechnicalUserProfilesForOfferSubscription(_offerSubscriptionId).ToListAsync().ConfigureAwait(false);
@@ -142,10 +144,11 @@ public class TechnicalUserProfileServiceTests
     public async Task GetTechnicalUserProfilesForOfferSubscription_WithValidData_ReturnsExpected()
     {
         // Arrange
-        var userRoleData = Enumerable.Repeat(new UserRoleData(Guid.NewGuid(), "cl1", "test role"), 1);
-        var serviceProfiles = Enumerable.Repeat(userRoleData, 1);
+        var serviceProfiles = new IEnumerable<UserRoleData> [] {
+            new UserRoleData [] { new (Guid.NewGuid(), "cl1", "test role") }
+        };
         A.CallTo(() => _offerRepository.GetServiceAccountProfileDataForSubscription(_offerSubscriptionId))
-            .ReturnsLazily(() => new ValueTuple<bool, IEnumerable<IEnumerable<UserRoleData>>, string?>(true, serviceProfiles, OfferName));
+            .Returns((true, serviceProfiles, OfferName));
 
         // Act
         var result = await _sut.GetTechnicalUserProfilesForOfferSubscription(_offerSubscriptionId).ToListAsync().ConfigureAwait(false);

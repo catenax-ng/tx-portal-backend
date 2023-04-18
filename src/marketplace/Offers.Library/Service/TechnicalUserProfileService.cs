@@ -22,6 +22,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Models;
 
@@ -41,14 +42,14 @@ public class TechnicalUserProfileService : ITechnicalUserProfileService
     }
 
     /// <inheritdoc />
-    public async IAsyncEnumerable<ServiceAccountCreationInfo> GetTechnicalUserProfilesForOffer(Guid offerId)
+    public async IAsyncEnumerable<ServiceAccountCreationInfo> GetTechnicalUserProfilesForOffer(Guid offerId, OfferTypeId offerTypeId)
     {
         var data = await _portalRepositories.GetInstance<IOfferRepository>()
-            .GetServiceAccountProfileData(offerId)
+            .GetServiceAccountProfileData(offerId, offerTypeId)
             .ConfigureAwait(false);
         if (data == default)
         {
-            throw new NotFoundException($"Offer {offerId} does not exists");
+            throw new NotFoundException($"Offer {offerTypeId} {offerId} does not exists");
         }
 
         if (!CheckTechnicalUserData(data)) yield break;
@@ -86,13 +87,10 @@ public class TechnicalUserProfileService : ITechnicalUserProfileService
         return data.IsSingleInstance || !data.ServiceAccountProfiles.Any();
     }
 
-    private static ServiceAccountCreationInfo GetServiceAccountData(string offerName, IEnumerable<UserRoleData> serviceAccountUserRoles)
-    {
-        var serviceAccountCreationData = new ServiceAccountCreationInfo(
+    private static ServiceAccountCreationInfo GetServiceAccountData(string offerName, IEnumerable<UserRoleData> serviceAccountUserRoles) =>
+        new ServiceAccountCreationInfo(
             offerName,
             $"Technical User for app {offerName} - {string.Join(",", serviceAccountUserRoles.Select(x => x.UserRoleText))}",
             IamClientAuthMethod.SECRET,
             serviceAccountUserRoles.Select(x => x.UserRoleId));
-        return serviceAccountCreationData;
-    }
 }

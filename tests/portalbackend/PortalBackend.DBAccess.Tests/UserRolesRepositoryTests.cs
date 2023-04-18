@@ -93,7 +93,7 @@ public class UserRolesRepositoryTests : IAssemblyFixture<TestDbFixture>
         var sut = await CreateSut().ConfigureAwait(false);
         
         // Act
-        var data = await sut.GetRolesForClient("Cl1-CX-Registration").ConfigureAwait(false);
+        var data = await sut.GetRolesForClient("Cl1-CX-Registration").ToListAsync().ConfigureAwait(false);
         
         // Assert
         data.Should().HaveCount(3);

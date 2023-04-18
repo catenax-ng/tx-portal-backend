@@ -200,11 +200,11 @@ public class UserRolesRepository : IUserRolesRepository
            .AsAsyncEnumerable();
 
     /// <inheritdoc />
-    public Task<List<string>> GetUserRolesForOfferIdAsync(Guid offerId) => 
+    public IAsyncEnumerable<string> GetUserRolesForOfferIdAsync(Guid offerId) => 
         _dbContext.UserRoles
             .Where(x => x.OfferId == offerId)
             .Select(x => x.UserRoleText)
-            .ToListAsync();
+            .AsAsyncEnumerable();
 
     /// <inheritdoc />
     public async IAsyncEnumerable<CompanyUserNameData> GetUserDataByAssignedRoles(string iamUserId, IDictionary<string, IEnumerable<string>> clientRoles)
@@ -249,10 +249,10 @@ public class UserRolesRepository : IUserRolesRepository
             .ToAsyncEnumerable();
 
     /// <inheritdoc />
-    public Task<List<Guid>> GetRolesForClient(string technicalUserProfileClient) =>
+    public IAsyncEnumerable<Guid> GetRolesForClient(string technicalUserProfileClient) =>
         _dbContext.AppInstances
             .AsNoTracking()
             .Where(instance => technicalUserProfileClient == instance.IamClient!.ClientClientId)
             .SelectMany(instance => instance.App!.UserRoles.Select(role => role.Id))
-            .ToListAsync();
+            .ToAsyncEnumerable();
 }

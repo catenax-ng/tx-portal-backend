@@ -767,17 +767,18 @@ public class OfferService : IOfferService
     }
 
     /// <inheritdoc />
-    public async Task UpdateTechnicalUserProfiles(Guid offerId, IEnumerable<TechnicalUserProfileData> data, string iamUserId, string technicalUserProfileClient)
+    public async Task UpdateTechnicalUserProfiles(Guid offerId, OfferTypeId offerTypeId, IEnumerable<TechnicalUserProfileData> data, string iamUserId, string technicalUserProfileClient)
     {
         var technicalUserProfileRepository = _portalRepositories.GetInstance<ITechnicalUserProfileRepository>();
-        var offerProfileData = await technicalUserProfileRepository.GetOfferProfileData(offerId, iamUserId).ConfigureAwait(false);
+        var offerProfileData = await technicalUserProfileRepository.GetOfferProfileData(offerId, offerTypeId, iamUserId).ConfigureAwait(false);
         var roles = await _portalRepositories.GetInstance<IUserRolesRepository>()
             .GetRolesForClient(technicalUserProfileClient)
+            .ToListAsync()
             .ConfigureAwait(false);
 
         if (offerProfileData == null)
         {
-            throw new NotFoundException($"Offer {offerId} does not exist");
+            throw new NotFoundException($"Offer {offerTypeId} {offerId} does not exist");
         }
 
         if (!offerProfileData.IsProvidingCompanyUser)
@@ -785,7 +786,7 @@ public class OfferService : IOfferService
             throw new ForbiddenException($"User {iamUserId} is not in providing company");
         }
 
-        if (offerProfileData.ServiceTypeIds.All(x => x == ServiceTypeId.CONSULTANCE_SERVICE))
+        if (offerProfileData.ServiceTypeIds?.All(x => x == ServiceTypeId.CONSULTANCE_SERVICE) ?? false)
         {
             throw new ConflictException("Technical User Profiles can't be set for CONSULTANCE_SERVICE");
         }
@@ -793,34 +794,26 @@ public class OfferService : IOfferService
         var notExistingRoles = data.SelectMany(ur => ur.UserRoleIds).Except(roles);
         if (notExistingRoles.Any())
         {
-            throw new UnexpectedConditionException($"Roles {string.Join(",", notExistingRoles)} do not exist");
+            throw new ConflictException($"Roles {string.Join(",", notExistingRoles)} do not exist");
         }
 
-        var profilesToDelete = offerProfileData.ProfileData
-            .ExceptBy(data
-                    .Where(x => x.TechnicalUserProfileId != null)
-                    .Select(x => x.TechnicalUserProfileId!.Value),
-                x => x.TechnicalUserProfileId);
-        if (profilesToDelete.Any())
-        {
-            technicalUserProfileRepository.RemoveTechnicalUserProfilesWithAssignedRoles(profilesToDelete);
-        }
-
-        foreach (var profileData in data)
-        {
-            var technicalUserProfileId = profileData.TechnicalUserProfileId ?? Guid.Empty;
-            var isNew = profileData.TechnicalUserProfileId == null;
-            if (isNew)
-            {
-                technicalUserProfileId = technicalUserProfileRepository.CreateTechnicalUserProfiles(Guid.NewGuid(), offerId).Id;
-            }
-
-            var existingUserRoles = isNew ?
-                Enumerable.Empty<Guid>() : 
-                offerProfileData.ProfileData.Single(x => x.TechnicalUserProfileId == technicalUserProfileId).UserRoleIds;
-            technicalUserProfileRepository.CreateDeleteTechnicalUserProfileAssignedRoles(technicalUserProfileId, existingUserRoles, profileData.UserRoleIds);
-        }
+        technicalUserProfileRepository.CreateDeleteTechnicalUserProfileAssignedRoles(
+            offerProfileData.ProfileData.SelectMany(profileData => profileData.UserRoleIds.Select(roleId => (profileData.TechnicalUserProfileId, roleId))).ToList(),
+            data.Select(profileData => (
+                    TechnicalUserProfileId: profileData.TechnicalUserProfileId == null
+                        ? technicalUserProfileRepository.CreateTechnicalUserProfile(Guid.NewGuid(), offerId).Id
+                        : profileData.TechnicalUserProfileId.Value,
+                    profileData.UserRoleIds))
+                .SelectMany(data => data.UserRoleIds.Select(roleId => (data.TechnicalUserProfileId, roleId))).ToList());
         
+        technicalUserProfileRepository.RemoveTechnicalUserProfiles(
+            offerProfileData.ProfileData
+                .ExceptBy(
+                    data.Where(x => x.TechnicalUserProfileId != null)
+                        .Select(x => x.TechnicalUserProfileId!.Value),
+                    x => x.TechnicalUserProfileId)
+                .Select(x => x.TechnicalUserProfileId));
+
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
 }

@@ -52,7 +52,7 @@ public interface IUserRolesRepository
     /// </summary>
     /// <param name="offerId">Id of the offer the roles are assigned to.</param>
     /// <returns>Returns a list of user role ids</returns>
-    Task<List<string>> GetUserRolesForOfferIdAsync(Guid offerId);
+    IAsyncEnumerable<string> GetUserRolesForOfferIdAsync(Guid offerId);
 
     IAsyncEnumerable<UserRoleModificationData> GetAssignedAndMatchingAppRoles(Guid companyUserId, IEnumerable<string> userRoles, Guid offerId);
     IAsyncEnumerable<UserRoleModificationData> GetAssignedAndMatchingCoreOfferRoles(Guid companyUserId, IEnumerable<string> userRoles, Guid offerId);
@@ -68,5 +68,5 @@ public interface IUserRolesRepository
     IAsyncEnumerable<(string ClientClientId, IEnumerable<(Guid UserRoleId, string UserRoleText)> UserRoles)> GetUserRolesByClientId(IEnumerable<string> iamClientIds);
     
     IAsyncEnumerable<(Guid CompanyUserId, string UserEntityId, IEnumerable<Guid> UserRoleIds)> GetUserWithUserRolesForApplicationId(Guid applicationId, IEnumerable<Guid> userRoleIds);
-    Task<List<Guid>> GetRolesForClient(string technicalUserProfileClient);
+    IAsyncEnumerable<Guid> GetRolesForClient(string technicalUserProfileClient);
 }

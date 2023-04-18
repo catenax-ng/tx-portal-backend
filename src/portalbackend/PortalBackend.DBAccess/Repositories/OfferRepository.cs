@@ -780,8 +780,8 @@ public class OfferRepository : IOfferRepository
     }
 
     /// <inheritdoc />
-    public Task<(bool IsSingleInstance, IEnumerable<IEnumerable<UserRoleData>> ServiceAccountProfiles, string? OfferName)> GetServiceAccountProfileData(Guid offerId) =>
-        _context.Offers.Where(x => x.Id == offerId)
+    public Task<(bool IsSingleInstance, IEnumerable<IEnumerable<UserRoleData>> ServiceAccountProfiles, string? OfferName)> GetServiceAccountProfileData(Guid offerId, OfferTypeId offerTypeId) =>
+        _context.Offers.Where(x => x.Id == offerId && x.OfferTypeId == offerTypeId)
             .Select(o => new ValueTuple<bool, IEnumerable<IEnumerable<UserRoleData>>, string?>(
                 o.AppInstanceSetup != null && o.AppInstanceSetup.IsSingleInstance,
                 o.TechnicalUserProfiles.Select(tup => tup.UserRoles.Select(ur => new UserRoleData(ur.Id, ur.Offer!.AppInstances.First().IamClient!.ClientClientId, ur.UserRoleText))),

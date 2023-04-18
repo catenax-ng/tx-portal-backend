@@ -375,7 +375,7 @@ public class OfferSetupServiceTests
         var appInstanceId = Guid.NewGuid();
         var appInstance = new AppInstance(appInstanceId, _validOfferId, default);
         SetupCreateSingleInstance(appInstance);
-        A.CallTo(() => _technicalUserProfileService.GetTechnicalUserProfilesForOffer(_validOfferId))
+        A.CallTo(() => _technicalUserProfileService.GetTechnicalUserProfilesForOffer(_validOfferId, A<OfferTypeId>._))
             .Returns(new ServiceAccountCreationInfo[] { new(Guid.NewGuid().ToString(), "test", IamClientAuthMethod.SECRET, Enumerable.Empty<Guid>()) }.ToAsyncEnumerable());
         
         // Act
