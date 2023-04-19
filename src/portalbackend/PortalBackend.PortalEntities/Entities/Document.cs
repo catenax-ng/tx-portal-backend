@@ -78,8 +78,8 @@ public class Document : IBaseEntity
     /// <summary>
     /// Mapping to an optional the connector
     /// </summary>
-    public virtual Connector? Connector { get; set; }
-
+    public virtual Connector? SelfDescriptionConnector { get; set; }
+    public virtual Connector? CertificateConnector { get; set; }
     public virtual ICollection<Agreement> Agreements { get; private set; }
     public virtual ICollection<Consent> Consents { get; private set; }
     public virtual ICollection<Offer> Offers { get; private set; }

@@ -71,6 +71,7 @@ public class PortalDbContext : DbContext
     public virtual DbSet<AuditCompanyUser20230522> AuditCompanyUser20230523 { get; set; } = default!;
     public virtual DbSet<AuditConnector20230405> AuditConnector20230405 { get; set; } = default!;
     public virtual DbSet<AuditConnector20230503> AuditConnector20230503 { get; set; } = default!;
+    public virtual DbSet<AuditConnector20230621> AuditConnector20230621 { get; set; } = default!;
     public virtual DbSet<AuditIdentity20230526> AuditIdentity20230526 { get; set; } = default!;
     public virtual DbSet<AuditUserRole20221017> AuditUserRole20221017 { get; set; } = default!;
     public virtual DbSet<AuditCompanyUserAssignedRole20221018> AuditCompanyUserAssignedRole20221018 { get; set; } = default!;
@@ -899,9 +900,19 @@ public class PortalDbContext : DbContext
 
         modelBuilder.Entity<Connector>(entity =>
         {
+            entity.HasOne(d => d.CertificateDocument)
+                .WithOne(p => p!.CertificateConnector)
+                .HasForeignKey<Connector>(d => d.CertificateDocumentId)
+                .OnDelete(DeleteBehavior.ClientSetNull);            
+
             entity.HasOne(d => d.SelfDescriptionDocument)
-                .WithOne(p => p!.Connector!)
+                .WithOne(p => p!.SelfDescriptionConnector)
                 .HasForeignKey<Connector>(d => d.SelfDescriptionDocumentId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+
+            entity.HasOne(d => d.RegistrationProcess)
+                .WithOne(p => p!.Connector)
+                .HasForeignKey<Connector>(d => d.RegistrationProcessId)
                 .OnDelete(DeleteBehavior.ClientSetNull);
 
             entity.HasOne(d => d.Status)
@@ -925,7 +936,7 @@ public class PortalDbContext : DbContext
                 .HasForeignKey<Connector>(d => d.CompanyServiceAccountId)
                 .OnDelete(DeleteBehavior.ClientSetNull);
 
-            entity.HasAuditV1Triggers<Connector, AuditConnector20230503>();
+            entity.HasAuditV1Triggers<Connector, AuditConnector20230621>();
         });
 
         modelBuilder.Entity<ConnectorClientDetail>(entity =>

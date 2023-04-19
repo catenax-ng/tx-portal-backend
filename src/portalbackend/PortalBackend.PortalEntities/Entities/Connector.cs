@@ -26,7 +26,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 
-[AuditEntityV1(typeof(AuditConnector20230503))]
+[AuditEntityV1(typeof(AuditConnector20230621))]
 public class Connector : IAuditableV1, IBaseEntity
 {
     public Connector(Guid id, string name, string locationId, string connectorUrl)
@@ -63,7 +63,11 @@ public class Connector : IAuditableV1, IBaseEntity
 
     public bool? DapsRegistrationSuccessful { get; set; }
 
+    public Guid? CertificateDocumentId { get; set; }
+
     public string? SelfDescriptionMessage { get; set; }
+
+    public Guid? RegistrationProcessId { get; set; }
 
     public DateTimeOffset? DateLastChanged { get; set; }
 
@@ -85,5 +89,7 @@ public class Connector : IAuditableV1, IBaseEntity
     /// <summary>
     /// Mapping to the assigned document
     /// </summary>
+    public virtual Document? CertificateDocument { get; set; }
     public virtual Document? SelfDescriptionDocument { get; set; }
+    public virtual Process? RegistrationProcess { get; set; }
 }

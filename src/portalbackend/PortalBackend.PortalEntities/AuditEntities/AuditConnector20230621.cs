@@ -1,4 +1,4 @@
-/********************************************************************************
+﻿/********************************************************************************
  * Copyright (c) 2021, 2023 BMW Group AG
  * Copyright (c) 2021, 2023 Contributors to the Eclipse Foundation
  *
@@ -18,21 +18,21 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using System.ComponentModel.DataAnnotations;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Auditing;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
-using System.ComponentModel.DataAnnotations;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.AuditEntities;
 
-public class AuditConnector20230405 : IAuditEntityV1
+public class AuditConnector20230621 : IAuditEntityV1
 {
-    public AuditConnector20230405()
+    public AuditConnector20230621()
     {
         Name = null!;
         ConnectorUrl = null!;
         LocationId = null!;
     }
-
+    
     /// <inheritdoc />
     [Key]
     public Guid AuditV1Id { get; set; }
@@ -63,9 +63,15 @@ public class AuditConnector20230405 : IAuditEntityV1
 
     public bool? DapsRegistrationSuccessful { get; set; }
 
+    public Guid? CertificateDocumentId { get; set; }
+    
     public string? SelfDescriptionMessage { get; set; }
 
+    public Guid? RegistrationProcessId { get; set; }
+    
     public DateTimeOffset? DateLastChanged { get; private set; }
+
+    public Guid? CompanyServiceAccountId { get; set; }
 
     [AuditLastEditorV1]
     public Guid? LastEditorId { get; set; }

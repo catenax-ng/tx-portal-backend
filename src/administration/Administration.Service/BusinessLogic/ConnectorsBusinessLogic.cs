@@ -27,7 +27,9 @@ using Org.Eclipse.TractusX.Portal.Backend.Framework.Async;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.IO;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Web;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Extensions;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
@@ -231,6 +233,16 @@ public class ConnectorsBusinessLogic : IConnectorsBusinessLogic
     {
         var (name, connectorUrl, type, location, provider, host, technicalUserId) = connectorInputModel;
 
+        var processId = _portalRepositories.GetInstance<IProcessStepRepository>().CreateProcess(ProcessTypeId.CONNECTOR_REGISTRATION).Id;
+
+        Guid? documentId = null;
+
+        if (file is not null)
+        {
+            var (content, hash) = await file.GetContentAndHash(cancellationToken).ConfigureAwait(false);
+            documentId = _portalRepositories.GetInstance<IDocumentRepository>().CreateDocument(file.FileName, content, hash, file.ContentType.ParseMediaTypeId(), DocumentTypeId.DAPS_CERTIFICATE, null).Id;
+        }
+
         var connectorsRepository = _portalRepositories.GetInstance<IConnectorsRepository>();
         var createdConnector = connectorsRepository.CreateConnector(
             name,
@@ -241,6 +253,8 @@ public class ConnectorsBusinessLogic : IConnectorsBusinessLogic
                 connector.ProviderId = provider;
                 connector.HostId = host;
                 connector.TypeId = type;
+                connector.CertificateDocumentId = documentId;
+                connector.RegistrationProcessId = processId;                
                 connector.LastEditorId = companyUserId;
                 connector.DateLastChanged = DateTimeOffset.UtcNow;
                 if (technicalUserId != null)
@@ -252,6 +266,8 @@ public class ConnectorsBusinessLogic : IConnectorsBusinessLogic
         DapsResponse? response = null;
         if (file is not null)
         {
+            var (content, hash) = await file.GetContentAndHash(cancellationToken).ConfigureAwait(false);
+            _portalRepositories.GetInstance<IDocumentRepository>().CreateDocument(file.FileName, content, hash, file.ContentType.ParseMediaTypeId(), DocumentTypeId.DAPS_CERTIFICATE, null);            
             try
             {
                 response = await _dapsService

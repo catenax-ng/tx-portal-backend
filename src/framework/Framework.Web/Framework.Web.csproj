@@ -34,4 +34,7 @@
     <ProjectReference Include="..\Framework.Authorization\Framework.Authorization.csproj" />
     <ProjectReference Include="..\Framework.Linq\Framework.Linq.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
+  </ItemGroup>
 </Project>

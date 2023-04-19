@@ -61,3 +61,18 @@ public record ManagedConnectorData(
     bool? DapsRegistrationSuccessful,
     string? ProviderCompanyName,
     Guid? SelfDescriptionDocumentId);
+
+public record ConnectorProcessData(
+    Guid ConnectorId,
+    string? BusinessPartnerNumber,
+    ConnectorDapsProcessData? DapsProcessData,
+    Guid? SelfDescriptionDocumentId
+);
+
+public record ConnectorDapsProcessData(
+    string ConnectorName,
+    string ConnectorUrl,
+    string? CertificateName,
+    byte[]? CertificateContent,
+    MediaTypeId CertificateMediaTypeId
+);

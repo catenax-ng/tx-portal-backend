@@ -1,4 +1,4 @@
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32407.343
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -207,6 +207,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Framework.Authorization", "framework\Framework.Authorization\Framework.Authorization.csproj", "{CB9FFDD9-7F41-44DA-BFA8-C157A96D51F6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Framework.Models.Tests", "..\tests\framework\Framework.Models.Tests\Framework.Models.Tests.csproj", "{EA9BA26E-83F6-47C4-BA3B-880AF1AD6A82}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConnectorRegistration.Executor", "processes\ConnectorRegistration.Executor\ConnectorRegistration.Executor.csproj", "{C4CC6CD5-9FA9-4C90-A8C0-5FF8BAC192A9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -1298,6 +1300,18 @@ Global
 		{EA9BA26E-83F6-47C4-BA3B-880AF1AD6A82}.Release|x64.Build.0 = Release|Any CPU
 		{EA9BA26E-83F6-47C4-BA3B-880AF1AD6A82}.Release|x86.ActiveCfg = Release|Any CPU
 		{EA9BA26E-83F6-47C4-BA3B-880AF1AD6A82}.Release|x86.Build.0 = Release|Any CPU
+		{C4CC6CD5-9FA9-4C90-A8C0-5FF8BAC192A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C4CC6CD5-9FA9-4C90-A8C0-5FF8BAC192A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C4CC6CD5-9FA9-4C90-A8C0-5FF8BAC192A9}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C4CC6CD5-9FA9-4C90-A8C0-5FF8BAC192A9}.Debug|x64.Build.0 = Debug|Any CPU
+		{C4CC6CD5-9FA9-4C90-A8C0-5FF8BAC192A9}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C4CC6CD5-9FA9-4C90-A8C0-5FF8BAC192A9}.Debug|x86.Build.0 = Debug|Any CPU
+		{C4CC6CD5-9FA9-4C90-A8C0-5FF8BAC192A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C4CC6CD5-9FA9-4C90-A8C0-5FF8BAC192A9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C4CC6CD5-9FA9-4C90-A8C0-5FF8BAC192A9}.Release|x64.ActiveCfg = Release|Any CPU
+		{C4CC6CD5-9FA9-4C90-A8C0-5FF8BAC192A9}.Release|x64.Build.0 = Release|Any CPU
+		{C4CC6CD5-9FA9-4C90-A8C0-5FF8BAC192A9}.Release|x86.ActiveCfg = Release|Any CPU
+		{C4CC6CD5-9FA9-4C90-A8C0-5FF8BAC192A9}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1396,5 +1410,6 @@ Global
 		{1694E75F-ABCE-4573-B805-18ED50F148FD} = {323C198D-A8C6-4EB0-8B79-72624275E35F}
 		{031237BF-7B2A-4B37-9E37-4D4C575FDD22} = {23500169-FC01-4D2B-A997-E7FAE2169FC0}
 		{CB9FFDD9-7F41-44DA-BFA8-C157A96D51F6} = {23500169-FC01-4D2B-A997-E7FAE2169FC0}
+		{C4CC6CD5-9FA9-4C90-A8C0-5FF8BAC192A9} = {282CEF03-292F-4A49-83C6-997567D0FF5F}
 	EndGlobalSection
 EndGlobal

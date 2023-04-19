@@ -21,6 +21,7 @@
 using Microsoft.AspNetCore.Http;
 using Org.Eclipse.TractusX.Portal.Backend.Daps.Library.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Daps.Library;
 
@@ -39,6 +40,8 @@ public interface IDapsService
     /// <param name="cancellationToken">cancellation token</param>
     /// <exception cref="ServiceException">throws an exception if the service call wasn't successfully</exception>
     Task<DapsResponse?> EnableDapsAuthAsync(string clientName, string connectorUrl, string businessPartnerNumber, IFormFile formFile, CancellationToken cancellationToken);
+
+    Task EnableDapsAuthAsync(string clientName, string connectorUrl, string businessPartnerNumber, string fileName, byte[] content, MediaTypeId mediaTypeId, CancellationToken cancellationToken);
 
     /// <summary>
     /// Deletes the daps client

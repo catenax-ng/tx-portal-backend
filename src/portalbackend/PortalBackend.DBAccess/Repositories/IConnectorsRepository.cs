@@ -37,6 +37,15 @@ public interface IConnectorsRepository
     /// <returns>Queryable of connectors that allows transformation.</returns>
     IQueryable<Connector> GetAllCompanyConnectorsForIamUser(Guid companyId);
 
+    Task<(bool IsValidProcessId, ConnectorProcessData ConnectorProcessData)> GetConnectorProcessData(Guid processId, bool IsDapsRequested);
+
+    /// <summary>
+    /// Gets SelfDescriptionDocument Data by ProcessId
+    /// </summary>
+    /// <param name="processId">Id of the process</param>
+    /// <returns>returns SelfDescriptionDocument Data/c></returns>
+    Task<(bool IsValidProcessId, Guid ConnectorId, Guid? SelfDescriptionDocumentId, string? BusinessPartnerNumber)> GetConnectorDataByProcessId(Guid processId);
+
     /// <summary>
     /// Get all managed connectors of a user's company by iam user ID.
     /// </summary>

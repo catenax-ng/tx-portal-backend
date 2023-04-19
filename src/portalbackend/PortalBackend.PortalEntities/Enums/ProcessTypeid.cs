@@ -23,5 +23,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums
 public enum ProcessTypeId
 {
     APPLICATION_CHECKLIST = 1,
+    CONNECTOR_REGISTRATION = 2,
     OFFER_SUBSCRIPTION = 3,
 }

@@ -100,6 +100,40 @@ public class ConnectorsRepository : IConnectorsRepository
             ))
             .SingleOrDefaultAsync();
 
+    public Task<(bool IsValidProcessId, ConnectorProcessData ConnectorProcessData)> GetConnectorProcessData(Guid processId, bool IsDapsRequested) =>
+        _context.Processes
+            .AsNoTracking()
+            .Where(process => process.Id == processId)
+            .Select(process => new ValueTuple<bool,ConnectorProcessData>(
+                true,
+                new ConnectorProcessData(
+                    process.Connector!.Id,
+                    process.Connector.Provider!.BusinessPartnerNumber,
+                    IsDapsRequested
+                        ? new ConnectorDapsProcessData(
+                            process.Connector.Name,
+                            process.Connector.ConnectorUrl,
+                            process.Connector.CertificateDocument!.DocumentName,
+                            process.Connector.CertificateDocument.DocumentContent,
+                            process.Connector.CertificateDocument.MediaTypeId)
+                        : null,
+                    process.Connector.SelfDescriptionDocumentId
+                )))
+            .SingleOrDefaultAsync();
+
+    /// <inheritdoc>
+    public Task<(bool IsValidProcessId, Guid ConnectorId, Guid? SelfDescriptionDocumentId, string? BusinessPartnerNumber)> GetConnectorDataByProcessId(Guid processId) =>
+        _context.Connectors
+            .AsNoTracking()
+            .Where(connector => connector.RegistrationProcessId == processId)
+            .Select(connector => new ValueTuple<bool,Guid,Guid?,string?>(
+                true,
+                connector.Id,
+                connector.SelfDescriptionDocumentId,
+                connector.Provider!.BusinessPartnerNumber
+            ))
+            .SingleOrDefaultAsync();
+
     /// <inheritdoc/>
     public Connector CreateConnector(string name, string location, string connectorUrl, Action<Connector>? setupOptionalFields)
     {
