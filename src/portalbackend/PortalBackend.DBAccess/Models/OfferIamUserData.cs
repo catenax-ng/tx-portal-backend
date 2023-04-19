@@ -20,4 +20,11 @@
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 
-public record OfferIamUserData(bool IsValidOffer, IEnumerable<string> IamClientIds, string IamUserId, bool IsSameCompany);
+public record OfferIamUserData(
+    bool IsValidOffer,
+    IEnumerable<string> IamClientIds,
+    string IamUserId,
+    bool IsSameCompany,
+    IEnumerable<string?> OfferNames,
+    string? Firstname,
+    string? Lastname);

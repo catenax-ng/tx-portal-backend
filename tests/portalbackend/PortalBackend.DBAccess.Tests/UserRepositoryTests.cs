@@ -20,6 +20,7 @@
 
 using AutoFixture;
 using AutoFixture.AutoFakeItEasy;
+using FakeItEasy.Sdk;
 using FluentAssertions;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
@@ -41,6 +42,7 @@ public class UserRepositoryTests : IAssemblyFixture<TestDbFixture>
     private const string ValidIamUserId = "502dabcf-01c7-47d9-a88e-0be4279097b5";
     private readonly Guid _validCompanyUser = new ("ac1cf001-7fbc-1f2f-817f-bce058020006");
     private readonly Guid _validOfferId = new("ac1cf001-7fbc-1f2f-817f-bce0572c0007");
+    private readonly Guid _validCoreOfferId = new("9b957704-3505-4445-822c-d7ef80f27fcd");
 
     public UserRepositoryTests(TestDbFixture testDbFixture)
     {
@@ -376,7 +378,7 @@ public class UserRepositoryTests : IAssemblyFixture<TestDbFixture>
     {
         // Arrange
         var sut = await CreateSut().ConfigureAwait(false);
-        
+
         // Act
         var result = await sut.GetCompanyIdAndBpnRolesForIamUserUntrackedAsync(ValidIamUserId, ClientId).ConfigureAwait(false);
 
@@ -386,6 +388,40 @@ public class UserRepositoryTests : IAssemblyFixture<TestDbFixture>
         result.CompanyId.Should().Be(new Guid("2dc4249f-b5ca-4d42-bef1-7a7a950a4f87"));
         result.TechnicalUserRoleIds.Should().HaveCount(9);
         result.TechnicalUserRoleIds.Should().OnlyHaveUniqueItems();
+    }
+
+    #region GetAppAssignedIamClientUserDataUntrackedAsync
+
+    [Fact]
+    public async Task GetAppAssignedIamClientUserDataUntrackedAsync_ReturnsExpected()
+    {
+        var sut = await CreateSut().ConfigureAwait(false);
+
+        var iamUserData = await sut.GetAppAssignedIamClientUserDataUntrackedAsync(new Guid("a16e73b9-5277-4b69-9f8d-3b227495dfea"), ValidCompanyUser, ValidIamUserId)
+            .ConfigureAwait(false);
+
+        iamUserData.Should().NotBeNull();
+        iamUserData!.OfferNames.Should().ContainSingle().And.Match(x => x.Single() == "SDE with EDC");
+        iamUserData.Firstname.Should().Be("Operator");
+        iamUserData.Lastname.Should().Be("CX Admin");
+    }
+
+    #endregion
+
+    #region GetCoreOfferAssignedIamClientUserDataUntrackedAsync
+
+    [Fact]
+    public async Task GetCoreOfferAssignedIamClientUserDataUntrackedAsync_ReturnsExpected()
+    {
+        var sut = await CreateSut().ConfigureAwait(false);
+
+        var iamUserData = await sut.GetCoreOfferAssignedIamClientUserDataUntrackedAsync(_validCoreOfferId, ValidCompanyUser, ValidIamUserId)
+            .ConfigureAwait(false);
+
+        iamUserData.Should().NotBeNull();
+        iamUserData!.OfferNames.Should().ContainSingle().And.Match(x => x.Single() == "Portal");
+        iamUserData.Firstname.Should().Be("Operator");
+        iamUserData.Lastname.Should().Be("CX Admin");
     }
 
     #endregion
