@@ -21,12 +21,14 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Tests.BusinessLogic;
 
 public class StaticDataBusinessLogicTest
 {
     private readonly IFixture _fixture;
+    private readonly IPortalRepositories _portalRepositories;
     private readonly IStaticDataRepository _staticDataRepository;
     public StaticDataBusinessLogicTest()
     {
@@ -36,6 +38,9 @@ public class StaticDataBusinessLogicTest
         _fixture.Behaviors.Add(new OmitOnRecursionBehavior());  
 
         _staticDataRepository = A.Fake<IStaticDataRepository>();
+        _portalRepositories = A.Fake<IPortalRepositories>();
+
+        A.CallTo(() => _portalRepositories.GetInstance<IStaticDataRepository>()).Returns(_staticDataRepository);
     }
 
     [Fact]
@@ -50,7 +55,7 @@ public class StaticDataBusinessLogicTest
        
         A.CallTo(() => _staticDataRepository.GetLicenseTypeData())
             .Returns(data);
-        var sut = _fixture.Create<StaticDataBusinessLogic>();
+        var sut = new StaticDataBusinessLogic(_portalRepositories);
 
         // Act
         var result = await sut.GetAllLicenseType().ToListAsync().ConfigureAwait(false);
