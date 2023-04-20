@@ -59,14 +59,18 @@ public class UserRolesBusinessLogic: IUserRolesBusinessLogic
             (Guid companyUserId, IEnumerable<string> roles, Guid offerId) => _portalRepositories.GetInstance<IUserRolesRepository>()
                 .GetAssignedAndMatchingCoreOfferRoles(companyUserId, roles, offerId),
             offerId, companyUserId, roles, iamUserId, 
-            data => JsonSerializer.Serialize(new
+            data =>
+            {
+                var userName = $"{data.firstname} {data.lastname}";
+                return JsonSerializer.Serialize(new
                 {
                     OfferId = data.offerId,
                     CoreOfferName = "Portal",
-                    Username = $"{data.firstname} {data.lastname}",
+                    Username = string.IsNullOrWhiteSpace(userName) ? "User" : userName,
                     RemovedRoles = string.Join(",", data.removedRoles),
                     AddedRoles = string.Join(",", data.addedRoles)
-                }, _options));
+                }, _options);
+            });
 
     public Task<IEnumerable<UserRoleWithId>> ModifyAppUserRolesAsync(Guid appId, Guid companyUserId, IEnumerable<string> roles, string iamUserId) =>
         ModifyUserRolesInternal(
@@ -75,15 +79,18 @@ public class UserRolesBusinessLogic: IUserRolesBusinessLogic
             (Guid companyUserId, IEnumerable<string> roles, Guid offerId) => _portalRepositories.GetInstance<IUserRolesRepository>()
                 .GetAssignedAndMatchingAppRoles(companyUserId, roles, offerId),
             appId, companyUserId, roles, iamUserId, 
-            data => JsonSerializer.Serialize(new
+            data =>
+            {
+                var userName = $"{data.firstname} {data.lastname}";
+                return JsonSerializer.Serialize(new
                 {
                     OfferId = data.offerId,
                     AppName = data.offerName,
-                    Username = $"{data.firstname} {data.lastname}",
+                    Username = string.IsNullOrWhiteSpace(userName) ? "User" : userName,
                     RemovedRoles = string.Join(",", data.removedRoles),
                     AddedRoles = string.Join(",", data.addedRoles)
-                }, _options)
-            );
+                }, _options);
+            });
 
     [Obsolete("to be replaced by endpoint UserRolesBusinessLogic.ModifyAppUserRolesAsync. Remove as soon frontend is adjusted")]
     public Task<IEnumerable<UserRoleWithId>> ModifyUserRoleAsync(Guid appId, UserRoleInfo userRoleInfo, string adminUserId) =>
