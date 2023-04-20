@@ -62,14 +62,14 @@ public class UserRolesBusinessLogic: IUserRolesBusinessLogic
             data =>
             {
                 var userName = $"{data.firstname} {data.lastname}";
-                return JsonSerializer.Serialize(new
+                return (JsonSerializer.Serialize(new
                 {
                     OfferId = data.offerId,
                     CoreOfferName = "Portal",
                     Username = string.IsNullOrWhiteSpace(userName) ? "User" : userName,
                     RemovedRoles = string.Join(",", data.removedRoles),
                     AddedRoles = string.Join(",", data.addedRoles)
-                }, _options);
+                }, _options), NotificationTypeId.ROLE_UPDATE_CORE_OFFER);
             });
 
     public Task<IEnumerable<UserRoleWithId>> ModifyAppUserRolesAsync(Guid appId, Guid companyUserId, IEnumerable<string> roles, string iamUserId) =>
@@ -82,14 +82,14 @@ public class UserRolesBusinessLogic: IUserRolesBusinessLogic
             data =>
             {
                 var userName = $"{data.firstname} {data.lastname}";
-                return JsonSerializer.Serialize(new
+                return (JsonSerializer.Serialize(new
                 {
                     OfferId = data.offerId,
                     AppName = data.offerName,
                     Username = string.IsNullOrWhiteSpace(userName) ? "User" : userName,
                     RemovedRoles = string.Join(",", data.removedRoles),
                     AddedRoles = string.Join(",", data.addedRoles)
-                }, _options);
+                }, _options), NotificationTypeId.ROLE_UPDATE_APP_OFFER);
             });
 
     [Obsolete("to be replaced by endpoint UserRolesBusinessLogic.ModifyAppUserRolesAsync. Remove as soon frontend is adjusted")]
@@ -105,7 +105,7 @@ public class UserRolesBusinessLogic: IUserRolesBusinessLogic
         Func<Task<OfferIamUserData?>> getIamUserData,
         Func<Guid, IEnumerable<string>, Guid, IAsyncEnumerable<UserRoleModificationData>> getUserRoleModificationData,
         Guid offerId, Guid companyUserId, IEnumerable<string> roles, string iamUserId,
-        Func<(Guid offerId, string offerName, string? firstname, string? lastname, IEnumerable<string> removedRoles, IEnumerable<string> addedRoles), string>? getNotificationContent)
+        Func<(Guid offerId, string offerName, string? firstname, string? lastname, IEnumerable<string> removedRoles, IEnumerable<string> addedRoles), (string content, NotificationTypeId notificationTypeId)>? getNotificationData)
     {
         var result = await getIamUserData().ConfigureAwait(false);
         if (result == default || string.IsNullOrWhiteSpace(result.IamUserId))
@@ -159,20 +159,21 @@ public class UserRolesBusinessLogic: IUserRolesBusinessLogic
             await DeleteRoles(companyUserId, result.IamClientIds, rolesToDelete, iamUserId).ConfigureAwait(false);
         }
 
-        if (getNotificationContent != null)
+        if (getNotificationData != null)
         {
+            var data = new ValueTuple<Guid, string, string?, string?, IEnumerable<string>, IEnumerable<string>>(
+                offerId,
+                offerName,
+                result.Firstname,
+                result.Lastname,
+                rolesToDelete.Select(x => x.CompanyUserRoleText),
+                rolesToAdd.Select(x => x.CompanyUserRoleText));
+            var notificationData = getNotificationData.Invoke(data);
             _portalRepositories.GetInstance<INotificationRepository>().CreateNotification(companyUserId,
-                NotificationTypeId.ROLE_UPDATE_CORE_OFFER, false,
+                notificationData.notificationTypeId, false,
                 notification =>
                 {
-                    var data = new ValueTuple<Guid, string, string?, string?, IEnumerable<string>, IEnumerable<string>>(
-                        offerId,
-                        offerName,
-                        result.Firstname,
-                        result.Lastname,
-                        rolesToDelete.Select(x => x.CompanyUserRoleText),
-                        rolesToAdd.Select(x => x.CompanyUserRoleText));
-                    notification.Content = getNotificationContent.Invoke(data);
+                    notification.Content = notificationData.content;
                 });
         }
 

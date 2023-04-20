@@ -32,7 +32,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migrations
 {
     [DbContext(typeof(PortalDbContext))]
-    [Migration("20230419113324_CPLP-2353-AddNotificationType")]
+    [Migration("20230420070641_CPLP-2353-AddNotificationType")]
     partial class CPLP2353AddNotificationType
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -3257,6 +3257,11 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         {
                             Id = 21,
                             Label = "ROLE_UPDATE_CORE_OFFER"
+                        },
+                        new
+                        {
+                            Id = 22,
+                            Label = "ROLE_UPDATE_APP_OFFER"
                         });
                 });
 

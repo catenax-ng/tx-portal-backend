@@ -790,7 +790,7 @@ public class UserBusinessLogicTests
         _companyUserAssignedRole.Should().HaveCount(2);
         notifications.Should().ContainSingle();
         notifications.Single().ReceiverUserId.Should().Be(_companyUserId);
-        notifications.Single().NotificationTypeId.Should().Be(NotificationTypeId.ROLE_UPDATE_CORE_OFFER);
+        notifications.Single().NotificationTypeId.Should().Be(NotificationTypeId.ROLE_UPDATE_APP_OFFER);
     }
 
     [Fact]
@@ -816,7 +816,7 @@ public class UserBusinessLogicTests
         A.CallTo(() => _portalRepositories.RemoveRange(A<IEnumerable<CompanyUserAssignedRole>>.That.Matches(x => x.Count() == 1))).MustHaveHappenedOnceExactly();
         notifications.Should().ContainSingle();
         notifications.Single().ReceiverUserId.Should().Be(_companyUserId);
-        notifications.Single().NotificationTypeId.Should().Be(NotificationTypeId.ROLE_UPDATE_CORE_OFFER);
+        notifications.Single().NotificationTypeId.Should().Be(NotificationTypeId.ROLE_UPDATE_APP_OFFER);
     }
 
     [Fact]

@@ -32,7 +32,11 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 schema: "portal",
                 table: "notification_type",
                 columns: new[] { "id", "label" },
-                values: new object[] { 21, "ROLE_UPDATE_CORE_OFFER" });
+                values: new object[,]
+                {
+                    { 21, "ROLE_UPDATE_CORE_OFFER" },
+                    { 22, "ROLE_UPDATE_APP_OFFER" }
+                });
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -42,6 +46,12 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                 table: "notification_type",
                 keyColumn: "id",
                 keyValue: 21);
+
+            migrationBuilder.DeleteData(
+                schema: "portal",
+                table: "notification_type",
+                keyColumn: "id",
+                keyValue: 22);
         }
     }
 }

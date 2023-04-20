@@ -82,5 +82,9 @@
   {
     "notification_type_id": 21,
     "notification_topic_id": 1
+  },
+  {
+    "notification_type_id": 22,
+    "notification_topic_id": 1
   }
 ]
