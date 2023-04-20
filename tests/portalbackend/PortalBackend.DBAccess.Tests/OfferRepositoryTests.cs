@@ -1110,6 +1110,7 @@ public class OfferRepositoryTests : IAssemblyFixture<TestDbFixture>
         result.Should().NotBeNull();
         result!.Title.Should().Be("SDE with EDC");
         result.Provider.Should().Be("Service Provider");
+        result.OfferStatusId.Should().Be(OfferStatusId.ACTIVE);
     }
 
     #endregion

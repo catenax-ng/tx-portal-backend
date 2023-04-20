@@ -142,26 +142,6 @@ public class ServiceReleaseBusinessLogicTest
     }
 
     [Fact]
-    public async Task GetServiceDetailsByIdAsync_WithInvalidOfferStatus_ThrowsException()
-    {
-        // Arrange
-        var data = _fixture.Build<ServiceDetailsData>()
-                            .With(x=>x.OfferStatusId, OfferStatusId.CREATED)
-                            .Create();
-        var serviceId = _fixture.Create<Guid>();
-       
-        A.CallTo(() => _offerRepository.GetServiceDetailsByIdAsync(serviceId))
-            .ReturnsLazily(() => data);
-
-        // Act
-        async Task Act() => await _sut.GetServiceDetailsByIdAsync(serviceId).ConfigureAwait(false);
-
-        // Assert
-        var error = await Assert.ThrowsAsync<ConflictException>(Act).ConfigureAwait(false);
-        error.Message.Should().Be($"serviceId {serviceId} is incorrect status");
-    }
-    
-    [Fact]
     public async Task GetServiceDetailsByIdAsync_WithInvalidServiceId_ThrowsException()
     {
         // Arrange
@@ -174,7 +154,7 @@ public class ServiceReleaseBusinessLogicTest
 
         // Assert
         var error = await Assert.ThrowsAsync<NotFoundException>(Act).ConfigureAwait(false);
-        error.Message.Should().Be($"serviceId {invalidServiceId} does not exist");
+        error.Message.Should().Be($"serviceId {invalidServiceId} not found or Incorrect Status");
     }
 
     [Fact]

@@ -535,7 +535,7 @@ public class OfferRepository : IOfferRepository
     public Task<InReviewOfferData?> GetInReviewAppDataByIdAsync(Guid id, OfferTypeId offerTypeId) =>
         _context.Offers.AsNoTracking()
             .AsSplitQuery()
-            .Where(offer => offer.Id == id && offer.OfferTypeId == offerTypeId && offer.OfferStatusId == OfferStatusId.IN_REVIEW)
+            .Where(offer => offer.Id == id && offer.OfferTypeId == offerTypeId && (offer.OfferStatusId == OfferStatusId.IN_REVIEW || offer.OfferStatusId == OfferStatusId.ACTIVE))
             .Select(offer =>  
                 new InReviewOfferData(
                     offer.Id,
@@ -670,7 +670,7 @@ public class OfferRepository : IOfferRepository
     ///<inheritdoc/>
     public Task<ServiceDetailsData?> GetServiceDetailsByIdAsync(Guid serviceId) =>
         _context.Offers.AsNoTracking()
-            .Where(service => service.Id == serviceId && service.OfferTypeId == OfferTypeId.SERVICE)
+            .Where(service => service.Id == serviceId && service.OfferTypeId == OfferTypeId.SERVICE && (service.OfferStatusId == OfferStatusId.IN_REVIEW || service.OfferStatusId == OfferStatusId.ACTIVE ))
             .Select(offer => new ServiceDetailsData(
                 offer.Id,
                 offer.Name,

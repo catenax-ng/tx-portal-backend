@@ -419,7 +419,9 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
             .GetInReviewAppDataByIdAsync(appId, OfferTypeId.APP).ConfigureAwait(false);
         
         if(result == default)
+        {
             throw new NotFoundException($"App {appId} not found or Incorrect Status");
+        }
         
         return new InReviewAppDetails(
             result.id,
