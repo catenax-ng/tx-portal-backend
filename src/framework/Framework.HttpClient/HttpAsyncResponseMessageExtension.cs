@@ -24,16 +24,24 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Framework.HttpClientExtensions;
 
 public static class HttpAsyncResponseMessageExtension
 {
-    public static async Task<HttpResponseMessage> CatchingIntoServiceExceptionFor(this Task<HttpResponseMessage> response, string systemName, RecoverOptions recoverOptions = RecoverOptions.None)
+    public static async Task<HttpResponseMessage> CatchingIntoServiceExceptionFor(this Task<HttpResponseMessage> response, string systemName, RecoverOptions recoverOptions = RecoverOptions.None, Func<string, string>? createErrorMessage = null)
     {
         try
         {
             var message = await response.ConfigureAwait(false);
-            if (!message.IsSuccessStatusCode)
+            if (message.IsSuccessStatusCode)
             {
-                throw new ServiceException($"call to external system {systemName} failed with statuscode {(int)message.StatusCode}", message.StatusCode, (recoverOptions & RecoverOptions.RESPONSE_RECEIVED) == RecoverOptions.RESPONSE_RECEIVED);
+                return message;
             }
-            return message;
+
+            var errorMessage = string.Empty;
+            if ((int) message.StatusCode < 500 && createErrorMessage != null)
+            {
+                var errorContent = await message.Content.ReadAsStringAsync();
+                errorMessage = string.IsNullOrWhiteSpace(errorContent) ? string.Empty : createErrorMessage.Invoke(errorContent);
+            }
+            
+            throw new ServiceException($"call to external system {systemName} failed with statuscode {(int)message.StatusCode}{errorMessage}", message.StatusCode, (recoverOptions & RecoverOptions.RESPONSE_RECEIVED) == RecoverOptions.RESPONSE_RECEIVED);
         }
         catch(HttpRequestException e)
         {
