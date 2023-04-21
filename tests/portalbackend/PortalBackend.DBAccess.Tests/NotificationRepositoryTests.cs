@@ -398,6 +398,28 @@ public class NotificationRepositoryTests : IAssemblyFixture<TestDbFixture>
     }
 
     #endregion
+
+    #region GetUpdateDataForCompanyUsers
+
+    
+    [Fact]
+    public async Task GetUpdateDataForCompanyUsers_ReturnsExpectedCount()
+    {
+        // Arrange
+        var sut = await CreateSut().ConfigureAwait(false);
+
+        // Act
+        var results = await sut
+            .GetUpdateDataForCompanyUsers(new [] { new Guid("ac1cf001-7fbc-1f2f-817f-bce058020001") }, new [] { NotificationTypeId.APP_RELEASE_REQUEST }, new Guid("0fc768e5-d4cf-4d3d-a0db-379efedd60f5"))
+            .ToListAsync()
+            .ConfigureAwait(false);
+
+        // Assert
+        results.Should().HaveCount(1)
+            .And.Contain(new Guid("1836bbf6-b067-4126-9745-a22a098d3486"));
+    }
+
+    #endregion
     
     #region Setup
     

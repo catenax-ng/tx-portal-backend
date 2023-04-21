@@ -316,10 +316,60 @@ public class NotificationServiceTests
     #endregion
 
     #region SetNotificationsForOfferToDone
-    
+    [Fact]
+    public async Task SetNotificationsForOfferToDone_WithAdditionalUsersAndMultipleNotifications_UpdatesThreeNotification()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var not1 = Guid.NewGuid();
+        var not2 = Guid.NewGuid();
+        var not3 = Guid.NewGuid();
+        var not4 = Guid.NewGuid();
+        var notifications = new List<Notification>
+        {
+            new(not1, Guid.Empty, DateTimeOffset.UtcNow, NotificationTypeId.APP_RELEASE_REQUEST, false),
+            new(not2, Guid.Empty, DateTimeOffset.UtcNow, NotificationTypeId.APP_RELEASE_REQUEST, false),
+        };
+        var userNotifications = new List<Notification>
+        {
+            new(not2, Guid.Empty, DateTimeOffset.UtcNow, NotificationTypeId.APP_RELEASE_REQUEST, false),
+            new(not3, Guid.Empty, DateTimeOffset.UtcNow, NotificationTypeId.APP_RELEASE_REQUEST, false),
+        };
+        var allNotifications = new List<Notification>
+        {
+            new(not1, Guid.Empty, DateTimeOffset.UtcNow, NotificationTypeId.APP_RELEASE_REQUEST, false),
+            new(not2, Guid.Empty, DateTimeOffset.UtcNow, NotificationTypeId.APP_RELEASE_REQUEST, false),
+            new(not3, Guid.Empty, DateTimeOffset.UtcNow, NotificationTypeId.APP_RELEASE_REQUEST, false)
+        };
+        var userRoles = new Dictionary<string, IEnumerable<string>>
+        {
+            { ClientId, new []{ "Company Admin" } }
+        };
+        var appId = new Guid("5cf74ef8-e0b7-4984-a872-474828beb5d2");
+        A.CallTo(() => _notificationRepository.GetUpdateData(A<IEnumerable<Guid>>._, A<IEnumerable<NotificationTypeId>>._, appId))
+            .Returns(notifications.Select(x => x.Id).ToAsyncEnumerable());
+        A.CallTo(() => _notificationRepository.GetUpdateDataForCompanyUsers(A<IEnumerable<Guid>>._, A<IEnumerable<NotificationTypeId>>._, appId))
+            .Returns(userNotifications.Select(x => x.Id).ToAsyncEnumerable());
+
+        A.CallTo(() => _notificationRepository.AttachAndModifyNotification(A<Guid>._, A<Action<Notification>>._))
+            .Invokes((Guid notificationId, Action<Notification> setOptionalFields) =>
+            {
+                var notification = allNotifications.Single(x => x.Id == notificationId);
+                setOptionalFields.Invoke(notification);
+            });
+
+        // Act
+        await _sut.SetNotificationsForOfferToDone(userRoles, Enumerable.Repeat(NotificationTypeId.APP_RELEASE_REQUEST,1), appId, Enumerable.Repeat(userId, 1)).ConfigureAwait(false);
+
+        // Assert
+        A.CallTo(() => _notificationRepository.AttachAndModifyNotification(not1, A<Action<Notification>>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _notificationRepository.AttachAndModifyNotification(not2, A<Action<Notification>>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _notificationRepository.AttachAndModifyNotification(not3, A<Action<Notification>>._)).MustHaveHappenedOnceExactly();
+        allNotifications.Should().AllSatisfy(x => x.Done.Should().BeTrue());
+    }
     
     [Fact]
-    public async Task SetNotificationsForOfferToDone_WithMultipleUserRoleAndOneNotificationTypeId_UpdatesThreeNotification()
+    public async Task SetNotificationsForOfferToDone_WithMultipleUserRoleAndOneNotificationTypeId_UpdatesAllNotification()
     {
         // Arrange
         var not1 = Guid.NewGuid();

@@ -274,7 +274,7 @@ public class OfferSetupServiceTests
                 A<IEnumerable<NotificationTypeId>>.That.Matches(x =>
                     x.Count() == 1 && x.Single() == notificationTypeId),
                 _existingServiceId,
-                A<IEnumerable<Guid>?>.That.Matches(x => x.Count() == 1 && x.Single() == _salesManagerId)))
+                A<IEnumerable<Guid>?>.That.Matches(x => x != null && x.Count() == 1 && x.Single() == _salesManagerId)))
             .MustHaveHappenedOnceExactly();
         A.CallTo(() => createNotificationsEnumerator.MoveNextAsync()).MustHaveHappened(2, Times.Exactly);
         offerSubscription.OfferSubscriptionStatusId.Should().Be(OfferSubscriptionStatusId.ACTIVE);
