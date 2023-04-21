@@ -48,6 +48,7 @@ public class NotificationServiceTests
     private readonly IUserRepository _userRepository;
     private readonly INotificationRepository _notificationRepository;
     private readonly List<Notification> _notifications = new();
+    private readonly INotificationService _sut;
 
     public NotificationServiceTests()
     {
@@ -66,6 +67,8 @@ public class NotificationServiceTests
         A.CallTo(() => _portalRepositories.GetInstance<INotificationRepository>()).Returns(_notificationRepository);
 
         SetupFakes();
+
+        _sut = new NotificationService(_portalRepositories);
     }
 
     #region Create Notification
@@ -78,7 +81,6 @@ public class NotificationServiceTests
         {
             { ClientId, new []{ "CX Admin" } }
         };
-        var sut = new NotificationService(_portalRepositories);
         var notificationContent = new
         {
             appId = "5cf74ef8-e0b7-4984-a872-474828beb5d2",
@@ -90,7 +92,7 @@ public class NotificationServiceTests
         };
 
         // Act
-        var userIds = await sut.CreateNotifications(userRoles, Guid.NewGuid(), content.AsEnumerable(), Guid.NewGuid()).ToListAsync().ConfigureAwait(false);
+        var userIds = await _sut.CreateNotifications(userRoles, Guid.NewGuid(), content.AsEnumerable(), Guid.NewGuid()).ToListAsync().ConfigureAwait(false);
 
         // Assert
         _notifications.Should().HaveCount(1);
@@ -106,7 +108,6 @@ public class NotificationServiceTests
         {
             { ClientId, new []{ "CX Admin" } }
         };
-        var sut = new NotificationService(_portalRepositories);
 
         // Act
         var notificationContent = new
@@ -123,7 +124,7 @@ public class NotificationServiceTests
             new(JsonSerializer.Serialize(notificationContent), NotificationTypeId.WELCOME_CONNECTOR_REGISTRATION)
         };
 
-        var userIds = await sut.CreateNotifications(userRoles, Guid.NewGuid(), content.AsEnumerable(), Guid.NewGuid()).ToListAsync().ConfigureAwait(false);
+        var userIds = await _sut.CreateNotifications(userRoles, Guid.NewGuid(), content.AsEnumerable(), Guid.NewGuid()).ToListAsync().ConfigureAwait(false);
 
         // Assert
         _notifications.Should().HaveCount(5);
@@ -143,7 +144,6 @@ public class NotificationServiceTests
         {
             { ClientId, new []{ "Company Admin" } }
         };
-        var sut = new NotificationService(_portalRepositories);
         var notificationContent = new
         {
             appId = "5cf74ef8-e0b7-4984-a872-474828beb5d2",
@@ -155,7 +155,7 @@ public class NotificationServiceTests
         };
 
         // Act
-        var userIds = await sut.CreateNotifications(userRoles, Guid.NewGuid(), content.AsEnumerable(), Guid.NewGuid()).ToListAsync().ConfigureAwait(false);
+        var userIds = await _sut.CreateNotifications(userRoles, Guid.NewGuid(), content.AsEnumerable(), Guid.NewGuid()).ToListAsync().ConfigureAwait(false);
 
         // Assert
         _notifications.Should().HaveCount(3);
@@ -177,7 +177,6 @@ public class NotificationServiceTests
         {
             { ClientId, new []{ "Not Existing" } }
         };
-        var sut = new NotificationService(_portalRepositories);
         var notificationContent = new
         {
             appId = "5cf74ef8-e0b7-4984-a872-474828beb5d2",
@@ -189,7 +188,7 @@ public class NotificationServiceTests
         };
 
         // Act
-        async Task Action() => await sut.CreateNotifications(userRoles, Guid.NewGuid(), content.AsEnumerable(), Guid.NewGuid()).ToListAsync().ConfigureAwait(false);
+        async Task Action() => await _sut.CreateNotifications(userRoles, Guid.NewGuid(), content.AsEnumerable(), Guid.NewGuid()).ToListAsync().ConfigureAwait(false);
 
         // Assert
         await Assert.ThrowsAsync<ConfigurationException>(Action);
@@ -207,7 +206,6 @@ public class NotificationServiceTests
         {
             { ClientId, new []{ "CX Admin" } }
         };
-        var sut = new NotificationService(_portalRepositories);
         var notificationContent = new
         {
             appId = "5cf74ef8-e0b7-4984-a872-474828beb5d2",
@@ -219,7 +217,7 @@ public class NotificationServiceTests
         };
 
         // Act
-        await sut.CreateNotifications(userRoles, Guid.NewGuid(), content.AsEnumerable()).ConfigureAwait(false);
+        await _sut.CreateNotifications(userRoles, Guid.NewGuid(), content.AsEnumerable()).ConfigureAwait(false);
 
         // Assert
         _notifications.Should().HaveCount(1);
@@ -234,7 +232,6 @@ public class NotificationServiceTests
         {
             { ClientId, new []{ "CX Admin" } }
         };
-        var sut = new NotificationService(_portalRepositories);
 
         // Act
         var notificationContent = new
@@ -251,7 +248,7 @@ public class NotificationServiceTests
             new(JsonSerializer.Serialize(notificationContent), NotificationTypeId.WELCOME_CONNECTOR_REGISTRATION)
         };
 
-        await sut.CreateNotifications(userRoles, Guid.NewGuid(), content.AsEnumerable()).ConfigureAwait(false);
+        await _sut.CreateNotifications(userRoles, Guid.NewGuid(), content.AsEnumerable()).ConfigureAwait(false);
 
         // Assert
         _notifications.Should().HaveCount(5);
@@ -270,7 +267,6 @@ public class NotificationServiceTests
         {
             { ClientId, new []{ "Company Admin" } }
         };
-        var sut = new NotificationService(_portalRepositories);
         var notificationContent = new
         {
             appId = "5cf74ef8-e0b7-4984-a872-474828beb5d2",
@@ -282,7 +278,7 @@ public class NotificationServiceTests
         };
 
         // Act
-        await sut.CreateNotifications(userRoles, Guid.NewGuid(), content.AsEnumerable()).ConfigureAwait(false);
+        await _sut.CreateNotifications(userRoles, Guid.NewGuid(), content.AsEnumerable()).ConfigureAwait(false);
 
         // Assert
         _notifications.Should().HaveCount(3);
@@ -300,7 +296,6 @@ public class NotificationServiceTests
         {
             { ClientId, new []{ "Not Existing" } }
         };
-        var sut = new NotificationService(_portalRepositories);
         var notificationContent = new
         {
             appId = "5cf74ef8-e0b7-4984-a872-474828beb5d2",
@@ -312,7 +307,7 @@ public class NotificationServiceTests
         };
 
         // Act
-        async Task Action() => await sut.CreateNotifications(userRoles, Guid.NewGuid(), content.AsEnumerable()).ConfigureAwait(false);
+        async Task Action() => await _sut.CreateNotifications(userRoles, Guid.NewGuid(), content.AsEnumerable()).ConfigureAwait(false);
 
         // Assert
         await Assert.ThrowsAsync<ConfigurationException>(Action);
@@ -342,7 +337,6 @@ public class NotificationServiceTests
         {
             { ClientId, new []{ "Company Admin" } }
         };
-        var sut = new NotificationService(_portalRepositories);
         var appId = new Guid("5cf74ef8-e0b7-4984-a872-474828beb5d2");
         A.CallTo(() => _notificationRepository.GetUpdateData(A<IEnumerable<Guid>>._, A<IEnumerable<NotificationTypeId>>._, appId))
             .Returns(notifications.Select(x => x.Id).ToAsyncEnumerable());
@@ -354,7 +348,7 @@ public class NotificationServiceTests
             });
 
         // Act
-        await sut.SetNotificationsForOfferToDone(userRoles, Enumerable.Repeat(NotificationTypeId.APP_RELEASE_REQUEST,1), appId).ConfigureAwait(false);
+        await _sut.SetNotificationsForOfferToDone(userRoles, Enumerable.Repeat(NotificationTypeId.APP_RELEASE_REQUEST,1), appId).ConfigureAwait(false);
 
         // Assert
         A.CallTo(() => _notificationRepository.AttachAndModifyNotification(not1, A<Action<Notification>>._)).MustHaveHappenedOnceExactly();
@@ -372,11 +366,10 @@ public class NotificationServiceTests
         {
             { ClientId, new []{ "Not Existing" } }
         };
-        var sut = new NotificationService(_portalRepositories);
         var appId = new Guid("5cf74ef8-e0b7-4984-a872-474828beb5d2");
 
         // Act
-        async Task Action() => await sut.SetNotificationsForOfferToDone(userRoles, Enumerable.Repeat(NotificationTypeId.APP_RELEASE_REQUEST,1), appId).ConfigureAwait(false);
+        async Task Action() => await _sut.SetNotificationsForOfferToDone(userRoles, Enumerable.Repeat(NotificationTypeId.APP_RELEASE_REQUEST,1), appId).ConfigureAwait(false);
 
         // Assert
         await Assert.ThrowsAsync<ConfigurationException>(Action);

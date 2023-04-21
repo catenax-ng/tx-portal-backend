@@ -94,4 +94,13 @@ public interface INotificationRepository
     /// <param name="offerId">id of the offer to get the notifications for</param>
     /// <returns>List of the notification ids that should be updated</returns>
     IAsyncEnumerable<Guid> GetUpdateData(IEnumerable<Guid> userRoleIds, IEnumerable<NotificationTypeId> notificationTypeIds, Guid offerId);
+    
+    /// <summary>
+    /// Gets the notification ids that should be updated
+    /// </summary>
+    /// <param name="companyUserIds">id of the companyUsers</param>
+    /// <param name="notificationTypeIds">notification type ids</param>
+    /// <param name="offerId">id of the offer to get the notifications for</param>
+    /// <returns>List of the notification ids that should be updated</returns>
+    IAsyncEnumerable<Guid> GetUpdateDataForCompanyUsers(IEnumerable<Guid> companyUserIds, IEnumerable<NotificationTypeId> notificationTypeIds, Guid offerId);
 }

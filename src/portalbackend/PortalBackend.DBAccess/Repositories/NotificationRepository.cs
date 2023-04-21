@@ -146,6 +146,20 @@ public class NotificationRepository : INotificationRepository
             .ToAsyncEnumerable();
 
     /// <inheritdoc />
+    public IAsyncEnumerable<Guid> GetUpdateDataForCompanyUsers(IEnumerable<Guid> companyUserIds, IEnumerable<NotificationTypeId> notificationTypeIds, Guid offerId) =>
+        _dbContext.CompanyUsers
+            .Where(x => 
+                x.CompanyUserStatusId == CompanyUserStatusId.ACTIVE && 
+                companyUserIds.Any(cu => cu == x.Id))
+            .SelectMany(x => x.Notifications
+                .Where(n =>
+                    notificationTypeIds.Contains(n.NotificationTypeId) &&
+                    EF.Functions.ILike(n.Content!, $"%\"offerId\":\"{offerId}\"%")
+                )
+                .Select(n => n.Id))
+            .ToAsyncEnumerable();
+
+    /// <inheritdoc />
     public Task<(bool IsUserReceiver, bool IsNotificationExisting)> CheckNotificationExistsByIdAndIamUserIdAsync(Guid notificationId, string iamUserId) =>
         _dbContext.Notifications
             .AsNoTracking()
