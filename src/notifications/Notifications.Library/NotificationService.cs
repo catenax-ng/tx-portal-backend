@@ -78,29 +78,12 @@ public class NotificationService : INotificationService
     {
         var roleData = await ValidateRoleData(roles).ConfigureAwait(false);
         var notificationRepository = _portalRepositories.GetInstance<INotificationRepository>();
-        var processedNotificationIds = new List<Guid>();
-        await foreach (var notificationId in notificationRepository.GetUpdateData(roleData, notificationTypeIds, offerId))
-        {
-            notificationRepository.AttachAndModifyNotification(notificationId, not =>
-            {
-                not.Done = true;
-            });
-            processedNotificationIds.Add(notificationId);
-        }
 
-        if (additionalCompanyUserIds != null)
-        {
-            await foreach (var notificationId in notificationRepository.GetUpdateDataForCompanyUsers(additionalCompanyUserIds, notificationTypeIds, offerId))
-            {
-                if (!processedNotificationIds.Contains(notificationId))
-                {
-                    notificationRepository.AttachAndModifyNotification(notificationId, not =>
-                    {
-                        not.Done = true;
-                    });
-                }
-            }
-        }
+        var notificationIds = await notificationRepository.GetNotificationUpdateIds(roleData, additionalCompanyUserIds, notificationTypeIds, offerId).ToListAsync().ConfigureAwait(false);
+
+        notificationRepository.AttachAndModifyNotifications(
+            notificationIds,
+            not => not.Done = true);
     }
 
     private async Task<IEnumerable<Guid>> ValidateRoleData(IDictionary<string, IEnumerable<string>> receiverUserRoles)

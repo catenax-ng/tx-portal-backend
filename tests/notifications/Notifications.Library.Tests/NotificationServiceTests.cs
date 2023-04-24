@@ -27,6 +27,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using System.Collections.Immutable;
 using System.Text.Json;
 using Xunit;
 
@@ -320,92 +321,91 @@ public class NotificationServiceTests
     public async Task SetNotificationsForOfferToDone_WithAdditionalUsersAndMultipleNotifications_UpdatesThreeNotification()
     {
         // Arrange
-        var userId = Guid.NewGuid();
-        var not1 = Guid.NewGuid();
-        var not2 = Guid.NewGuid();
-        var not3 = Guid.NewGuid();
-        var not4 = Guid.NewGuid();
-        var notifications = new List<Notification>
-        {
-            new(not1, Guid.Empty, DateTimeOffset.UtcNow, NotificationTypeId.APP_RELEASE_REQUEST, false),
-            new(not2, Guid.Empty, DateTimeOffset.UtcNow, NotificationTypeId.APP_RELEASE_REQUEST, false),
-        };
-        var userNotifications = new List<Notification>
-        {
-            new(not2, Guid.Empty, DateTimeOffset.UtcNow, NotificationTypeId.APP_RELEASE_REQUEST, false),
-            new(not3, Guid.Empty, DateTimeOffset.UtcNow, NotificationTypeId.APP_RELEASE_REQUEST, false),
-        };
-        var allNotifications = new List<Notification>
-        {
-            new(not1, Guid.Empty, DateTimeOffset.UtcNow, NotificationTypeId.APP_RELEASE_REQUEST, false),
-            new(not2, Guid.Empty, DateTimeOffset.UtcNow, NotificationTypeId.APP_RELEASE_REQUEST, false),
-            new(not3, Guid.Empty, DateTimeOffset.UtcNow, NotificationTypeId.APP_RELEASE_REQUEST, false)
-        };
+        var userIds = _fixture.CreateMany<Guid>(3).ToImmutableArray();
+        var notifications = _fixture.CreateMany<Guid>(3).ToImmutableArray();
         var userRoles = new Dictionary<string, IEnumerable<string>>
         {
             { ClientId, new []{ "Company Admin" } }
         };
         var appId = new Guid("5cf74ef8-e0b7-4984-a872-474828beb5d2");
-        A.CallTo(() => _notificationRepository.GetUpdateData(A<IEnumerable<Guid>>._, A<IEnumerable<NotificationTypeId>>._, appId))
-            .Returns(notifications.Select(x => x.Id).ToAsyncEnumerable());
-        A.CallTo(() => _notificationRepository.GetUpdateDataForCompanyUsers(A<IEnumerable<Guid>>._, A<IEnumerable<NotificationTypeId>>._, appId))
-            .Returns(userNotifications.Select(x => x.Id).ToAsyncEnumerable());
+        A.CallTo(() => _notificationRepository.GetNotificationUpdateIds(A<IEnumerable<Guid>>._, A<IEnumerable<Guid>?>._, A<IEnumerable<NotificationTypeId>>._, A<Guid>._))
+            .Returns(notifications.ToAsyncEnumerable());
 
-        A.CallTo(() => _notificationRepository.AttachAndModifyNotification(A<Guid>._, A<Action<Notification>>._))
-            .Invokes((Guid notificationId, Action<Notification> setOptionalFields) =>
+        IEnumerable<Notification>? modified = null;
+
+        A.CallTo(() => _notificationRepository.AttachAndModifyNotifications(A<IEnumerable<Guid>>._, A<Action<Notification>>._))
+            .Invokes((IEnumerable<Guid> notificationIds, Action<Notification> setOptionalFields) =>
             {
-                var notification = allNotifications.Single(x => x.Id == notificationId);
-                setOptionalFields.Invoke(notification);
+                modified = notificationIds.Select(id => new Notification(id, Guid.Empty, default, default, false)).ToImmutableArray();
+                foreach (var notification in modified)
+                {
+                    setOptionalFields.Invoke(notification);
+                }
             });
 
         // Act
-        await _sut.SetNotificationsForOfferToDone(userRoles, Enumerable.Repeat(NotificationTypeId.APP_RELEASE_REQUEST,1), appId, Enumerable.Repeat(userId, 1)).ConfigureAwait(false);
+        await _sut.SetNotificationsForOfferToDone(userRoles, Enumerable.Repeat(NotificationTypeId.APP_RELEASE_REQUEST,1), appId, userIds).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() => _notificationRepository.AttachAndModifyNotification(not1, A<Action<Notification>>._)).MustHaveHappenedOnceExactly();
-        A.CallTo(() => _notificationRepository.AttachAndModifyNotification(not2, A<Action<Notification>>._)).MustHaveHappenedOnceExactly();
-        A.CallTo(() => _notificationRepository.AttachAndModifyNotification(not3, A<Action<Notification>>._)).MustHaveHappenedOnceExactly();
-        allNotifications.Should().AllSatisfy(x => x.Done.Should().BeTrue());
+        A.CallTo(() => _notificationRepository.GetNotificationUpdateIds(
+                A<IEnumerable<Guid>>.That.IsSameSequenceAs(new [] { UserRoleId }),
+                A<IEnumerable<Guid>>.That.IsSameSequenceAs(userIds),
+                A<IEnumerable<NotificationTypeId>>.That.IsSameSequenceAs(new [] { NotificationTypeId.APP_RELEASE_REQUEST }),
+                appId))
+            .MustHaveHappenedOnceExactly();
+        A.CallTo(() => _notificationRepository.AttachAndModifyNotifications(A<IEnumerable<Guid>>._, A<Action<Notification>>._)).MustHaveHappenedOnceExactly();
+        modified.Should().NotBeNull()
+            .And.HaveCount(3)
+            .And.Satisfy(
+                x => x.Id == notifications[0] && x.Done != null && x.Done.Value,
+                x => x.Id == notifications[1] && x.Done != null && x.Done.Value,
+                x => x.Id == notifications[2] && x.Done != null && x.Done.Value
+            );
     }
     
     [Fact]
     public async Task SetNotificationsForOfferToDone_WithMultipleUserRoleAndOneNotificationTypeId_UpdatesAllNotification()
     {
         // Arrange
-        var not1 = Guid.NewGuid();
-        var not2 = Guid.NewGuid();
-        var not3 = Guid.NewGuid();
-        var not4 = Guid.NewGuid();
-        var notifications = new List<Notification>
-        {
-            new(not1, Guid.Empty, DateTimeOffset.UtcNow, NotificationTypeId.APP_RELEASE_REQUEST, false),
-            new(not2, Guid.Empty, DateTimeOffset.UtcNow, NotificationTypeId.APP_RELEASE_REQUEST, false),
-            new(not3, Guid.Empty, DateTimeOffset.UtcNow, NotificationTypeId.APP_RELEASE_REQUEST, false),
-            new(not4, Guid.Empty, DateTimeOffset.UtcNow, NotificationTypeId.APP_RELEASE_REQUEST, false),
-        };
+        var notifications = _fixture.CreateMany<Guid>(3).ToImmutableArray();
         var userRoles = new Dictionary<string, IEnumerable<string>>
         {
             { ClientId, new []{ "Company Admin" } }
         };
         var appId = new Guid("5cf74ef8-e0b7-4984-a872-474828beb5d2");
-        A.CallTo(() => _notificationRepository.GetUpdateData(A<IEnumerable<Guid>>._, A<IEnumerable<NotificationTypeId>>._, appId))
-            .Returns(notifications.Select(x => x.Id).ToAsyncEnumerable());
-        A.CallTo(() => _notificationRepository.AttachAndModifyNotification(A<Guid>._, A<Action<Notification>>._))
-            .Invokes((Guid notificationId, Action<Notification> setOptionalFields) =>
+        A.CallTo(() => _notificationRepository.GetNotificationUpdateIds(A<IEnumerable<Guid>>._, A<IEnumerable<Guid>?>._, A<IEnumerable<NotificationTypeId>>._, A<Guid>._))
+            .Returns(notifications.ToAsyncEnumerable());
+
+        IEnumerable<Notification>? modified = null;
+
+        A.CallTo(() => _notificationRepository.AttachAndModifyNotifications(A<IEnumerable<Guid>>._, A<Action<Notification>>._))
+            .Invokes((IEnumerable<Guid> notificationIds, Action<Notification> setOptionalFields) =>
             {
-                var notification = notifications.Single(x => x.Id == notificationId);
-                setOptionalFields.Invoke(notification);
+                modified = notificationIds.Select(id => new Notification(id, Guid.Empty, default, default, false)).ToImmutableArray();
+                foreach (var notification in modified)
+                {
+                    setOptionalFields.Invoke(notification);
+                }
             });
 
         // Act
         await _sut.SetNotificationsForOfferToDone(userRoles, Enumerable.Repeat(NotificationTypeId.APP_RELEASE_REQUEST,1), appId).ConfigureAwait(false);
 
         // Assert
-        A.CallTo(() => _notificationRepository.AttachAndModifyNotification(not1, A<Action<Notification>>._)).MustHaveHappenedOnceExactly();
-        A.CallTo(() => _notificationRepository.AttachAndModifyNotification(not2, A<Action<Notification>>._)).MustHaveHappenedOnceExactly();
-        A.CallTo(() => _notificationRepository.AttachAndModifyNotification(not3, A<Action<Notification>>._)).MustHaveHappenedOnceExactly();
-        A.CallTo(() => _notificationRepository.AttachAndModifyNotification(not4, A<Action<Notification>>._)).MustHaveHappenedOnceExactly();
-        notifications.Should().AllSatisfy(x => x.Done.Should().BeTrue());
+        A.CallTo(() => _notificationRepository.GetNotificationUpdateIds(
+                A<IEnumerable<Guid>>.That.IsSameSequenceAs(new [] { UserRoleId }),
+                (IEnumerable<Guid>?) null,
+                A<IEnumerable<NotificationTypeId>>.That.IsSameSequenceAs(new [] { NotificationTypeId.APP_RELEASE_REQUEST }),
+                appId))
+            .MustHaveHappenedOnceExactly();
+        A.CallTo(() => _notificationRepository.AttachAndModifyNotifications(A<IEnumerable<Guid>>._, A<Action<Notification>>._)).MustHaveHappenedOnceExactly();
+        modified.Should().NotBeNull()
+            .And.HaveCount(3)
+            .And.Satisfy(
+                x => x.Id == notifications[0] && x.Done != null && x.Done.Value,
+                x => x.Id == notifications[1] && x.Done != null && x.Done.Value,
+                x => x.Id == notifications[2] && x.Done != null && x.Done.Value
+            );
     }
 
     [Fact]
