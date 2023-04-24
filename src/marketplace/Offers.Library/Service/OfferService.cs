@@ -632,14 +632,12 @@ public class OfferService : IOfferService
             throw new ControllerArgumentException("File name should not be null");
         }
 
-        if (!uploadDocumentTypeIdSettings.ContainsKey(documentTypeId))
+        if (!uploadDocumentTypeIdSettings.TryGetValue(documentTypeId, out var uploadContentTypeSettings))
         {
             throw new ControllerArgumentException($"documentType must be either: {string.Join(",", uploadDocumentTypeIdSettings.Keys)}");
         }
-
         // Check if document is a pdf,jpeg and png file (also see https://www.rfc-editor.org/rfc/rfc3778.txt)
         var documentContentType = document.ContentType;
-        var uploadContentTypeSettings = uploadDocumentTypeIdSettings.Where(x => x.Key == documentTypeId).Select(contentType => contentType.Value).First();
         if (!uploadContentTypeSettings.Contains(documentContentType))
         {
             throw new UnsupportedMediaTypeException($"Document type {documentTypeId} is not supported. File with contentType :{string.Join(",", uploadContentTypeSettings)} are allowed.");
