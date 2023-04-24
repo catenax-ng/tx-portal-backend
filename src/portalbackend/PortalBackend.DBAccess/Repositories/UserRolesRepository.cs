@@ -188,17 +188,21 @@ public class UserRolesRepository : IUserRolesRepository
             .Select(userRole => userRole.UserRoleText)
             .AsAsyncEnumerable();
 
-    public IAsyncEnumerable<UserRoleWithDescription> GetServiceAccountRolesAsync(string clientId, string? languageShortName = null) =>
-       _dbContext.UserRoles
-           .AsNoTracking()
-           .Where(userRole => userRole.Offer!.AppInstances.Any(x => x.IamClient!.ClientClientId == clientId))
-           .Select(userRole => new UserRoleWithDescription(
-                   userRole.Id,
-                   userRole.UserRoleText,
-                   userRole.UserRoleDescriptions.SingleOrDefault(desc =>
-                   desc.LanguageShortName == (languageShortName ?? Constants.DefaultLanguage))!.Description))
-           .AsAsyncEnumerable();
-
+    IAsyncEnumerable<UserRoleWithDescription> IUserRolesRepository.GetServiceAccountRolesAsync(string iamUserId, string clientId, string? languageShortName) =>
+        _dbContext.IamUsers
+            .AsNoTracking()
+            .Where(iamUser => iamUser.UserEntityId == iamUserId)
+            .SelectMany(i => i.CompanyUser!.Company!.CompanyAssignedRoles
+                .SelectMany(car => car.CompanyRole!.CompanyRoleAssignedRoleCollection!.UserRoleCollection!.UserRoles
+                    .Where(ur => ur.Offer!.AppInstances.Any(ai => ai.IamClient!.ClientClientId == clientId))))
+            .Distinct()
+            .Select(userRole => new UserRoleWithDescription(
+                userRole.Id,
+                userRole.UserRoleText,
+                userRole.UserRoleDescriptions.SingleOrDefault(desc =>
+                    desc.LanguageShortName == (languageShortName ?? Constants.DefaultLanguage))!.Description))
+            .AsAsyncEnumerable();
+    
     /// <inheritdoc />
     public IAsyncEnumerable<string> GetUserRolesForOfferIdAsync(Guid offerId) => 
         _dbContext.UserRoles

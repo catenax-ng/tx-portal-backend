@@ -64,10 +64,15 @@ public class ServiceAccountBusinessLogic : IServiceAccountBusinessLogic
             throw new ControllerArgumentException("name must not be empty","name");
         }
 
-        var result = await _portalRepositories.GetInstance<IUserRepository>().GetCompanyIdAndBpnForIamUserUntrackedAsync(iamAdminId).ConfigureAwait(false);
+        var result = await _portalRepositories.GetInstance<IUserRepository>().GetCompanyIdAndBpnForIamUserUntrackedAsync(iamAdminId, _settings.ClientId).ConfigureAwait(false);
         if (result == default)
         {
             throw new NotFoundException($"user {iamAdminId} is not associated with any company");
+        }
+
+        if (!serviceAccountCreationInfos.UserRoleIds.All(result.TechnicalUserRoleIds.Contains))
+        {
+            throw new ControllerArgumentException($"The roles {string.Join(",", serviceAccountCreationInfos.UserRoleIds.Where(ur => !result.TechnicalUserRoleIds.Contains(ur)))} are not assignable to a service account", "userRoleIds");
         }
 
         var companyServiceAccountTypeId = CompanyServiceAccountTypeId.OWN;
@@ -226,6 +231,6 @@ public class ServiceAccountBusinessLogic : IServiceAccountBusinessLogic
             15,
             _portalRepositories.GetInstance<IServiceAccountRepository>().GetOwnCompanyServiceAccountsUntracked(iamAdminId));
 
-    public IAsyncEnumerable<UserRoleWithDescription> GetServiceAccountRolesAsync(string? languageShortName = null) =>
-        _portalRepositories.GetInstance<IUserRolesRepository>().GetServiceAccountRolesAsync(_settings.ClientId,languageShortName);
+    IAsyncEnumerable<UserRoleWithDescription> IServiceAccountBusinessLogic.GetServiceAccountRolesAsync(string iamUserId, string? languageShortName) =>
+        _portalRepositories.GetInstance<IUserRolesRepository>().GetServiceAccountRolesAsync(iamUserId, _settings.ClientId, languageShortName);
 }
