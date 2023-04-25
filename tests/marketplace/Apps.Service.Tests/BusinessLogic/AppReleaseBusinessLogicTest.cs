@@ -1030,6 +1030,7 @@ public class AppReleaseBusinessLogicTest
         result.LeadPictureId.Should().Be(data.leadPictureId);
         result.Provider.Should().Be(data.Provider);
         result.ProviderUri.Should().Be(data.ProviderUri);
+        result.OfferStatusId.Should().Be(data.OfferStatusId);
     }
 
     [Fact]

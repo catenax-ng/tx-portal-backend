@@ -440,7 +440,8 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
             result.LicenseTypeId,
             result.Price ?? Constants.ErrorString,
             result.Tags,
-            result.MatchingPrivacyPolicies);
+            result.MatchingPrivacyPolicies,
+            result.OfferStatusId);
     }
 
     /// <inheritdoc />

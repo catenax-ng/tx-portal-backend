@@ -555,7 +555,8 @@ public class OfferRepository : IOfferRepository
                     offer.OfferLicenses.Select(license => license.Licensetext).FirstOrDefault(),
                     offer.Tags.Select(t => t.Name),
                     offer.OfferAssignedPrivacyPolicies.Select(p=>p.PrivacyPolicyId),
-                    offer.LicenseTypeId))
+                    offer.LicenseTypeId,
+                    offer.OfferStatusId))
             .SingleOrDefaultAsync();
     
     ///<inheritdoc/>
