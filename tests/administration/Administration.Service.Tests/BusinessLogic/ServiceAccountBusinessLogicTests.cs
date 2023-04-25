@@ -398,7 +398,12 @@ public class ServiceAccountBusinessLogicTests
         // Assert
         result.Should().NotBeNull();
         result.Should().HaveCount(15);
-        result.Should().AllSatisfy(ur => data.Contains(ur));
+        // Sonar fix -> Return value of pure method is not used
+        result.Should().AllSatisfy(ur =>
+        {
+            var contains = data.Contains(ur);
+            contains.Should().BeTrue();
+        });
     }
     
     #endregion
