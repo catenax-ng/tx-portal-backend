@@ -335,7 +335,7 @@ public class ConnectorsBusinessLogic : IConnectorsBusinessLogic
             {
                 if(!bpnRegex.IsMatch(bpn))
                 {
-                    throw new ControllerArgumentException($"Incorrect BPN {bpn} attribute value", nameof(bpn));
+                    throw new ControllerArgumentException($"Incorrect BPN {bpn} attribute value");
                 }
             }
         }

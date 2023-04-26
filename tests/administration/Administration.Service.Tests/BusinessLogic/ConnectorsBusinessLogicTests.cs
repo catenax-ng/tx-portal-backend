@@ -798,6 +798,45 @@ public class ConnectorsBusinessLogicTests
     }
 
     #endregion
+    
+    [Fact]
+    public async Task GetCompanyConnectorEndPoint_WithValidData_ReturnsExpectedResult()
+    {
+        //Arrange
+        var bpns = new[]
+        {
+            "BPNL00000003CRHL",
+            "BPNL00000003CRHK"
+        };
+        A.CallTo(() => _connectorsRepository.GetConnectorEndPointDataAsync(bpns))
+            .Returns(new [] { (BusinessPartnerNumber: "BPNL00000003CRHL", ConnectorEndPoint: "www.googlr.com") }.ToAsyncEnumerable());
+
+        //Act
+        var result = await _logic.GetCompanyConnectorEndPointAsync(bpns).ToListAsync().ConfigureAwait(false);
+
+        //Assert
+        A.CallTo(() => _connectorsRepository.GetConnectorEndPointDataAsync(bpns)).MustHaveHappenedOnceExactly();
+        result.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task GetCompanyConnectorEndPoint_WithInValidBpn_ThrowsArgumentException()
+    {
+        //Arrange
+        var bpns = new[]
+        {
+            "CAXLBOSCHZZ"
+        };
+        A.CallTo(() => _connectorsRepository.GetConnectorEndPointDataAsync(bpns))
+            .Returns(new [] { (BusinessPartnerNumber: "CAXLBOSCHZZ", ConnectorEndPoint: "www.googlr.com") }.ToAsyncEnumerable());
+
+         // Act
+        async Task Act() => await _logic.GetCompanyConnectorEndPointAsync(bpns).ToListAsync().ConfigureAwait(false);
+        
+        // Assert
+        var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Act);
+        ex.Message.Should().Be($"Incorrect BPN {bpns[0]} attribute value");
+    }
 
     #region Setup
 

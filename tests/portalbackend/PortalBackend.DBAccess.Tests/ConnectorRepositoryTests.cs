@@ -381,6 +381,25 @@ public class ConnectorRepositoryTests : IAssemblyFixture<TestDbFixture>
         // Assert
         result.Should().BeNull();        
     }
+
+    [Fact]
+    public async Task GetConnectorEndPointDataAsync_WithExistingConnector_ReturnsExpectedResult()
+    {
+        // Arrange
+        var (sut, _) = await CreateSut().ConfigureAwait(false);
+       
+        // Act
+        var bpns = new[]
+        {
+            "BPNL00000003AYRE",
+            "BPNL00000003CRHK"
+        };
+        var result = await sut.GetConnectorEndPointDataAsync(bpns).ToListAsync().ConfigureAwait(false);
+
+        // Assert
+        result.Should().NotBeNull();  
+        result.Should().HaveCount(2);      
+    }
     
     #endregion
     
