@@ -32,7 +32,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migrations
 {
     [DbContext(typeof(PortalDbContext))]
-    [Migration("20230420070641_CPLP-2353-AddNotificationType")]
+    [Migration("20230426125742_CPLP-2353-AddNotificationType")]
     partial class CPLP2353AddNotificationType
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -3065,7 +3065,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("date_created");
 
-                    b.Property<bool>("Done")
+                    b.Property<bool?>("Done")
                         .HasColumnType("boolean")
                         .HasColumnName("done");
 
