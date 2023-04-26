@@ -33,6 +33,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.BusinessLogic;
 using Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.Models;
+using System.Text.RegularExpressions;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
 
@@ -45,6 +46,7 @@ public class ConnectorsBusinessLogic : IConnectorsBusinessLogic
     private readonly ISdFactoryBusinessLogic _sdFactoryBusinessLogic;
     private readonly IDapsService _dapsService;
     private readonly ConnectorsSettings _settings;
+    private static readonly Regex bpnRegex = new Regex(@"(\w|\d){16}", RegexOptions.None, TimeSpan.FromSeconds(1));
 
     /// <summary>
     /// Constructor.
@@ -325,14 +327,28 @@ public class ConnectorsBusinessLogic : IConnectorsBusinessLogic
     }
 
     /// <inheritdoc/>
-    public IAsyncEnumerable<ConnectorEndPointData> GetCompanyConnectorEndPointAsync(IEnumerable<string> bpns) =>
-        _portalRepositories.GetInstance<IConnectorsRepository>()
+    public IAsyncEnumerable<ConnectorEndPointData> GetCompanyConnectorEndPointAsync(IEnumerable<string> bpns)
+    {
+        if (bpns.Any())
+        {
+            foreach(var bpn in bpns)
+            {
+                if(!bpnRegex.IsMatch(bpn))
+                {
+                    throw new ControllerArgumentException($"Incorrect BPN {bpn} attribute value", nameof(bpn));
+                }
+            }
+        }
+       
+        return _portalRepositories.GetInstance<IConnectorsRepository>()
             .GetConnectorEndPointDataAsync(bpns)
             .PreSortedGroupBy(data => data.BusinessPartnerNumber)
             .Select(group =>
                 new ConnectorEndPointData(
                     group.Key,
                     group.Select(x => x.ConnectorEndpoint)));
+    }
+        
 
     /// <inheritdoc />
     public async Task<bool> TriggerDapsAsync(Guid connectorId, IFormFile certificate, string iamUserId, CancellationToken cancellationToken)
