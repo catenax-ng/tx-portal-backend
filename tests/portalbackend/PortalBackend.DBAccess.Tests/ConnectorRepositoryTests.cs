@@ -19,6 +19,7 @@
  ********************************************************************************/
 
 using Microsoft.EntityFrameworkCore;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Async;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Tests.Setup;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
@@ -382,23 +383,38 @@ public class ConnectorRepositoryTests : IAssemblyFixture<TestDbFixture>
         result.Should().BeNull();        
     }
 
-    [Fact]
-    public async Task GetConnectorEndPointDataAsync_WithExistingConnector_ReturnsExpectedResult()
+    #endregion
+
+    #region GetConnectorEndPointDataAsync
+
+    [Theory]
+    [InlineData(new [] { "BPNL00000003AYRE", "BPNL00000003CRHK" }, 3, 2)]
+    [InlineData(new string [] {}, 4, 3)]
+    [InlineData(new [] { "not a bpn" }, 0, 0)]
+    public async Task GetConnectorEndPointDataAsync_WithExistingConnector_ReturnsExpectedResult(IEnumerable<string> bpns, int numResults, int numGroups)
     {
         // Arrange
         var (sut, _) = await CreateSut().ConfigureAwait(false);
-       
+
         // Act
-        var bpns = new[]
-        {
-            "BPNL00000003AYRE",
-            "BPNL00000003CRHK"
-        };
         var result = await sut.GetConnectorEndPointDataAsync(bpns).ToListAsync().ConfigureAwait(false);
 
         // Assert
-        result.Should().NotBeNull();  
-        result.Should().HaveCount(1);      
+        result.Should().NotBeNull().And.HaveCount(numResults);
+        if (numResults > 0)
+        {
+            var grouped = result.GroupBy(x => x.BusinessPartnerNumber, x => x.ConnectorEndpoint);
+            var presorted = await result.ToAsyncEnumerable().PreSortedGroupBy(x => x.BusinessPartnerNumber, x => x.ConnectorEndpoint).ToListAsync();
+            grouped.Should().HaveCount(numGroups);
+            presorted.Should().HaveCount(numGroups);
+            grouped.Join(presorted, g => g.Key, p => p.Key, (g,p) => (g,p)).Should().AllSatisfy(
+                j => j.g.OrderBy(x => x).Should().ContainInOrder(j.p.OrderBy(x => x))
+            );
+            if (bpns.Any())
+            {
+                grouped.Select(x => x.Key).Should().HaveSameCount(bpns).And.AllSatisfy(x => bpns.Should().Contain(x));
+            }
+        }
     }
     
     #endregion

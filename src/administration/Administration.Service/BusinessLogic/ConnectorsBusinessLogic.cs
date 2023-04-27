@@ -46,7 +46,7 @@ public class ConnectorsBusinessLogic : IConnectorsBusinessLogic
     private readonly ISdFactoryBusinessLogic _sdFactoryBusinessLogic;
     private readonly IDapsService _dapsService;
     private readonly ConnectorsSettings _settings;
-    private static readonly Regex bpnRegex = new Regex(@"(\w|\d){16}", RegexOptions.None, TimeSpan.FromSeconds(1));
+    private static readonly Regex bpnRegex = new (@"(\w|\d){16}", RegexOptions.None, TimeSpan.FromSeconds(1));
 
     /// <summary>
     /// Constructor.
@@ -329,17 +329,11 @@ public class ConnectorsBusinessLogic : IConnectorsBusinessLogic
     /// <inheritdoc/>
     public IAsyncEnumerable<ConnectorEndPointData> GetCompanyConnectorEndPointAsync(IEnumerable<string> bpns)
     {
-        if (bpns.Any())
+        if (bpns.Any(bpn => !bpnRegex.IsMatch(bpn)))
         {
-            foreach(var bpn in bpns)
-            {
-                if(!bpnRegex.IsMatch(bpn))
-                {
-                    throw new ControllerArgumentException($"Incorrect BPN {bpn} attribute value");
-                }
-            }
+            throw new ControllerArgumentException($"Incorrect BPN [{string.Join(", ", bpns.Where(bpn => !bpnRegex.IsMatch(bpn)))}] attribute value");
         }
-       
+
         return _portalRepositories.GetInstance<IConnectorsRepository>()
             .GetConnectorEndPointDataAsync(bpns)
             .PreSortedGroupBy(data => data.BusinessPartnerNumber)
