@@ -189,20 +189,20 @@ public class UserRolesRepository : IUserRolesRepository
             .AsAsyncEnumerable();
 
     IAsyncEnumerable<UserRoleWithDescription> IUserRolesRepository.GetServiceAccountRolesAsync(string iamUserId, string clientId, string? languageShortName) =>
-        _dbContext.IamUsers
+        _dbContext.UserRoles
             .AsNoTracking()
-            .Where(iamUser => iamUser.UserEntityId == iamUserId)
-            .SelectMany(i => i.CompanyUser!.Company!.CompanyAssignedRoles
-                .SelectMany(car => car.CompanyRole!.CompanyRoleAssignedRoleCollection!.UserRoleCollection!.UserRoles
-                    .Where(ur => ur.Offer!.AppInstances.Any(ai => ai.IamClient!.ClientClientId == clientId))))
-            .Distinct()
+            .Where(ur => ur.Offer!.AppInstances.Any(ai => ai.IamClient!.ClientClientId == clientId) &&
+                ur.UserRoleCollections.Any(urc =>
+                    urc.CompanyRoleAssignedRoleCollection!.CompanyRole!.CompanyAssignedRoles.Any(car =>
+                        car.Company!.CompanyUsers.Any(cu =>
+                            cu.IamUser!.UserEntityId == iamUserId))))
             .Select(userRole => new UserRoleWithDescription(
                 userRole.Id,
                 userRole.UserRoleText,
                 userRole.UserRoleDescriptions.SingleOrDefault(desc =>
                     desc.LanguageShortName == (languageShortName ?? Constants.DefaultLanguage))!.Description))
             .AsAsyncEnumerable();
-    
+
     /// <inheritdoc />
     public IAsyncEnumerable<string> GetUserRolesForOfferIdAsync(Guid offerId) => 
         _dbContext.UserRoles

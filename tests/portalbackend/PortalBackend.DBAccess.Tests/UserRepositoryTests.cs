@@ -378,7 +378,7 @@ public class UserRepositoryTests : IAssemblyFixture<TestDbFixture>
         var sut = await CreateSut().ConfigureAwait(false);
         
         // Act
-        var result = await sut.GetCompanyIdAndBpnForIamUserUntrackedAsync(ValidIamUserId, ClientId).ConfigureAwait(false);
+        var result = await sut.GetCompanyIdAndBpnRolesForIamUserUntrackedAsync(ValidIamUserId, ClientId).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBe(default);

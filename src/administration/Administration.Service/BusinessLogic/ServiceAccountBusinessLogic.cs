@@ -64,19 +64,24 @@ public class ServiceAccountBusinessLogic : IServiceAccountBusinessLogic
             throw new ControllerArgumentException("name must not be empty","name");
         }
 
-        var result = await _portalRepositories.GetInstance<IUserRepository>().GetCompanyIdAndBpnForIamUserUntrackedAsync(iamAdminId, _settings.ClientId).ConfigureAwait(false);
+        var result = await _portalRepositories.GetInstance<IUserRepository>().GetCompanyIdAndBpnRolesForIamUserUntrackedAsync(iamAdminId, _settings.ClientId).ConfigureAwait(false);
         if (result == default)
         {
             throw new NotFoundException($"user {iamAdminId} is not associated with any company");
         }
-
-        if (!serviceAccountCreationInfos.UserRoleIds.All(result.TechnicalUserRoleIds.Contains))
+        if (string.IsNullOrEmpty(result.Bpn))
         {
-            throw new ControllerArgumentException($"The roles {string.Join(",", serviceAccountCreationInfos.UserRoleIds.Where(ur => !result.TechnicalUserRoleIds.Contains(ur)))} are not assignable to a service account", "userRoleIds");
+            throw new ConflictException($"bpn not set for company {result.CompanyId}");
+        }
+
+        var unassignable = serviceAccountCreationInfos.UserRoleIds.Except(result.TechnicalUserRoleIds);
+        if (unassignable.Any())
+        {
+            throw new ControllerArgumentException($"The roles {string.Join(",", unassignable)} are not assignable to a service account", "userRoleIds");
         }
 
         var companyServiceAccountTypeId = CompanyServiceAccountTypeId.OWN;
-        var (clientId, serviceAccountData, serviceAccountId, userRoleData) = await _serviceAccountCreation.CreateServiceAccountAsync(serviceAccountCreationInfos, result.CompanyId, Enumerable.Repeat(result.Bpn, 1), companyServiceAccountTypeId, false).ConfigureAwait(false);
+        var (clientId, serviceAccountData, serviceAccountId, userRoleData) = await _serviceAccountCreation.CreateServiceAccountAsync(serviceAccountCreationInfos, result.CompanyId, new [] { result.Bpn }, companyServiceAccountTypeId, false).ConfigureAwait(false);
 
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
         return new ServiceAccountDetails(
