@@ -26,6 +26,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Enums;
@@ -41,13 +42,16 @@ public class ServiceAccountBusinessLogicTests
     private static readonly Guid UserRoleId1 = Guid.NewGuid();
     private static readonly Guid UserRoleId2 = Guid.NewGuid();
     private static readonly Guid ValidCompanyId = Guid.NewGuid();
+    private static readonly Guid ValidConnectorId = Guid.NewGuid();
     private static readonly Guid ValidServiceAccountId = Guid.NewGuid();
     private static readonly Guid InactiveServiceAccount = Guid.NewGuid();
     private static readonly string ValidAdminId = Guid.NewGuid().ToString();
+    private readonly IEnumerable<Guid> _userRoleIds = Enumerable.Repeat(Guid.NewGuid(), 1);
     private readonly IServiceAccountCreation _serviceAccountCreation;
     private readonly IUserRepository _userRepository;
     private readonly IUserRolesRepository _userRolesRepository;
     private readonly IServiceAccountRepository _serviceAccountRepository;
+    private readonly IConnectorsRepository _connectorsRepository;
     private readonly IProvisioningManager _provisioningManager;
     private readonly IPortalRepositories _portalRepositories;
     private readonly IFixture _fixture;
@@ -63,6 +67,7 @@ public class ServiceAccountBusinessLogicTests
         _userRepository = A.Fake<IUserRepository>();
         _userRolesRepository = A.Fake<IUserRolesRepository>();
         _serviceAccountRepository = A.Fake<IServiceAccountRepository>();
+        _connectorsRepository = A.Fake<IConnectorsRepository>();
         _provisioningManager = A.Fake<IProvisioningManager>();
         _portalRepositories = A.Fake<IPortalRepositories>();
         _serviceAccountCreation = A.Fake<IServiceAccountCreation>();
@@ -379,6 +384,64 @@ public class ServiceAccountBusinessLogicTests
     
     #endregion
 
+    #region DeleteOwnCompanyServiceAccountAsync
+
+    [Fact]
+    public async Task DeleteOwnCompanyServiceAccountAsync_WithNotExistingServiceAccount_ThrowsNotFoundException()
+    {
+        // Arrange
+        var serviceAccountId = Guid.NewGuid();
+        SetupDeleteOwnCompanyServiceAccount(false, false);
+
+        var sut = new ServiceAccountBusinessLogic(_provisioningManager, _portalRepositories, _options, null!);
+        
+        // Act
+        async Task Act() => await sut.DeleteOwnCompanyServiceAccountAsync(serviceAccountId, ValidAdminId).ConfigureAwait(false);
+        
+        // Assert
+        var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
+        ex.Message.Should().Be($"serviceAccount {serviceAccountId} not found in company of user {ValidAdminId}");
+    }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    [InlineData(false, false)]
+    public async Task DeleteOwnCompanyServiceAccountAsync_WithoutClient_CallsExpected(bool withClient, bool withServiceAccount)
+    {
+        // Arrange
+        var serviceAccount = _fixture.Build<CompanyServiceAccount>()
+            .With(x => x.CompanyServiceAccountStatusId, CompanyServiceAccountStatusId.ACTIVE)
+            .Create();
+        var connector = _fixture.Build<Connector>()
+            .With(x => x.CompanyServiceAccountId, ValidServiceAccountId)
+            .Create();
+        SetupDeleteOwnCompanyServiceAccount(withServiceAccount, withClient, connector, serviceAccount);
+        var sut = new ServiceAccountBusinessLogic(_provisioningManager, _portalRepositories, _options, null!);
+
+        // Act
+        await sut.DeleteOwnCompanyServiceAccountAsync(ValidServiceAccountId, ValidAdminId).ConfigureAwait(false);
+        
+        // Assert
+        if (withClient)
+        {
+            A.CallTo(() => _provisioningManager.DeleteCentralClientAsync(ClientId)).MustHaveHappenedOnceExactly(); 
+            A.CallTo(() => _serviceAccountRepository.RemoveIamServiceAccount(ClientId)).MustHaveHappenedOnceExactly();
+        }
+
+        if (withServiceAccount)
+        {
+            A.CallTo(() => _connectorsRepository.AttachAndModifyConnector(ValidConnectorId, A<Action<Connector>>._, A<Action<Connector>>._)).MustHaveHappenedOnceExactly();
+            connector.CompanyServiceAccountId.Should().BeNull();
+        }
+
+        serviceAccount.CompanyServiceAccountStatusId.Should().Be(CompanyServiceAccountStatusId.INACTIVE);
+        A.CallTo(() => _serviceAccountRepository.RemoveCompanyServiceAccountAssignedRole(A<CompanyServiceAccountAssignedRole>._)).MustHaveHappenedOnceExactly();
+    }
+
+    #endregion
+
     #region GetServiceAccountRolesAsync
     
     [Fact]
@@ -473,6 +536,36 @@ public class ServiceAccountBusinessLogicTests
         A.CallTo(() => _serviceAccountRepository.GetOwnCompanyServiceAccountDetailedDataUntrackedAsync(
                 A<Guid>.That.Matches(x => x == ValidServiceAccountId), A<string>.That.Not.Matches(x => x == ValidAdminId)))
             .ReturnsLazily(() => (CompanyServiceAccountDetailedData?) null);
+    }
+
+    private void SetupDeleteOwnCompanyServiceAccount(bool withServiceAccount, bool withClient, Connector? connector = null, CompanyServiceAccount? companyServiceAccount = null)
+    {
+        A.CallTo(() => _serviceAccountRepository.GetOwnCompanyServiceAccountWithIamServiceAccountRolesAsync(ValidServiceAccountId, ValidAdminId))
+            .ReturnsLazily(() => new ValueTuple<IEnumerable<Guid>, Guid?, string?>(_userRoleIds, withServiceAccount ? ValidConnectorId : null, withClient ? ClientId : null));
+        A.CallTo(() => _serviceAccountRepository.GetOwnCompanyServiceAccountWithIamServiceAccountRolesAsync(A<Guid>.That.Not.Matches(x => x == ValidServiceAccountId), ValidAdminId))
+            .ReturnsLazily(() => new ValueTuple<IEnumerable<Guid>, Guid?, string?>());
+
+        if (companyServiceAccount != null)
+        {
+            A.CallTo(() => _serviceAccountRepository.AttachAndModifyCompanyServiceAccount(ValidServiceAccountId, null, A<Action<CompanyServiceAccount>>._))
+                .Invokes((Guid _, Action<CompanyServiceAccount>? _, Action<CompanyServiceAccount> modify) =>
+                {
+                    modify.Invoke(companyServiceAccount);
+                });
+        }
+
+        if (connector != null)
+        {
+            A.CallTo(() => _connectorsRepository.AttachAndModifyConnector(ValidConnectorId, A<Action<Connector>>._, A<Action<Connector>>._))
+                .Invokes((Guid _, Action<Connector>? initialize, Action<Connector> modify) =>
+                {
+                    initialize?.Invoke(connector);
+                    modify.Invoke(connector);
+                });
+        }
+        
+        A.CallTo(() => _portalRepositories.GetInstance<IServiceAccountRepository>()).Returns(_serviceAccountRepository);
+        A.CallTo(() => _portalRepositories.GetInstance<IConnectorsRepository>()).Returns(_connectorsRepository);
     }
 
     #endregion

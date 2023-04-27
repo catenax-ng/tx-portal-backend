@@ -18,15 +18,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using AutoFixture;
-using AutoFixture.AutoFakeItEasy;
-using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Tests.Setup;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
-using Xunit;
 using Xunit.Extensions.AssemblyFixture;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Tests;
@@ -81,6 +78,54 @@ public class ServiceAccountRepositoryTests : IAssemblyFixture<TestDbFixture>
         changedEntries.Should().NotBeEmpty();
         changedEntries.Should().HaveCount(1);
         changedEntries.Single().Entity.Should().BeOfType<CompanyServiceAccount>().Which.OfferSubscriptionId.Should().Be(_validSubscriptionId);
+    }
+
+    #endregion
+
+    #region RemoveIamServiceAccount
+
+    [Fact]
+    public async Task RemoveIamServiceAccount_ReturnsExpectedResult()
+    {
+        // Arrange
+        var (sut, context) = await CreateSut().ConfigureAwait(false);
+
+        // Act
+        sut.RemoveIamServiceAccount(IamUserId);
+
+        // Assert
+        var changeTracker = context.ChangeTracker;
+        var changedEntries = changeTracker.Entries().ToList();
+        changeTracker.HasChanges().Should().BeTrue();
+        changedEntries.Should().NotBeEmpty();
+        changedEntries.Should().HaveCount(1);
+        changedEntries.Should().AllSatisfy(x => x.State.Should().Be(EntityState.Deleted));
+        changedEntries.Single().Entity.Should().BeOfType<IamServiceAccount>().Which.ClientId.Should().Be(IamUserId);
+    }
+
+    #endregion
+
+    #region RemoveCompanyServiceAccountAssignedRole
+
+    [Fact]
+    public async Task RemoveCompanyServiceAccountAssignedRole_ReturnsExpectedResult()
+    {
+        // Arrange
+        var companyServiceAccountId = Guid.NewGuid();
+        var userRoleId = Guid.NewGuid();
+        var (sut, context) = await CreateSut().ConfigureAwait(false);
+
+        // Act
+        sut.RemoveCompanyServiceAccountAssignedRole(new CompanyServiceAccountAssignedRole(companyServiceAccountId, userRoleId));
+
+        // Assert
+        var changeTracker = context.ChangeTracker;
+        var changedEntries = changeTracker.Entries().ToList();
+        changeTracker.HasChanges().Should().BeTrue();
+        changedEntries.Should().NotBeEmpty();
+        changedEntries.Should().HaveCount(1);
+        changedEntries.Should().AllSatisfy(x => x.State.Should().Be(EntityState.Deleted));
+        changedEntries.Single().Entity.Should().BeOfType<CompanyServiceAccountAssignedRole>().Which.CompanyServiceAccountId.Should().Be(companyServiceAccountId);
     }
 
     #endregion
@@ -203,6 +248,23 @@ public class ServiceAccountRepositoryTests : IAssemblyFixture<TestDbFixture>
 
     #endregion
 
+    #region CheckActiveServiceAccountExistsForCompanyAsync
+
+    [Fact]
+    public async Task CheckActiveServiceAccountExistsForCompanyAsync_ReturnsExpectedResult()
+    {
+        // Arrange
+        var (sut, _) = await CreateSut().ConfigureAwait(false);
+
+        // Act
+        var result = await sut.CheckActiveServiceAccountExistsForCompanyAsync(_validServiceAccountId, new Guid("2dc4249f-b5ca-4d42-bef1-7a7a950a4f87")).ConfigureAwait(false);
+
+        // Assert
+        result.Should().BeTrue();
+    }
+
+    #endregion
+    
     #region Setup
     
     private async Task<(ServiceAccountRepository, PortalDbContext)> CreateSut()
