@@ -238,7 +238,8 @@ public class ApplicationActivationService : IApplicationActivationService
             {
                 { "userName", !string.IsNullOrWhiteSpace(userName) ?  userName : user.Email },
                 { "companyName", user.CompanyName },
-                { "url", _settings.BasePortalAddress }
+                { "url", _settings.BasePortalAddress },
+                {"bpn", user.BusinessPartnerNumber!}
             };
 
             await _mailingService.SendMails(user.Email, mailParameters, new List<string> { "EmailRegistrationWelcomeTemplate" }).ConfigureAwait(false);

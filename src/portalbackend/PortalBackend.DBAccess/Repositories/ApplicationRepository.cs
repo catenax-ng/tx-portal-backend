@@ -205,7 +205,8 @@ public class ApplicationRepository : IApplicationRepository
                         companyUser.Firstname,
                         companyUser.Lastname,
                         companyUser.Email,
-                        companyUser.Company!.Name)))
+                        companyUser.Company!.Name,
+                        companyUser.Company!.BusinessPartnerNumber)))
             .AsAsyncEnumerable();
 
     public IAsyncEnumerable<WelcomeEmailData> GetRegistrationDeclineEmailDataUntrackedAsync(Guid applicationId, IEnumerable<Guid> roleIds) =>
@@ -220,7 +221,8 @@ public class ApplicationRepository : IApplicationRepository
                         companyUser.Firstname,
                         companyUser.Lastname,
                         companyUser.Email,
-                        companyUser.Company!.Name)))
+                        companyUser.Company!.Name,
+                        companyUser.Company!.BusinessPartnerNumber)))
             .AsAsyncEnumerable();
 
     public IQueryable<CompanyApplication> GetAllCompanyApplicationsDetailsQuery(string? companyName = null) =>

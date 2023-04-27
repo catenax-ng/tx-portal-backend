@@ -20,4 +20,4 @@
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 
-public record WelcomeEmailData(Guid CompanyUserId, string? FirstName, string? LastName, string? Email, string CompanyName);
+public record WelcomeEmailData(Guid CompanyUserId, string? FirstName, string? LastName, string? Email, string CompanyName, string? BusinessPartnerNumber);
