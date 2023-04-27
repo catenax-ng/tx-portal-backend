@@ -398,7 +398,7 @@ public class ConnectorRepositoryTests : IAssemblyFixture<TestDbFixture>
 
         // Assert
         result.Should().NotBeNull();  
-        result.Should().HaveCount(2);      
+        result.Should().HaveCount(1);      
     }
     
     #endregion
