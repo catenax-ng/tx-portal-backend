@@ -128,8 +128,8 @@ public class ServiceAccountRepositoryTests : IAssemblyFixture<TestDbFixture>
         var result = await sut.GetOwnCompanyServiceAccountWithIamServiceAccountRolesAsync(_validServiceAccountId, IamUserId).ConfigureAwait(false);
 
         // Assert
-        result.Should().NotBeNull();
-        result!.CompanyServiceAccountTypeId.Should().Be(CompanyServiceAccountTypeId.OWN);
+        result.Should().NotBe(default);
+        result!.ClientId.Should().Be("7e85a0b8-0001-ab67-10d1-000000001006");
     }
 
     [Fact]
@@ -142,7 +142,7 @@ public class ServiceAccountRepositoryTests : IAssemblyFixture<TestDbFixture>
         var result = await sut.GetOwnCompanyServiceAccountWithIamServiceAccountRolesAsync(Guid.NewGuid(), IamUserId).ConfigureAwait(false);
 
         // Assert
-        result.Should().BeNull();
+        result.Should().Be(default);
     }
 
     #endregion
