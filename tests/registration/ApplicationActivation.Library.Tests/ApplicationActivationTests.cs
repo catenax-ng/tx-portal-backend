@@ -645,9 +645,9 @@ public class ApplicationActivationTests
         var welcomeEmailData = new List<WelcomeEmailData>();
         welcomeEmailData.AddRange(new WelcomeEmailData[]
         {
-            new (CompanyUserId1, "Stan", "Lee", "stan@lee.com", company.Name),
-            new (CompanyUserId2, "Tony", "Stark", "tony@stark.com", company.Name),
-            new (CompanyUserId3, "Peter", "Parker", "peter@parker.com", company.Name)
+            new (CompanyUserId1, "Stan", "Lee", "stan@lee.com", company.Name,"BPNL00000003CRHK"),
+            new (CompanyUserId2, "Tony", "Stark", "tony@stark.com", company.Name,"BPNL00000003CRHL"),
+            new (CompanyUserId3, "Peter", "Parker", "peter@parker.com", company.Name,"BPNL07800HZ01643")
         });
         A.CallTo(() => _applicationRepository.GetWelcomeEmailDataUntrackedAsync(Id, A<IEnumerable<Guid>>._))
             .Returns(welcomeEmailData.ToAsyncEnumerable());
