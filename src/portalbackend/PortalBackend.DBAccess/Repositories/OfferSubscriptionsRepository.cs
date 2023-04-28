@@ -56,7 +56,7 @@ public class OfferSubscriptionsRepository : IOfferSubscriptionsRepository
             .ToAsyncEnumerable();
 
     /// <inheritdoc />
-    public Func<int, int, Task<Pagination.Source<OfferCompanySubscriptionStatusData>?>> GetOwnCompanyProvidedOfferSubscriptionStatusesUntrackedAsync(string iamUserId, OfferTypeId offerTypeId, SubscriptionStatusSorting? sorting, OfferSubscriptionStatusId statusId, Guid? offerId = null) =>
+    public Func<int, int, Task<Pagination.Source<OfferCompanySubscriptionStatusData>?>> GetOwnCompanyProvidedOfferSubscriptionStatusesUntrackedAsync(string iamUserId, OfferTypeId offerTypeId, SubscriptionStatusSorting? sorting, OfferSubscriptionStatusId statusId, Guid? offerId) =>
         (skip, take) => Pagination.CreateSourceQueryAsync(
                 skip,
                 take,
