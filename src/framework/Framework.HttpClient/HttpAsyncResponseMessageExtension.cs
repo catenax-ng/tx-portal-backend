@@ -24,7 +24,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Framework.HttpClientExtensions;
 
 public static class HttpAsyncResponseMessageExtension
 {
-    public static async Task<HttpResponseMessage> CatchingIntoServiceExceptionFor(this Task<HttpResponseMessage> response, string systemName, RecoverOptions recoverOptions = RecoverOptions.None, Func<string, string>? createErrorMessage = null)
+    public static async Task<HttpResponseMessage> CatchingIntoServiceExceptionFor(this Task<HttpResponseMessage> response, string systemName, RecoverOptions recoverOptions = RecoverOptions.None, Func<HttpContent,ValueTask<string?>>? createErrorMessage = null)
     {
         try
         {
@@ -34,14 +34,24 @@ public static class HttpAsyncResponseMessageExtension
                 return message;
             }
 
-            var errorMessage = string.Empty;
-            if ((int) message.StatusCode < 500 && createErrorMessage != null)
+            string? errorMessage;
+            try
             {
-                var errorContent = await message.Content.ReadAsStringAsync();
-                errorMessage = string.IsNullOrWhiteSpace(errorContent) ? string.Empty : createErrorMessage.Invoke(errorContent);
+                errorMessage = (int) message.StatusCode < 500 && createErrorMessage != null
+                    ? await createErrorMessage(message.Content).ConfigureAwait(false)
+                    : null;
             }
-            
-            throw new ServiceException($"call to external system {systemName} failed with statuscode {(int)message.StatusCode}{errorMessage}", message.StatusCode, (recoverOptions & RecoverOptions.RESPONSE_RECEIVED) == RecoverOptions.RESPONSE_RECEIVED);
+            catch(Exception)
+            {
+                errorMessage = null;
+            }
+
+            throw new ServiceException(
+                string.IsNullOrWhiteSpace(errorMessage)
+                    ? $"call to external system {systemName} failed with statuscode {(int)message.StatusCode}"
+                    : $"call to external system {systemName} failed with statuscode {(int)message.StatusCode} - Message: {errorMessage}",
+                message.StatusCode,
+                (recoverOptions & RecoverOptions.RESPONSE_RECEIVED) == RecoverOptions.RESPONSE_RECEIVED);
         }
         catch(HttpRequestException e)
         {

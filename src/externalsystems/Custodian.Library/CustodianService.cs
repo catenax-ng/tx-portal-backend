@@ -50,11 +50,9 @@ public class CustodianService : ICustodianService
         var stringContent = new StringContent(json, Encoding.UTF8, "application/json");
         const string walletUrl = "/api/wallets";
 
-        string CreateErrorMessage(string errorContent)
-        {
-            var response = JsonSerializer.Deserialize<WalletErrorResponse>(errorContent, _options);
-            return response == null || string.IsNullOrWhiteSpace(response.Message) ? string.Empty : $" - Message: {response.Message}";
-        }
+        async ValueTask<string?> CreateErrorMessage(HttpContent errorContent) =>
+            (await JsonSerializer.DeserializeAsync<WalletErrorResponse>(errorContent.ReadAsStream(cancellationToken), _options, cancellationToken).ConfigureAwait(false))?.Message;
+
         var result = await httpClient.PostAsync(walletUrl, stringContent, cancellationToken)
             .CatchingIntoServiceExceptionFor("custodian-post", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE, CreateErrorMessage).ConfigureAwait(false);
 

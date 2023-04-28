@@ -84,14 +84,19 @@ public class CustodianServiceTests
         true.Should().BeTrue(); // One Assert is needed - just checking for no exception
     }
 
-    [Fact]
-    public async Task CreateWallet_WithConflict_ThrowsServiceExceptionWithErrorContent()
+    [Theory]
+    [InlineData(HttpStatusCode.Conflict, "{ \"message\": \"Wallet with given identifier already exists!\" }", "call to external system custodian-post failed with statuscode 409 - Message: Wallet with given identifier already exists!")]
+    [InlineData(HttpStatusCode.BadRequest, "{ \"test\": \"123\" }", "call to external system custodian-post failed with statuscode 400")]
+    [InlineData(HttpStatusCode.BadRequest, "this is no json", "call to external system custodian-post failed with statuscode 400")]
+    [InlineData(HttpStatusCode.Forbidden, null, "call to external system custodian-post failed with statuscode 403")]
+    public async Task CreateWallet_WithConflict_ThrowsServiceExceptionWithErrorContent(HttpStatusCode statusCode, string content, string message)
     {
         // Arrange
         const string bpn = "123";
         const string name = "test";
-        var content = JsonSerializer.Serialize(new WalletErrorResponse("Wallet with given identifier already exists!"));
-        var httpMessageHandlerMock = new HttpMessageHandlerMock(HttpStatusCode.Conflict, new StringContent(content));
+        var httpMessageHandlerMock = content == null
+            ? new HttpMessageHandlerMock(statusCode)
+            : new HttpMessageHandlerMock(statusCode, new StringContent(content));
         var httpClient = new HttpClient(httpMessageHandlerMock)
         {
             BaseAddress = new Uri("https://base.address.com")
@@ -104,54 +109,8 @@ public class CustodianServiceTests
 
         // Assert
         var ex = await Assert.ThrowsAsync<ServiceException>(Act);
-        ex.Message.Should().Contain("call to external system custodian-post failed with statuscode 409 - Message: Wallet with given identifier already exists!");
-        ex.StatusCode.Should().Be(HttpStatusCode.Conflict);
-    }
-
-    [Fact]
-    public async Task CreateWallet_WithInvalidErrorContent_ThrowsServiceException()
-    {
-        // Arrange
-        const string bpn = "123";
-        const string name = "test";
-        var httpMessageHandlerMock = new HttpMessageHandlerMock(HttpStatusCode.BadRequest, new StringContent(JsonSerializer.Serialize(new { test = "123" })));
-        var httpClient = new HttpClient(httpMessageHandlerMock)
-        {
-            BaseAddress = new Uri("https://base.address.com")
-        };
-        A.CallTo(() => _tokenService.GetAuthorizedClient<CustodianService>(_options.Value, A<CancellationToken>._)).Returns(httpClient);
-        var sut = new CustodianService(_tokenService, _options);
-
-        // Act
-        async Task Act() => await sut.CreateWalletAsync(bpn, name, CancellationToken.None).ConfigureAwait(false);
-
-        // Assert
-        var ex = await Assert.ThrowsAsync<ServiceException>(Act);
-        ex.Message.Should().Contain("call to external system custodian-post failed with statuscode 400");
-        ex.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-    }
-
-    [Fact]
-    public async Task CreateWallet_WithInvalidData_ThrowsServiceException()
-    {
-        // Arrange
-        const string bpn = "123";
-        const string name = "test";
-        var httpMessageHandlerMock = new HttpMessageHandlerMock(HttpStatusCode.BadRequest);
-        var httpClient = new HttpClient(httpMessageHandlerMock)
-        {
-            BaseAddress = new Uri("https://base.address.com")
-        };
-        A.CallTo(() => _tokenService.GetAuthorizedClient<CustodianService>(_options.Value, A<CancellationToken>._)).Returns(httpClient);
-        var sut = new CustodianService(_tokenService, _options);
-
-        // Act
-        async Task Act() => await sut.CreateWalletAsync(bpn, name, CancellationToken.None).ConfigureAwait(false);
-
-        // Assert
-        var ex = await Assert.ThrowsAsync<ServiceException>(Act);
-        ex.Message.Should().Contain("call to external system custodian-post failed with statuscode 400");
-        ex.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        ex.Message.Should().Be(message);
+        ex.StatusCode.Should().Be(statusCode);
     }
 
     #endregion
