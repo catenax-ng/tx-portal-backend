@@ -52,25 +52,40 @@ public class UserRolesBusinessLogic: IUserRolesBusinessLogic
         _portalRepositories.GetInstance<IUserRolesRepository>()
             .GetAppRolesAsync(appId, iamUserId, languageShortName ?? IUserRolesBusinessLogic.DEFAULT_LANGUAGE);
 
-    public Task<IEnumerable<UserRoleWithId>> ModifyCoreOfferUserRolesAsync(Guid offerId, Guid companyUserId, IEnumerable<string> roles, string iamUserId) =>
-        ModifyUserRolesInternal(
-            () => _portalRepositories.GetInstance<IUserRepository>()
-                .GetCoreOfferAssignedIamClientUserDataUntrackedAsync(offerId, companyUserId, iamUserId),
+    public Task<IEnumerable<UserRoleWithId>> ModifyCoreOfferUserRolesAsync(Guid offerId, Guid companyUserId, IEnumerable<string> roles, string iamUserId)
+    {
+        return ModifyUserRolesInternal(
+            async () =>
+            {
+                var result = await _portalRepositories.GetInstance<IUserRepository>()
+                    .GetCoreOfferAssignedIamClientUserDataUntrackedAsync(offerId, companyUserId, iamUserId).ConfigureAwait(false);
+                return result == null
+                    ? null
+                    : new OfferIamUserData(
+                        result.IsValidOffer,
+                        result.IamClientIds,
+                        result.IamUserId,
+                        result.IsSameCompany,
+                        "Portal",
+                        result.Firstname,
+                        result.Lastname
+                    );
+            },
             (Guid companyUserId, IEnumerable<string> roles, Guid offerId) => _portalRepositories.GetInstance<IUserRolesRepository>()
                 .GetAssignedAndMatchingCoreOfferRoles(companyUserId, roles, offerId),
-            offerId, companyUserId, roles, iamUserId, 
-            data =>
+            offerId, companyUserId, roles, iamUserId,             data =>
             {
                 var userName = $"{data.firstname} {data.lastname}";
                 return (JsonSerializer.Serialize(new
                 {
                     OfferId = data.offerId,
-                    CoreOfferName = "Portal",
+                    CoreOfferName = data.offerName,
                     Username = string.IsNullOrWhiteSpace(userName) ? "User" : userName,
                     RemovedRoles = string.Join(",", data.removedRoles),
                     AddedRoles = string.Join(",", data.addedRoles)
                 }, _options), NotificationTypeId.ROLE_UPDATE_CORE_OFFER);
             });
+    }
 
     public Task<IEnumerable<UserRoleWithId>> ModifyAppUserRolesAsync(Guid appId, Guid companyUserId, IEnumerable<string> roles, string iamUserId) =>
         ModifyUserRolesInternal(
@@ -129,13 +144,12 @@ public class UserRolesBusinessLogic: IUserRolesBusinessLogic
             throw new ConflictException($"offerId {offerId} is not associated with any keycloak-client");
         }
 
-        if (result.OfferNames.Count() != 1)
+        if (result.IamUserId == null)
         {
-            throw new UnexpectedConditionException("Only one offer name should be set here");
+            throw new ConflictException($"user {companyUserId} is not associated with any iamUser");
         }
 
-        var offerName = result.OfferNames.Single();
-        if (string.IsNullOrWhiteSpace(offerName))
+        if (string.IsNullOrWhiteSpace(result.OfferName))
         {
             throw new ConflictException("OfferName must be set here.");
         }
@@ -161,14 +175,15 @@ public class UserRolesBusinessLogic: IUserRolesBusinessLogic
 
         if (getNotificationData != null)
         {
-            var data = new ValueTuple<Guid, string, string?, string?, IEnumerable<string>, IEnumerable<string>>(
+            var data = (
                 offerId,
-                offerName,
+                result.OfferName,
                 result.Firstname,
                 result.Lastname,
                 rolesToDelete.Select(x => x.CompanyUserRoleText),
-                rolesToAdd.Select(x => x.CompanyUserRoleText));
-            var notificationData = getNotificationData.Invoke(data);
+                rolesToAdd.Select(x => x.CompanyUserRoleText)
+            );
+            var notificationData = getNotificationData(data);
             _portalRepositories.GetInstance<INotificationRepository>().CreateNotification(companyUserId,
                 notificationData.notificationTypeId, false,
                 notification =>
