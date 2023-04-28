@@ -670,12 +670,14 @@ public class OfferRepository : IOfferRepository
 
     ///<inheritdoc/>
     public Task<ServiceDetailsData?> GetServiceDetailsByIdAsync(Guid serviceId) =>
-        _context.Offers.AsNoTracking()
+        _context.Offers
+            .AsNoTracking()
+            .AsSplitQuery()
             .Where(service => service.Id == serviceId && service.OfferTypeId == OfferTypeId.SERVICE && (service.OfferStatusId == OfferStatusId.IN_REVIEW || service.OfferStatusId == OfferStatusId.ACTIVE ))
             .Select(offer => new ServiceDetailsData(
                 offer.Id,
                 offer.Name,
-                offer.ServiceDetails.Select(x => x.ServiceType!.Label),
+                offer.ServiceDetails.Select(x => x.ServiceTypeId),
                 offer.Provider,
                 offer.OfferDescriptions.Select(description => new LocalizedDescription(description.LanguageShortName, description.DescriptionLong, description.DescriptionShort)),
                 offer.Documents.Select(d => new DocumentTypeData(d.DocumentTypeId, d.Id, d.DocumentName)),
