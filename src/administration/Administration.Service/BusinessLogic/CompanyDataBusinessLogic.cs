@@ -91,8 +91,16 @@ public class CompanyDataBusinessLogic : ICompanyDataBusinessLogic
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
 
-    public async IAsyncEnumerable<CompanyRoleConsentViewData> GetCompanyRoleAndConsentAgreementDetailsAsync(string iamUserId)
+    public async IAsyncEnumerable<CompanyRoleConsentViewData> GetCompanyRoleAndConsentAgreementDetailsAsync(string iamUserId, string? languageShortName = null)
     {
+        if (languageShortName != null)
+        {
+            var languagecode = await _portalRepositories.GetInstance<ILanguageRepository>().GetLanguageAsync(languageShortName.ToLower()).ConfigureAwait(false);
+            if(languagecode == null)
+            {
+                throw new ControllerArgumentException($"language {languageShortName} does not exist");
+            }
+        }
         var companyRepositories = _portalRepositories.GetInstance<ICompanyRepository>();
         var companyData = await companyRepositories.GetCompanyStatusDataAsync(iamUserId).ConfigureAwait(false);
         if(companyData == default)
@@ -103,14 +111,16 @@ public class CompanyDataBusinessLogic : ICompanyDataBusinessLogic
         {
             throw new ConflictException("Company Status is Incorrect");
         }
-        await foreach (var data in companyRepositories.GetCompanyRoleAndConsentAgreementDataAsync(companyData.CompanyId).ConfigureAwait(false))
+        await foreach (var data in companyRepositories.GetCompanyRoleAndConsentAgreementDataAsync(companyData.CompanyId, languageShortName == null ? null : languageShortName!.ToLower()).ConfigureAwait(false))
         {
             yield return new CompanyRoleConsentViewData(
                 data.CompanyRoleId,
+                data.RoleDescription,
                 data.CompanyRolesActive,
                 data.Agreements.Select(x => new ConsentAgreementViewData(
                     x.AgreementId,
                     x.AgreementName,
+                    x.DocumentId,
                     x.ConsentStatus == 0
                         ? null
                         : x.ConsentStatus
