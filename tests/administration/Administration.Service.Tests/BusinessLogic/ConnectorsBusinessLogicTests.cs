@@ -925,11 +925,17 @@ public class ConnectorsBusinessLogicTests
             })
             .Returns(new Connector(Guid.NewGuid(), null!, null!, null!));
 
-        A.CallTo(() => _connectorsRepository.AttachAndModifyConnector(A<Guid>._, A<Action<Connector>>._, A<Action<Connector>>._))
-            .Invokes((Guid connectorId, Action<Connector>? initialize, Action<Connector> setOptionalParameters) =>
+        A.CallTo(() => _connectorsRepository.AttachAndModifyConnector(A<Guid>._, null, A<Action<Connector>>._))
+            .Invokes((Guid connectorId, Action<Connector>? _, Action<Connector> setOptionalParameters) =>
             {
                 var connector = _connectors.First(x => x.Id == connectorId);
-                initialize?.Invoke(connector);
+                setOptionalParameters.Invoke(connector);
+            });
+        A.CallTo(() => _connectorsRepository.AttachAndModifyConnector(A<Guid>._, A<Action<Connector>>.That.IsNotNull(), A<Action<Connector>>._))
+            .Invokes((Guid connectorId, Action<Connector> initialize, Action<Connector> setOptionalParameters) =>
+            {
+                var connector = _connectors.First(x => x.Id == connectorId);
+                initialize.Invoke(connector);
                 setOptionalParameters.Invoke(connector);
             });
 
