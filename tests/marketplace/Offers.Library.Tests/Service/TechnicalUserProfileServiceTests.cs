@@ -148,7 +148,7 @@ public class TechnicalUserProfileServiceTests
             new UserRoleData [] { new (Guid.NewGuid(), "cl1", "test role") }
         };
         A.CallTo(() => _offerRepository.GetServiceAccountProfileDataForSubscription(_offerSubscriptionId))
-            .Returns((true, serviceProfiles, OfferName));
+            .Returns((false, serviceProfiles, OfferName));
 
         // Act
         var result = await _sut.GetTechnicalUserProfilesForOfferSubscription(_offerSubscriptionId).ToListAsync().ConfigureAwait(false);

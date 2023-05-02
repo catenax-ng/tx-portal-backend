@@ -52,7 +52,7 @@ public class TechnicalUserProfileService : ITechnicalUserProfileService
             throw new NotFoundException($"Offer {offerTypeId} {offerId} does not exists");
         }
 
-        if (!CheckTechnicalUserData(data)) yield break;
+        if (CheckTechnicalUserData(data)) yield break;
 
         foreach (var serviceAccountData in data.ServiceAccountProfiles
                      .Select(x => GetServiceAccountData(data.OfferName!, x)))
@@ -84,7 +84,7 @@ public class TechnicalUserProfileService : ITechnicalUserProfileService
             throw new ConflictException("Offer name needs to be set here");
         }
 
-        return data.IsSingleInstance || !data.ServiceAccountProfiles.Any();
+        return !data.IsSingleInstance && data.ServiceAccountProfiles.Any();
     }
 
     private static ServiceAccountCreationInfo GetServiceAccountData(string offerName, IEnumerable<UserRoleData> serviceAccountUserRoles) =>
