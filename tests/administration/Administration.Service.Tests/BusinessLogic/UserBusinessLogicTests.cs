@@ -67,6 +67,7 @@ public class UserBusinessLogicTests
     private readonly Func<UserCreationRoleDataIdpInfo,(Guid CompanyUserId, string UserName, string? Password, Exception? Error)> _processLine;
     private readonly Func<CompanyUserAccountData,CompanyUserAccountData> _companyUserSelectFunction;
     private readonly Exception _error;
+    private readonly UserSettings _settings;
 
     public UserBusinessLogicTests()
     {
@@ -104,6 +105,13 @@ public class UserBusinessLogicTests
         _processLine = A.Fake<Func<UserCreationRoleDataIdpInfo,(Guid CompanyUserId, string UserName, string? Password, Exception? Error)>>();
         _companyUserSelectFunction = A.Fake<Func<CompanyUserAccountData,CompanyUserAccountData>>();
 
+        _settings = new UserSettings
+        {
+            Portal = new UserSetting
+            {
+                KeycloakClientID = "portal"
+            }
+        };
         _error = _fixture.Create<TestException>();
     }
 
@@ -611,7 +619,8 @@ public class UserBusinessLogicTests
 
         var sut = new UserRolesBusinessLogic(
             _portalRepositories,
-            _provisioningManager
+            _provisioningManager,
+            Options.Create(_settings)
         );
 
         // Act
@@ -636,7 +645,8 @@ public class UserBusinessLogicTests
 
         var sut = new UserRolesBusinessLogic(
             _portalRepositories,
-            _provisioningManager
+            _provisioningManager,
+            Options.Create(_settings)
         );
 
         // Act
@@ -658,7 +668,8 @@ public class UserBusinessLogicTests
 
         var sut = new UserRolesBusinessLogic(
             _portalRepositories,
-            _provisioningManager
+            _provisioningManager,
+            Options.Create(_settings)
         );
 
         // Act
@@ -682,7 +693,8 @@ public class UserBusinessLogicTests
 
         var sut = new UserRolesBusinessLogic(
             _portalRepositories,
-            _provisioningManager
+            _provisioningManager,
+            Options.Create(_settings)
         );
 
         // Act
@@ -707,7 +719,8 @@ public class UserBusinessLogicTests
 
         var sut = new UserRolesBusinessLogic(
             _portalRepositories,
-            _provisioningManager
+            _provisioningManager,
+            Options.Create(_settings)
         );
         var invalidAppId = Guid.NewGuid();
 
@@ -771,7 +784,8 @@ public class UserBusinessLogicTests
 
         var sut = new UserRolesBusinessLogic(
             _portalRepositories,
-            _provisioningManager
+            _provisioningManager,
+            Options.Create(_settings)
         );
 
         // Act
@@ -800,7 +814,8 @@ public class UserBusinessLogicTests
 
         var sut = new UserRolesBusinessLogic(
             _portalRepositories,
-            _provisioningManager
+            _provisioningManager,
+            Options.Create(_settings)
         );
 
         // Act
@@ -825,7 +840,8 @@ public class UserBusinessLogicTests
 
         var sut = new UserRolesBusinessLogic(
             _portalRepositories,
-            _provisioningManager
+            _provisioningManager,
+            Options.Create(_settings)
         );
 
         // Act
@@ -851,7 +867,8 @@ public class UserBusinessLogicTests
 
         var sut = new UserRolesBusinessLogic(
             _portalRepositories,
-            _provisioningManager
+            _provisioningManager,
+            Options.Create(_settings)
         );
 
         var companyUserId = _fixture.Create<Guid>();
@@ -879,7 +896,8 @@ public class UserBusinessLogicTests
 
         var sut = new UserRolesBusinessLogic(
             _portalRepositories,
-            _provisioningManager
+            _provisioningManager,
+            Options.Create(_settings)
         );
         var invalidAppId = Guid.NewGuid();
 
