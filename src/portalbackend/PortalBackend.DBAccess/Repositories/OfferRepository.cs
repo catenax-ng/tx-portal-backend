@@ -350,8 +350,7 @@ public class OfferRepository : IOfferRepository
                 o.UserRoles.Any(),
                 o.Documents.Where(doc => doc.DocumentStatusId != DocumentStatusId.LOCKED )
                     .Select(doc => new DocumentStatusData(doc.Id, doc.DocumentStatusId)),
-                o.Documents.Where(doc => doc.DocumentStatusId != DocumentStatusId.LOCKED )
-                    .Select(doc => doc.DocumentTypeId)
+                o.Documents.Select(doc => doc.DocumentTypeId)
             ))
             .SingleOrDefaultAsync();
 
