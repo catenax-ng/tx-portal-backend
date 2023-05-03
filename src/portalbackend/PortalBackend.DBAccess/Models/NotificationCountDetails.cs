@@ -21,7 +21,7 @@
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 
 /// <summary>
-///     Detail count data of the notifications for a specific user
+/// Detail count data of the notifications for a specific user
 /// </summary>
 /// <param name="Read">Count of all read messages</param>
 /// <param name="Unread">Count of all unread messages</param>
@@ -35,4 +35,5 @@ public record NotificationCountDetails(
     int InfoUnread,
     int OfferUnread,
     int ActionRequired,
-    int UnreadActionRequired);
+    int UnreadActionRequired
+);
