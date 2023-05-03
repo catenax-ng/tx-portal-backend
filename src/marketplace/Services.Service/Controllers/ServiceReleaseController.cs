@@ -164,8 +164,8 @@ public class ServiceReleaseController : ControllerBase
     [Route("inReview")]
     [Authorize(Roles = "approve_service_release,decline_service_release")]
     [ProducesResponseType(typeof(Pagination.Response<InReviewServiceData>), StatusCodes.Status200OK)]
-    public Task<Pagination.Response<InReviewServiceData>> GetAllInReviewStatusServiceAsync([FromQuery] int page = 0, [FromQuery] int size = 15, [FromQuery] OfferSorting? sorting = null, [FromQuery] string? serviceName = null, [FromQuery] string? languageShortName = null) =>
-        _serviceReleaseBusinessLogic.GetAllInReviewStatusServiceAsync(page, size, sorting,serviceName, languageShortName);
+    public Task<Pagination.Response<InReviewServiceData>> GetAllInReviewStatusServiceAsync([FromQuery] int page = 0, [FromQuery] int size = 15, [FromQuery] OfferSorting? sorting = null, [FromQuery] string? serviceName = null, [FromQuery] string? languageShortName = null, [FromQuery] ServiceReleaseStatusIdFilter? status = null) =>
+        _serviceReleaseBusinessLogic.GetAllInReviewStatusServiceAsync(page, size, sorting,serviceName, languageShortName, status);
 
     /// <summary>
     /// Delete Document Assigned to Offer
