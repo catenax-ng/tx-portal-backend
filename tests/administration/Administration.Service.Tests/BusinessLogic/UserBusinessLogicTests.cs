@@ -751,7 +751,8 @@ public class UserBusinessLogicTests
 
         var sut = new UserRolesBusinessLogic(
             _portalRepositories,
-            _provisioningManager
+            _provisioningManager,
+            Options.Create(_settings)
         );
 
         // Act
@@ -925,7 +926,8 @@ public class UserBusinessLogicTests
 
         var sut = new UserRolesBusinessLogic(
             _portalRepositories,
-            _provisioningManager
+            _provisioningManager,
+            Options.Create(_settings)
         );
 
         // Act
