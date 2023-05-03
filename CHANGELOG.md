@@ -38,6 +38,9 @@ New features, fixed bugs, known defects and other noteworthy changes to each rel
 * Fixed CX Admin/operator notification creation for endpoint PUT: /api/apps/appreleaseprocess/appId/submit and PUT: /api/services/servicerelease/serviceId/submit by deleting the companyId validation
 * Notification Service: the notifications will only get created once per request for each user and notification type
 
+## Known Knowns
+* Registration Approval Flow - Wallet interface error login not sufficient. Only error code, but without error message is stored
+
 ## 1.2.0
 
 ### Change
