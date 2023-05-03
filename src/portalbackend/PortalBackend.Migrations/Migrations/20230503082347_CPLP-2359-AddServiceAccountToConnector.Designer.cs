@@ -32,7 +32,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities;
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migrations
 {
     [DbContext(typeof(PortalDbContext))]
-    [Migration("20230502122940_CPLP-2359-AddServiceAccountToConnector")]
+    [Migration("20230503082347_CPLP-2359-AddServiceAccountToConnector")]
     partial class CPLP2359AddServiceAccountToConnector
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
