@@ -58,7 +58,7 @@ public class TechnicalUserProfileServiceTests
             .Returns(((bool,IEnumerable<IEnumerable<UserRoleData>>,string?))default);
         
         // Act
-        async Task Act() => await _sut.GetTechnicalUserProfilesForOffer(_offerId, OfferTypeId.APP).ToListAsync().ConfigureAwait(false);
+        async Task Act() => await _sut.GetTechnicalUserProfilesForOffer(_offerId, OfferTypeId.APP).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
@@ -73,7 +73,7 @@ public class TechnicalUserProfileServiceTests
             .Returns((true, Enumerable.Empty<IEnumerable<UserRoleData>>(), null));
         
         // Act
-        async Task Act() => await _sut.GetTechnicalUserProfilesForOffer(_offerId, OfferTypeId.APP).ToListAsync().ConfigureAwait(false);
+        async Task Act() => await _sut.GetTechnicalUserProfilesForOffer(_offerId, OfferTypeId.APP).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -88,7 +88,7 @@ public class TechnicalUserProfileServiceTests
             .Returns((false, Enumerable.Empty<IEnumerable<UserRoleData>>(), OfferName));
         
         // Act
-        var result = await _sut.GetTechnicalUserProfilesForOffer(_offerId, OfferTypeId.APP).ToListAsync().ConfigureAwait(false);
+        var result = await _sut.GetTechnicalUserProfilesForOffer(_offerId, OfferTypeId.APP).ConfigureAwait(false);
         
         // Assert
         result.Should().BeEmpty();
@@ -105,7 +105,7 @@ public class TechnicalUserProfileServiceTests
             .Returns((false, serviceProfiles, OfferName));
 
         // Act
-        var result = await _sut.GetTechnicalUserProfilesForOffer(_offerId, OfferTypeId.APP).ToListAsync().ConfigureAwait(false);
+        var result = await _sut.GetTechnicalUserProfilesForOffer(_offerId, OfferTypeId.APP).ConfigureAwait(false);
         
         // Assert
         result.Should().HaveCount(1);
@@ -119,7 +119,7 @@ public class TechnicalUserProfileServiceTests
             .Returns((true, Enumerable.Empty<IEnumerable<UserRoleData>>(), (string?)null));
         
         // Act
-        async Task Act() => await _sut.GetTechnicalUserProfilesForOfferSubscription(_offerSubscriptionId).ToListAsync().ConfigureAwait(false);
+        async Task Act() => await _sut.GetTechnicalUserProfilesForOfferSubscription(_offerSubscriptionId).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -134,7 +134,7 @@ public class TechnicalUserProfileServiceTests
             .Returns((false, Enumerable.Empty<IEnumerable<UserRoleData>>(), OfferName));
         
         // Act
-        var result = await _sut.GetTechnicalUserProfilesForOfferSubscription(_offerSubscriptionId).ToListAsync().ConfigureAwait(false);
+        var result = await _sut.GetTechnicalUserProfilesForOfferSubscription(_offerSubscriptionId).ConfigureAwait(false);
         
         // Assert
         result.Should().BeEmpty();
@@ -151,7 +151,7 @@ public class TechnicalUserProfileServiceTests
             .Returns((false, serviceProfiles, OfferName));
 
         // Act
-        var result = await _sut.GetTechnicalUserProfilesForOfferSubscription(_offerSubscriptionId).ToListAsync().ConfigureAwait(false);
+        var result = await _sut.GetTechnicalUserProfilesForOfferSubscription(_offerSubscriptionId).ConfigureAwait(false);
         
         // Assert
         result.Should().HaveCount(1);
