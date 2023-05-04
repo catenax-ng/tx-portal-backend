@@ -52,7 +52,7 @@ public class TechnicalUserProfileService : ITechnicalUserProfileService
             throw new NotFoundException($"Offer {offerTypeId} {offerId} does not exists");
         }
 
-        if (CheckTechnicalUserData(data)) yield break;
+        if (!CheckTechnicalUserData(data)) yield break;
 
         foreach (var serviceAccountData in data.ServiceAccountProfiles
                      .Select(x => GetServiceAccountData(data.OfferName!, x)))
