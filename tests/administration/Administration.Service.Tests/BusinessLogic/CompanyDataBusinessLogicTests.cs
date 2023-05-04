@@ -124,8 +124,8 @@ public class CompanyDataBusinessLogicTests
         A.CallTo(() => _companyRepository.GetCompanyStatusDataAsync(IamUserId))
             .Returns((true, companyId));
         
-        A.CallTo(() => _languageRepository.GetLanguageAsync(languageShortName))
-            .Returns(languageShortName);
+        A.CallTo(() => _languageRepository.IsValidLanguageCode(languageShortName))
+            .Returns(true);
 
         A.CallTo(() => _companyRepository.GetCompanyRoleAndConsentAgreementDataAsync(companyId, languageShortName))
             .Returns(companyRoleConsentDatas.ToAsyncEnumerable());
@@ -155,8 +155,12 @@ public class CompanyDataBusinessLogicTests
     {
         // Arrange
         var languageShortName = "en";
+
         A.CallTo(() => _companyRepository.GetCompanyStatusDataAsync(IamUserId))
             .Returns(((bool,Guid))default);
+
+        A.CallTo(() => _languageRepository.IsValidLanguageCode(languageShortName))
+            .Returns(true);
 
         var sut = new CompanyDataBusinessLogic(_portalRepositories);
 
@@ -178,6 +182,9 @@ public class CompanyDataBusinessLogicTests
         A.CallTo(() => _companyRepository.GetCompanyStatusDataAsync(IamUserId))
             .Returns((false, companyId));
 
+        A.CallTo(() => _languageRepository.IsValidLanguageCode(languageShortName))
+            .Returns(true);
+
         var sut = new CompanyDataBusinessLogic(_portalRepositories);
 
         // Act
@@ -194,8 +201,8 @@ public class CompanyDataBusinessLogicTests
         // Arrange
         var languageShortName = "eng";
 
-        A.CallTo(() => _languageRepository.GetLanguageAsync(languageShortName))
-            .Returns((string)default!);
+        A.CallTo(() => _languageRepository.IsValidLanguageCode(languageShortName))
+            .Returns(false);
         
         var sut = new CompanyDataBusinessLogic(_portalRepositories);
 
@@ -204,7 +211,7 @@ public class CompanyDataBusinessLogicTests
 
         // Assert
         var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Act);
-        ex.Message.Should().Be($"language {languageShortName} does not exist");
+        ex.Message.Should().Be($"language {languageShortName} is not a valid languagecode");
 
     }
 

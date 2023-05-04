@@ -30,7 +30,6 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositorie
 /// <inheritdoc/>
 public class CompanyRepository : ICompanyRepository
 {
-    private const string DEFAULT_LANGUAGE = "en";
     private readonly PortalDbContext _context;
 
     /// <summary>
@@ -213,15 +212,13 @@ public class CompanyRepository : ICompanyRepository
         _context.CompanyAssignedUseCases.Remove( new CompanyAssignedUseCase(companyId, useCaseId));
 
     /// <inheritdoc />
-    public IAsyncEnumerable<CompanyRoleConsentData> GetCompanyRoleAndConsentAgreementDataAsync(Guid companyId, string? languageShortName = null) =>
+    public IAsyncEnumerable<CompanyRoleConsentData> GetCompanyRoleAndConsentAgreementDataAsync(Guid companyId, string languageShortName) =>
         _context.CompanyRoles
             .AsSplitQuery()
             .Where(companyRole => companyRole.CompanyRoleRegistrationData!.IsRegistrationRole)
             .Select(companyRole => new CompanyRoleConsentData(
                 companyRole.Id,
-                languageShortName == null
-                    ? companyRole.CompanyRoleDescriptions.SingleOrDefault(lc => lc.LanguageShortName == DEFAULT_LANGUAGE)!.Description
-                    : companyRole.CompanyRoleDescriptions.SingleOrDefault(lc => lc.LanguageShortName == languageShortName)!.Description,
+                companyRole.CompanyRoleDescriptions.SingleOrDefault(lc => lc.LanguageShortName == languageShortName)!.Description,
                 companyRole.CompanyAssignedRoles.Any(assigned => assigned.CompanyId == companyId),
                 companyRole.AgreementAssignedCompanyRoles
                     .Select(assigned => new ConsentAgreementData(

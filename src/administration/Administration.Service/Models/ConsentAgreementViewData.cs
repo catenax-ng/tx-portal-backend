@@ -26,7 +26,7 @@ public record CompanyRoleConsentViewData(
     [property: JsonPropertyName("companyRoles")]
     CompanyRoleId CompanyRoleId,
     [property: JsonPropertyName("roleDescription")]
-    string RoleDescription,
+    string? RoleDescription,
     bool CompanyRolesActive,
     IEnumerable<ConsentAgreementViewData> Agreements
 );

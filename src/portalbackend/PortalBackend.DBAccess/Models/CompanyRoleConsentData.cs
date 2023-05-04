@@ -22,7 +22,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 
 public record CompanyRoleConsentData(
     CompanyRoleId CompanyRoleId,
-    string RoleDescription,
+    string? RoleDescription,
     bool CompanyRolesActive,
     IEnumerable<ConsentAgreementData> Agreements
 );
