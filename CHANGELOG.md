@@ -15,7 +15,7 @@ New features, fixed bugs, known defects and other noteworthy changes to each rel
 * Seeding Data: update agreement name for app marketplace offers - CX Conformity
 
 ### Feature
-* Administration Service - Company preffered use case settings released (Controller: CompanyData)
+* Administration Service - Company preferred use case settings released (Controller: CompanyData)
   * GET endpoint to receive company preferred use cases
   * POST endpoint to set new company preferred use cases
   * DELETE endpoint to delete a use case from company preference list
