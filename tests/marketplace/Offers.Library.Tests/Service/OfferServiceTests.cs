@@ -2168,7 +2168,7 @@ public class OfferServiceTests
             };
 
         // Act
-        async Task Act() => await _sut.GetSubscriptionDetailForProviderAsync(offerId, subscriptionId, _iamUserId, offerTypeId, companyAdminRoles).ConfigureAwait(false);
+        async Task Act() => await _sut.GetSubscriptionDetailsAsync(offerId, subscriptionId, _iamUserId, offerTypeId, companyAdminRoles, true).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ConfigurationException>(Act);
@@ -2190,7 +2190,7 @@ public class OfferServiceTests
         SetupGetSubscriptionDetailForProvider();
 
         // Act
-        async Task Act() => await _sut.GetSubscriptionDetailForProviderAsync(offerId, subscriptionId, _iamUserId, offerTypeId, companyAdminRoles).ConfigureAwait(false);
+        async Task Act() => await _sut.GetSubscriptionDetailsAsync(offerId, subscriptionId, _iamUserId, offerTypeId, companyAdminRoles, true).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
@@ -2212,7 +2212,7 @@ public class OfferServiceTests
         SetupGetSubscriptionDetailForProvider();
         
         // Act
-        async Task Act() => await _sut.GetSubscriptionDetailForProviderAsync(_existingServiceId, subscriptionId, userId, offerTypeId, companyAdminRoles).ConfigureAwait(false);
+        async Task Act() => await _sut.GetSubscriptionDetailsAsync(_existingServiceId, subscriptionId, userId, offerTypeId, companyAdminRoles, true).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ForbiddenException>(Act);
@@ -2232,11 +2232,11 @@ public class OfferServiceTests
         SetupGetSubscriptionDetailForProvider();
 
         // Act
-        var result = await _sut.GetSubscriptionDetailForProviderAsync(_existingServiceId, Guid.NewGuid(), _iamUserId, offerTypeId, companyAdminRoles).ConfigureAwait(false);
+        var result = await _sut.GetSubscriptionDetailsAsync(_existingServiceId, Guid.NewGuid(), _iamUserId, offerTypeId, companyAdminRoles, true).ConfigureAwait(false);
 
         // Assert
         result.Name.Should().Be("Test App");
-        result.Customer.Should().Be("Stark Industry");
+        result.CompanyName.Should().Be("Stark Industry");
         result.Contact.Should().HaveCount(2);
         result.TechnicalUserData.Should().HaveCount(5);
     }
@@ -2359,11 +2359,11 @@ public class OfferServiceTests
         A.CallTo(() => _userRolesRepository.GetUserRoleIdsUntrackedAsync(A<IDictionary<string, IEnumerable<string>>>.That.Matches(x => x.ContainsKey("ClientTest"))))
             .Returns(new[] {_validUserRoleId}.ToAsyncEnumerable());
 
-        A.CallTo(() => _offerSubscriptionsRepository.GetSubscriptionDetailForProviderAsync(_existingServiceId, A<Guid>._, _iamUserId, A<OfferTypeId>._, A<IEnumerable<Guid>>._))
+        A.CallTo(() => _offerSubscriptionsRepository.GetSubscriptionDetailsAsync(_existingServiceId, A<Guid>._, _iamUserId, A<OfferTypeId>._, A<IEnumerable<Guid>>._, A<bool>._))
             .ReturnsLazily(() => new ValueTuple<bool, bool, OfferSubscriptionDetailData>(true, true, data));
-        A.CallTo(() => _offerSubscriptionsRepository.GetSubscriptionDetailForProviderAsync(_existingServiceId, A<Guid>._, A<string>.That.Not.Matches(x => x == _iamUserId), A<OfferTypeId>._, A<IEnumerable<Guid>>._))
+        A.CallTo(() => _offerSubscriptionsRepository.GetSubscriptionDetailsAsync(_existingServiceId, A<Guid>._, A<string>.That.Not.Matches(x => x == _iamUserId), A<OfferTypeId>._, A<IEnumerable<Guid>>._, A<bool>._))
             .ReturnsLazily(() => new ValueTuple<bool, bool, OfferSubscriptionDetailData>(true, false, data));
-        A.CallTo(() => _offerSubscriptionsRepository.GetSubscriptionDetailForProviderAsync(A<Guid>.That.Not.Matches(x => x == _existingServiceId), A<Guid>._, _iamUserId, A<OfferTypeId>._, A<IEnumerable<Guid>>._))
+        A.CallTo(() => _offerSubscriptionsRepository.GetSubscriptionDetailsAsync(A<Guid>.That.Not.Matches(x => x == _existingServiceId), A<Guid>._, _iamUserId, A<OfferTypeId>._, A<IEnumerable<Guid>>._, A<bool>._))
             .ReturnsLazily(() => new ValueTuple<bool, bool, OfferSubscriptionDetailData>(false, false, default!));
 
         A.CallTo(() => _portalRepositories.GetInstance<IOfferSubscriptionsRepository>()).Returns(_offerSubscriptionsRepository);

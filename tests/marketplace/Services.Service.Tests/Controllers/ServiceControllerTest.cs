@@ -289,4 +289,22 @@ public class ServiceControllerTest
         A.CallTo(() => _logic.GetSubscriptionDetailForProvider(serviceId, subscriptionId, IamUserId)).MustHaveHappenedOnceExactly();
         result.Should().Be(data);
     }
+
+    [Fact]
+    public async Task GetSubscriptionDetailForSubscriber_ReturnsExpected()
+    {
+        // Arrange
+        var serviceId = _fixture.Create<Guid>();
+        var subscriptionId = _fixture.Create<Guid>();
+        var data = _fixture.Create<OfferSubscriptionDetailData>();
+        A.CallTo(() => _logic.GetSubscriptionDetailForSubscriber(serviceId, subscriptionId, IamUserId))
+            .ReturnsLazily(() => data);
+
+        // Act
+        var result = await this._controller.GetSubscriptionDetailForSubscriber(serviceId, subscriptionId).ConfigureAwait(false);
+
+        // Assert
+        A.CallTo(() => _logic.GetSubscriptionDetailForSubscriber(serviceId, subscriptionId, IamUserId)).MustHaveHappenedOnceExactly();
+        result.Should().Be(data);
+    }
 }

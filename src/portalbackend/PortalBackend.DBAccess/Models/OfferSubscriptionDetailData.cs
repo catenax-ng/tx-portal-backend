@@ -20,10 +20,18 @@
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 
+/// <summary>
+/// Detail data for a offer subscription
+/// </summary>
+/// <param name="Id">Id of the Offer</param>
+/// <param name="Name">Name of the Offer</param>
+/// <param name="CompanyName">When called from /provider name of the company subscribing the offer, otherwise the provider company's name</param>
+/// <param name="Contact">When called from /provider the company admins of the subscribing company, otherwise the salesmanagers of the offer provider</param>
+/// <param name="TechnicalUserData">Information about the technical user</param>
 public record OfferSubscriptionDetailData (
     Guid Id,
     string? Name,
-    string Customer,
+    string CompanyName,
     IEnumerable<string> Contact,
     IEnumerable<SubscriptionTechnicalUserData> TechnicalUserData
 );

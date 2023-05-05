@@ -244,7 +244,8 @@ public interface IOfferService
     /// <param name="subscriptionId">Id of the subscription</param>
     /// <param name="iamUserId">Id of the iam user</param>
     /// <param name="offerTypeId">Offer type</param>
-    /// <param name="companyAdminRoles">Company admin role</param>
+    /// <param name="contactUserRoles">The roles of the users that will be listed as contact</param>
+    /// <param name="forProvider"><c>true</c> if the subscription details should be returned for the provider, otherwise the details are returned for the subscriber</param>
     /// <returns>Returns the details of the subscription</returns>
-    Task<OfferSubscriptionDetailData> GetSubscriptionDetailForProviderAsync(Guid offerId, Guid subscriptionId, string iamUserId, OfferTypeId offerTypeId, IDictionary<string, IEnumerable<string>> companyAdminRoles);
+    Task<OfferSubscriptionDetailData> GetSubscriptionDetailsAsync(Guid offerId, Guid subscriptionId, string iamUserId, OfferTypeId offerTypeId, IDictionary<string, IEnumerable<string>> contactUserRoles, bool forProvider);
 }

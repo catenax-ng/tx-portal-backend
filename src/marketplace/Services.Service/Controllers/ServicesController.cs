@@ -274,4 +274,22 @@ public class ServicesController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public Task<OfferSubscriptionDetailData> GetSubscriptionDetailForProvider([FromRoute] Guid serviceId, [FromRoute] Guid subscriptionId) =>
         this.WithIamUserId(iamUserId => _serviceBusinessLogic.GetSubscriptionDetailForProvider(serviceId, subscriptionId, iamUserId));
+
+    /// <summary>
+    /// Retrieves the details of a subscription
+    /// </summary>
+    /// <param name="serviceId">id of the service to receive the details for</param>
+    /// <param name="subscriptionId">id of the subscription to receive the details for</param>
+    /// <remarks>Example: GET: /api/services/{serviceId}/subscription/{subscriptionId}/subscriber</remarks>
+    /// <response code="200">Returns the document Content</response>
+    /// <response code="403">User's company does not provide the service.</response>
+    /// <response code="404">No service or subscription found.</response>
+    [HttpGet]
+    [Authorize(Roles = "add_service_offering")]
+    [Route("{serviceId}/subscription/{subscriptionId}/subscriber")]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    public Task<OfferSubscriptionDetailData> GetSubscriptionDetailForSubscriber([FromRoute] Guid serviceId, [FromRoute] Guid subscriptionId) =>
+        this.WithIamUserId(iamUserId => _serviceBusinessLogic.GetSubscriptionDetailForSubscriber(serviceId, subscriptionId, iamUserId));
 }
