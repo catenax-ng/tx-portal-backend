@@ -686,8 +686,7 @@ public class OfferRepository : IOfferRepository
                 offer.ContactNumber,
                 offer.OfferStatusId,
                 offer.LicenseTypeId,
-                offer.TechnicalUserProfiles.Select(tup =>new TechnicalUserRoleData(tup.Id,
-                        tup.UserRoles.Select(ur => ur.UserRoleText)))
+                offer.TechnicalUserProfiles.Select(tup => new TechnicalUserRoleData(tup.Id, tup.UserRoles.Select(ur => ur.UserRoleText)))
 
             ))
             .SingleOrDefaultAsync();

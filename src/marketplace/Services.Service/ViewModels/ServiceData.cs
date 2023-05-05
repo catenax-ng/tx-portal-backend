@@ -51,5 +51,5 @@ public record ServiceData(
     string? ContactNumber,
     LicenseTypeId LicenseType,
     OfferStatusId OfferStatus,
-    IDictionary<Guid, IEnumerable<string>> TechnicalUserProfile);
-
+    IDictionary<Guid, IEnumerable<string>> TechnicalUserProfile
+);
