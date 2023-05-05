@@ -393,4 +393,22 @@ public class AppsController : ControllerBase
         await this.WithIamUserId(iamUserId => _appsBusinessLogic.UpdateTechnicalUserProfiles(appId, data, iamUserId)).ConfigureAwait(false);
         return NoContent();
     }
+
+    /// <summary>
+    /// Retrieves the details of a subscription
+    /// </summary>
+    /// <param name="appId">id of the app to receive the details for</param>
+    /// <param name="subscriptionId">id of the subscription to receive the details for</param>
+    /// <remarks>Example: GET: /api/apps/{appId}/subscription/{subscriptionId}</remarks>
+    /// <response code="200">Returns the document Content</response>
+    /// <response code="403">User's company does not provide the app.</response>
+    /// <response code="404">No app or subscription found.</response>
+    [HttpGet]
+    [Authorize(Roles = "app_management")]
+    [Route("{appId}/subscription/{subscriptionId}/provider")]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    public Task<OfferSubscriptionDetailData> GetSubscriptionDetailForProvider([FromRoute] Guid appId, [FromRoute] Guid subscriptionId) =>
+        this.WithIamUserId(iamUserId => _appsBusinessLogic.GetSubscriptionDetailForProvider(appId, subscriptionId, iamUserId));
 }

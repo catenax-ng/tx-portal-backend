@@ -214,6 +214,55 @@ public class OfferSubscriptionRepositoryTest : IAssemblyFixture<TestDbFixture>
 
     #endregion
 
+    #region GetSubscriptionDetailForProviderAsync
+
+    [Fact]
+    public async Task GetSubscriptionDetailForProviderAsync_WithValidData_ReturnsExpected()
+    {
+        // Arrange
+        var (sut, _) = await CreateSut().ConfigureAwait(false);
+
+        // Act
+        var result = await sut.GetSubscriptionDetailForProviderAsync(new Guid("a16e73b9-5277-4b69-9f8d-3b227495dfea"), new Guid("3DE6A31F-A5D1-4F60-AA3A-4B1A769BECBF"), "8be5ee49-4b9c-4008-b641-138305430cc4", OfferTypeId.SERVICE, new List<Guid>()).ConfigureAwait(false);
+
+        // Assert
+        result.Exists.Should().BeTrue();
+        result.IsUserOfProviderCompany.Should().BeTrue();
+        result.Details.Name.Should().Be("SDE with EDC");
+    }
+
+    [Fact]
+    public async Task GetSubscriptionDetailForProviderAsync_WithNotExistingId_ReturnsExpected()
+    {
+        // Arrange
+        var (sut, _) = await CreateSut().ConfigureAwait(false);
+
+        // Act
+        var result = await sut.GetSubscriptionDetailForProviderAsync(Guid.NewGuid(), new Guid("3DE6A31F-A5D1-4F60-AA3A-4B1A769BECBF"), "8be5ee49-4b9c-4008-b641-138305430cc4", OfferTypeId.SERVICE, new List<Guid>()).ConfigureAwait(false);
+
+        // Assert
+        result.Exists.Should().BeFalse();
+        result.IsUserOfProviderCompany.Should().BeFalse();
+        result.Details.Should().Be(default!);
+    }
+
+    [Fact]
+    public async Task GetSubscriptionDetailForProviderAsync_WithWrongUser_ReturnsExpected()
+    {
+        // Arrange
+        var (sut, _) = await CreateSut().ConfigureAwait(false);
+
+        // Act
+        var result = await sut.GetSubscriptionDetailForProviderAsync(new Guid("a16e73b9-5277-4b69-9f8d-3b227495dfea"), new Guid("3DE6A31F-A5D1-4F60-AA3A-4B1A769BECBF"), Guid.NewGuid().ToString(), OfferTypeId.SERVICE, new List<Guid>()).ConfigureAwait(false);
+
+        // Assert
+        result.Exists.Should().BeTrue();
+        result.IsUserOfProviderCompany.Should().BeFalse();
+        result.Details.Name.Should().Be("SDE with EDC");
+    }
+
+    #endregion
+    
     #region Setup
     
     private async Task<(OfferSubscriptionsRepository, PortalDbContext)> CreateSut()

@@ -236,4 +236,15 @@ public interface IOfferService
     /// <param name="iamUserId">id of the iam user</param>
     /// <param name="technicalUserProfileClient">Client to get the technicalUserProfiles</param>
     Task UpdateTechnicalUserProfiles(Guid offerId, OfferTypeId offerTypeId, IEnumerable<TechnicalUserProfileData> data, string iamUserId, string technicalUserProfileClient);
+
+    /// <summary>
+    /// Gets the information for the subscription
+    /// </summary>
+    /// <param name="offerId">Id of the offer</param>
+    /// <param name="subscriptionId">Id of the subscription</param>
+    /// <param name="iamUserId">Id of the iam user</param>
+    /// <param name="offerTypeId">Offer type</param>
+    /// <param name="companyAdminRoles">Company admin role</param>
+    /// <returns>Returns the details of the subscription</returns>
+    Task<OfferSubscriptionDetailData> GetSubscriptionDetailForProviderAsync(Guid offerId, Guid subscriptionId, string iamUserId, OfferTypeId offerTypeId, IDictionary<string, IEnumerable<string>> companyAdminRoles);
 }

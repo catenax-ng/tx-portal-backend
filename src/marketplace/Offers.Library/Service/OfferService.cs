@@ -831,4 +831,41 @@ public class OfferService : IOfferService
 
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
+
+    /// <inheritdoc />
+    public async Task<OfferSubscriptionDetailData> GetSubscriptionDetailForProviderAsync(Guid offerId, Guid subscriptionId, string iamUserId, OfferTypeId offerTypeId, IDictionary<string, IEnumerable<string>> companyAdminRoles)
+    {
+        var userRoles = await ValidateRoleData(companyAdminRoles).ConfigureAwait(false);
+
+        var result = await _portalRepositories.GetInstance<IOfferSubscriptionsRepository>()
+            .GetSubscriptionDetailForProviderAsync(offerId, subscriptionId, iamUserId, offerTypeId, userRoles)
+            .ConfigureAwait(false);
+        
+        var (exists, isUserOfProvidingCompany, details) = result;
+        if (!exists)
+        {
+            throw new NotFoundException($"subscription {subscriptionId} for offer {offerId} of type {offerTypeId} does not exist");
+        }
+
+        if (!isUserOfProvidingCompany)
+        {
+            throw new ForbiddenException($"User {iamUserId} is not part of the providing company");
+        }
+
+        return details;
+    }
+    
+    private async Task<IEnumerable<Guid>> ValidateRoleData(IDictionary<string, IEnumerable<string>> userRoles)
+    {
+        var userRolesRepository = _portalRepositories.GetInstance<IUserRolesRepository>();
+        var roleData = await userRolesRepository
+            .GetUserRoleIdsUntrackedAsync(userRoles)
+            .ToListAsync()
+            .ConfigureAwait(false);
+        if (roleData.Count < userRoles.Sum(clientRoles => clientRoles.Value.Count()))
+        {
+            throw new ConfigurationException($"invalid configuration, at least one of the configured roles does not exist in the database: {string.Join(", ", userRoles.Select(clientRoles => $"client: {clientRoles.Key}, roles: [{string.Join(", ", clientRoles.Value)}]"))}");
+        }
+        return roleData;
+    }
 }

@@ -271,4 +271,22 @@ public class ServiceControllerTest
         A.CallTo(() => _logic.UpdateTechnicalUserProfiles(offerId, A<IEnumerable<TechnicalUserProfileData>>.That.Matches(x => x.Count() == 5),IamUserId)).MustHaveHappenedOnceExactly();
         result.Should().BeOfType<NoContentResult>();
     }
+
+    [Fact]
+    public async Task GetSubscriptionDetailForProvider_ReturnsExpected()
+    {
+        // Arrange
+        var serviceId = _fixture.Create<Guid>();
+        var subscriptionId = _fixture.Create<Guid>();
+        var data = _fixture.Create<OfferSubscriptionDetailData>();
+        A.CallTo(() => _logic.GetSubscriptionDetailForProvider(serviceId, subscriptionId, IamUserId))
+            .ReturnsLazily(() => data);
+
+        // Act
+        var result = await this._controller.GetSubscriptionDetailForProvider(serviceId, subscriptionId).ConfigureAwait(false);
+
+        // Assert
+        A.CallTo(() => _logic.GetSubscriptionDetailForProvider(serviceId, subscriptionId, IamUserId)).MustHaveHappenedOnceExactly();
+        result.Should().Be(data);
+    }
 }

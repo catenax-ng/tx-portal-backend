@@ -343,4 +343,8 @@ public class AppsBusinessLogic : IAppsBusinessLogic
     /// <inheritdoc />
     public Task UpdateTechnicalUserProfiles(Guid appId, IEnumerable<TechnicalUserProfileData> data, string iamUserId) =>
         _offerService.UpdateTechnicalUserProfiles(appId, OfferTypeId.APP, data, iamUserId, _settings.TechnicalUserProfileClient);
+
+    /// <inheritdoc />
+    public Task<OfferSubscriptionDetailData> GetSubscriptionDetailForProvider(Guid appId, Guid subscriptionId, string iamUserId) =>
+        _offerService.GetSubscriptionDetailForProviderAsync(appId, subscriptionId, iamUserId, OfferTypeId.APP, _settings.CompanyAdminRoles);
 }

@@ -187,4 +187,19 @@ public class OfferSubscriptionsRepository : IOfferSubscriptionsRepository
                 offerSubscription.Offer!.Documents.Where(document => document.DocumentTypeId == DocumentTypeId.APP_LEADIMAGE && document.DocumentStatusId != DocumentStatusId.INACTIVE).Select(document => document.Id).FirstOrDefault(),
                 offerSubscription.Offer!.Provider
             )).ToAsyncEnumerable();
+
+    /// <inheritdoc />
+    public Task<(bool Exists, bool IsUserOfProviderCompany, OfferSubscriptionDetailData Details)> GetSubscriptionDetailForProviderAsync(Guid offerId, Guid subscriptionId, string iamUserId, OfferTypeId offerTypeId, IEnumerable<Guid> userRoleIds) =>
+        _context.OfferSubscriptions
+            .Where(os => os.Id == subscriptionId && os.OfferId == offerId && os.Offer!.OfferTypeId == offerTypeId)
+            .Select(os => new ValueTuple<bool, bool, OfferSubscriptionDetailData>(
+                true,
+                os.Offer!.ProviderCompany!.CompanyUsers.Any(cu => cu.IamUser!.UserEntityId == iamUserId),
+                new OfferSubscriptionDetailData(
+                    os.Id,
+                    os.Offer!.Name,
+                    os.Company!.Name,
+                    os.Offer!.ProviderCompany!.CompanyUsers.Where(cu => cu.Email != null && cu.UserRoles.Any(ur => userRoleIds.Contains(ur.Id))).Select(cu => cu.Email!),
+                    os.CompanyServiceAccounts.Select(sa => new SubscriptionTechnicalUserData(sa.Id, sa.Name, sa.UserRoles.Select(x => x.UserRoleText))))))
+            .SingleOrDefaultAsync();
 }

@@ -18,6 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using System.Collections;
 using AutoFixture;
 using AutoFixture.AutoFakeItEasy;
 using FakeItEasy;
@@ -41,6 +42,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.BusinessLogic.Tests;
 public class AppBusinessLogicTests
 {
     private const string IamUserId = "3e8343f7-4fe5-4296-8312-f33aa6dbde5d";
+
     private readonly IFixture _fixture;
     private readonly IPortalRepositories _portalRepositories;
     private readonly IOfferRepository _offerRepository;
@@ -454,8 +456,6 @@ public class AppBusinessLogicTests
 
     #endregion
 
-    
-
     [Fact]
     public async Task GetCompanySubscribedAppSubscriptionStatusesForUserAsync_ReturnsExpectedCount()
     {
@@ -650,6 +650,37 @@ public class AppBusinessLogicTests
 
     #endregion
 
+    #region GetSubscriptionDetailForProvider
+
+    [Fact]
+    public async Task GetSubscriptionDetailForProvider_WithNotMatchingUserRoles_ThrowsException()
+    {
+        // Arrange
+        var offerId = _fixture.Create<Guid>();
+        var subscriptionId = _fixture.Create<Guid>();
+        var data = _fixture.Create<OfferSubscriptionDetailData>();
+        var settings = new AppsSettings
+        {
+            CompanyAdminRoles = new Dictionary<string, IEnumerable<string>>
+            {
+                {"ClientTest", new[] {"Test"}}
+            }
+        };
+        A.CallTo(() => _offerService.GetSubscriptionDetailForProviderAsync(offerId, subscriptionId, IamUserId, OfferTypeId.APP, A<IDictionary<string, IEnumerable<string>>>._))
+            .ReturnsLazily(() => data);
+        var sut = new AppsBusinessLogic(null!, null!, _offerService,  null!, Options.Create(settings), null!);
+
+        // Act
+        var result = await sut.GetSubscriptionDetailForProvider(offerId, subscriptionId, IamUserId).ConfigureAwait(false);
+
+        // Assert
+        result.Should().Be(data);
+    }
+
+    #endregion
+
+    #region Setup
+    
     private (CompanyUser, IamUser) CreateTestUserPair()
     {
         var companyUser = _fixture.Build<CompanyUser>()
@@ -661,4 +692,6 @@ public class AppBusinessLogicTests
         companyUser.IamUser = iamUser;
         return (companyUser, iamUser);
     }
+
+    #endregion
 }
