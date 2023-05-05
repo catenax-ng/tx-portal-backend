@@ -399,7 +399,7 @@ public class AppsController : ControllerBase
     /// </summary>
     /// <param name="appId">id of the app to receive the details for</param>
     /// <param name="subscriptionId">id of the subscription to receive the details for</param>
-    /// <remarks>Example: GET: /api/apps/{appId}/subscription/{subscriptionId}</remarks>
+    /// <remarks>Example: GET: /api/apps/{appId}/subscription/{subscriptionId}/provider</remarks>
     /// <response code="200">Returns the document Content</response>
     /// <response code="403">User's company does not provide the app.</response>
     /// <response code="404">No app or subscription found.</response>

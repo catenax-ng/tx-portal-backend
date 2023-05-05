@@ -223,12 +223,13 @@ public class OfferSubscriptionRepositoryTest : IAssemblyFixture<TestDbFixture>
         var (sut, _) = await CreateSut().ConfigureAwait(false);
 
         // Act
-        var result = await sut.GetSubscriptionDetailForProviderAsync(new Guid("a16e73b9-5277-4b69-9f8d-3b227495dfea"), new Guid("3DE6A31F-A5D1-4F60-AA3A-4B1A769BECBF"), "8be5ee49-4b9c-4008-b641-138305430cc4", OfferTypeId.SERVICE, new List<Guid>()).ConfigureAwait(false);
+        var result = await sut.GetSubscriptionDetailForProviderAsync(new Guid("a16e73b9-5277-4b69-9f8d-3b227495dfea"), new Guid("3DE6A31F-A5D1-4F60-AA3A-4B1A769BECBF"), "8be5ee49-4b9c-4008-b641-138305430cc4", OfferTypeId.SERVICE, new []{new Guid("58f897ec-0aad-4588-8ffa-5f45d6638632")}).ConfigureAwait(false);
 
         // Assert
         result.Exists.Should().BeTrue();
         result.IsUserOfProviderCompany.Should().BeTrue();
         result.Details.Name.Should().Be("SDE with EDC");
+        result.Details.Contact.Should().ContainSingle().And.Subject.Should().ContainSingle("tobeadded@cx.com");
     }
 
     [Fact]

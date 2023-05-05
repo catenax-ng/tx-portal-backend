@@ -262,7 +262,7 @@ public class ServicesController : ControllerBase
     /// </summary>
     /// <param name="serviceId">id of the service to receive the details for</param>
     /// <param name="subscriptionId">id of the subscription to receive the details for</param>
-    /// <remarks>Example: GET: /api/services/{serviceId}/subscription/{subscriptionId}</remarks>
+    /// <remarks>Example: GET: /api/services/{serviceId}/subscription/{subscriptionId}/provider</remarks>
     /// <response code="200">Returns the document Content</response>
     /// <response code="403">User's company does not provide the service.</response>
     /// <response code="404">No service or subscription found.</response>
