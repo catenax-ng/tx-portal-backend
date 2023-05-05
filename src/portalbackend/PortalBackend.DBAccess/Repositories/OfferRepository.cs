@@ -392,7 +392,9 @@ public class OfferRepository : IOfferRepository
                         x.Offer.OfferAssignedPrivacyPolicies.Select(x => x.PrivacyPolicyId),
                         offerTypeId == OfferTypeId.SERVICE
                             ? x.Offer.ServiceDetails.Select(x => x.ServiceTypeId)
-                            : null)
+                            : null,
+                        x.Offer.TechnicalUserProfiles.Select(tup =>new TechnicalUserRoleData(tup.Id,
+                        tup.UserRoles.Select(ur => ur.UserRoleText))))
                     : null,
                 x.IsProviderCompany))
             .SingleOrDefaultAsync();
