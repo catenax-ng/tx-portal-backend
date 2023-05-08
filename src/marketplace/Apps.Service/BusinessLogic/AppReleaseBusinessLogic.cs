@@ -442,7 +442,7 @@ public class AppReleaseBusinessLogic : IAppReleaseBusinessLogic
             result.Tags,
             result.MatchingPrivacyPolicies,
             result.OfferStatusId,
-            result.TechnicalUserProfile.ToDictionary(g=>g.TechnicalUserProfileId, g=>g.UserRoles));
+            result.TechnicalUserProfile.ToDictionary(g => g.TechnicalUserProfileId, g => g.UserRoles));
     }
 
     /// <inheritdoc />
