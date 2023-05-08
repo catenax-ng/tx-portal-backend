@@ -206,6 +206,7 @@ public class OfferSubscriptionsRepository : IOfferSubscriptionsRepository
                     os.OfferId,
                     os.OfferName,
                     os.Company!.Name,
+                    os.Company!.BusinessPartnerNumber,
                     os.Company.CompanyUsers.Where(cu => cu.Email != null && cu.UserRoles.Any(ur => userRoleIds.Contains(ur.Id))).Select(cu => cu.Email!),
                     os.CompanyServiceAccounts.Select(sa => new SubscriptionTechnicalUserData(sa.Id, sa.Name, sa.UserRoles.Select(x => x.UserRoleText))))))
             .SingleOrDefaultAsync();
