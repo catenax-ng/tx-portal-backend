@@ -276,7 +276,7 @@ public class OfferService : IOfferService
             data.SalesManagerId,
             data.PrivacyPolicies,
             data.ServiceTypeIds,
-            data.TechnicalUserProfile.GroupBy(x=>x.TechnicalUserProfileId).ToDictionary(g => g.Key, g => g.SelectMany(d =>  d.AdditionalProp)));
+            data.TechnicalUserProfile.ToDictionary(g => g.TechnicalUserProfileId, g => g.UserRoles));
     }
     
     /// <inheritdoc />
