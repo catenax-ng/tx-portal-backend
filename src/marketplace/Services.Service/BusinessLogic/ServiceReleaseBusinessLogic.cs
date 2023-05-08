@@ -115,7 +115,6 @@ public class ServiceReleaseBusinessLogic : IServiceReleaseBusinessLogic
             result.SalesManagerId,
             result.ServiceTypeIds,
             result.TechnicalUserProfile);
-            
     }
     
     /// <inheritdoc/>

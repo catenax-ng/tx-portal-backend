@@ -88,6 +88,7 @@ public record ServiceDetailsData(
     IEnumerable<TechnicalUserRoleData> TechnicalUserProfile
 );
 
-public record TechnicalUserRoleData(Guid TechnicalUserProfileId, IEnumerable<string> UserRoles);
-
-
+public record TechnicalUserRoleData(
+    Guid TechnicalUserProfileId,
+    IEnumerable<string> UserRoles
+);
