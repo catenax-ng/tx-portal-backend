@@ -504,6 +504,8 @@ public class AppBusinessLogicTests
         );
     }
 
+    #endregion
+
     #region GetTechnicalUserProfilesForOffer
 
     [Fact]
@@ -546,6 +548,7 @@ public class AppBusinessLogicTests
     }
 
     #endregion
+
     #region GetSubscriptionDetailForProvider
 
     [Fact]
