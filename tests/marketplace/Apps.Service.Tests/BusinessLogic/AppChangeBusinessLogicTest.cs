@@ -35,6 +35,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared.Extensions;
 using System.Collections.Immutable;
 using Xunit;
+using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.BusinessLogic.Tests;
 
@@ -49,6 +50,7 @@ public class AppChangeBusinessLogicTest
     private readonly IPortalRepositories _portalRepositories;
     private readonly IOfferRepository _offerRepository;
     private readonly IUserRolesRepository _userRolesRepository;
+    private readonly IDocumentRepository _documentRepository;
     private readonly INotificationService _notificationService;
     private readonly AppChangeBusinessLogic _sut;
 
@@ -63,6 +65,7 @@ public class AppChangeBusinessLogicTest
         _portalRepositories = A.Fake<IPortalRepositories>();
         _offerRepository = A.Fake<IOfferRepository>();
         _userRolesRepository = A.Fake<IUserRolesRepository>();
+        _documentRepository = A.Fake<IDocumentRepository>();
         _notificationService = A.Fake<INotificationService>();
 
         var settings = new AppsSettings
@@ -78,6 +81,7 @@ public class AppChangeBusinessLogicTest
         };
         A.CallTo(() => _portalRepositories.GetInstance<IOfferRepository>()).Returns(_offerRepository);
         A.CallTo(() => _portalRepositories.GetInstance<IUserRolesRepository>()).Returns(_userRolesRepository);
+        A.CallTo(() => _portalRepositories.GetInstance<IDocumentRepository>()).Returns(_documentRepository);
         _sut = new AppChangeBusinessLogic(_portalRepositories, _notificationService, _provisioningManager, Options.Create(settings));
     }
 
@@ -442,4 +446,128 @@ public class AppChangeBusinessLogicTest
     }
 
     #endregion
+
+   #region  UploadOfferAssignedAppLeadImageDocumentById
+
+    [Fact]
+    public async Task UploadOfferAssignedAppLeadImageDocumentById_ExpectedCalls()
+    {
+        // Arrange
+        var appId = _fixture.Create<Guid>();
+        var iamUserId = _fixture.Create<Guid>().ToString();
+        var documentId = _fixture.Create<Guid>();
+        var documentStatusData = _fixture.CreateMany<DocumentStatusData>(2);
+        var companyUserId =  _fixture.Create<Guid>();
+        var file = FormFileHelper.GetFormFile("Test Image", "TestImage.jpeg", "image/jpeg");
+        var documents = new List<Document>();
+        var offerAssignedDocuments = new List<OfferAssignedDocument>();
+
+        A.CallTo(() => _offerRepository.GetOfferAssignedAppLeadImageDocumentsByIdAsync(appId, iamUserId, OfferTypeId.APP))
+            .ReturnsLazily(() => (true, companyUserId, documentStatusData));
+
+        A.CallTo(() => _documentRepository.CreateDocument(A<string>._, A<byte[]>._, A<byte[]>._, A<MediaTypeId>._, A<DocumentTypeId>._,A<Action<Document>?>._))
+            .Invokes((string documentName, byte[] documentContent, byte[] hash, MediaTypeId mediaTypeId, DocumentTypeId documentType, Action<Document>? setupOptionalFields) =>
+            {
+                var document = new Document(documentId, documentContent, hash, documentName, mediaTypeId, DateTimeOffset.UtcNow, DocumentStatusId.LOCKED, documentType);
+                setupOptionalFields?.Invoke(document);
+                documents.Add(document);
+            });
+
+        A.CallTo(() => _offerRepository.CreateOfferAssignedDocument(A<Guid>._, A<Guid>._))
+            .Invokes((Guid offerId, Guid docId) =>
+            {
+                var offerAssignedDocument = new OfferAssignedDocument(offerId, docId);
+                offerAssignedDocuments.Add(offerAssignedDocument);
+            });
+
+        // Act
+        await _sut.UploadOfferAssignedAppLeadImageDocumentByIdAsync(appId, iamUserId, file, CancellationToken.None);
+
+        // Assert
+        A.CallTo(() => _documentRepository.CreateDocument(A<string>._, A<byte[]>._, A<byte[]>._, A<MediaTypeId>._, A<DocumentTypeId>._,A<Action<Document>?>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _offerRepository.CreateOfferAssignedDocument(A<Guid>._, A<Guid>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _offerRepository.RemoveOfferAssignedDocument(A<Guid>._,A<Guid>._)).MustHaveHappenedTwiceExactly();
+        A.CallTo(() => _documentRepository.RemoveDocument(A<Guid>._)).MustHaveHappenedTwiceExactly();
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
+        documents.Should().HaveCount(1);
+        offerAssignedDocuments.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task UploadOfferAssignedAppLeadImageDocumentById_ThrowsUnsupportedMediaTypeException()
+    {
+        // Arrange
+        var appId = _fixture.Create<Guid>();
+        var iamUserId = _fixture.Create<Guid>().ToString();
+        var appLeadImageContentTypes = new [] {"image/jpeg","image/png"};
+        var file = FormFileHelper.GetFormFile("Test File", "TestImage.pdf", "application/pdf");
+
+        // Act
+        var Act = () => _sut.UploadOfferAssignedAppLeadImageDocumentByIdAsync(appId, iamUserId, file, CancellationToken.None);
+
+        // Assert
+        var result = await Assert.ThrowsAsync<UnsupportedMediaTypeException>(Act).ConfigureAwait(false);
+        result.Message.Should().Be($"Document type not supported. File with contentType :{string.Join(",", appLeadImageContentTypes)} are allowed.");
+    }
+
+    [Fact]
+    public async Task UploadOfferAssignedAppLeadImageDocumentById_ThrowsConflictException()
+    {
+        // Arrange
+        var appId = _fixture.Create<Guid>();
+        var iamUserId = _fixture.Create<Guid>().ToString();
+        var companyUserId = _fixture.Create<Guid>();
+        var file = FormFileHelper.GetFormFile("Test Image", "TestImage.jpeg", "image/jpeg");
+
+        A.CallTo(() => _offerRepository.GetOfferAssignedAppLeadImageDocumentsByIdAsync(appId, iamUserId, OfferTypeId.APP))
+            .ReturnsLazily(() => (false, companyUserId, null!));
+
+        // Act
+        var Act = () => _sut.UploadOfferAssignedAppLeadImageDocumentByIdAsync(appId, iamUserId, file, CancellationToken.None);
+
+        // Assert
+        var result = await Assert.ThrowsAsync<ConflictException>(Act).ConfigureAwait(false);
+        result.Message.Should().Be("offerStatus is in incorrect State");
+    }
+
+    [Fact]
+    public async Task UploadOfferAssignedAppLeadImageDocumentById_ThrowsForbiddenException()
+    {
+        // Arrange
+        var appId = _fixture.Create<Guid>();
+        var iamUserId = _fixture.Create<Guid>().ToString();
+        var companyUserId = _fixture.Create<Guid>();
+        var file = FormFileHelper.GetFormFile("Test Image", "TestImage.jpeg", "image/jpeg");
+
+        A.CallTo(() => _offerRepository.GetOfferAssignedAppLeadImageDocumentsByIdAsync(appId, iamUserId, OfferTypeId.APP))
+            .ReturnsLazily(() => (true, Guid.Empty, null!));
+
+        // Act
+        async Task Act() => await _sut.UploadOfferAssignedAppLeadImageDocumentByIdAsync(appId, iamUserId, file, CancellationToken.None);
+
+        // Assert
+        var result = await Assert.ThrowsAsync<ForbiddenException>(Act).ConfigureAwait(false);
+        result.Message.Should().Be($"user {iamUserId} is not a member of the provider company of App {appId}");
+    }
+
+    [Fact]
+    public async Task UploadOfferAssignedAppLeadImageDocumentById_ThrowsNotFoundException()
+    {
+        // Arrange
+        var appId = _fixture.Create<Guid>();
+        var iamUserId = _fixture.Create<Guid>().ToString();
+        var file = FormFileHelper.GetFormFile("Test Image", "TestImage.jpeg", "image/jpeg");
+
+        A.CallTo(() => _offerRepository.GetOfferAssignedAppLeadImageDocumentsByIdAsync(appId, iamUserId, OfferTypeId.APP))
+            .ReturnsLazily(() => new ValueTuple<bool,Guid,IEnumerable<DocumentStatusData>>());
+
+        // Act
+        async Task Act() => await _sut.UploadOfferAssignedAppLeadImageDocumentByIdAsync(appId, iamUserId, file, CancellationToken.None);
+
+        // Assert
+        var result = await Assert.ThrowsAsync<NotFoundException>(Act).ConfigureAwait(false);
+        result.Message.Should().Be($"App {appId} does not exist.");
+    }
+    #endregion
+
 }

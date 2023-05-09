@@ -29,6 +29,8 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Extensions;
+using System.Security.Cryptography;
 using System.Text.Json;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.BusinessLogic;
@@ -145,4 +147,59 @@ public class AppChangeBusinessLogic : IAppChangeBusinessLogic
 
         return result.OfferDescriptionDatas;
     }
+
+  /// <inheritdoc />
+    public async Task UploadOfferAssignedAppLeadImageDocumentByIdAsync(Guid appId, string iamUserId, IFormFile document, CancellationToken cancellationToken)
+    {
+        var appLeadImageContentTypes = new []{ "image/jpeg","image/png" };
+        var documentContentType = document.ContentType;
+        if (!appLeadImageContentTypes.Contains(documentContentType))
+        {
+            throw new UnsupportedMediaTypeException($"Document type not supported. File with contentType :{string.Join(",", appLeadImageContentTypes)} are allowed.");
+        }
+
+        var offerRepository = _portalRepositories.GetInstance<IOfferRepository>();
+        var result = await offerRepository.GetOfferAssignedAppLeadImageDocumentsByIdAsync(appId, iamUserId, OfferTypeId.APP).ConfigureAwait(false);
+
+        if(result == default)
+        {
+            throw new NotFoundException($"App {appId} does not exist.");
+        }
+        if (!result.IsStatusActive)
+        {
+            throw new ConflictException("offerStatus is in incorrect State");
+        }
+        var companyUserId = result.CompanyUserId;
+        if (companyUserId == Guid.Empty)
+        {
+            throw new ForbiddenException($"user {iamUserId} is not a member of the provider company of App {appId}");
+        }
+
+        var documentRepository = _portalRepositories.GetInstance<IDocumentRepository>();
+        var documentName = document.FileName;
+        using var sha512Hash = SHA512.Create();
+        using var ms = new MemoryStream((int)document.Length);
+
+        await document.CopyToAsync(ms, cancellationToken).ConfigureAwait(false);
+        var hash = await sha512Hash.ComputeHashAsync(ms, cancellationToken);
+        var documentContent = ms.GetBuffer();
+        if (ms.Length != document.Length || documentContent.Length != document.Length)
+        {
+            throw new ControllerArgumentException($"document {document.FileName} transmitted length {document.Length} doesn't match actual length {ms.Length}.");
+        }
+        var doc = documentRepository.CreateDocument(documentName, documentContent, hash, documentContentType.ParseMediaTypeId(), DocumentTypeId.APP_LEADIMAGE, x =>
+        {
+            x.CompanyUserId = companyUserId;
+            x.DocumentStatusId = DocumentStatusId.LOCKED;
+        });
+        _portalRepositories.GetInstance<IOfferRepository>().CreateOfferAssignedDocument(appId, doc.Id);
+
+        foreach(var docId in result.documentStatusDatas.Select(x => x.DocumentId))
+        {
+            offerRepository.RemoveOfferAssignedDocument(appId, docId);
+            documentRepository.RemoveDocument(docId);
+        }
+        await _portalRepositories.SaveAsync().ConfigureAwait(false);
+    }
+    
 }
