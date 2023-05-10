@@ -227,7 +227,7 @@ public class OfferSubscriptionRepositoryTest : IAssemblyFixture<TestDbFixture>
 
         // Assert
         result.Exists.Should().BeTrue();
-        result.IsUserOfProviderCompany.Should().BeTrue();
+        result.IsUserOfCompany.Should().BeTrue();
         result.Details.Name.Should().Be("SDE with EDC");
         result.Details.CompanyName.Should().Be("Catena-X");
         result.Details.Contact.Should().ContainSingle().And.Subject.Should().ContainSingle("tobeadded@cx.com");
@@ -244,7 +244,7 @@ public class OfferSubscriptionRepositoryTest : IAssemblyFixture<TestDbFixture>
 
         // Assert
         result.Exists.Should().BeTrue();
-        result.IsUserOfProviderCompany.Should().BeTrue();
+        result.IsUserOfCompany.Should().BeTrue();
         result.Details.Name.Should().Be("SDE with EDC");
         result.Details.CompanyName.Should().Be("Service Provider");
         result.Details.Contact.Should().ContainSingle().And.Subject.Should().ContainSingle("tobeadded@cx.com");
@@ -263,7 +263,7 @@ public class OfferSubscriptionRepositoryTest : IAssemblyFixture<TestDbFixture>
 
         // Assert
         result.Exists.Should().BeFalse();
-        result.IsUserOfProviderCompany.Should().BeFalse();
+        result.IsUserOfCompany.Should().BeFalse();
         result.Details.Should().Be(default!);
     }
 
@@ -280,7 +280,7 @@ public class OfferSubscriptionRepositoryTest : IAssemblyFixture<TestDbFixture>
 
         // Assert
         result.Exists.Should().BeTrue();
-        result.IsUserOfProviderCompany.Should().BeFalse();
+        result.IsUserOfCompany.Should().BeFalse();
         result.Details.Name.Should().Be("SDE with EDC");
     }
 

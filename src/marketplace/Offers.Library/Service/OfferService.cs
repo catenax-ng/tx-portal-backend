@@ -875,7 +875,7 @@ public class OfferService : IOfferService
 
         if (!isUserOfCompany)
         {
-            throw new ForbiddenException($"User {iamUserId} is not part of the  {offerCompanyRole} company");
+            throw new ForbiddenException($"User {iamUserId} is not part of the {offerCompanyRole} company");
         }
 
         return details;
