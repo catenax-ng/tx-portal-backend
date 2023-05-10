@@ -263,13 +263,13 @@ public class ServicesController : ControllerBase
     /// <param name="serviceId">id of the service to receive the details for</param>
     /// <param name="subscriptionId">id of the subscription to receive the details for</param>
     /// <remarks>Example: GET: /api/services/{serviceId}/subscription/{subscriptionId}/provider</remarks>
-    /// <response code="200">Returns the document Content</response>
+    /// <response code="200">Returns the subscription details for the provider</response>
     /// <response code="403">User's company does not provide the service.</response>
     /// <response code="404">No service or subscription found.</response>
     [HttpGet]
     [Authorize(Roles = "add_service_offering")]
     [Route("{serviceId}/subscription/{subscriptionId}/provider")]
-    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProviderSubscriptionDetailData), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public Task<ProviderSubscriptionDetailData> GetSubscriptionDetailForProvider([FromRoute] Guid serviceId, [FromRoute] Guid subscriptionId) =>
@@ -281,13 +281,13 @@ public class ServicesController : ControllerBase
     /// <param name="serviceId">id of the service to receive the details for</param>
     /// <param name="subscriptionId">id of the subscription to receive the details for</param>
     /// <remarks>Example: GET: /api/services/{serviceId}/subscription/{subscriptionId}/subscriber</remarks>
-    /// <response code="200">Returns the document Content</response>
+    /// <response code="200">Returns the subscription details for the subscriber</response>
     /// <response code="403">User's company does not provide the service.</response>
     /// <response code="404">No service or subscription found.</response>
     [HttpGet]
     [Authorize(Roles = "add_service_offering")]
     [Route("{serviceId}/subscription/{subscriptionId}/subscriber")]
-    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(SubscriberSubscriptionDetailData), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public Task<SubscriberSubscriptionDetailData> GetSubscriptionDetailForSubscriber([FromRoute] Guid serviceId, [FromRoute] Guid subscriptionId) =>
