@@ -837,17 +837,16 @@ public class OfferService : IOfferService
     {
         var userRoleIds = await ValidateRoleData(contactUserRoles).ConfigureAwait(false);
 
-        var result = await _portalRepositories.GetInstance<IOfferSubscriptionsRepository>()
+        var (exists, isUserOfCompany, details) = await _portalRepositories.GetInstance<IOfferSubscriptionsRepository>()
             .GetSubscriptionDetailsAsync(offerId, subscriptionId, iamUserId, offerTypeId, userRoleIds, offerCompanyRole == OfferCompanyRole.Provider)
             .ConfigureAwait(false);
-        
-        var (exists, isUserOfProvidingCompany, details) = result;
+
         if (!exists)
         {
             throw new NotFoundException($"subscription {subscriptionId} for offer {offerId} of type {offerTypeId} does not exist");
         }
 
-        if (!isUserOfProvidingCompany)
+        if (!isUserOfCompany)
         {
             throw new ForbiddenException($"User {iamUserId} is not part of the {offerCompanyRole} company");
         }

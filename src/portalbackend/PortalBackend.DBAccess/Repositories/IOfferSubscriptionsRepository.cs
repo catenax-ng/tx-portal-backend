@@ -100,5 +100,5 @@ public interface IOfferSubscriptionsRepository
     /// <param name="offerTypeId">Offer type</param>
     /// <param name="userRoleIds">Ids of the user roles the contacts should be in</param>
     /// <returns>Returns details for the offer subscription</returns>
-    Task<(bool Exists, bool IsUserOfProviderCompany, OfferSubscriptionDetailData Details)> GetSubscriptionDetailsAsync(Guid offerId, Guid subscriptionId, string iamUserId, OfferTypeId offerTypeId, IEnumerable<Guid> userRoleIds, bool forProvider);
+    Task<(bool Exists, bool IsUserOfCompany, OfferSubscriptionDetailData Details)> GetSubscriptionDetailsAsync(Guid offerId, Guid subscriptionId, string iamUserId, OfferTypeId offerTypeId, IEnumerable<Guid> userRoleIds, bool forProvider);
 }
