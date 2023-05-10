@@ -658,7 +658,7 @@ public class AppBusinessLogicTests
         // Arrange
         var offerId = _fixture.Create<Guid>();
         var subscriptionId = _fixture.Create<Guid>();
-        var data = _fixture.Create<OfferSubscriptionDetailData>();
+        var data = _fixture.Create<ProviderSubscriptionDetailData>();
         var settings = new AppsSettings
         {
             CompanyAdminRoles = new Dictionary<string, IEnumerable<string>>
@@ -666,8 +666,8 @@ public class AppBusinessLogicTests
                 {"ClientTest", new[] {"Test"}}
             }
         };
-        A.CallTo(() => _offerService.GetSubscriptionDetailsAsync(offerId, subscriptionId, IamUserId, OfferTypeId.APP, A<IDictionary<string, IEnumerable<string>>>._, OfferCompanyRole.Provider))
-            .ReturnsLazily(() => data);
+        A.CallTo(() => _offerService.GetSubscriptionDetailsForProviderAsync(offerId, subscriptionId, IamUserId, OfferTypeId.APP, A<IDictionary<string, IEnumerable<string>>>._))
+            .Returns(data);
         var sut = new AppsBusinessLogic(null!, null!, _offerService,  null!, Options.Create(settings), null!);
 
         // Act
@@ -687,7 +687,7 @@ public class AppBusinessLogicTests
         // Arrange
         var offerId = _fixture.Create<Guid>();
         var subscriptionId = _fixture.Create<Guid>();
-        var data = _fixture.Create<OfferSubscriptionDetailData>();
+        var data = _fixture.Create<SubscriberSubscriptionDetailData>();
         var settings = new AppsSettings
         {
             CompanyAdminRoles = new Dictionary<string, IEnumerable<string>>
@@ -695,8 +695,8 @@ public class AppBusinessLogicTests
                 {"ClientTest", new[] {"Test"}}
             }
         };
-        A.CallTo(() => _offerService.GetSubscriptionDetailsAsync(offerId, subscriptionId, IamUserId, OfferTypeId.APP, A<IDictionary<string, IEnumerable<string>>>._, OfferCompanyRole.Subscriber))
-            .ReturnsLazily(() => data);
+        A.CallTo(() => _offerService.GetSubscriptionDetailsForSubscriberAsync(offerId, subscriptionId, IamUserId, OfferTypeId.APP, A<IDictionary<string, IEnumerable<string>>>._))
+            .Returns(data);
         var sut = new AppsBusinessLogic(null!, null!, _offerService,  null!, Options.Create(settings), null!);
 
         // Act

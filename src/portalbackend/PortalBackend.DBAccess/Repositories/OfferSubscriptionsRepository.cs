@@ -197,6 +197,7 @@ public class OfferSubscriptionsRepository : IOfferSubscriptionsRepository
                 OtherCompany = forProvider ? os.Company : os.Offer!.ProviderCompany,
                 OfferName = os.Offer!.Name,
                 os.OfferId,
+                os.Offer!.OfferStatusId,
                 os.CompanyServiceAccounts
             })
             .Select(x => new ValueTuple<bool, bool, OfferSubscriptionDetailData>(
@@ -204,6 +205,7 @@ public class OfferSubscriptionsRepository : IOfferSubscriptionsRepository
                 x.UserCompany!.CompanyUsers.Any(cu => cu.IamUser!.UserEntityId == iamUserId),
                 new OfferSubscriptionDetailData(
                     x.OfferId,
+                    x.OfferStatusId,
                     x.OfferName,
                     x.OtherCompany!.Name,
                     x.OtherCompany!.BusinessPartnerNumber,

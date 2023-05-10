@@ -194,10 +194,10 @@ public class ServiceBusinessLogic : IServiceBusinessLogic
         _offerService.UpdateTechnicalUserProfiles(serviceId, OfferTypeId.SERVICE, data, iamUserId, _settings.TechnicalUserProfileClient);
 
     /// <inheritdoc />
-    public Task<OfferSubscriptionDetailData> GetSubscriptionDetailForProvider(Guid serviceId, Guid subscriptionId, string iamUserId) =>
-        _offerService.GetSubscriptionDetailsAsync(serviceId, subscriptionId, iamUserId, OfferTypeId.SERVICE, _settings.CompanyAdminRoles, OfferCompanyRole.Provider);
+    public Task<ProviderSubscriptionDetailData> GetSubscriptionDetailForProvider(Guid serviceId, Guid subscriptionId, string iamUserId) =>
+        _offerService.GetSubscriptionDetailsForProviderAsync(serviceId, subscriptionId, iamUserId, OfferTypeId.SERVICE, _settings.CompanyAdminRoles);
 
     /// <inheritdoc />
-    public Task<OfferSubscriptionDetailData> GetSubscriptionDetailForSubscriber(Guid serviceId, Guid subscriptionId, string iamUserId) =>
-        _offerService.GetSubscriptionDetailsAsync(serviceId, subscriptionId, iamUserId, OfferTypeId.SERVICE, _settings.SalesManagerRoles, OfferCompanyRole.Subscriber);
+    public Task<SubscriberSubscriptionDetailData> GetSubscriptionDetailForSubscriber(Guid serviceId, Guid subscriptionId, string iamUserId) =>
+        _offerService.GetSubscriptionDetailsForSubscriberAsync(serviceId, subscriptionId, iamUserId, OfferTypeId.SERVICE, _settings.SalesManagerRoles);
 }

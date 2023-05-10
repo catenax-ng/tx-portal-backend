@@ -18,12 +18,53 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 
 /// <summary>
 /// Detail data for a offer subscription
 /// </summary>
 /// <param name="Id">Id of the Offer</param>
+/// <param name="OfferStatus">Status of the offer</param>
+/// <param name="Name">Name of the Offer</param>
+/// <param name="Customer">Name of the company subscribing the offer</param>
+/// <param name="Bpn">When called from /provider bpn of the company subscribing the offer, otherwise the provider company's bpn</param>
+/// <param name="Contact">When called from /provider the company admins of the subscribing company, otherwise the salesmanagers of the offer provider</param>
+/// <param name="TechnicalUserData">Information about the technical user</param>
+public record ProviderSubscriptionDetailData (
+    Guid Id,
+    OfferStatusId OfferStatus,
+    string? Name,
+    string Customer,
+    string? Bpn,
+    IEnumerable<string> Contact,
+    IEnumerable<SubscriptionTechnicalUserData> TechnicalUserData
+);
+
+/// <summary>
+/// Detail data for a offer subscription
+/// </summary>
+/// <param name="Id">Id of the Offer</param>
+/// <param name="OfferStatus">Status of the offer</param>
+/// <param name="Name">Name of the Offer</param>
+/// <param name="Provider">The provider company's name</param>
+/// <param name="Contact">When called from /provider the company admins of the subscribing company, otherwise the salesmanagers of the offer provider</param>
+/// <param name="TechnicalUserData">Information about the technical user</param>
+public record SubscriberSubscriptionDetailData (
+    Guid Id,
+    OfferStatusId OfferStatus,
+    string? Name,
+    string Provider,
+    IEnumerable<string> Contact,
+    IEnumerable<SubscriptionTechnicalUserData> TechnicalUserData
+);
+
+/// <summary>
+/// Detail data for a offer subscription
+/// </summary>
+/// <param name="Id">Id of the Offer</param>
+/// <param name="OfferStatus">Status of the offer</param>
 /// <param name="Name">Name of the Offer</param>
 /// <param name="CompanyName">When called from /provider name of the company subscribing the offer, otherwise the provider company's name</param>
 /// <param name="Bpn">When called from /provider bpn of the company subscribing the offer, otherwise the provider company's bpn</param>
@@ -31,6 +72,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 /// <param name="TechnicalUserData">Information about the technical user</param>
 public record OfferSubscriptionDetailData (
     Guid Id,
+    OfferStatusId OfferStatus,
     string? Name,
     string CompanyName,
     string? Bpn,

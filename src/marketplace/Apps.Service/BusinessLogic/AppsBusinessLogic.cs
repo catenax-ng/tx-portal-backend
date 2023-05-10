@@ -345,10 +345,10 @@ public class AppsBusinessLogic : IAppsBusinessLogic
         _offerService.UpdateTechnicalUserProfiles(appId, OfferTypeId.APP, data, iamUserId, _settings.TechnicalUserProfileClient);
 
     /// <inheritdoc />
-    public Task<OfferSubscriptionDetailData> GetSubscriptionDetailForProvider(Guid appId, Guid subscriptionId, string iamUserId) =>
-        _offerService.GetSubscriptionDetailsAsync(appId, subscriptionId, iamUserId, OfferTypeId.APP, _settings.CompanyAdminRoles, OfferCompanyRole.Provider);
+    public Task<ProviderSubscriptionDetailData> GetSubscriptionDetailForProvider(Guid appId, Guid subscriptionId, string iamUserId) =>
+        _offerService.GetSubscriptionDetailsForProviderAsync(appId, subscriptionId, iamUserId, OfferTypeId.APP, _settings.CompanyAdminRoles);
     
     /// <inheritdoc />
-    public Task<OfferSubscriptionDetailData> GetSubscriptionDetailForSubscriber(Guid appId, Guid subscriptionId, string iamUserId) =>
-        _offerService.GetSubscriptionDetailsAsync(appId, subscriptionId, iamUserId, OfferTypeId.APP, _settings.SalesManagerRoles, OfferCompanyRole.Subscriber);
+    public Task<SubscriberSubscriptionDetailData> GetSubscriptionDetailForSubscriber(Guid appId, Guid subscriptionId, string iamUserId) =>
+        _offerService.GetSubscriptionDetailsForSubscriberAsync(appId, subscriptionId, iamUserId, OfferTypeId.APP, _settings.SalesManagerRoles);
 }

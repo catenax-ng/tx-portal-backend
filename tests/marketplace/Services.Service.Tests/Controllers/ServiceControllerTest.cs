@@ -114,7 +114,7 @@ public class ServiceControllerTest
         var subscriptionId = Guid.NewGuid();
         var detailData = new SubscriptionDetailData(subscriptionId, "Service", OfferSubscriptionStatusId.ACTIVE);
         A.CallTo(() => _logic.GetSubscriptionDetailAsync(subscriptionId, IamUserId))
-            .ReturnsLazily(() => detailData);
+            .Returns(detailData);
 
         //Act
         var result = await this._controller.GetSubscriptionDetail(subscriptionId).ConfigureAwait(false);
@@ -229,7 +229,7 @@ public class ServiceControllerTest
         var data = _fixture.CreateMany<AllOfferStatusData>(5);
         var paginationResponse = new Pagination.Response<AllOfferStatusData>(new Pagination.Metadata(data.Count(), 1, 0, data.Count()), data);
         A.CallTo(() => _logic.GetCompanyProvidedServiceStatusDataAsync(0, 15,IamUserId, null, null,null))
-            .ReturnsLazily(() => paginationResponse);
+            .Returns(paginationResponse);
 
         //Act
         var result = await this._controller.GetCompanyProvidedServiceStatusDataAsync().ConfigureAwait(false);
@@ -247,7 +247,7 @@ public class ServiceControllerTest
         
         var data = _fixture.CreateMany<TechnicalUserProfileInformation>(5);
         A.CallTo(() => _logic.GetTechnicalUserProfilesForOffer(offerId, IamUserId))
-            .ReturnsLazily(() => data);
+            .Returns(data);
 
         //Act
         var result = await this._controller.GetTechnicalUserProfiles(offerId).ConfigureAwait(false);
@@ -278,9 +278,9 @@ public class ServiceControllerTest
         // Arrange
         var serviceId = _fixture.Create<Guid>();
         var subscriptionId = _fixture.Create<Guid>();
-        var data = _fixture.Create<OfferSubscriptionDetailData>();
+        var data = _fixture.Create<ProviderSubscriptionDetailData>();
         A.CallTo(() => _logic.GetSubscriptionDetailForProvider(serviceId, subscriptionId, IamUserId))
-            .ReturnsLazily(() => data);
+            .Returns(data);
 
         // Act
         var result = await this._controller.GetSubscriptionDetailForProvider(serviceId, subscriptionId).ConfigureAwait(false);
@@ -296,9 +296,9 @@ public class ServiceControllerTest
         // Arrange
         var serviceId = _fixture.Create<Guid>();
         var subscriptionId = _fixture.Create<Guid>();
-        var data = _fixture.Create<OfferSubscriptionDetailData>();
+        var data = _fixture.Create<SubscriberSubscriptionDetailData>();
         A.CallTo(() => _logic.GetSubscriptionDetailForSubscriber(serviceId, subscriptionId, IamUserId))
-            .ReturnsLazily(() => data);
+            .Returns(data);
 
         // Act
         var result = await this._controller.GetSubscriptionDetailForSubscriber(serviceId, subscriptionId).ConfigureAwait(false);

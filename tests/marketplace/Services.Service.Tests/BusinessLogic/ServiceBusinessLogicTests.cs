@@ -561,16 +561,16 @@ public class ServiceBusinessLogicTests
         // Arrange
         var offerId = _fixture.Create<Guid>();
         var subscriptionId = _fixture.Create<Guid>();
-        var data = _fixture.Create<OfferSubscriptionDetailData>();
-        var settings = new ServiceSettings()
+        var data = _fixture.Create<ProviderSubscriptionDetailData>();
+        var settings = new ServiceSettings
         {
             CompanyAdminRoles = new Dictionary<string, IEnumerable<string>>
             {
                 {"ClientTest", new[] {"Test"}}
             }
         };
-        A.CallTo(() => _offerService.GetSubscriptionDetailsAsync(offerId, subscriptionId, _iamUser.UserEntityId, OfferTypeId.SERVICE, A<IDictionary<string, IEnumerable<string>>>._, OfferCompanyRole.Provider))
-            .ReturnsLazily(() => data);
+        A.CallTo(() => _offerService.GetSubscriptionDetailsForProviderAsync(offerId, subscriptionId, _iamUser.UserEntityId, OfferTypeId.SERVICE, A<IDictionary<string, IEnumerable<string>>>._))
+            .Returns(data);
         var sut = new ServiceBusinessLogic(null!, _offerService,  null!, null!, Options.Create(settings));
 
         // Act
@@ -590,16 +590,16 @@ public class ServiceBusinessLogicTests
         // Arrange
         var offerId = _fixture.Create<Guid>();
         var subscriptionId = _fixture.Create<Guid>();
-        var data = _fixture.Create<OfferSubscriptionDetailData>();
-        var settings = new ServiceSettings()
+        var data = _fixture.Create<SubscriberSubscriptionDetailData>();
+        var settings = new ServiceSettings
         {
             CompanyAdminRoles = new Dictionary<string, IEnumerable<string>>
             {
                 {"ClientTest", new[] {"Test"}}
             }
         };
-        A.CallTo(() => _offerService.GetSubscriptionDetailsAsync(offerId, subscriptionId, _iamUser.UserEntityId, OfferTypeId.SERVICE, A<IDictionary<string, IEnumerable<string>>>._, OfferCompanyRole.Subscriber))
-            .ReturnsLazily(() => data);
+        A.CallTo(() => _offerService.GetSubscriptionDetailsForSubscriberAsync(offerId, subscriptionId, _iamUser.UserEntityId, OfferTypeId.SERVICE, A<IDictionary<string, IEnumerable<string>>>._))
+            .Returns(data);
         var sut = new ServiceBusinessLogic(null!, _offerService,  null!, null!, Options.Create(settings));
 
         // Act

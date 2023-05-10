@@ -141,7 +141,7 @@ public interface IServiceBusinessLogic
     /// <param name="subscriptionId">Id of the subscription</param>
     /// <param name="iamUserId">Id of the iam user</param>
     /// <returns>Returns the details of the subscription</returns>
-    Task<OfferSubscriptionDetailData> GetSubscriptionDetailForProvider(Guid serviceId, Guid subscriptionId, string iamUserId);
+    Task<ProviderSubscriptionDetailData> GetSubscriptionDetailForProvider(Guid serviceId, Guid subscriptionId, string iamUserId);
 
     /// <summary>
     /// Gets the information for the subscription
@@ -150,5 +150,5 @@ public interface IServiceBusinessLogic
     /// <param name="subscriptionId">Id of the subscription</param>
     /// <param name="iamUserId">Id of the iam user</param>
     /// <returns>Returns the details of the subscription</returns>
-    Task<OfferSubscriptionDetailData> GetSubscriptionDetailForSubscriber(Guid serviceId, Guid subscriptionId, string iamUserId);
+    Task<SubscriberSubscriptionDetailData> GetSubscriptionDetailForSubscriber(Guid serviceId, Guid subscriptionId, string iamUserId);
 }

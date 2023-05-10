@@ -833,7 +833,34 @@ public class OfferService : IOfferService
     }
 
     /// <inheritdoc />
-    public async Task<OfferSubscriptionDetailData> GetSubscriptionDetailsAsync(Guid offerId, Guid subscriptionId, string iamUserId, OfferTypeId offerTypeId, IDictionary<string, IEnumerable<string>> contactUserRoles, OfferCompanyRole offerCompanyRole)
+    public async Task<ProviderSubscriptionDetailData> GetSubscriptionDetailsForProviderAsync(Guid offerId, Guid subscriptionId, string iamUserId, OfferTypeId offerTypeId, IDictionary<string, IEnumerable<string>> contactUserRoles)
+    {
+        var details = await GetOfferSubscriptionDetailsInternal(offerId, subscriptionId, iamUserId, offerTypeId, contactUserRoles, OfferCompanyRole.Provider);
+        return new ProviderSubscriptionDetailData(
+            details.Id,
+            details.OfferStatus,
+            details.Name,
+            details.CompanyName,
+            details.Bpn,
+            details.Contact,
+            details.TechnicalUserData);
+    }
+
+    /// <inheritdoc />
+    public async Task<SubscriberSubscriptionDetailData> GetSubscriptionDetailsForSubscriberAsync(Guid offerId, Guid subscriptionId, string iamUserId, OfferTypeId offerTypeId, IDictionary<string, IEnumerable<string>> contactUserRoles)
+    {
+        var details = await GetOfferSubscriptionDetailsInternal(offerId, subscriptionId, iamUserId, offerTypeId, contactUserRoles, OfferCompanyRole.Subscriber);
+        return new SubscriberSubscriptionDetailData(
+            details.Id,
+            details.OfferStatus,
+            details.Name,
+            details.CompanyName,
+            details.Contact,
+            details.TechnicalUserData);
+    }
+
+    private async Task<OfferSubscriptionDetailData> GetOfferSubscriptionDetailsInternal(Guid offerId, Guid subscriptionId, string iamUserId,
+        OfferTypeId offerTypeId, IDictionary<string, IEnumerable<string>> contactUserRoles, OfferCompanyRole offerCompanyRole)
     {
         var userRoleIds = await ValidateRoleData(contactUserRoles).ConfigureAwait(false);
 
@@ -848,7 +875,7 @@ public class OfferService : IOfferService
 
         if (!isUserOfCompany)
         {
-            throw new ForbiddenException($"User {iamUserId} is not part of the {offerCompanyRole} company");
+            throw new ForbiddenException($"User {iamUserId} is not part of the  {offerCompanyRole} company");
         }
 
         return details;

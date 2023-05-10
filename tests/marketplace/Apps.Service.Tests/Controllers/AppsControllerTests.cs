@@ -405,9 +405,9 @@ public class AppsControllerTests
         // Arrange
         var appId = _fixture.Create<Guid>();
         var subscriptionId = _fixture.Create<Guid>();
-        var data = _fixture.Create<OfferSubscriptionDetailData>();
+        var data = _fixture.Create<ProviderSubscriptionDetailData>();
         A.CallTo(() => _logic.GetSubscriptionDetailForProvider(appId, subscriptionId, IamUserId))
-            .ReturnsLazily(() => data);
+            .Returns(data);
 
         // Act
         var result = await this._controller.GetSubscriptionDetailForProvider(appId, subscriptionId).ConfigureAwait(false);
@@ -423,9 +423,9 @@ public class AppsControllerTests
         // Arrange
         var appId = _fixture.Create<Guid>();
         var subscriptionId = _fixture.Create<Guid>();
-        var data = _fixture.Create<OfferSubscriptionDetailData>();
+        var data = _fixture.Create<SubscriberSubscriptionDetailData>();
         A.CallTo(() => _logic.GetSubscriptionDetailForSubscriber(appId, subscriptionId, IamUserId))
-            .ReturnsLazily(() => data);
+            .Returns( data);
 
         // Act
         var result = await this._controller.GetSubscriptionDetailForSubscriber(appId, subscriptionId).ConfigureAwait(false);
