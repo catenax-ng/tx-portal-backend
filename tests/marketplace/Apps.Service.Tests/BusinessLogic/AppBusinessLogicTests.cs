@@ -18,7 +18,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using System.Collections;
 using AutoFixture;
 using AutoFixture.AutoFakeItEasy;
 using FakeItEasy;
