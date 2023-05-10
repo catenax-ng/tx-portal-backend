@@ -163,7 +163,7 @@ public interface IAppsBusinessLogic
     /// <param name="iamUserId">Id of the iamUser</param>
     /// <param name="document">Document Data</param>
     /// <param name="cancellationToken">cancellationToken</param>
-    Task CreatOfferAssignedAppLeadImageDocumentByIdAsync(Guid appId, string iamUserId, IFormFile document, CancellationToken cancellationToken);
+    Task CreateOfferAssignedAppLeadImageDocumentByIdAsync(Guid appId, string iamUserId, IFormFile document, CancellationToken cancellationToken);
     
     /// <summary>
     /// Get technical user profiles for a specific offer

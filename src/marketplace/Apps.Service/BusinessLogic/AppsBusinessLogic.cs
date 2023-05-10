@@ -283,7 +283,7 @@ public class AppsBusinessLogic : IAppsBusinessLogic
         _offerService.GetOfferDocumentContentAsync(appId, documentId, _settings.AppImageDocumentTypeIds, OfferTypeId.APP, cancellationToken);
 
     /// <inheritdoc />
-    public async Task CreatOfferAssignedAppLeadImageDocumentByIdAsync(Guid appId, string iamUserId, IFormFile document, CancellationToken cancellationToken)
+    public async Task CreateOfferAssignedAppLeadImageDocumentByIdAsync(Guid appId, string iamUserId, IFormFile document, CancellationToken cancellationToken)
     {
         var appLeadImageContentTypes = new []{ "image/jpeg","image/png" };
         var documentContentType = document.ContentType;

@@ -352,9 +352,9 @@ public class AppsController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status415UnsupportedMediaType)]
-    public async Task<NoContentResult> CreatOfferAssignedAppLeadImageDocumentByIdAsync([FromRoute] Guid appId,  [FromForm(Name = "document")] IFormFile document, CancellationToken cancellationToken)
+    public async Task<NoContentResult> CreateOfferAssignedAppLeadImageDocumentByIdAsync([FromRoute] Guid appId,  [FromForm(Name = "document")] IFormFile document, CancellationToken cancellationToken)
     {
-        await this.WithIamUserId(iamUserId => _appsBusinessLogic.CreatOfferAssignedAppLeadImageDocumentByIdAsync(appId, iamUserId, document, cancellationToken));
+        await this.WithIamUserId(iamUserId => _appsBusinessLogic.CreateOfferAssignedAppLeadImageDocumentByIdAsync(appId, iamUserId, document, cancellationToken));
         return NoContent();
     }
     
