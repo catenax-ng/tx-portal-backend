@@ -195,9 +195,9 @@ public class ServiceBusinessLogic : IServiceBusinessLogic
 
     /// <inheritdoc />
     public Task<OfferSubscriptionDetailData> GetSubscriptionDetailForProvider(Guid serviceId, Guid subscriptionId, string iamUserId) =>
-        _offerService.GetSubscriptionDetailsAsync(serviceId, subscriptionId, iamUserId, OfferTypeId.SERVICE, _settings.CompanyAdminRoles, true);
+        _offerService.GetSubscriptionDetailsAsync(serviceId, subscriptionId, iamUserId, OfferTypeId.SERVICE, _settings.CompanyAdminRoles, OfferCompanyRole.Provider);
 
     /// <inheritdoc />
     public Task<OfferSubscriptionDetailData> GetSubscriptionDetailForSubscriber(Guid serviceId, Guid subscriptionId, string iamUserId) =>
-        _offerService.GetSubscriptionDetailsAsync(serviceId, subscriptionId, iamUserId, OfferTypeId.SERVICE, _settings.SalesManagerRoles, false);
+        _offerService.GetSubscriptionDetailsAsync(serviceId, subscriptionId, iamUserId, OfferTypeId.SERVICE, _settings.SalesManagerRoles, OfferCompanyRole.Subscriber);
 }

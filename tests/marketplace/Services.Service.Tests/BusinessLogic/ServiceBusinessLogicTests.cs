@@ -569,7 +569,7 @@ public class ServiceBusinessLogicTests
                 {"ClientTest", new[] {"Test"}}
             }
         };
-        A.CallTo(() => _offerService.GetSubscriptionDetailsAsync(offerId, subscriptionId, _iamUser.UserEntityId, OfferTypeId.SERVICE, A<IDictionary<string, IEnumerable<string>>>._, true))
+        A.CallTo(() => _offerService.GetSubscriptionDetailsAsync(offerId, subscriptionId, _iamUser.UserEntityId, OfferTypeId.SERVICE, A<IDictionary<string, IEnumerable<string>>>._, OfferCompanyRole.Provider))
             .ReturnsLazily(() => data);
         var sut = new ServiceBusinessLogic(null!, _offerService,  null!, null!, Options.Create(settings));
 
@@ -598,7 +598,7 @@ public class ServiceBusinessLogicTests
                 {"ClientTest", new[] {"Test"}}
             }
         };
-        A.CallTo(() => _offerService.GetSubscriptionDetailsAsync(offerId, subscriptionId, _iamUser.UserEntityId, OfferTypeId.SERVICE, A<IDictionary<string, IEnumerable<string>>>._, false))
+        A.CallTo(() => _offerService.GetSubscriptionDetailsAsync(offerId, subscriptionId, _iamUser.UserEntityId, OfferTypeId.SERVICE, A<IDictionary<string, IEnumerable<string>>>._, OfferCompanyRole.Subscriber))
             .ReturnsLazily(() => data);
         var sut = new ServiceBusinessLogic(null!, _offerService,  null!, null!, Options.Create(settings));
 

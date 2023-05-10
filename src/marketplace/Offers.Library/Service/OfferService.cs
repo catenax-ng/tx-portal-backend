@@ -833,12 +833,12 @@ public class OfferService : IOfferService
     }
 
     /// <inheritdoc />
-    public async Task<OfferSubscriptionDetailData> GetSubscriptionDetailsAsync(Guid offerId, Guid subscriptionId, string iamUserId, OfferTypeId offerTypeId, IDictionary<string, IEnumerable<string>> contactUserRoles, bool forProvider)
+    public async Task<OfferSubscriptionDetailData> GetSubscriptionDetailsAsync(Guid offerId, Guid subscriptionId, string iamUserId, OfferTypeId offerTypeId, IDictionary<string, IEnumerable<string>> contactUserRoles, OfferCompanyRole offerCompanyRole)
     {
         var userRoleIds = await ValidateRoleData(contactUserRoles).ConfigureAwait(false);
 
         var result = await _portalRepositories.GetInstance<IOfferSubscriptionsRepository>()
-            .GetSubscriptionDetailsAsync(offerId, subscriptionId, iamUserId, offerTypeId, userRoleIds, forProvider)
+            .GetSubscriptionDetailsAsync(offerId, subscriptionId, iamUserId, offerTypeId, userRoleIds, offerCompanyRole == OfferCompanyRole.Provider)
             .ConfigureAwait(false);
         
         var (exists, isUserOfProvidingCompany, details) = result;
@@ -847,10 +847,9 @@ public class OfferService : IOfferService
             throw new NotFoundException($"subscription {subscriptionId} for offer {offerId} of type {offerTypeId} does not exist");
         }
 
-        var companyType = forProvider ? "providing" : "subscribing";
         if (!isUserOfProvidingCompany)
         {
-            throw new ForbiddenException($"User {iamUserId} is not part of the {companyType} company");
+            throw new ForbiddenException($"User {iamUserId} is not part of the {offerCompanyRole} company");
         }
 
         return details;

@@ -346,9 +346,9 @@ public class AppsBusinessLogic : IAppsBusinessLogic
 
     /// <inheritdoc />
     public Task<OfferSubscriptionDetailData> GetSubscriptionDetailForProvider(Guid appId, Guid subscriptionId, string iamUserId) =>
-        _offerService.GetSubscriptionDetailsAsync(appId, subscriptionId, iamUserId, OfferTypeId.APP, _settings.CompanyAdminRoles, true);
+        _offerService.GetSubscriptionDetailsAsync(appId, subscriptionId, iamUserId, OfferTypeId.APP, _settings.CompanyAdminRoles, OfferCompanyRole.Provider);
     
     /// <inheritdoc />
     public Task<OfferSubscriptionDetailData> GetSubscriptionDetailForSubscriber(Guid appId, Guid subscriptionId, string iamUserId) =>
-        _offerService.GetSubscriptionDetailsAsync(appId, subscriptionId, iamUserId, OfferTypeId.APP, _settings.SalesManagerRoles, false);
+        _offerService.GetSubscriptionDetailsAsync(appId, subscriptionId, iamUserId, OfferTypeId.APP, _settings.SalesManagerRoles, OfferCompanyRole.Subscriber);
 }

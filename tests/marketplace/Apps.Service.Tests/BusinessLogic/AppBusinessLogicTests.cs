@@ -666,7 +666,7 @@ public class AppBusinessLogicTests
                 {"ClientTest", new[] {"Test"}}
             }
         };
-        A.CallTo(() => _offerService.GetSubscriptionDetailsAsync(offerId, subscriptionId, IamUserId, OfferTypeId.APP, A<IDictionary<string, IEnumerable<string>>>._, true))
+        A.CallTo(() => _offerService.GetSubscriptionDetailsAsync(offerId, subscriptionId, IamUserId, OfferTypeId.APP, A<IDictionary<string, IEnumerable<string>>>._, OfferCompanyRole.Provider))
             .ReturnsLazily(() => data);
         var sut = new AppsBusinessLogic(null!, null!, _offerService,  null!, Options.Create(settings), null!);
 
@@ -695,7 +695,7 @@ public class AppBusinessLogicTests
                 {"ClientTest", new[] {"Test"}}
             }
         };
-        A.CallTo(() => _offerService.GetSubscriptionDetailsAsync(offerId, subscriptionId, IamUserId, OfferTypeId.APP, A<IDictionary<string, IEnumerable<string>>>._, false))
+        A.CallTo(() => _offerService.GetSubscriptionDetailsAsync(offerId, subscriptionId, IamUserId, OfferTypeId.APP, A<IDictionary<string, IEnumerable<string>>>._, OfferCompanyRole.Subscriber))
             .ReturnsLazily(() => data);
         var sut = new AppsBusinessLogic(null!, null!, _offerService,  null!, Options.Create(settings), null!);
 

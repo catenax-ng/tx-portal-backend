@@ -2168,7 +2168,7 @@ public class OfferServiceTests
             };
 
         // Act
-        async Task Act() => await _sut.GetSubscriptionDetailsAsync(offerId, subscriptionId, _iamUserId, offerTypeId, companyAdminRoles, true).ConfigureAwait(false);
+        async Task Act() => await _sut.GetSubscriptionDetailsAsync(offerId, subscriptionId, _iamUserId, offerTypeId, companyAdminRoles, OfferCompanyRole.Provider).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ConfigurationException>(Act);
@@ -2190,7 +2190,7 @@ public class OfferServiceTests
         SetupGetSubscriptionDetailForProvider();
 
         // Act
-        async Task Act() => await _sut.GetSubscriptionDetailsAsync(offerId, subscriptionId, _iamUserId, offerTypeId, companyAdminRoles, true).ConfigureAwait(false);
+        async Task Act() => await _sut.GetSubscriptionDetailsAsync(offerId, subscriptionId, _iamUserId, offerTypeId, companyAdminRoles, OfferCompanyRole.Provider).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
@@ -2212,11 +2212,11 @@ public class OfferServiceTests
         SetupGetSubscriptionDetailForProvider();
         
         // Act
-        async Task Act() => await _sut.GetSubscriptionDetailsAsync(_existingServiceId, subscriptionId, userId, offerTypeId, companyAdminRoles, true).ConfigureAwait(false);
+        async Task Act() => await _sut.GetSubscriptionDetailsAsync(_existingServiceId, subscriptionId, userId, offerTypeId, companyAdminRoles, OfferCompanyRole.Provider).ConfigureAwait(false);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ForbiddenException>(Act);
-        ex.Message.Should().Contain($"User {userId} is not part of the providing company");
+        ex.Message.Should().Contain($"User {userId} is not part of the Provider company");
     }
 
     [Theory]
@@ -2232,7 +2232,7 @@ public class OfferServiceTests
         SetupGetSubscriptionDetailForProvider();
 
         // Act
-        var result = await _sut.GetSubscriptionDetailsAsync(_existingServiceId, Guid.NewGuid(), _iamUserId, offerTypeId, companyAdminRoles, true).ConfigureAwait(false);
+        var result = await _sut.GetSubscriptionDetailsAsync(_existingServiceId, Guid.NewGuid(), _iamUserId, offerTypeId, companyAdminRoles, OfferCompanyRole.Provider).ConfigureAwait(false);
 
         // Assert
         result.Name.Should().Be("Test App");
