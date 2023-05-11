@@ -326,7 +326,7 @@ public class ServiceAccountBusinessLogicTests
         SetupUpdateOwnCompanyServiceAccountDetails();
         var invalidServiceAccountId = Guid.NewGuid();
         A.CallTo(() => _serviceAccountRepository.GetOwnCompanyServiceAccountWithIamClientIdAsync(invalidServiceAccountId, A<string>.That.Matches(x => x == ValidAdminId)))
-            .ReturnsLazily(() => (CompanyServiceAccountWithRoleDataClientId?)null);
+            .Returns((CompanyServiceAccountWithRoleDataClientId?)null);
         var data = new ServiceAccountEditableDetails(invalidServiceAccountId, "new name", "changed description", IamClientAuthMethod.SECRET); 
         var sut = new ServiceAccountBusinessLogic(_provisioningManager, _portalRepositories, _options, null!);
 
@@ -347,7 +347,7 @@ public class ServiceAccountBusinessLogicTests
             .With(x => x.CompanyServiceAccountStatusId, CompanyServiceAccountStatusId.INACTIVE)
             .Create();
         A.CallTo(() => _serviceAccountRepository.GetOwnCompanyServiceAccountWithIamClientIdAsync(InactiveServiceAccount, A<string>.That.Matches(x => x == ValidAdminId)))
-            .ReturnsLazily(() => inactive);
+            .Returns(inactive);
         var data = new ServiceAccountEditableDetails(InactiveServiceAccount, "new name", "changed description", IamClientAuthMethod.SECRET); 
         var sut = new ServiceAccountBusinessLogic(_provisioningManager, _portalRepositories, _options, null!);
 
@@ -369,7 +369,7 @@ public class ServiceAccountBusinessLogicTests
         // Arrange
         var data = _fixture.CreateMany<CompanyServiceAccountData>(15);
         A.CallTo(() => _serviceAccountRepository.GetOwnCompanyServiceAccountsUntracked(A<string>.That.Matches(x => x == ValidAdminId)))
-            .ReturnsLazily(() => (int skip, int take) => Task.FromResult((Pagination.Source<CompanyServiceAccountData>?)new Pagination.Source<CompanyServiceAccountData>(data.Count(), data.Skip(skip).Take(take))));
+            .Returns((int skip, int take) => Task.FromResult((Pagination.Source<CompanyServiceAccountData>?)new Pagination.Source<CompanyServiceAccountData>(data.Count(), data.Skip(skip).Take(take))));
         
         A.CallTo(() => _portalRepositories.GetInstance<IServiceAccountRepository>()).Returns(_serviceAccountRepository);
         var sut = new ServiceAccountBusinessLogic(_provisioningManager, _portalRepositories, _options, null!);
@@ -437,7 +437,7 @@ public class ServiceAccountBusinessLogicTests
         }
 
         serviceAccount.CompanyServiceAccountStatusId.Should().Be(CompanyServiceAccountStatusId.INACTIVE);
-        A.CallTo(() => _serviceAccountRepository.RemoveCompanyServiceAccountAssignedRole(A<CompanyServiceAccountAssignedRole>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _serviceAccountRepository.RemoveCompanyServiceAccountAssignedRoles(A<IEnumerable<(Guid,Guid)>>.That.IsSameSequenceAs(_userRoleIds.Select(userRoleId => new ValueTuple<Guid,Guid>(ValidServiceAccountId, userRoleId))))).MustHaveHappenedOnceExactly();
     }
 
     #endregion
@@ -475,12 +475,12 @@ public class ServiceAccountBusinessLogicTests
     private void SetupCreateOwnCompanyServiceAccount()
     {
         A.CallTo(() => _userRepository.GetCompanyIdAndBpnRolesForIamUserUntrackedAsync(ValidAdminId, ClientId))
-            .ReturnsLazily(() => new ValueTuple<Guid, string, IEnumerable<Guid>>(ValidCompanyId, ValidBpn, new []{ UserRoleId1, UserRoleId2 }));
+            .Returns((ValidCompanyId, ValidBpn, new []{ UserRoleId1, UserRoleId2 }));
         A.CallTo(() => _userRepository.GetCompanyIdAndBpnRolesForIamUserUntrackedAsync(A<string>.That.Not.Matches(x => x == ValidAdminId), ClientId))
-            .ReturnsLazily(() => new ValueTuple<Guid, string, IEnumerable<Guid>>());
+            .Returns(((Guid, string, IEnumerable<Guid>))default);
         
         A.CallTo(() => _serviceAccountCreation.CreateServiceAccountAsync(A<ServiceAccountCreationInfo>._, A<Guid>.That.Matches(x => x == ValidCompanyId), A<IEnumerable<string>>._, CompanyServiceAccountTypeId.OWN, A<bool>._, null))
-            .ReturnsLazily(() => new ValueTuple<string, ServiceAccountData, Guid, List<UserRoleData>>(ClientId, new ServiceAccountData(ClientId, Guid.NewGuid().ToString(), new ClientAuthData(IamClientAuthMethod.SECRET)), Guid.NewGuid(), new List<UserRoleData>()));
+            .Returns((ClientId, new ServiceAccountData(ClientId, Guid.NewGuid().ToString(), new ClientAuthData(IamClientAuthMethod.SECRET)), Guid.NewGuid(), Enumerable.Empty<UserRoleData>()));
 
         A.CallTo(() => _portalRepositories.GetInstance<IUserRepository>()).Returns(_userRepository);
     }
@@ -491,7 +491,7 @@ public class ServiceAccountBusinessLogicTests
         SetupGetOwnCompanyServiceAccount();
 
         A.CallTo(() => _provisioningManager.GetCentralClientAuthDataAsync(A<string>._))
-            .ReturnsLazily(() => authData);
+            .Returns(authData);
 
         A.CallTo(() => _portalRepositories.GetInstance<IServiceAccountRepository>()).Returns(_serviceAccountRepository);
     }
@@ -502,7 +502,7 @@ public class ServiceAccountBusinessLogicTests
         SetupGetOwnCompanyServiceAccount();
 
         A.CallTo(() => _provisioningManager.ResetCentralClientAuthDataAsync(A<string>._))
-            .ReturnsLazily(() => authData);
+            .Returns(authData);
 
         A.CallTo(() => _portalRepositories.GetInstance<IServiceAccountRepository>()).Returns(_serviceAccountRepository);
     }
@@ -514,12 +514,12 @@ public class ServiceAccountBusinessLogicTests
             .With(x => x.CompanyServiceAccountStatusId, CompanyServiceAccountStatusId.ACTIVE)
             .Create();
         A.CallTo(() => _serviceAccountRepository.GetOwnCompanyServiceAccountWithIamClientIdAsync(ValidServiceAccountId, A<string>.That.Matches(x => x == ValidAdminId)))
-            .ReturnsLazily(() => data);
+            .Returns(data);
         A.CallTo(() => _serviceAccountRepository.GetOwnCompanyServiceAccountWithIamClientIdAsync(ValidServiceAccountId, A<string>.That.Not.Matches(x => x == ValidAdminId)))
-            .ReturnsLazily(() => (CompanyServiceAccountWithRoleDataClientId?)null);
+            .Returns((CompanyServiceAccountWithRoleDataClientId?)null);
 
         A.CallTo(() => _provisioningManager.ResetCentralClientAuthDataAsync(A<string>._))
-            .ReturnsLazily(() => authData);
+            .Returns(authData);
 
         A.CallTo(() => _portalRepositories.GetInstance<IServiceAccountRepository>()).Returns(_serviceAccountRepository);
     }
@@ -529,21 +529,21 @@ public class ServiceAccountBusinessLogicTests
         var data = _fixture.Create<CompanyServiceAccountDetailedData>();
         A.CallTo(() => _serviceAccountRepository.GetOwnCompanyServiceAccountDetailedDataUntrackedAsync(
                 A<Guid>.That.Matches(x => x == ValidServiceAccountId), A<string>.That.Matches(x => x == ValidAdminId)))
-            .ReturnsLazily(() => data);
+            .Returns(data);
         A.CallTo(() => _serviceAccountRepository.GetOwnCompanyServiceAccountDetailedDataUntrackedAsync(
                 A<Guid>.That.Not.Matches(x => x == ValidServiceAccountId), A<string>.That.Matches(x => x == ValidAdminId)))
-            .ReturnsLazily(() => (CompanyServiceAccountDetailedData?) null);
+            .Returns((CompanyServiceAccountDetailedData?) null);
         A.CallTo(() => _serviceAccountRepository.GetOwnCompanyServiceAccountDetailedDataUntrackedAsync(
                 A<Guid>.That.Matches(x => x == ValidServiceAccountId), A<string>.That.Not.Matches(x => x == ValidAdminId)))
-            .ReturnsLazily(() => (CompanyServiceAccountDetailedData?) null);
+            .Returns((CompanyServiceAccountDetailedData?) null);
     }
 
     private void SetupDeleteOwnCompanyServiceAccount(bool withServiceAccount, bool withClient, Connector? connector = null, CompanyServiceAccount? companyServiceAccount = null)
     {
         A.CallTo(() => _serviceAccountRepository.GetOwnCompanyServiceAccountWithIamServiceAccountRolesAsync(ValidServiceAccountId, ValidAdminId))
-            .ReturnsLazily(() => new ValueTuple<IEnumerable<Guid>, Guid?, string?>(_userRoleIds, withServiceAccount ? ValidConnectorId : null, withClient ? ClientId : null));
+            .Returns((_userRoleIds, withServiceAccount ? ValidConnectorId : null, withClient ? ClientId : null));
         A.CallTo(() => _serviceAccountRepository.GetOwnCompanyServiceAccountWithIamServiceAccountRolesAsync(A<Guid>.That.Not.Matches(x => x == ValidServiceAccountId), ValidAdminId))
-            .ReturnsLazily(() => new ValueTuple<IEnumerable<Guid>, Guid?, string?>());
+            .Returns(((IEnumerable<Guid>, Guid?, string?))default);
 
         if (companyServiceAccount != null)
         {

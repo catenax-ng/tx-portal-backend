@@ -26,7 +26,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Base;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 
-[AuditEntityV1(typeof(AuditConnector20230425))]
+[AuditEntityV1(typeof(AuditConnector20230503))]
 public class Connector : IAuditableV1, IBaseEntity
 {
     public Connector(Guid id, string name, string locationId, string connectorUrl)
@@ -86,5 +86,4 @@ public class Connector : IAuditableV1, IBaseEntity
     /// Mapping to the assigned document
     /// </summary>
     public virtual Document? SelfDescriptionDocument { get; set; }
-
 }

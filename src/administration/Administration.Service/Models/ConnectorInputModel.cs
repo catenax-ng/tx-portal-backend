@@ -36,7 +36,8 @@ public record ConnectorInputModel(
     [MaxLength(255)] string ConnectorUrl,
     [StringLength(2, MinimumLength = 2)] string Location,
     IFormFile? Certificate,
-    Guid? TechnicalUserId);
+    Guid? TechnicalUserId
+);
 
 /// <summary>
 /// Input model defining all parameters for creating a connector in persistence layer.
@@ -53,7 +54,8 @@ public record ManagedConnectorInputModel(
     [StringLength(2, MinimumLength = 2)] string Location,
     string ProviderBpn,
     IFormFile? Certificate,
-    Guid? TechnicalUserId);
+    Guid? TechnicalUserId
+);
 
 public record ConnectorRequestModel(
     [MaxLength(255)] string Name,
@@ -62,4 +64,5 @@ public record ConnectorRequestModel(
     [StringLength(2, MinimumLength = 2)] string Location,
     Guid Provider,
     Guid Host,
-    Guid? TechnicalUserId);
+    Guid? TechnicalUserId
+);

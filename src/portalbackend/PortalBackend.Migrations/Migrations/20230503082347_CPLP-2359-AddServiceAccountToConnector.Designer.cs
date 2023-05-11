@@ -420,7 +420,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.Migrations.Migration
                     b.ToTable("audit_connector20230405", "portal");
                 });
 
-            modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.AuditEntities.AuditConnector20230425", b =>
+            modelBuilder.Entity("Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.AuditEntities.AuditConnector20230503", b =>
                 {
                     b.Property<Guid>("AuditV1Id")
                         .ValueGeneratedOnAdd()

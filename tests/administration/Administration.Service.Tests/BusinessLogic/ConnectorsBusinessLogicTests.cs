@@ -110,7 +110,7 @@ public class ConnectorsBusinessLogicTests
         var file = FormFileHelper.GetFormFile("Content of the super secure certificate", "test.pem", "application/x-pem-file");
         var connectorInput = new ConnectorInputModel("connectorName", "https://test.de", "de", file, ServiceAccountUserId);
         A.CallTo(() => _dapsService.EnableDapsAuthAsync(A<string>._, A<string>._, A<string>._, A<IFormFile>._, A<CancellationToken>._))
-            .ReturnsLazily(() => new DapsResponse("12345"));
+            .Returns(new DapsResponse("12345"));
 
         // Act
         var result = await _logic.CreateConnectorAsync(connectorInput, IamUserId, CancellationToken.None).ConfigureAwait(false);
@@ -129,7 +129,7 @@ public class ConnectorsBusinessLogicTests
         var file = FormFileHelper.GetFormFile("Content of the super secure certificate", "test.pem", "application/x-pem-file");
         var connectorInput = new ConnectorInputModel("connectorName", "https://test.de", "de", file, saId);
         A.CallTo(() => _dapsService.EnableDapsAuthAsync(A<string>._, A<string>._, A<string>._, A<IFormFile>._, A<CancellationToken>._))
-            .ReturnsLazily(() => new DapsResponse("12345"));
+            .Returns(new DapsResponse("12345"));
 
         // Act
         async Task Act() => await _logic.CreateConnectorAsync(connectorInput, IamUserId, CancellationToken.None).ConfigureAwait(false);
@@ -147,7 +147,7 @@ public class ConnectorsBusinessLogicTests
         var file = FormFileHelper.GetFormFile("Content of the super secure certificate", "test.pem", "application/x-pem-file");
         var connectorInput = new ConnectorInputModel("connectorName", "https://test.de", "de", file, null);
         A.CallTo(() => _dapsService.EnableDapsAuthAsync(A<string>._, A<string>._, A<string>._, A<IFormFile>._, A<CancellationToken>._))
-            .ReturnsLazily(() => (DapsResponse?)null);
+            .Returns((DapsResponse?)null);
 
         // Act
         var result = await _logic.CreateConnectorAsync(connectorInput, IamUserId, CancellationToken.None).ConfigureAwait(false);
@@ -261,7 +261,7 @@ public class ConnectorsBusinessLogicTests
         var file = FormFileHelper.GetFormFile("Content of the super secure certificate", "test.pdf", "application/x-pem-file");
         var connectorInput = new ManagedConnectorInputModel("connectorName", "https://test.de", "de", ValidCompanyBpn, file, ServiceAccountUserId);
         A.CallTo(() => _dapsService.EnableDapsAuthAsync(A<string>._, A<string>._, A<string>._, A<IFormFile>._, A<CancellationToken>._))
-            .ReturnsLazily(() => new DapsResponse("12345"));
+            .Returns(new DapsResponse("12345"));
 
         // Act
         var result = await _logic.CreateManagedConnectorAsync(connectorInput, IamUserId, CancellationToken.None).ConfigureAwait(false);
@@ -280,7 +280,7 @@ public class ConnectorsBusinessLogicTests
         var file = FormFileHelper.GetFormFile("Content of the super secure certificate", "test.pdf", "application/x-pem-file");
         var connectorInput = new ManagedConnectorInputModel("connectorName", "https://test.de", "de", ValidCompanyBpn, file, saId);
         A.CallTo(() => _dapsService.EnableDapsAuthAsync(A<string>._, A<string>._, A<string>._, A<IFormFile>._, A<CancellationToken>._))
-            .ReturnsLazily(() => new DapsResponse("12345"));
+            .Returns(new DapsResponse("12345"));
 
         // Act
         async Task Act() => await _logic.CreateManagedConnectorAsync(connectorInput, IamUserId, CancellationToken.None).ConfigureAwait(false);
@@ -313,7 +313,7 @@ public class ConnectorsBusinessLogicTests
         var file = FormFileHelper.GetFormFile("this is just random content", "cert.pem", "application/x-pem-file");
         var connectorInput = new ManagedConnectorInputModel("connectorName", "https://test.de", "de", ValidCompanyBpn, file, null);
         A.CallTo(() => _dapsService.EnableDapsAuthAsync(A<string>._, A<string>._, A<string>._, A<IFormFile>._, A<CancellationToken>._))
-            .ReturnsLazily(() => new DapsResponse("12345"));
+            .Returns(new DapsResponse("12345"));
 
         // Act
         var result = await _logic.CreateManagedConnectorAsync(connectorInput, TechnicalUserId, CancellationToken.None).ConfigureAwait(false);
@@ -378,7 +378,7 @@ public class ConnectorsBusinessLogicTests
         _connectors.Add(new Connector(ExistingConnectorId, "test", "de", "https://www.api.connector.com"));
         var file = FormFileHelper.GetFormFile("Content of the super secure certificate", "test.pem", "application/x-pem-file");
         A.CallTo(() => _dapsService.EnableDapsAuthAsync(A<string>._, A<string>._, A<string>._, A<IFormFile>._, A<CancellationToken>._))
-            .ReturnsLazily(() => new DapsResponse("12345"));
+            .Returns(new DapsResponse("12345"));
 
         // Act
         await _logic.TriggerDapsAsync(ExistingConnectorId, file, IamUserId, CancellationToken.None).ConfigureAwait(false);
@@ -395,7 +395,7 @@ public class ConnectorsBusinessLogicTests
         _connectors.Add(new Connector(ExistingConnectorId, "test", "de", "https://www.api.connector.com"));
         var file = FormFileHelper.GetFormFile("Content of the super secure certificate", "test.pem", "application/x-pem-file");
         A.CallTo(() => _dapsService.EnableDapsAuthAsync(A<string>._, A<string>._, A<string>._, A<IFormFile>._, A<CancellationToken>._))
-            .ReturnsLazily(() => (DapsResponse?)null);
+            .Returns((DapsResponse?)null);
 
         // Act
         async Task Act() => await _logic.TriggerDapsAsync(ExistingConnectorId, file, IamUserId, CancellationToken.None).ConfigureAwait(false);
@@ -447,7 +447,7 @@ public class ConnectorsBusinessLogicTests
         var connectorId = Guid.NewGuid();
         var data = new SelfDescriptionResponseData(connectorId, SelfDescriptionStatus.Confirm, null, "{ \"test\": true }");
         A.CallTo(() => _connectorsRepository.GetConnectorDataById(connectorId))
-            .ReturnsLazily(() => new ValueTuple<Guid, Guid?>(connectorId, null));
+            .Returns((connectorId, (Guid?)null));
 
         // Act
         await _logic.ProcessClearinghouseSelfDescription(data, IamUserId, CancellationToken.None).ConfigureAwait(false);
@@ -465,7 +465,7 @@ public class ConnectorsBusinessLogicTests
         var connectorId = Guid.NewGuid();
         var data = new SelfDescriptionResponseData(connectorId, SelfDescriptionStatus.Confirm, null, "{ \"test\": true }");
         A.CallTo(() => _connectorsRepository.GetConnectorDataById(connectorId))
-            .ReturnsLazily(() => new ValueTuple<Guid, Guid?>());
+            .Returns(((Guid,Guid?))default);
 
         // Act
         async Task Act() => await _logic.ProcessClearinghouseSelfDescription(data, IamUserId, CancellationToken.None).ConfigureAwait(false);
@@ -482,7 +482,7 @@ public class ConnectorsBusinessLogicTests
         var connectorId = Guid.NewGuid();
         var data = new SelfDescriptionResponseData(connectorId, SelfDescriptionStatus.Confirm, null, "{ \"test\": true }");
         A.CallTo(() => _connectorsRepository.GetConnectorDataById(connectorId))
-            .ReturnsLazily(() => new ValueTuple<Guid, Guid?>(connectorId, Guid.NewGuid()));
+            .Returns((connectorId, Guid.NewGuid()));
 
         // Act
         async Task Act() => await _logic.ProcessClearinghouseSelfDescription(data, IamUserId, CancellationToken.None).ConfigureAwait(false);
@@ -562,7 +562,7 @@ public class ConnectorsBusinessLogicTests
         // Arrange
         var connectorId = Guid.NewGuid();
         A.CallTo(() => _connectorsRepository.GetConnectorDeleteDataAsync(connectorId))
-            .ReturnsLazily(() => new ValueTuple<bool,string?,Guid?,DocumentStatusId?, ConnectorStatusId>(true, "1234", null, null, ConnectorStatusId.INACTIVE));
+            .Returns((true, "1234", null, null, ConnectorStatusId.INACTIVE));
 
         // Act
         async Task Act() => await _logic.DeleteConnectorAsync(connectorId, IamUserId, CancellationToken.None).ConfigureAwait(false);
@@ -578,7 +578,7 @@ public class ConnectorsBusinessLogicTests
         // Arrange
         var connectorId = Guid.NewGuid();
         A.CallTo(() => _connectorsRepository.GetConnectorDeleteDataAsync(connectorId))
-            .ReturnsLazily(() => new ValueTuple<bool,string?,Guid?,DocumentStatusId?, ConnectorStatusId>(true, null, null, null, ConnectorStatusId.ACTIVE));
+            .Returns((true, null, null, null, ConnectorStatusId.ACTIVE));
 
         // Act
         async Task Act() => await _logic.DeleteConnectorAsync(connectorId, IamUserId, CancellationToken.None).ConfigureAwait(false);
@@ -663,7 +663,7 @@ public class ConnectorsBusinessLogicTests
         // Arrange
         var connectorId = Guid.NewGuid();
         A.CallTo(() => _connectorsRepository.GetConnectorUpdateInformation(connectorId, IamUserId))
-            .ReturnsLazily(() => (ConnectorUpdateInformation?)null);
+            .Returns((ConnectorUpdateInformation?)null);
 
         // Act
         async Task Act() => await _logic.UpdateConnectorUrl(connectorId, new ConnectorUpdateRequest("https://test.de"), IamUserId, CancellationToken.None).ConfigureAwait(false);
@@ -682,7 +682,7 @@ public class ConnectorsBusinessLogicTests
             .With(x => x.ConnectorUrl, "https://test.de")
             .Create();
         A.CallTo(() => _connectorsRepository.GetConnectorUpdateInformation(connectorId, IamUserId))
-            .ReturnsLazily(() => data);
+            .Returns(data);
 
         // Act
         await _logic.UpdateConnectorUrl(connectorId, new ConnectorUpdateRequest("https://test.de"), IamUserId, CancellationToken.None).ConfigureAwait(false);
@@ -702,7 +702,7 @@ public class ConnectorsBusinessLogicTests
             .With(x => x.IsUserOfHostCompany, false)
             .Create();
         A.CallTo(() => _connectorsRepository.GetConnectorUpdateInformation(connectorId, IamUserId))
-            .ReturnsLazily(() => data);
+            .Returns(data);
 
         // Act
         async Task Act() => await _logic.UpdateConnectorUrl(connectorId, new ConnectorUpdateRequest("https://new.de"), IamUserId, CancellationToken.None).ConfigureAwait(false);
@@ -723,7 +723,7 @@ public class ConnectorsBusinessLogicTests
             .With(x => x.Status, ConnectorStatusId.INACTIVE)
             .Create();
         A.CallTo(() => _connectorsRepository.GetConnectorUpdateInformation(connectorId, IamUserId))
-            .ReturnsLazily(() => data);
+            .Returns(data);
 
         // Act
         async Task Act() => await _logic.UpdateConnectorUrl(connectorId, new ConnectorUpdateRequest("https://new.de"), IamUserId, CancellationToken.None).ConfigureAwait(false);
@@ -745,7 +745,7 @@ public class ConnectorsBusinessLogicTests
             .With(x => x.DapsClientId, (string?)null)
             .Create();
         A.CallTo(() => _connectorsRepository.GetConnectorUpdateInformation(connectorId, IamUserId))
-            .ReturnsLazily(() => data);
+            .Returns(data);
 
         // Act
         async Task Act() => await _logic.UpdateConnectorUrl(connectorId, new ConnectorUpdateRequest("https://new.de"), IamUserId, CancellationToken.None).ConfigureAwait(false);
@@ -769,7 +769,7 @@ public class ConnectorsBusinessLogicTests
             .With(x => x.Bpn, (string?)null)
             .Create();
         A.CallTo(() => _connectorsRepository.GetConnectorUpdateInformation(connectorId, IamUserId))
-            .ReturnsLazily(() => data);
+            .Returns(data);
 
         // Act
         async Task Act() => await _logic.UpdateConnectorUrl(connectorId, new ConnectorUpdateRequest("https://new.de"), IamUserId, CancellationToken.None).ConfigureAwait(false);
@@ -793,9 +793,9 @@ public class ConnectorsBusinessLogicTests
             .With(x => x.Bpn, "BPNL123456789")
             .Create();
         A.CallTo(() => _connectorsRepository.GetConnectorUpdateInformation(connectorId, IamUserId))
-            .ReturnsLazily(() => data);
+            .Returns(data);
         A.CallTo(() => _userRepository.GetCompanyBpnForIamUserAsync(IamUserId))
-            .ReturnsLazily(() => (string?) null);
+            .Returns((string?)null);
 
         // Act
         async Task Act() => await _logic.UpdateConnectorUrl(connectorId, new ConnectorUpdateRequest("https://new.de"), IamUserId, CancellationToken.None).ConfigureAwait(false);
@@ -822,7 +822,7 @@ public class ConnectorsBusinessLogicTests
             .With(x => x.Bpn, "BPNL123456789")
             .Create();
         A.CallTo(() => _connectorsRepository.GetConnectorUpdateInformation(connectorId, IamUserId))
-            .ReturnsLazily(() => data);
+            .Returns(data);
         A.CallTo(() => _connectorsRepository.AttachAndModifyConnector(connectorId, null, A<Action<Connector>>._))
             .Invokes((Guid _, Action<Connector>? initialize, Action<Connector> setOptionalProperties) =>
             {
@@ -948,7 +948,7 @@ public class ConnectorsBusinessLogicTests
             .Returns(CompanyWithoutBpnId);
 
         A.CallTo(() => _companyRepository.GetCompanyIdAndUserIdForUserOrTechnicalUser(IamUserId))
-            .ReturnsLazily(() => (ValidCompanyId, CompanyUserId));
+            .Returns((ValidCompanyId, CompanyUserId));
         A.CallTo(() => _companyRepository.GetCompanyIdAndUserIdForUserOrTechnicalUser(A<string>.That.Matches(x => x == UserWithoutBpn)))
             .Returns((CompanyWithoutBpnId, CompanyUserId));
         A.CallTo(() => _companyRepository.GetCompanyIdAndUserIdForUserOrTechnicalUser(A<string>.That.Matches(x => x == IamUserWithoutSdDocumentId)))
@@ -959,12 +959,10 @@ public class ConnectorsBusinessLogicTests
             .Returns(new ValueTuple<Guid, Guid>());
 
         A.CallTo(() => _userRepository.GetCompanyUserIdForIamUserUntrackedAsync(IamUserId))
-            .ReturnsLazily(() => CompanyUserId);
+            .Returns(CompanyUserId);
 
         A.CallTo(() => _serviceAccountRepository.CheckActiveServiceAccountExistsForCompanyAsync(ServiceAccountUserId, ValidCompanyId))
-            .ReturnsLazily(() => true);
-        A.CallTo(() => _serviceAccountRepository.CheckActiveServiceAccountExistsForCompanyAsync(ServiceAccountUserId, ValidCompanyId))
-            .ReturnsLazily(() => true);
+            .Returns(true);
 
         A.CallTo(() => _sdFactoryBusinessLogic.RegisterConnectorAsync(A<Guid>._, A<string>._, A<string>._, A<CancellationToken>._))
             .Returns(Task.CompletedTask);

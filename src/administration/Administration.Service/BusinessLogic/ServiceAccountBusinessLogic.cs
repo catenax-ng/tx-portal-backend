@@ -115,10 +115,8 @@ public class ServiceAccountBusinessLogic : IServiceAccountBusinessLogic
             await _provisioningManager.DeleteCentralClientAsync(result.ClientId).ConfigureAwait(false);
             serviceAccountRepository.RemoveIamServiceAccount(result.ClientId);
         }
-        foreach(var userRoleId in result.UserRoleIds)
-        {
-            serviceAccountRepository.RemoveCompanyServiceAccountAssignedRole(new CompanyServiceAccountAssignedRole(serviceAccountId, userRoleId));
-        }
+
+        serviceAccountRepository.RemoveCompanyServiceAccountAssignedRoles(result.UserRoleIds.Select(userRoleId => (serviceAccountId, userRoleId)));
 
         if (result.ConnectorId != null)
         {

@@ -83,17 +83,14 @@ public class ServiceAccountRepository : IServiceAccountRepository
                 userEntityId,
                 companyServiceAccountId)).Entity;
 
-    public CompanyServiceAccountAssignedRole CreateCompanyServiceAccountAssignedRole(Guid companyServiceAccountId, Guid userRoleId) =>
-        _dbContext.CompanyServiceAccountAssignedRoles.Add(
-            new CompanyServiceAccountAssignedRole(
-                companyServiceAccountId,
-                userRoleId)).Entity;
-
     public void RemoveIamServiceAccount(string clientId) =>
         _dbContext.IamServiceAccounts.Remove(new IamServiceAccount(clientId, null!, null!, Guid.Empty));
 
-    public void RemoveCompanyServiceAccountAssignedRole(CompanyServiceAccountAssignedRole companyServiceAccountAssignedRole) =>
-        _dbContext.CompanyServiceAccountAssignedRoles.Remove(companyServiceAccountAssignedRole);
+    public void CreateCompanyServiceAccountAssignedRoles(IEnumerable<(Guid CompanyServiceAccountId, Guid UserRoleId)> companyServiceAccountAssignedRoleIds) =>
+        _dbContext.CompanyServiceAccountAssignedRoles.AddRange(companyServiceAccountAssignedRoleIds.Select(x => new CompanyServiceAccountAssignedRole(x.CompanyServiceAccountId, x.UserRoleId)));
+
+    public void RemoveCompanyServiceAccountAssignedRoles(IEnumerable<(Guid CompanyServiceAccountId, Guid UserRoleId)> companyServiceAccountAssignedRoleIds) =>
+        _dbContext.CompanyServiceAccountAssignedRoles.RemoveRange(companyServiceAccountAssignedRoleIds.Select(x => new CompanyServiceAccountAssignedRole(x.CompanyServiceAccountId, x.UserRoleId)));
 
     public Task<CompanyServiceAccountWithRoleDataClientId?> GetOwnCompanyServiceAccountWithIamClientIdAsync(Guid serviceAccountId, string adminUserId) =>
         _dbContext.CompanyServiceAccounts
@@ -176,8 +173,9 @@ public class ServiceAccountRepository : IServiceAccountRepository
     /// <inheritdoc />
     public Task<bool> CheckActiveServiceAccountExistsForCompanyAsync(Guid technicalUserId, Guid companyId) =>
         _dbContext.CompanyServiceAccounts
-            .Where(sa => sa.Id == technicalUserId &&
-                         sa.CompanyServiceAccountStatusId == CompanyServiceAccountStatusId.ACTIVE &&
-                         sa.ServiceAccountOwnerId == companyId)
+            .Where(sa =>
+                sa.Id == technicalUserId &&
+                sa.CompanyServiceAccountStatusId == CompanyServiceAccountStatusId.ACTIVE &&
+                sa.ServiceAccountOwnerId == companyId)
             .AnyAsync();
 }

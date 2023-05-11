@@ -4,9 +4,9 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.AuditEntities;
 
-public class AuditConnector20230425 : IAuditEntityV1
+public class AuditConnector20230503 : IAuditEntityV1
 {
-    public AuditConnector20230425()
+    public AuditConnector20230503()
     {
         Name = null!;
         ConnectorUrl = null!;
