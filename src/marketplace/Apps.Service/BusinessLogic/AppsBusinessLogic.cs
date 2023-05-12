@@ -174,9 +174,25 @@ public class AppsBusinessLogic : IAppsBusinessLogic
             .GetOwnCompanySubscribedAppSubscriptionStatusesUntrackedAsync(iamUserId);
 
     /// <inheritdoc/>
-    public Task<Pagination.Response<OfferCompanySubscriptionStatusData>> GetCompanyProvidedAppSubscriptionStatusesForUserAsync(int page, int size, string iamUserId, SubscriptionStatusSorting? sorting, OfferSubscriptionStatusId? statusId, Guid? offerId) =>
-        Pagination.CreateResponseAsync(page, size, _settings.ApplicationsMaxPageSize, _portalRepositories.GetInstance<IOfferSubscriptionsRepository>()
-            .GetOwnCompanyProvidedOfferSubscriptionStatusesUntrackedAsync(iamUserId, OfferTypeId.APP, sorting, statusId ?? OfferSubscriptionStatusId.ACTIVE, offerId));
+    public async Task<Pagination.Response<OfferCompanySubscriptionStatusResponse>> GetCompanyProvidedAppSubscriptionStatusesForUserAsync(int page, int size, string iamUserId, SubscriptionStatusSorting? sorting, OfferSubscriptionStatusId? statusId, Guid? offerId)
+    {
+        async Task<Pagination.Source<OfferCompanySubscriptionStatusResponse>?> GetCompanyProvidedAppSubscriptionStatusData(int skip, int take)
+        {
+            var offerCompanySubscriptionResponse = await _portalRepositories.GetInstance<IOfferSubscriptionsRepository>()
+                .GetOwnCompanyProvidedOfferSubscriptionStatusesUntrackedAsync(iamUserId, OfferTypeId.APP, sorting, statusId ?? OfferSubscriptionStatusId.ACTIVE, offerId)(skip,take).ConfigureAwait(false);
+            var offerCompanySubscriptionStatusDatas = new List<OfferCompanySubscriptionStatusResponse>();
+            foreach(var item in offerCompanySubscriptionResponse!.Data)
+            {
+                offerCompanySubscriptionStatusDatas.Add(new OfferCompanySubscriptionStatusResponse(item.OfferId, item.ServiceName, item.CompanySubscriptionStatuses, item.Image == Guid.Empty ? null : item.Image));
+            }
+            var result = new Pagination.Source<OfferCompanySubscriptionStatusResponse>(offerCompanySubscriptionResponse!.Count, offerCompanySubscriptionStatusDatas);
+            return result;
+        }
+        return await Pagination.CreateResponseAsync(page, size, _settings.ApplicationsMaxPageSize, GetCompanyProvidedAppSubscriptionStatusData).ConfigureAwait(false);
+    }
+
+
+        
 
     /// <inheritdoc/>
     public Task<Guid> AddOwnCompanyAppSubscriptionAsync(Guid appId, IEnumerable<OfferAgreementConsentData> offerAgreementConsentData, string iamUserId, string accessToken) =>
