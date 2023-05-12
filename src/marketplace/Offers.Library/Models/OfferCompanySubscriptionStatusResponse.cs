@@ -20,7 +20,7 @@
 
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
+namespace Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Models;
 
 /// <summary>
 /// View model of an Offer Company Subscription.
