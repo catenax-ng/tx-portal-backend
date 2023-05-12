@@ -499,7 +499,7 @@ public class AppChangeBusinessLogicTest
         // Arrange
         var appId = _fixture.Create<Guid>();
         var iamUserId = _fixture.Create<Guid>().ToString();
-        var appLeadImageContentTypes = new [] {"image/jpeg","image/png"};
+        var appLeadImageContentTypes = new [] {MediaTypeId.JPEG,MediaTypeId.PNG};
         var file = FormFileHelper.GetFormFile("Test File", "TestImage.pdf", "application/pdf");
 
         // Act
