@@ -131,13 +131,9 @@ public class ServiceBusinessLogic : IServiceBusinessLogic
         {
             var offerCompanySubscriptionResponse = await _portalRepositories.GetInstance<IOfferSubscriptionsRepository>()
                 .GetOwnCompanyProvidedOfferSubscriptionStatusesUntrackedAsync(iamUserId, OfferTypeId.SERVICE, sorting, statusId ?? OfferSubscriptionStatusId.ACTIVE, offerId)(skip,take).ConfigureAwait(false);
-            var offerCompanySubscriptionStatusDatas = new List<OfferCompanySubscriptionStatusResponse>();
-            foreach(var item in offerCompanySubscriptionResponse!.Data)
-            {
-                offerCompanySubscriptionStatusDatas.Add(new OfferCompanySubscriptionStatusResponse(item.OfferId, item.ServiceName, item.CompanySubscriptionStatuses, item.Image == Guid.Empty ? null : item.Image));
-            }
-            var result = new Pagination.Source<OfferCompanySubscriptionStatusResponse>(offerCompanySubscriptionResponse!.Count, offerCompanySubscriptionStatusDatas);
-            return result;
+            return offerCompanySubscriptionResponse == null
+                ? null
+                :new Pagination.Source<OfferCompanySubscriptionStatusResponse>(offerCompanySubscriptionResponse!.Count, offerCompanySubscriptionResponse.Data.Select(item => new OfferCompanySubscriptionStatusResponse(item.OfferId, item.ServiceName, item.CompanySubscriptionStatuses, item.Image == Guid.Empty ? null : item.Image)));
         }
         return await Pagination.CreateResponseAsync(page, size, _settings.ApplicationsMaxPageSize, GetCompanyProvidedAppSubscriptionStatusData).ConfigureAwait(false);
     }
