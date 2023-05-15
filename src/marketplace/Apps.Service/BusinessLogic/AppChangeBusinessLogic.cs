@@ -23,6 +23,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Apps.Service.Extensions;
 using Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Async;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Web;
 using Org.Eclipse.TractusX.Portal.Backend.Notifications.Library;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
@@ -30,7 +31,6 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Extensions;
-using Org.Eclipse.TractusX.Portal.Backend.Framework.Web;
 using System.Text.Json;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.BusinessLogic;
@@ -176,21 +176,17 @@ public class AppChangeBusinessLogic : IAppChangeBusinessLogic
         }
 
         var documentRepository = _portalRepositories.GetInstance<IDocumentRepository>();
-        var documentName = document.FileName;
-        var (documentContent, hash) = await DocumentExtensions.GetContentAndHash(document, cancellationToken);
-        var doc = documentRepository.CreateDocument(documentName, documentContent, hash, documentContentType, DocumentTypeId.APP_LEADIMAGE, x =>
+        var (documentContent, hash) = await document.GetContentAndHash(cancellationToken).ConfigureAwait(false);
+        var doc = documentRepository.CreateDocument(document.FileName, documentContent, hash, documentContentType, DocumentTypeId.APP_LEADIMAGE, x =>
         {
             x.CompanyUserId = companyUserId;
             x.DocumentStatusId = DocumentStatusId.LOCKED;
         });
-        _portalRepositories.GetInstance<IOfferRepository>().CreateOfferAssignedDocument(appId, doc.Id);
+        offerRepository.CreateOfferAssignedDocument(appId, doc.Id);
 
-        foreach(var docId in result.documentStatusDatas.Select(x => x.DocumentId))
-        {
-            offerRepository.RemoveOfferAssignedDocument(appId, docId);
-            documentRepository.RemoveDocument(docId);
-        }
+        offerRepository.RemoveOfferAssignedDocuments(result.documentStatusDatas.Select(data => (appId, data.DocumentId)));
+        documentRepository.RemoveDocuments(result.documentStatusDatas.Select(data => data.DocumentId));
+
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
     }
-    
 }

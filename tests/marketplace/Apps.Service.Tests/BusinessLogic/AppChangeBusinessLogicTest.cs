@@ -25,6 +25,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Apps.Service.ViewModels;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Web;
 using Org.Eclipse.TractusX.Portal.Backend.Notifications.Library;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
@@ -32,10 +33,10 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
+using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared;
 using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared.Extensions;
 using System.Collections.Immutable;
 using Xunit;
-using Org.Eclipse.TractusX.Portal.Backend.Tests.Shared;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Apps.Service.BusinessLogic.Tests;
 
@@ -456,21 +457,22 @@ public class AppChangeBusinessLogicTest
         var appId = _fixture.Create<Guid>();
         var iamUserId = _fixture.Create<Guid>().ToString();
         var documentId = _fixture.Create<Guid>();
-        var documentStatusData = _fixture.CreateMany<DocumentStatusData>(2);
+        var documentStatusData = _fixture.CreateMany<DocumentStatusData>(2).ToImmutableArray();
         var companyUserId =  _fixture.Create<Guid>();
         var file = FormFileHelper.GetFormFile("Test Image", "TestImage.jpeg", "image/jpeg");
         var documents = new List<Document>();
         var offerAssignedDocuments = new List<OfferAssignedDocument>();
 
-        A.CallTo(() => _offerRepository.GetOfferAssignedAppLeadImageDocumentsByIdAsync(appId, iamUserId, OfferTypeId.APP))
-            .ReturnsLazily(() => (true, companyUserId, documentStatusData));
+        A.CallTo(() => _offerRepository.GetOfferAssignedAppLeadImageDocumentsByIdAsync(A<Guid>._, A<string>._, A<OfferTypeId>._))
+            .Returns((true, companyUserId, documentStatusData));
 
         A.CallTo(() => _documentRepository.CreateDocument(A<string>._, A<byte[]>._, A<byte[]>._, A<MediaTypeId>._, A<DocumentTypeId>._,A<Action<Document>?>._))
-            .Invokes((string documentName, byte[] documentContent, byte[] hash, MediaTypeId mediaTypeId, DocumentTypeId documentType, Action<Document>? setupOptionalFields) =>
+            .ReturnsLazily((string documentName, byte[] documentContent, byte[] hash, MediaTypeId mediaTypeId, DocumentTypeId documentType, Action<Document>? setupOptionalFields) =>
             {
                 var document = new Document(documentId, documentContent, hash, documentName, mediaTypeId, DateTimeOffset.UtcNow, DocumentStatusId.LOCKED, documentType);
                 setupOptionalFields?.Invoke(document);
                 documents.Add(document);
+                return document;
             });
 
         A.CallTo(() => _offerRepository.CreateOfferAssignedDocument(A<Guid>._, A<Guid>._))
@@ -484,13 +486,14 @@ public class AppChangeBusinessLogicTest
         await _sut.UploadOfferAssignedAppLeadImageDocumentByIdAsync(appId, iamUserId, file, CancellationToken.None);
 
         // Assert
+        A.CallTo(() => _offerRepository.GetOfferAssignedAppLeadImageDocumentsByIdAsync(appId, iamUserId, OfferTypeId.APP)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _documentRepository.CreateDocument(A<string>._, A<byte[]>._, A<byte[]>._, A<MediaTypeId>._, A<DocumentTypeId>._,A<Action<Document>?>._)).MustHaveHappenedOnceExactly();
         A.CallTo(() => _offerRepository.CreateOfferAssignedDocument(A<Guid>._, A<Guid>._)).MustHaveHappenedOnceExactly();
-        A.CallTo(() => _offerRepository.RemoveOfferAssignedDocument(A<Guid>._,A<Guid>._)).MustHaveHappenedTwiceExactly();
-        A.CallTo(() => _documentRepository.RemoveDocument(A<Guid>._)).MustHaveHappenedTwiceExactly();
+        A.CallTo(() => _offerRepository.RemoveOfferAssignedDocuments(A<IEnumerable<(Guid OfferId, Guid DocumentId)>>.That.IsSameSequenceAs(documentStatusData.Select(data => new ValueTuple<Guid,Guid>(appId, data.DocumentId))))).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _documentRepository.RemoveDocuments(A<IEnumerable<Guid>>.That.IsSameSequenceAs(documentStatusData.Select(data => data.DocumentId)))).MustHaveHappenedOnceExactly();
         A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
-        documents.Should().HaveCount(1);
-        offerAssignedDocuments.Should().HaveCount(1);
+        documents.Should().ContainSingle().Which.Should().Match<Document>(x => x.Id == documentId && x.MediaTypeId == MediaTypeId.JPEG && x.DocumentTypeId == DocumentTypeId.APP_LEADIMAGE && x.DocumentStatusId == DocumentStatusId.LOCKED);
+        offerAssignedDocuments.Should().ContainSingle().Which.Should().Match<OfferAssignedDocument>(x => x.DocumentId == documentId && x.OfferId == appId);
     }
 
     [Fact]
@@ -569,5 +572,4 @@ public class AppChangeBusinessLogicTest
         result.Message.Should().Be($"App {appId} does not exist.");
     }
     #endregion
-
 }
