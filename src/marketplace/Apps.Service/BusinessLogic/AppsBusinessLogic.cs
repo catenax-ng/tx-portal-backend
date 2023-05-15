@@ -180,10 +180,17 @@ public class AppsBusinessLogic : IAppsBusinessLogic
         {
             var offerCompanySubscriptionResponse = await _portalRepositories.GetInstance<IOfferSubscriptionsRepository>()
                 .GetOwnCompanyProvidedOfferSubscriptionStatusesUntrackedAsync(iamUserId, OfferTypeId.APP, sorting, statusId ?? OfferSubscriptionStatusId.ACTIVE, offerId)(skip,take).ConfigureAwait(false);
-           
+
             return offerCompanySubscriptionResponse == null
                 ? null
-                :new Pagination.Source<OfferCompanySubscriptionStatusResponse>(offerCompanySubscriptionResponse!.Count, offerCompanySubscriptionResponse.Data.Select(item => new OfferCompanySubscriptionStatusResponse(item.OfferId, item.ServiceName, item.CompanySubscriptionStatuses, item.Image == Guid.Empty ? null : item.Image)));
+                : new Pagination.Source<OfferCompanySubscriptionStatusResponse>(
+                    offerCompanySubscriptionResponse!.Count,
+                    offerCompanySubscriptionResponse.Data.Select(item =>
+                        new OfferCompanySubscriptionStatusResponse(
+                            item.OfferId,
+                            item.ServiceName,
+                            item.CompanySubscriptionStatuses,
+                            item.Image == Guid.Empty ? null : item.Image)));
         }
         return await Pagination.CreateResponseAsync(page, size, _settings.ApplicationsMaxPageSize, GetCompanyProvidedAppSubscriptionStatusData).ConfigureAwait(false);
     }
