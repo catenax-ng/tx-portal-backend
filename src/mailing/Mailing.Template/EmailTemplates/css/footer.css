@@ -1,0 +1,45 @@
+object {
+    width: 100%;
+    height: 600px;
+}
+
+object .footer-body {
+    margin: 0px;
+}
+
+.footer {
+    border: none;
+    border-collapse: separate;
+    border-spacing: 0;
+    mso-table-lspace: 0pt;
+    mso-table-rspace: 0pt;
+    background-color: #FFA600;
+    width: 100%;
+    margin: auto;
+    max-width: 600px;
+}
+
+.footer div {
+    color: #191715;
+    font-family: sans-serif;
+    font-size: 12px;
+    padding: 30px 0px;
+    text-align: center;
+}
+
+.footer div h3,
+.footer div h3 span {
+    color: #191715;
+    font-family: Arial, Helvetica Neue, Helvetica, sans-serif;
+    font-size: 14px;
+}
+
+.footer div h3 span a {
+    color: #191715;
+    font-size: 12px;
+    text-align: left;
+}
+
+.footer div.footer-plain-text {
+    padding-top: 0px;
+}
