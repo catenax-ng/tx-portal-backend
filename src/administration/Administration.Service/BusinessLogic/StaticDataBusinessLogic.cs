@@ -18,6 +18,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Models;
+using Org.Eclipse.TractusX.Portal.Backend.Mailing.SendMail;
+using Org.Eclipse.TractusX.Portal.Backend.Mailing.Template.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
@@ -30,14 +33,17 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLog
 public class StaticDataBusinessLogic : IStaticDataBusinessLogic
 {
     private readonly IPortalRepositories _portalRepositories;
+    private readonly IMailingService _mailService;
 
     /// <summary>
     /// Constructor
     /// </summary>
     /// <param name="portalRepositories"></param>
-    public StaticDataBusinessLogic(IPortalRepositories portalRepositories)
+    /// <param name="mailService"></param>
+    public StaticDataBusinessLogic(IPortalRepositories portalRepositories, IMailingService mailService)
     {
         _portalRepositories = portalRepositories;
+        _mailService = mailService;
     }
 
     /// <inheritdoc/>
@@ -51,4 +57,11 @@ public class StaticDataBusinessLogic : IStaticDataBusinessLogic
     /// <inheritdoc/>
     public IAsyncEnumerable<LicenseTypeData> GetAllLicenseType() =>
         _portalRepositories.GetInstance<IStaticDataRepository>().GetLicenseTypeData();
+
+    /// <inheritdoc />
+    public Task SendMail(TestMailData data) =>
+        _mailService.SendMails(data.Email, new Dictionary<string, string>
+        {
+            { "url", "https://eclipse-tractusx.github.io/" }
+        }, new List<string> { data.Template });
 }

@@ -18,6 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
@@ -44,4 +45,9 @@ public interface IStaticDataBusinessLogic
     /// </summary>
     /// <returns>AsyncEnumerable of the License Type</returns>
     IAsyncEnumerable<LicenseTypeData> GetAllLicenseType();
+
+    /// <summary>
+    /// Sends a mail to the given email for the given template
+    /// </summary>
+    Task SendMail(TestMailData data);
 }

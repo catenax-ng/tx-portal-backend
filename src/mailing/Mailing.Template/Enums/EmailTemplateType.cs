@@ -118,5 +118,11 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Mailing.Template.Enums
         /// </summary>
         [Path("new_user_account_ownidp.html")]
         NewUserAccountOwnIdp,
+
+        /// <summary>
+        /// Email Test Template
+        /// </summary>
+        [Path("password.html")]
+        TestTemplate
     }
 }
