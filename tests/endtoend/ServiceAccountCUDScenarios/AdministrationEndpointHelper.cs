@@ -1,5 +1,5 @@
 using Castle.Core.Internal;
-using EndToEnd.Tests;
+using Org.Eclipse.TractusX.Portal.Backend.EndToEnd.Tests;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;

@@ -1,4 +1,4 @@
-using EndToEnd.Tests;
+using Org.Eclipse.TractusX.Portal.Backend.EndToEnd.Tests;
 using HtmlAgilityPack;
 using System.Text.RegularExpressions;
 using System.Web;

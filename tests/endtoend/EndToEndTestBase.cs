@@ -1,7 +1,7 @@
 using Org.Eclipse.TractusX.Portal.Backend.EndToEnd.Tests;
 using Xunit.Abstractions;
 
-namespace EndToEnd.Tests;
+namespace Org.Eclipse.TractusX.Portal.Backend.EndToEnd.Tests;
 
 //prepare xUnit logging for every e2e test according to https://github.com/basdijkstra/rest-assured-net/wiki/Usage-Guide#logging-when-using-xunit
 public abstract class EndToEndTestBase

@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace EndToEnd.Tests;
+namespace Org.Eclipse.TractusX.Portal.Backend.EndToEnd.Tests;
 
 public abstract class DataHandleHelper
 {

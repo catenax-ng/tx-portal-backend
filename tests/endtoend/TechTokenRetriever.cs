@@ -2,7 +2,7 @@ using RestAssured.Response.Logging;
 using System.IdentityModel.Tokens.Jwt;
 using static RestAssured.Dsl;
 
-namespace EndToEnd.Tests;
+namespace Org.Eclipse.TractusX.Portal.Backend.EndToEnd.Tests;
 
 public static class TechTokenRetriever
 {

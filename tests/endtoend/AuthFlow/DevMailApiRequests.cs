@@ -1,4 +1,4 @@
-using EndToEnd.Tests;
+using Org.Eclipse.TractusX.Portal.Backend.EndToEnd.Tests;
 using HtmlAgilityPack;
 using MimeKit;
 using System.Text;

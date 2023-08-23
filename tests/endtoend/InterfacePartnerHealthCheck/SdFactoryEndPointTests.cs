@@ -1,5 +1,5 @@
 using Castle.Core.Internal;
-using EndToEnd.Tests;
+using Org.Eclipse.TractusX.Portal.Backend.EndToEnd.Tests;
 using Org.Eclipse.TractusX.Portal.Backend.SdFactory.Library.Models;
 using RestAssured.Response.Logging;
 using Xunit;
