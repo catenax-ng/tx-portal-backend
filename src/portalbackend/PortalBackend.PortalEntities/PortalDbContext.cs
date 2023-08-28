@@ -907,7 +907,7 @@ public class PortalDbContext : DbContext
                 .WithMany(x => x.IdentityProviders)
                 .HasForeignKey(x => x.IdentityProviderCategoryId)
                 .OnDelete(DeleteBehavior.ClientSetNull);
-            
+
             entity.HasOne(x => x.IdentityProviderType)
                 .WithMany(x => x.IdentityProviders)
                 .HasForeignKey(x => x.IdentityProviderTypeId)
