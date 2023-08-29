@@ -100,6 +100,9 @@ public class IdentityProviderBusinessLogicTests
             HeaderProviderUserId = "ProviderUserId",
             HeaderProviderUserName = "ProviderUserName",
         };
+
+        A.CallTo(() => _portalRepositories.GetInstance<IIdentityProviderRepository>())
+            .Returns(_identityProviderRepository);
     }
 
     #region UploadOwnCompanyUsersIdentityProviderLinkDataAsync
@@ -508,6 +511,154 @@ public class IdentityProviderBusinessLogicTests
 
     #endregion
 
+    #region DeleteCompanyIdentityProviderAsync
+
+    [Fact]
+    public async Task DeleteCompanyIdentityProviderAsync_WithNotExistingProvider_ThrowsNotFoundException()
+    {
+        // Arrange
+        var invalidId = Guid.NewGuid();
+        var sut = new IdentityProviderBusinessLogic(
+            _portalRepositories,
+            _provisioningManager,
+            _identityService,
+            _options);
+        A.CallTo(() => _identityProviderRepository.GetCompanyIdentityProviderDeletionDataUntrackedAsync(invalidId, _companyId))
+            .Returns(new ValueTuple<bool, int, string, IdentityProviderCategoryId, IdentityProviderTypeId, IEnumerable<string>>());
+
+        // Act
+        async Task Act() => await sut.DeleteCompanyIdentityProviderAsync(invalidId).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
+        ex.Message.Should().Be($"identityProvider {invalidId} does not exist");
+    }
+
+    [Fact]
+    public async Task DeleteCompanyIdentityProviderAsync_WithInvalidCompany_ThrowsConflictException()
+    {
+        // Arrange
+        var idpId = Guid.NewGuid();
+        var sut = new IdentityProviderBusinessLogic(
+            _portalRepositories,
+            _provisioningManager,
+            _identityService,
+            _options);
+        A.CallTo(() => _identityProviderRepository.GetCompanyIdentityProviderDeletionDataUntrackedAsync(idpId, _companyId))
+            .Returns(new ValueTuple<bool, int, string, IdentityProviderCategoryId, IdentityProviderTypeId, IEnumerable<string>>(false, 1, string.Empty, IdentityProviderCategoryId.KEYCLOAK_OIDC, IdentityProviderTypeId.OWN, new List<string>()));
+
+        // Act
+        async Task Act() => await sut.DeleteCompanyIdentityProviderAsync(idpId).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be($"identityProvider {idpId} is not associated with company {_companyId}");
+    }
+
+    [Fact]
+    public async Task DeleteCompanyIdentityProviderAsync_WithManagedIdp_ThrowsConflictException()
+    {
+        // Arrange
+        var idpId = Guid.NewGuid();
+        var sut = new IdentityProviderBusinessLogic(
+            _portalRepositories,
+            _provisioningManager,
+            _identityService,
+            _options);
+        A.CallTo(() => _identityProviderRepository.GetCompanyIdentityProviderDeletionDataUntrackedAsync(idpId, _companyId))
+            .Returns(new ValueTuple<bool, int, string, IdentityProviderCategoryId, IdentityProviderTypeId, IEnumerable<string>>(true, 1, string.Empty, IdentityProviderCategoryId.KEYCLOAK_OIDC, IdentityProviderTypeId.MANAGED, new List<string>()));
+
+        // Act
+        async Task Act() => await sut.DeleteCompanyIdentityProviderAsync(idpId).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+        ex.Message.Should().Be($"IdentityProviders of type {IdentityProviderTypeId.MANAGED} can not be deleted");
+    }
+
+    [Fact]
+    public async Task DeleteCompanyIdentityProviderAsync_WithDisabledIdp_ThrowsControllerArgumentException()
+    {
+        // Arrange
+        var idpId = Guid.NewGuid();
+        var sut = new IdentityProviderBusinessLogic(
+            _portalRepositories,
+            _provisioningManager,
+            _identityService,
+            _options);
+        A.CallTo(() => _identityProviderRepository.GetCompanyIdentityProviderDeletionDataUntrackedAsync(idpId, _companyId))
+            .Returns(new ValueTuple<bool, int, string, IdentityProviderCategoryId, IdentityProviderTypeId, IEnumerable<string>>(true, 1, "test", IdentityProviderCategoryId.KEYCLOAK_OIDC, IdentityProviderTypeId.OWN, new List<string>()));
+        A.CallTo(() => _provisioningManager.IsCentralIdentityProviderEnabled("test"))
+            .Returns(true);
+
+        // Act
+        async Task Act() => await sut.DeleteCompanyIdentityProviderAsync(idpId).ConfigureAwait(false);
+
+        // Assert
+        var ex = await Assert.ThrowsAsync<ControllerArgumentException>(Act);
+        ex.Message.Should().Be($"cannot delete identityProvider {idpId} as it is enabled");
+    }
+
+    [Fact]
+    public async Task DeleteCompanyIdentityProviderAsync_WithSharedKeycloakValid_CallsExpected()
+    {
+        // Arrange
+        var idpId = Guid.NewGuid();
+        var sut = new IdentityProviderBusinessLogic(
+            _portalRepositories,
+            _provisioningManager,
+            _identityService,
+            _options);
+        A.CallTo(() => _identityProviderRepository.GetCompanyIdentityProviderDeletionDataUntrackedAsync(idpId, _companyId))
+            .Returns(new ValueTuple<bool, int, string, IdentityProviderCategoryId, IdentityProviderTypeId, IEnumerable<string>>(true, 1, "test", IdentityProviderCategoryId.KEYCLOAK_SHARED, IdentityProviderTypeId.OWN, Enumerable.Repeat("other-alias", 1)));
+        A.CallTo(() => _provisioningManager.IsCentralIdentityProviderEnabled("test"))
+            .Returns(false);
+        A.CallTo(() => _provisioningManager.IsCentralIdentityProviderEnabled("other-alias"))
+            .Returns(true);
+
+        // Act
+        await sut.DeleteCompanyIdentityProviderAsync(idpId).ConfigureAwait(false);
+
+        // Assert
+        A.CallTo(() => _provisioningManager.DeleteSharedIdpRealmAsync("test")).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _provisioningManager.DeleteCentralIdentityProviderAsync("test")).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.Remove(A<CompanyIdentityProvider>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.Remove(A<IamIdentityProvider>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.Remove(A<IdentityProvider>._)).MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task DeleteCompanyIdentityProviderAsync_WithValid_CallsExpected()
+    {
+        // Arrange
+        var idpId = Guid.NewGuid();
+        var sut = new IdentityProviderBusinessLogic(
+            _portalRepositories,
+            _provisioningManager,
+            _identityService,
+            _options);
+        A.CallTo(() => _identityProviderRepository.GetCompanyIdentityProviderDeletionDataUntrackedAsync(idpId, _companyId))
+            .Returns(new ValueTuple<bool, int, string, IdentityProviderCategoryId, IdentityProviderTypeId, IEnumerable<string>>(true, 1, "test", IdentityProviderCategoryId.KEYCLOAK_OIDC, IdentityProviderTypeId.OWN, Enumerable.Repeat("other-alias", 1)));
+        A.CallTo(() => _provisioningManager.IsCentralIdentityProviderEnabled("test"))
+            .Returns(false);
+        A.CallTo(() => _provisioningManager.IsCentralIdentityProviderEnabled("other-alias"))
+            .Returns(true);
+
+        // Act
+        await sut.DeleteCompanyIdentityProviderAsync(idpId).ConfigureAwait(false);
+
+        // Assert
+        A.CallTo(() => _provisioningManager.DeleteSharedIdpRealmAsync("test")).MustNotHaveHappened();
+        A.CallTo(() => _provisioningManager.DeleteCentralIdentityProviderAsync("test")).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.Remove(A<CompanyIdentityProvider>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.Remove(A<IamIdentityProvider>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _portalRepositories.Remove(A<IdentityProvider>._)).MustHaveHappenedOnceExactly();
+    }
+
+    #endregion
+
     #region Setup
 
     private void SetupCreateOwnCompanyIdentityProvider(IamIdentityProviderProtocol protocol = IamIdentityProviderProtocol.OIDC, ICollection<IdentityProvider>? idps = null, ICollection<CompanyIdentityProvider>? companyIdps = null, ICollection<IamIdentityProvider>? iamIdps = null)
@@ -588,11 +739,11 @@ public class IdentityProviderBusinessLogicTests
                     )).FirstOrDefault());
 
         A.CallTo(() => _identityProviderRepository.GetCompanyIdentityProviderCategoryDataUntracked(A<Guid>.That.Not.IsEqualTo(_companyId))).Returns(
-            Enumerable.Empty<(Guid IdentityProviderId, IdentityProviderCategoryId CategoryId, string Alias)>().ToAsyncEnumerable());
+            Enumerable.Empty<(Guid IdentityProviderId, IdentityProviderCategoryId CategoryId, string Alias, IdentityProviderTypeId TypeId)>().ToAsyncEnumerable());
         A.CallTo(() => _identityProviderRepository.GetCompanyIdentityProviderCategoryDataUntracked(A<Guid>.That.IsEqualTo(_companyId))).Returns(
             new[] {
-                (IdentityProviderId: _sharedIdentityProviderId, CategoryId: IdentityProviderCategoryId.KEYCLOAK_SHARED, Alias: _sharedIdpAlias),
-                (IdentityProviderId: _otherIdentityProviderId, CategoryId: IdentityProviderCategoryId.KEYCLOAK_OIDC, Alias: _otherIdpAlias),
+                (IdentityProviderId: _sharedIdentityProviderId, CategoryId: IdentityProviderCategoryId.KEYCLOAK_SHARED, Alias: _sharedIdpAlias, IdentityProviderTypeId.OWN),
+                (IdentityProviderId: _otherIdentityProviderId, CategoryId: IdentityProviderCategoryId.KEYCLOAK_OIDC, Alias: _otherIdpAlias, IdentityProviderTypeId.OWN),
             }.ToAsyncEnumerable());
 
         A.CallTo(() => _identityProviderRepository.CreateIdentityProvider(A<IdentityProviderCategoryId>._, A<IdentityProviderTypeId>._, A<Guid>._))
