@@ -33,7 +33,7 @@ public interface IIdentityProviderRepository
     CompanyIdentityProvider CreateCompanyIdentityProvider(Guid companyId, Guid identityProviderId);
     Task<string?> GetSharedIdentityProviderIamAliasDataUntrackedAsync(Guid companyId);
     Task<IdpUser?> GetIdpCategoryIdByUserIdAsync(Guid companyUserId, Guid userCompanyId);
-    Task<(string Alias, IdentityProviderCategoryId IamIdentityProviderCategory, bool IsOwnCompany, IdentityProviderTypeId TypeId)> GetOwnCompanyIdentityProviderAliasUntrackedAsync(Guid identityProviderId, Guid companyId);
+    Task<(string? Alias, IdentityProviderCategoryId IamIdentityProviderCategory, bool IsOwnCompany, IdentityProviderTypeId TypeId)> GetOwnCompanyIdentityProviderAliasUntrackedAsync(Guid identityProviderId, Guid companyId);
     Task<(bool IsSameCompany, bool IsOwner, string Alias, IdentityProviderCategoryId IdentityProviderCategory, IdentityProviderTypeId IdentityProviderTypeId, IEnumerable<string> Aliase)> GetOwnCompanyIdentityProviderUpdateDataUntrackedAsync(Guid identityProviderId, Guid? companyId, Guid ownerId);
     Task<(bool IsValidCompanyId, int LinkedCompaniesCount, string Alias, IdentityProviderCategoryId IdentityProviderCategory, IdentityProviderTypeId TypeId, IEnumerable<string> Aliase)> GetCompanyIdentityProviderDeletionDataUntrackedAsync(Guid identityProviderId, Guid companyId);
     IAsyncEnumerable<(Guid IdentityProviderId, IdentityProviderCategoryId CategoryId, string Alias, IdentityProviderTypeId TypeId)> GetCompanyIdentityProviderCategoryDataUntracked(Guid companyId);

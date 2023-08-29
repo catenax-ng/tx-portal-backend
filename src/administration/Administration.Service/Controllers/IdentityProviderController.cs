@@ -188,16 +188,16 @@ public class IdentityProviderController : ControllerBase
     [Authorize(Roles = "delete_idp")]
     [Authorize(Policy = PolicyTypes.ValidCompany)]
     [Route("owncompany/identityproviders/{identityProviderId}")]
-    [ProducesResponseType(typeof(NoContentResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status502BadGateway)]
-    public async Task<ActionResult> DeleteOwnCompanyIdentityProvider([FromRoute] Guid identityProviderId)
+    public async Task<NoContentResult> DeleteOwnCompanyIdentityProvider([FromRoute] Guid identityProviderId)
     {
         await _businessLogic.DeleteCompanyIdentityProviderAsync(identityProviderId).ConfigureAwait(false);
-        return (ActionResult)NoContent();
+        return NoContent();
     }
 
     /// <summary>

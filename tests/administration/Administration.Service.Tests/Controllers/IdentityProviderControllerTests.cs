@@ -53,4 +53,17 @@ public class IdentityProviderControllerTests
         result.Should().Be(data);
         A.CallTo(() => _logic.UpdateOwnCompanyIdentityProviderAsync(id, A<IdentityProviderEditableDetails>.That.Matches(x => x.displayName == "test"))).MustHaveHappenedOnceExactly();
     }
+
+    [Fact]
+    public async Task DeleteOwnCompanyIdentityProvider_WithValidData_ReturnsOk()
+    {
+        //Arrange
+        var id = Guid.NewGuid();
+
+        //Act
+        await this._controller.DeleteOwnCompanyIdentityProvider(id).ConfigureAwait(false);
+
+        //Assert
+        A.CallTo(() => _logic.DeleteCompanyIdentityProviderAsync(id)).MustHaveHappenedOnceExactly();
+    }
 }

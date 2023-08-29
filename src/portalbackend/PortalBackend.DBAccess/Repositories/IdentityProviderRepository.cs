@@ -86,11 +86,11 @@ public class IdentityProviderRepository : IIdentityProviderRepository
                     .SingleOrDefault()
             }).SingleOrDefaultAsync();
 
-    public Task<(string Alias, IdentityProviderCategoryId IamIdentityProviderCategory, bool IsOwnCompany, IdentityProviderTypeId TypeId)> GetOwnCompanyIdentityProviderAliasUntrackedAsync(Guid identityProviderId, Guid companyId) =>
+    public Task<(string? Alias, IdentityProviderCategoryId IamIdentityProviderCategory, bool IsOwnCompany, IdentityProviderTypeId TypeId)> GetOwnCompanyIdentityProviderAliasUntrackedAsync(Guid identityProviderId, Guid companyId) =>
         _context.IdentityProviders
             .Where(identityProvider => identityProvider.Id == identityProviderId)
             .Select(identityProvider =>
-                new ValueTuple<string, IdentityProviderCategoryId, bool, IdentityProviderTypeId>(
+                new ValueTuple<string?, IdentityProviderCategoryId, bool, IdentityProviderTypeId>(
                     identityProvider.IamIdentityProvider!.IamIdpAlias,
                     identityProvider.IdentityProviderCategoryId,
                     identityProvider.Companies.Any(company => company.Id == companyId),
