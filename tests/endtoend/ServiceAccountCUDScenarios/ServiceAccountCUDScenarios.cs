@@ -40,13 +40,6 @@ public class ServiceAccountCUDScenarios : EndToEndTestBase
     {
     }
 
-    [Fact(DisplayName = "Service Account Get Access Token")]
-    private async Task GetAccessToken() // in order to just get token once, ensure that method name is alphabetically before other tests cases
-    {
-        var result = await AdministrationEndpointHelper.GetOperatorToken();
-        result.Should().BeTrue("Could not get an access token for technical user.");
-    }
-
     //Scenario - Create a new service account
     [Theory(DisplayName = "Service Account Creation")]
     [MemberData(nameof(GetDataEntries))]

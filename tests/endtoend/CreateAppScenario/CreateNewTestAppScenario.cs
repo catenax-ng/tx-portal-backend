@@ -115,7 +115,7 @@ public class CreateNewTestAppScenario : EndToEndTestBase
             {
                 yield return new object[] { t };
             }
-        }   
+        }
     }
 
     private static bool ValidateStorageOfAppDetailData(AppRequestModel newAppRequest,
