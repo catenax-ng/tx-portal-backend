@@ -190,6 +190,14 @@ public class AppsSettings
     [Required]
     [DistinctValues("x => x.ClientId")]
     public IEnumerable<UserRoleConfig> ActivationUserRoles { get; init; } = null!;
+
+    /// <summary>
+    /// Active Document Types
+    /// </summary>
+    [Required]
+    [EnumEnumeration]
+    [DistinctValues]
+    public IEnumerable<DocumentTypeId> ActiveAppDocumentTypeIds { get; set; } = null!;
 }
 
 /// <summary>
