@@ -92,9 +92,7 @@ jobs:
           INTERFACE_HEALTH_CHECK_TECH_CLIENT_SECRET: ${{ secrets.INTERFACE_HEALTH_CHECK_TECH_CLIENT_SECRET }}
           CLEARING_HOUSE_CLIENT_ID: ${{ secrets.CLEARING_HOUSE_CLIENT_ID }}
           CLEARING_HOUSE_CLIENT_SECRET: ${{ secrets.CLEARING_HOUSE_CLIENT_SECRET }}
-        run: |
-          ls tests
-          dotnet test tests/endtoend --filter Category=InterfaceHC --no-restore --verbosity minimal --logger "html;logfilename=e2eInterfaceHealthCheckResults.html"
+        run: dotnet test tests/endtoend --filter Category=InterfaceHC --no-restore --verbosity minimal --logger "html;logfilename=e2eInterfaceHealthCheckResults.html"
       - name: 'Upload Artifact'
         if: always()
         uses: actions/upload-artifact@v3
@@ -112,7 +110,9 @@ jobs:
           BASE_PORTAL_BACKEND_URL: ${{ vars.BASE_PORTAL_BACKEND_URL }}
           PORTAL_USER_NAME: ${{ secrets.PORTAL_USER_NAME }}
           PORTAL_USER_PASSWORD: ${{ secrets.PORTAL_USER_PASSWORD }}
-        run: dotnet test tests/endtoend --filter Category=PortalHC --no-restore --verbosity minimal --logger "html;logfilename=e2ePortalHealthCheckResults.html"
+        run: |
+          ls tests
+          dotnet test tests/endtoend --filter Category=PortalHC --no-restore --verbosity minimal --logger "html;logfilename=e2ePortalHealthCheckResults.html"
       - name: 'Upload Artifact'
         if: always()
         uses: actions/upload-artifact@v3
@@ -131,7 +131,9 @@ jobs:
           TEMPMAIL_APIKEY: ${{ secrets.TEMPMAIL_APIKEY }}
           PORTAL_USER_NAME: ${{ secrets.PORTAL_USER_NAME }}
           PORTAL_USER_PASSWORD: ${{ secrets.PORTAL_USER_PASSWORD }}
-        run: dotnet test tests/endtoend --filter Category=Registration --no-restore --verbosity minimal --logger "html;logfilename=e2eRegistrationTestResults.html"
+        run: |
+          ls tests
+          dotnet test tests/endtoend --filter Category=Registration --no-restore --verbosity minimal --logger "html;logfilename=e2eRegistrationTestResults.html"
       - name: 'Upload Artifact'
         if: always()
         uses: actions/upload-artifact@v3
@@ -151,7 +153,9 @@ jobs:
           TEMPMAIL_APIKEY: ${{ secrets.TEMPMAIL_APIKEY }}
           PORTAL_USER_NAME: ${{ secrets.PORTAL_USER_NAME }}
           PORTAL_USER_PASSWORD: ${{ secrets.PORTAL_USER_PASSWORD }}
-        run: dotnet test tests/endtoend --filter Category=Portal --no-restore --verbosity minimal --logger "html;logfilename=e2ePortalTestResults.html"
+        run: |
+          ls tests
+          dotnet test tests/endtoend --filter Category=Portal --no-restore --verbosity minimal --logger "html;logfilename=e2ePortalTestResults.html"
       - name: 'Upload Artifact'
         if: always()
         uses: actions/upload-artifact@v3
@@ -180,7 +184,9 @@ jobs:
           TEMPMAIL_APIKEY: ${{ secrets.TEMPMAIL_APIKEY }}
           PORTAL_USER_NAME: ${{ secrets.PORTAL_USER_NAME }}
           PORTAL_USER_PASSWORD: ${{ secrets.PORTAL_USER_PASSWORD }}
-        run: dotnet test tests/endtoend --no-restore --verbosity minimal --logger "html;logfilename=e2eAllResults.html"
+        run: |
+          ls tests
+          dotnet test tests/endtoend --no-restore --verbosity minimal --logger "html;logfilename=e2eAllResults.html"
       - name: 'Upload Artifact'
         if: always()
         uses: actions/upload-artifact@v3
