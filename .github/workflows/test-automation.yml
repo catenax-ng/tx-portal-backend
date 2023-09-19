@@ -92,7 +92,9 @@ jobs:
           INTERFACE_HEALTH_CHECK_TECH_CLIENT_SECRET: ${{ secrets.INTERFACE_HEALTH_CHECK_TECH_CLIENT_SECRET }}
           CLEARING_HOUSE_CLIENT_ID: ${{ secrets.CLEARING_HOUSE_CLIENT_ID }}
           CLEARING_HOUSE_CLIENT_SECRET: ${{ secrets.CLEARING_HOUSE_CLIENT_SECRET }}
-        run: dotnet test tests/endtoend --filter Category=InterfaceHC --no-restore --verbosity minimal --logger "html;logfilename=e2eInterfaceHealthCheckResults.html"
+        run: |
+          ls tests
+          dotnet test tests/endtoend --filter Category=InterfaceHC --no-restore --verbosity minimal --logger "html;logfilename=e2eInterfaceHealthCheckResults.html"
       - name: 'Upload Artifact'
         if: always()
         uses: actions/upload-artifact@v3

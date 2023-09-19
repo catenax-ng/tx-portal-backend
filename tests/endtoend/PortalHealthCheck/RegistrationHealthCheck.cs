@@ -17,9 +17,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Castle.Core.Internal;
 using FluentAssertions;
-using Org.Eclipse.TractusX.Portal.Backend.EndToEnd.Tests;
 using Xunit;
 using Xunit.Abstractions;
 using static RestAssured.Dsl;
@@ -27,8 +25,7 @@ using static RestAssured.Dsl;
 namespace Org.Eclipse.TractusX.Portal.Backend.EndToEnd.Tests;
 
 [Trait("Category", "PortalHC")]
-[TestCaseOrderer("Org.Eclipse.TractusX.Portal.Backend.EndToEnd.Tests.AlphabeticalOrderer",
-    "EndToEnd.Tests")]
+[TestCaseOrderer("Org.Eclipse.TractusX.Portal.Backend.EndToEnd.Tests.AlphabeticalOrderer", "EndToEnd.Tests")]
 [Collection("PortalHC")]
 public class RegistrationHealthCheck : EndToEndTestBase
 {
