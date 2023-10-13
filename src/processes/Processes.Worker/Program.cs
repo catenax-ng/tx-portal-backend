@@ -31,6 +31,7 @@ using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.Processes.ApplicationChecklist.Config.DependencyInjection;
 using Org.Eclipse.TractusX.Portal.Backend.Processes.ApplicationChecklist.Executor;
 using Org.Eclipse.TractusX.Portal.Backend.Processes.OfferSubscription.Executor.DependencyInjection;
+using Org.Eclipse.TractusX.Portal.Backend.Processes.ServiceAccountSync.Executor.DependencyInjection;
 using Org.Eclipse.TractusX.Portal.Backend.Processes.Worker.Library;
 using Serilog;
 
@@ -52,7 +53,9 @@ try
                 .AddApplicationChecklist(hostContext.Configuration.GetSection("ApplicationChecklist"))
                 .AddApplicationChecklistCreation()
                 .AddApplicationActivation(hostContext.Configuration)
-                .AddProcessIdentity(hostContext.Configuration.GetSection("ProcessIdentity"));
+                .AddProcessIdentity(hostContext.Configuration.GetSection("ProcessIdentity"))
+                .AddServiceAccountSyncProcessExecutor(hostContext.Configuration);
+
 
             if (hostContext.HostingEnvironment.IsDevelopment())
             {
