@@ -2,7 +2,7 @@
 
 New features, fixed bugs, known defects and other noteworthy changes to each release of the Catena-X Portal Backend.
 
-## 1.x.x xxxx
+## 1.7.0-RC1
 
 ### Change
 * Apps Service
@@ -35,6 +35,7 @@ New features, fixed bugs, known defects and other noteworthy changes to each rel
 * Portal DB
   * added inside portal.offer_subscription new attribute "date_created", incl. a migration to set all existing offer subscriptiond dates to "1970-01-01"
 * check constraints is_external_type_use_case, is_credential_type_use_case & is_connector_managed changed from function constraint to trigger function constraint
+* Add new process to synchronize keycloak user with company service account to set the correct user entity id
 
 ### Bugfix
 * Application approval/verification process: adjusted bpdm businessPartnerNumber pull process to handle an unset SharingProcessStarted and retry the process
@@ -43,6 +44,7 @@ New features, fixed bugs, known defects and other noteworthy changes to each rel
   * updated POST /partnerregistration endpoint - bpn propoerty value NULL allowed
 * Seeding data typo fixes (agreements.json)
 * Updated userRole for service endpoint PUT api/services/{subscriptionId}/unsubscribe to "unsubscribe_services"
+* Add user entity id when creating a company service account
 
 ### Known Knowns
 * POST /api/registration/application/{applicationId}/inviteNewUser runs on error if user email is already known/existing in the portal db (no matter to which company the user is connected)
