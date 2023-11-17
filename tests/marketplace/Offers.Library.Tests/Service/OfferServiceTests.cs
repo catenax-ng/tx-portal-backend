@@ -858,7 +858,7 @@ public class OfferServiceTests
         var userNameParameter = ("offerProviderName", "User");
         var template = new[]
         {
-            "offer-release-activation"
+            "app-release-activation"
         };
 
         //Act
@@ -1208,7 +1208,7 @@ public class OfferServiceTests
         var userNameParameter = ("offerProviderName", "Service Manager");
         var template = new[]
         {
-            "offer-request-decline"
+            $"{offerTypeId.ToString().ToLower()}-request-decline"
         };
 
         // Act

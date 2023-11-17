@@ -1,5 +1,4 @@
 /********************************************************************************
- * Copyright (c) 2021, 2023 BMW Group AG
  * Copyright (c) 2021, 2023 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
@@ -26,10 +25,13 @@ using Org.Eclipse.TractusX.Portal.Backend.Framework.Logging;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ProcessIdentity.DependencyInjection;
 using Org.Eclipse.TractusX.Portal.Backend.Keycloak.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Keycloak.Factory;
+using Org.Eclipse.TractusX.Portal.Backend.Mailing.SendMail;
 using Org.Eclipse.TractusX.Portal.Backend.Offers.Library.DependencyInjection;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.Processes.ApplicationChecklist.Config.DependencyInjection;
 using Org.Eclipse.TractusX.Portal.Backend.Processes.ApplicationChecklist.Executor;
+using Org.Eclipse.TractusX.Portal.Backend.Processes.Invitation.Executor.DependencyInjection;
+using Org.Eclipse.TractusX.Portal.Backend.Processes.Mailing.Executor.DependencyInjection;
 using Org.Eclipse.TractusX.Portal.Backend.Processes.NetworkRegistration.Executor.DependencyInjection;
 using Org.Eclipse.TractusX.Portal.Backend.Processes.OfferSubscription.Executor.DependencyInjection;
 using Org.Eclipse.TractusX.Portal.Backend.Processes.ServiceAccountSync.Executor.DependencyInjection;
@@ -45,6 +47,7 @@ try
         .ConfigureServices((hostContext, services) =>
         {
             services
+                .AddMailingAndTemplateManager(hostContext.Configuration)
                 .AddProcessExecutionService(hostContext.Configuration.GetSection("Processes"))
                 .AddTransient<IProcessTypeExecutor, ApplicationChecklistProcessTypeExecutor>()
                 .AddOfferSubscriptionProcessExecutor(hostContext.Configuration)
@@ -56,7 +59,9 @@ try
                 .AddApplicationActivation(hostContext.Configuration)
                 .AddProcessIdentity(hostContext.Configuration.GetSection("ProcessIdentity"))
                 .AddNetworkRegistrationProcessExecutor(hostContext.Configuration)
-                .AddServiceAccountSyncProcessExecutor(hostContext.Configuration);
+                .AddServiceAccountSyncProcessExecutor(hostContext.Configuration)
+                .AddMailingProcessExecutor()
+                .AddInvitationProcessExecutor(hostContext.Configuration);
 
             if (hostContext.HostingEnvironment.IsDevelopment())
             {

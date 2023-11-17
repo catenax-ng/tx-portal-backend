@@ -35,15 +35,12 @@ WebApplicationBuildRunner
     .BuildAndRunWebApplication<Program>(args, "services", VERSION, builder =>
     {
         builder.Services
-            .AddMailingAndTemplateManager(builder.Configuration)
             .AddPortalRepositories(builder.Configuration)
             .AddProvisioningManager(builder.Configuration);
 
         builder.Services.AddTransient<INotificationService, NotificationService>();
         builder.Services
             .AddServiceBusinessLogic(builder.Configuration)
-            .AddTransient<IServiceReleaseBusinessLogic, ServiceReleaseBusinessLogic>()
-            .AddTransient<IServiceChangeBusinessLogic, ServiceChangeBusinessLogic>()
             .AddTechnicalUserProfile()
             .AddOfferDocumentServices();
 

@@ -23,6 +23,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Framework.Models.Configuration;
 using Org.Eclipse.TractusX.Portal.Backend.Mailing.SendMail;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
+using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Mailing.Service.Tests;
 
@@ -31,9 +32,10 @@ public class RoleBaseMailServiceTests
     private const string BasePortalUrl = "http//base-url.com";
     private readonly IFixture _fixture;
     private readonly IPortalRepositories _portalRepositories;
-    private readonly IMailingService _mailingService;
     private readonly IUserRolesRepository _userRolesRepository;
     private readonly IUserRepository _userRepository;
+    private readonly IMailingInformationRepository _mailingInformationRepository;
+    private readonly IProcessStepRepository _processStepRepository;
     private readonly Guid _companyId;
     private readonly IEnumerable<Guid> _userRoleIds;
     private readonly RoleBaseMailService _sut;
@@ -46,15 +48,16 @@ public class RoleBaseMailServiceTests
         _fixture.Behaviors.Add(new OmitOnRecursionBehavior());
 
         _portalRepositories = A.Fake<IPortalRepositories>();
-        _mailingService = A.Fake<IMailingService>();
         _userRolesRepository = A.Fake<IUserRolesRepository>();
+        _mailingInformationRepository = A.Fake<IMailingInformationRepository>();
+        _processStepRepository = A.Fake<IProcessStepRepository>();
         _userRepository = A.Fake<IUserRepository>();
         _companyId = _fixture.Create<Guid>();
         _userRoleIds = _fixture.CreateMany<Guid>(2);
 
         SetupRepositories();
 
-        _sut = new RoleBaseMailService(_portalRepositories, _mailingService);
+        _sut = new RoleBaseMailService(_portalRepositories);
     }
 
     [Theory]
@@ -94,14 +97,19 @@ public class RoleBaseMailServiceTests
         // Assert
         A.CallTo(() => _userRolesRepository.GetUserRoleIdsUntrackedAsync(A<IEnumerable<UserRoleConfig>>.That.Matches(x => x.Any(y => y.ClientId == "ClientId")))).MustHaveHappenedOnceExactly();
         A.CallTo(() => _userRepository.GetCompanyUserEmailForCompanyAndRoleId(A<IEnumerable<Guid>>.That.IsSameSequenceAs(_userRoleIds), _companyId)).MustHaveHappenedOnceExactly();
-        A.CallTo(() => _mailingService.SendMails(
+        A.CallTo(() => _processStepRepository.CreateProcess(ProcessTypeId.MAILING)).MustHaveHappenedTwiceExactly();
+        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.SEND_MAIL, ProcessStepStatusId.TODO, A<Guid>._)).MustHaveHappenedTwiceExactly();
+        A.CallTo(() => _mailingInformationRepository.CreateMailingInformation(
+            A<Guid>._,
             "TestApp@bmw",
-            A<IDictionary<string, string>>.That.Matches(x => x.Count() == (hasUserNameParameter ? 3 : 2) && x["offerName"] == offerName && x["url"] == BasePortalUrl && (!hasUserNameParameter || x["offerProviderName"] == "AppFirst AppLast")),
-            A<IEnumerable<string>>.That.IsSameSequenceAs(template))).MustHaveHappenedOnceExactly();
-        A.CallTo(() => _mailingService.SendMails(
+            template.Single(),
+            A<Dictionary<string, string>>.That.Matches(x => x.Count == (hasUserNameParameter ? 3 : 2) && x["offerName"] == offerName && x["url"] == BasePortalUrl && (!hasUserNameParameter || x["offerProviderName"] == "AppFirst AppLast")))).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _mailingInformationRepository.CreateMailingInformation(
+            A<Guid>._,
             "TestSale@bmw",
-            A<IDictionary<string, string>>.That.Matches(x => x.Count() == (hasUserNameParameter ? 3 : 2) && x["offerName"] == offerName && x["url"] == BasePortalUrl && (!hasUserNameParameter || x["offerProviderName"] == "SaleFirst SaleLast")),
-            A<IEnumerable<string>>.That.IsSameSequenceAs(template))).MustHaveHappenedOnceExactly();
+            template.Single(),
+            A<Dictionary<string, string>>.That.Matches(x => x.Count == (hasUserNameParameter ? 3 : 2) && x["offerName"] == offerName && x["url"] == BasePortalUrl && (!hasUserNameParameter || x["offerProviderName"] == "SaleFirst SaleLast")))
+            ).MustHaveHappenedOnceExactly();
     }
 
     [Fact]
@@ -133,7 +141,9 @@ public class RoleBaseMailServiceTests
             $"invalid configuration, at least one of the configured roles does not exist in the database: {string.Join(", ", receiverRoles.Select(clientRoles => $"client: {clientRoles.ClientId}, roles: [{string.Join(", ", clientRoles.UserRoleNames)}]"))}");
         A.CallTo(() => _userRolesRepository.GetUserRoleIdsUntrackedAsync(A<IEnumerable<UserRoleConfig>>.That.IsSameSequenceAs(receiverRoles))).MustHaveHappenedOnceExactly();
         A.CallTo(() => _userRepository.GetCompanyUserEmailForCompanyAndRoleId(A<IEnumerable<Guid>>.That.IsSameSequenceAs(roleData), _companyId)).MustNotHaveHappened();
-        A.CallTo(() => _mailingService.SendMails(A<string>._, A<IDictionary<string, string>>._, A<IEnumerable<string>>._)).MustNotHaveHappened();
+        A.CallTo(() => _processStepRepository.CreateProcess(ProcessTypeId.MAILING)).MustNotHaveHappened();
+        A.CallTo(() => _processStepRepository.CreateProcessStep(ProcessStepTypeId.SEND_MAIL, ProcessStepStatusId.TODO, A<Guid>._)).MustNotHaveHappened();
+        A.CallTo(() => _mailingInformationRepository.CreateMailingInformation(A<Guid>._, A<string>._, A<string>._, A<Dictionary<string, string>>._)).MustNotHaveHappened();
     }
 
     #region Setup
@@ -142,7 +152,8 @@ public class RoleBaseMailServiceTests
     {
         A.CallTo(() => _portalRepositories.GetInstance<IUserRepository>()).Returns(_userRepository);
         A.CallTo(() => _portalRepositories.GetInstance<IUserRolesRepository>()).Returns(_userRolesRepository);
-        A.CallTo(() => _portalRepositories.GetInstance<IMailingService>()).Returns(_mailingService);
+        A.CallTo(() => _portalRepositories.GetInstance<IMailingInformationRepository>()).Returns(_mailingInformationRepository);
+        A.CallTo(() => _portalRepositories.GetInstance<IProcessStepRepository>()).Returns(_processStepRepository);
         _fixture.Inject(_portalRepositories);
     }
 

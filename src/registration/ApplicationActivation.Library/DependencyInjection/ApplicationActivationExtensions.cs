@@ -42,7 +42,6 @@ public static class ApplicationActivationExtensions
         return services
             .AddDateTimeProvider()
             .AddTransient<INotificationService, NotificationService>()
-            .AddMailingAndTemplateManager(config)
             .AddProvisioningManager(config)
             .AddScoped<IApplicationActivationService, ApplicationActivationService>();
     }

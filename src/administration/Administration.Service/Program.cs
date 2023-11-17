@@ -40,14 +40,12 @@ WebApplicationBuildRunner
     .BuildAndRunWebApplication<Program>(args, "administration", VERSION, builder =>
     {
         builder.Services
-            .AddMailingAndTemplateManager(builder.Configuration)
             .AddPortalRepositories(builder.Configuration)
             .AddProvisioningManager(builder.Configuration);
 
         builder.Services.AddTransient<IUserProvisioningService, UserProvisioningService>();
 
-        builder.Services.AddTransient<IInvitationBusinessLogic, InvitationBusinessLogic>()
-            .ConfigureInvitationSettings(builder.Configuration.GetSection("Invitation"));
+        builder.Services.AddTransient<IInvitationBusinessLogic, InvitationBusinessLogic>();
 
         builder.Services.AddTransient<IUserBusinessLogic, UserBusinessLogic>()
             .AddTransient<IUserUploadBusinessLogic, UserUploadBusinessLogic>()

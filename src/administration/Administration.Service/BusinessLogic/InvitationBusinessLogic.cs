@@ -1,5 +1,4 @@
 /********************************************************************************
- * Copyright (c) 2021, 2023 BMW Group AG
  * Copyright (c) 2021, 2023 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
@@ -18,57 +17,34 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Administration.Service.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
-using Org.Eclipse.TractusX.Portal.Backend.Mailing.SendMail;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess;
-using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Repositories;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
-using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library;
-using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Models;
-using Org.Eclipse.TractusX.Portal.Backend.Provisioning.Library.Service;
 
 namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
 
 public class InvitationBusinessLogic : IInvitationBusinessLogic
 {
-    private readonly IProvisioningManager _provisioningManager;
-    private readonly IUserProvisioningService _userProvisioningService;
     private readonly IPortalRepositories _portalRepositories;
-    private readonly IMailingService _mailingService;
-    private readonly InvitationSettings _settings;
 
     /// <summary>
     /// Constructor.
     /// </summary>
-    /// <param name="provisioningManager">Provisioning Manager</param>
-    /// <param name="userProvisioningService">User Provisioning Service</param>
     /// <param name="portalRepositories">Portal Repositories</param>
-    /// <param name="mailingService">Mailing Service</param>
-    /// <param name="settings">Settings</param>
-    public InvitationBusinessLogic(
-        IProvisioningManager provisioningManager,
-        IUserProvisioningService userProvisioningService,
-        IPortalRepositories portalRepositories,
-        IMailingService mailingService,
-        IOptions<InvitationSettings> settings)
+    public InvitationBusinessLogic(IPortalRepositories portalRepositories)
     {
-        _provisioningManager = provisioningManager;
-        _userProvisioningService = userProvisioningService;
         _portalRepositories = portalRepositories;
-        _mailingService = mailingService;
-        _settings = settings.Value;
     }
 
     public Task ExecuteInvitation(CompanyInvitationData invitationData)
     {
-        if (string.IsNullOrWhiteSpace(invitationData.email))
+        if (string.IsNullOrWhiteSpace(invitationData.Email))
         {
             throw new ControllerArgumentException("email must not be empty", "email");
         }
-        if (string.IsNullOrWhiteSpace(invitationData.organisationName))
+        if (string.IsNullOrWhiteSpace(invitationData.OrganisationName))
         {
             throw new ControllerArgumentException("organisationName must not be empty", "organisationName");
         }
@@ -77,70 +53,17 @@ public class InvitationBusinessLogic : IInvitationBusinessLogic
 
     private async Task ExecuteInvitationInternalAsync(CompanyInvitationData invitationData)
     {
-        var idpName = await _provisioningManager.GetNextCentralIdentityProviderNameAsync().ConfigureAwait(false);
-        await _provisioningManager.SetupSharedIdpAsync(idpName, invitationData.organisationName, _settings.InitialLoginTheme).ConfigureAwait(false);
-
-        var company = _portalRepositories.GetInstance<ICompanyRepository>().CreateCompany(invitationData.organisationName);
-
-        var identityProviderRepository = _portalRepositories.GetInstance<IIdentityProviderRepository>();
-        var identityProvider = identityProviderRepository.CreateIdentityProvider(IdentityProviderCategoryId.KEYCLOAK_OIDC, IdentityProviderTypeId.SHARED, company.Id, null);
-        identityProvider.Companies.Add(company);
-        identityProviderRepository.CreateIamIdentityProvider(identityProvider.Id, idpName);
-
-        var applicationRepository = _portalRepositories.GetInstance<IApplicationRepository>();
-        var application = applicationRepository.CreateCompanyApplication(company.Id, CompanyApplicationStatusId.CREATED, CompanyApplicationTypeId.INTERNAL);
-
+        var (userName, firstName, lastName, email, organisationName) = invitationData;
+        var processStepRepository = _portalRepositories.GetInstance<IProcessStepRepository>();
+        var processId = processStepRepository.CreateProcess(ProcessTypeId.INVITATION).Id;
+        processStepRepository.CreateProcessStep(ProcessStepTypeId.INVITATION_SETUP_IDP, ProcessStepStatusId.TODO, processId);
+        _portalRepositories.GetInstance<ICompanyInvitationRepository>().CreateCompanyInvitation(firstName, lastName, email, organisationName, processId, ci =>
+            {
+                if (!string.IsNullOrWhiteSpace(userName))
+                {
+                    ci.UserName = userName;
+                }
+            });
         await _portalRepositories.SaveAsync().ConfigureAwait(false);
-
-        var companyNameIdpAliasData = new CompanyNameIdpAliasData(
-            company.Id,
-            company.Name,
-            null,
-            idpName,
-            identityProvider.Id,
-            true
-        );
-
-        IEnumerable<UserRoleData> roleDatas;
-        try
-        {
-            roleDatas = await _userProvisioningService.GetRoleDatas(_settings.InvitedUserInitialRoles).ToListAsync().ConfigureAwait(false);
-        }
-        catch (Exception e)
-        {
-            throw new ConfigurationException($"{nameof(_settings.InvitedUserInitialRoles)}: {e.Message}");
-        }
-
-        var userCreationInfoIdps = new[] { new UserCreationRoleDataIdpInfo(
-            invitationData.firstName,
-            invitationData.lastName,
-            invitationData.email,
-            roleDatas,
-            string.IsNullOrWhiteSpace(invitationData.userName) ? invitationData.email : invitationData.userName,
-            "",
-            UserStatusId.ACTIVE,
-            true
-        )}.ToAsyncEnumerable();
-
-        var (companyUserId, _, password, error) = await _userProvisioningService.CreateOwnCompanyIdpUsersAsync(companyNameIdpAliasData, userCreationInfoIdps).SingleAsync().ConfigureAwait(false);
-
-        if (error != null)
-        {
-            throw error;
-        }
-
-        applicationRepository.CreateInvitation(application.Id, companyUserId);
-
-        await _portalRepositories.SaveAsync().ConfigureAwait(false);
-
-        var mailParameters = new Dictionary<string, string>
-        {
-            { "password", password ?? "" },
-            { "companyName", invitationData.organisationName },
-            { "url", _settings.RegistrationAppAddress },
-            { "passwordResendUrl", _settings.PasswordResendAddress },
-        };
-
-        await _mailingService.SendMails(invitationData.email, mailParameters, new List<string> { "RegistrationTemplate", "PasswordForRegistrationTemplate" }).ConfigureAwait(false);
     }
 }

@@ -24,5 +24,5 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Mailing.Service;
 
 public interface IRoleBaseMailService
 {
-    Task RoleBaseSendMail(IEnumerable<UserRoleConfig> receiverRoles, IEnumerable<(string ParameterName, string ParameterValue)> parameters, (string ParameterName, string ParameterValue)? userNameParameter, IEnumerable<string> template, Guid companyId);
+    Task RoleBaseSendMail(IEnumerable<UserRoleConfig> receiverRoles, IEnumerable<(string ParameterName, string ParameterValue)> parameters, (string ParameterName, string ParameterValue)? userNameParameter, IEnumerable<string> templates, Guid companyId);
 }

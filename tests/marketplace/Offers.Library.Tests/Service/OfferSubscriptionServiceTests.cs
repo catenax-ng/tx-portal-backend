@@ -151,7 +151,7 @@ public class OfferSubscriptionServiceTests
         var userParameter = ("offerProviderName", "User");
         var template = new[]
         {
-            "subscription-request"
+            $"{offerTypeId.ToString().ToLower()}-subscription-request"
         };
 
         // Act
@@ -213,7 +213,7 @@ public class OfferSubscriptionServiceTests
         var userParameter = ("offerProviderName", "User");
         var template = new[]
         {
-            "subscription-request"
+            $"{offerTypeId.ToString().ToLower()}-subscription-request"
         };
 
         // Act

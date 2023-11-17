@@ -35,7 +35,6 @@ WebApplicationBuildRunner
     .BuildAndRunWebApplication<Program>(args, "apps", VERSION, builder =>
     {
         builder.Services
-            .AddMailingAndTemplateManager(builder.Configuration)
             .AddPortalRepositories(builder.Configuration)
             .AddProvisioningManager(builder.Configuration);
 

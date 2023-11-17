@@ -18,34 +18,31 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Models.Configuration;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Models.Validation;
 using System.ComponentModel.DataAnnotations;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Administration.Service.BusinessLogic;
+namespace Org.Eclipse.TractusX.Portal.Backend.Processes.Invitation.Executor.DependencyInjection;
 
 public class InvitationSettings
 {
-    public InvitationSettings()
-    {
-        RegistrationAppAddress = null!;
-        InvitedUserInitialRoles = null!;
-        InitialLoginTheme = null!;
-        PasswordResendAddress = null!;
-    }
-
     [Required(AllowEmptyStrings = false)]
-    public string RegistrationAppAddress { get; set; }
+    public string RegistrationAppAddress { get; set; } = null!;
 
     [Required]
     [DistinctValues("x => x.ClientId")]
-    public IEnumerable<UserRoleConfig> InvitedUserInitialRoles { get; set; }
+    public IEnumerable<UserRoleConfig> InvitedUserInitialRoles { get; set; } = null!;
 
     [Required(AllowEmptyStrings = false)]
-    public string InitialLoginTheme { get; set; }
+    public string InitialLoginTheme { get; set; } = null!;
 
     [Required(AllowEmptyStrings = false)]
-    public string PasswordResendAddress { get; set; }
+    public string PasswordResendAddress { get; set; } = null!;
+
+    [Required(AllowEmptyStrings = false)]
+    public string EncryptionKey { get; set; } = null!;
 }
 
 public static class InvitationSettingsExtension
