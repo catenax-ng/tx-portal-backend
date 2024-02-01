@@ -430,6 +430,25 @@ public class UserRepositoryTests : IAssemblyFixture<TestDbFixture>
 
     #endregion
 
+    #region GetNextCompanyUserInfoForIdpLinDataSync
+
+    [Fact]
+    public async Task GetNextCompanyUserInfoForIdpLinDataSync_ReturnsExpectedResult()
+    {
+        // Arrange
+        var sut = await CreateSut().ConfigureAwait(false);
+
+        // Act
+        var results = await sut.GetNextCompanyUserInfoForIdpLinDataSync().ToListAsync().ConfigureAwait(false);
+
+        // Assert
+        results.Should().HaveCount(2).And.Satisfy(
+            x => x.CompanyUserId == new Guid("ac1cf001-7fbc-1f2f-817f-bce058020001") && x.UserEntityId == "3d8142f1-860b-48aa-8c2b-1ccb18699f65",
+            x => x.CompanyUserId == new Guid("8b42e6de-7b59-4217-a63c-198e83d93777") && x.UserEntityId == null);
+    }
+
+    #endregion
+
     private async Task<(UserRepository sut, PortalDbContext context)> CreateSutWithContext()
     {
         var context = await _dbTestDbFixture.GetPortalDbContext().ConfigureAwait(false);

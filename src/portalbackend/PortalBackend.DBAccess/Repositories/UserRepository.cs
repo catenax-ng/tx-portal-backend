@@ -528,4 +528,11 @@ public class UserRepository : IUserRepository
             .Select(x => x.Id)
             .Take(2)
             .ToAsyncEnumerable();
+
+    public IAsyncEnumerable<(Guid CompanyUserId, string? UserEntityId)> GetNextCompanyUserInfoForIdpLinDataSync() =>
+        _dbContext.CompanyUsers
+            .Where(cu => cu.Identity!.UserStatusId == UserStatusId.ACTIVE && !cu.CompanyUserAssignedIdentityProviders.Any())
+            .Select(x => new ValueTuple<Guid, string?>(x.Id, x.Identity!.UserEntityId))
+            .Take(2)
+            .ToAsyncEnumerable();
 }

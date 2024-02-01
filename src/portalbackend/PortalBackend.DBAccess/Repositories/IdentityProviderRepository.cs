@@ -300,4 +300,10 @@ public class IdentityProviderRepository : IIdentityProviderRepository
                 x.Email != null)
             .Select(x => new ValueTuple<string, string?, string?>(x.Email!, x.Firstname, x.Lastname))
             .ToAsyncEnumerable();
+
+    public Task<Guid> GetIdpIdByAlias(string alias) =>
+        _context.IamIdentityProviders
+            .Where(x => x.IamIdpAlias == alias)
+            .Select(x => x.IdentityProviderId)
+            .SingleOrDefaultAsync();
 }

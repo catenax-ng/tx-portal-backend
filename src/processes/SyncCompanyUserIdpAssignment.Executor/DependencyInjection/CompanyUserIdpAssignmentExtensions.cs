@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2021,2023 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -17,12 +17,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-namespace Org.Eclipse.TractusX.Portal.Backend.PortalBackend.PortalEntities.Enums;
+using Microsoft.Extensions.DependencyInjection;
+using Org.Eclipse.TractusX.Portal.Backend.Processes.Worker.Library;
 
-public enum ProcessTypeId
+namespace Org.Eclipse.TractusX.Portal.Backend.SyncCompanUserIdpAssignment.Executor.DependencyInjection;
+
+public static class CompanyUserIdpAssignmentExtensions
 {
-    APPLICATION_CHECKLIST = 1,
-    OFFER_SUBSCRIPTION = 3,
-    PARTNER_REGISTRATION = 4,
-    SYNC_COMPANY_USER_IDP = 5
+    public static IServiceCollection AddSyncCompanyUserIdpAssignment(this IServiceCollection services) =>
+        services
+            .AddTransient<IProcessTypeExecutor, SyncCompanyUserIdpAssigmentProcessTypeExecutor>();
 }

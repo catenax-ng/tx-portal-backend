@@ -50,6 +50,7 @@
       <ProjectReference Include="..\NetworkRegistration.Executor\NetworkRegistration.Executor.csproj" />
       <ProjectReference Include="..\Processes.Worker.Library\Processes.Worker.Library.csproj" />
       <ProjectReference Include="..\ApplicationChecklist.Executor\ApplicationChecklist.Executor.csproj" />
+      <ProjectReference Include="..\SyncCompanyUserIdpAssignment.Executor\SyncCompanyUserIdpAssignment.Executor.csproj" />
     </ItemGroup>
 
     <ItemGroup>
