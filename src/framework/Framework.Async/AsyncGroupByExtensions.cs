@@ -22,6 +22,7 @@ namespace Org.Eclipse.TractusX.Portal.Backend.Framework.Async;
 
 public static class AsyncGroupByExtensions
 {
+
     public static async IAsyncEnumerable<IGrouping<TKey, TElement>> PreSortedGroupBy<T, TKey, TElement>(this IAsyncEnumerable<T> Data, Func<T, TKey> KeySelector, Func<T, TElement> ElementSelector) where T : notnull where TKey : notnull
     {
         await using var enumerator = Data.GetAsyncEnumerator();
