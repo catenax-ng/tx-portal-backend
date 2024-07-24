@@ -20,7 +20,7 @@
 using Microsoft.Extensions.Logging;
 using Org.Eclipse.TractusX.Portal.Backend.PortalBackend.DBAccess.Models;
 
-namespace Offers.Library.Extensions;
+namespace Org.Eclipse.TractusX.Portal.Backend.Offers.Library.Extensions;
 
 public static class CompanySubscriptionStatusExtensions
 {
